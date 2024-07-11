@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-family: 'Fredoka One', sans-serif;
+            height: 100vh; /* Ensures body takes up full viewport height */
+        }
+
+        .container {
+            position: absolute;
+            top: 370px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .coming-soon-link {
+            font-size: 100px;
+            text-decoration: none;
+            color: inherit; /* Ensures link color matches text color */
+            display: inline-block;
+        }
+
+        .coming-soon-link:hover,
+        .coming-soon-link:focus {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .coming-soon-link::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 1px;
+            background-color: transparent; /* Hides the underline */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="https://blinkywink.bandcamp.com" target="_blank" class="coming-soon-link">COMING SOON</a>
+    </div>
+</body>
+</html>
