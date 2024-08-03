@@ -15,31 +15,23 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            overflow: hidden; /* Hide overflow to ensure video fits perfectly */
+            overflow: hidden; /* Hide overflow to ensure content fits perfectly */
+            background-image: url('bg.jpg'); /* Set background image */
+            background-size: cover; /* Ensure the image covers the entire viewport */
+            background-position: center; /* Center the image */
         }
 
-        /* Style for the background video */
+        /* Remove background video styles */
         .background-video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensure the video covers the entire viewport */
-            z-index: -1; /* Place the video behind other content */
+            display: none; /* Hide video if any */
         }
 
         .coming-soon-text {
-            font-size: 60px;
-            color: black; /* Set text color to black */
-            margin-bottom: 20px;
+            display: none; /* Hide the coming-soon-text span */
         }
 
         #countdown {
-            font-size: 24px;
-            font-family: 'Fredoka One', sans-serif;
-            color: white; /* Keep other text white */
-            margin-top: 20px;
+            display: none; /* Hide the countdown if it was used */
         }
 
         .spotify-embed {
@@ -53,14 +45,16 @@
     </style>
 </head>
 <body>
-    <!-- Background video -->
+    <!-- Remove background video -->
     <video class="background-video" autoplay muted loop>
         <source src="back.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 
+    <!-- Removed coming-soon-text span -->
+    <!-- Removed countdown id -->
+
     <!-- Content -->
-    <span class="coming-soon-text">9.6.24</span>
     <iframe class="spotify-embed" src="https://open.spotify.com/embed/artist/0yvuzkWMchTMLyLSFhTmIm?utm_source=generator&theme=0" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
 </body>
 </html>
