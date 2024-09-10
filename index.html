@@ -6,55 +6,109 @@
     <title>blinkywink</title>
     <link rel="icon" type="image/png" href="icon.png">
     <style>
+        @font-face {
+            font-family: 'Lines';
+            src: url('lines.ttf') format('truetype');
+        }
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Fredoka One', sans-serif;
+            font-family: 'Lines', sans-serif;
             height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            overflow: hidden; /* Hide overflow to ensure content fits perfectly */
-            background-image: url('bg.jpg'); /* Set background image */
-            background-size: cover; /* Ensure the image covers the entire viewport */
-            background-position: center; /* Center the image */
+            justify-content: flex-start;
+            align-items: flex-start;
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
         }
 
-        /* Remove background video styles */
-        .background-video {
-            display: none; /* Hide video if any */
+        /* Disable selection */
+        * {
+            user-select: none;
         }
 
-        .coming-soon-text {
-            display: none; /* Hide the coming-soon-text span */
+        /* Container for posts */
+        .posts-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 50px;
+            position: absolute;
+            top: 33%;
+            left: 10%;
+            width: 80%;
         }
 
-        #countdown {
-            display: none; /* Hide the countdown if it was used */
+        /* Responsive for vertical screens */
+        @media (max-width: 768px) {
+            .posts-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                top: 10%;
+                left: 5%;
+                width: 90%;
+            }
         }
 
-        .spotify-embed {
-            width: 100%;
-            max-width: 600px; /* Limit width for better readability */
-            height: 352px;
+        .post {
+            text-align: center;
+            font-size: 1.56em;
+            color: black;
+        }
+
+        .post img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
             border-radius: 12px;
-            border: none; /* Remove border from iframe */
-            margin-top: 20px;
+            border: 5px solid black; /* Thinner border */
+            background-color: #ccc;
+            transition: border 0.3s ease; /* Smooth transition for hover effect */
+            draggable: false;
+        }
+
+        .post-title {
+            margin-top: 15px;
+            font-size: 2em;
+            color: black;
+        }
+
+        /* Styling for links to make sure text is clickable */
+        a {
+            text-decoration: none;
+            color: black;
+        }
+
+        /* Hover effect: applies same thickness border on hover */
+        a:hover img {
+            border: 5px solid black; /* Same thickness on hover */
+        }
+
+        a:hover .post-title {
+            text-decoration: underline; /* Optional: underline the text on hover */
         }
     </style>
 </head>
 <body>
-    <!-- Remove background video -->
-    <video class="background-video" autoplay muted loop>
-        <source src="back.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <!-- Posts Container -->
+    <div class="posts-container">
+        <!-- Newest post (ECHOES OF DECEMBER) -->
+        <div class="post">
+            <a href="https://open.spotify.com/album/0dLaVyC0BHthf769PGrI9Q?si=-jquJwEGQXaNzGMI6yBbQQ" target="_blank">
+                <img src="image2.png" alt="ECHOES OF DECEMBER" draggable="false">
+                <div class="post-title">ECHOES OF DECEMBER</div>
+            </a>
+        </div>
 
-    <!-- Removed coming-soon-text span -->
-    <!-- Removed countdown id -->
-
-    <!-- Content -->
-<iframe class="spotify-embed" src="https://open.spotify.com/embed/album/0dLaVyC0BHthf769PGrI9Q?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <!-- Oldest post (DIVIDED) -->
+        <div class="post">
+            <a href="https://open.spotify.com/album/6a8AqsZauO8W8GEMka3vB8?si=EIJ0OwCDRo2cwufazUkYEw" target="_blank">
+                <img src="image1.png" alt="DIVIDED" draggable="false">
+                <div class="post-title">DIVIDED</div>
+            </a>
+        </div>
+    </div>
 </body>
 </html>
