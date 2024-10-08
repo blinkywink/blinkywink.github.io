@@ -4,111 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>blinkywink</title>
-    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="icon" href="icon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Sometype:wght@700&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Lines';
-            src: url('lines.ttf') format('truetype');
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Lines', sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
-            background-image: url('bg.jpg');
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-
-        /* Disable selection */
-        * {
-            user-select: none;
-        }
-
-        /* Container for posts */
-        .posts-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 50px;
-            position: absolute;
-            top: 33%;
-            left: 10%;
-            width: 80%;
-        }
-
-        /* Responsive for vertical screens */
-        @media (max-width: 768px) {
-            .posts-container {
-                grid-template-columns: 1fr;
-                gap: 30px;
-                top: 10%;
-                left: 5%;
-                width: 90%;
-            }
-        }
-
-        .post {
-            text-align: center;
-            font-size: 1.56em;
-            color: black;
-        }
-
-        .post img {
-            width: 300px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 5px solid black; /* Thinner border */
-            background-color: #ccc;
-            transition: border 0.3s ease; /* Smooth transition for hover effect */
-            draggable: false;
-        }
-
-        .post-title {
-            margin-top: 15px;
-            font-size: 2em;
-            color: black;
-        }
-
-        /* Styling for links to make sure text is clickable */
-        a {
-            text-decoration: none;
-            color: black;
-        }
-
-        /* Hover effect: applies same thickness border on hover */
-        a:hover img {
-            border: 5px solid black; /* Same thickness on hover */
-        }
-
-        a:hover .post-title {
-            text-decoration: underline; /* Optional: underline the text on hover */
-        }
+        @font-face{font-family:'CustomFont';src:url('lines.ttf') format('truetype')}
+        body{margin:0;padding:0;height:100vh;background-image:url('bg.jpg');background-size:cover;background-attachment:fixed;background-position:center;display:flex;justify-content:center;align-items:center;font-family:'CustomFont','Sometype',sans-serif;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}
+        h1{font-size:4.5em;color:black;text-transform:uppercase;margin:0}
     </style>
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
 </head>
 <body>
-    <!-- Posts Container -->
-    <div class="posts-container">
-        <!-- Newest post (ECHOES OF DECEMBER) -->
-        <div class="post">
-            <a href="https://open.spotify.com/album/0dLaVyC0BHthf769PGrI9Q?si=-jquJwEGQXaNzGMI6yBbQQ" target="_blank">
-                <img src="image2.png" alt="ECHOES OF DECEMBER" draggable="false">
-                <div class="post-title">ECHOES OF DECEMBER</div>
-            </a>
-        </div>
-
-        <!-- Oldest post (DIVIDED) -->
-        <div class="post">
-            <a href="https://open.spotify.com/album/6a8AqsZauO8W8GEMka3vB8?si=EIJ0OwCDRo2cwufazUkYEw" target="_blank">
-                <img src="image1.png" alt="DIVIDED" draggable="false">
-                <div class="post-title">DIVIDED</div>
-            </a>
-        </div>
-    </div>
+    <h1>Coming Soon</h1>
 </body>
 </html>
