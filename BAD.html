@@ -169,7 +169,7 @@
       }
 
       .thumbnail-container {
-        justify-content: space-between;
+        justify-content: center;
         width: 100%;
         padding: 0.5rem 0;
         margin: 0;
@@ -180,11 +180,10 @@
       }
 
       .thumbnail {
-        width: calc(25% - 0.375rem);
-        height: auto;
-        aspect-ratio: 1;
-        max-width: 100px;
-        max-height: 100px;
+        width: 80px;
+        height: 80px;
+        flex: 0 0 80px;
+        object-fit: cover;
       }
 
       .thumbnail:last-child {
@@ -272,11 +271,9 @@
       }
 
       .thumbnail {
-        width: calc(25% - 0.375rem);
-        height: auto;
-        aspect-ratio: 1;
-        max-width: 80px;
-        max-height: 80px;
+        width: 70px;
+        height: 70px;
+        max-width: 70px;
       }
 
       .product-title {
@@ -319,10 +316,8 @@
 
       .thumbnail {
         width: calc(25% - 0.375rem);
-        height: auto;
-        aspect-ratio: 1;
-        max-width: 70px;
-        max-height: 70px;
+        height: 60px;
+        max-width: 60px;
       }
     }
 
@@ -347,20 +342,15 @@
       overflow-x: auto;
       padding-bottom: 1rem;
       flex-wrap: nowrap;
-      justify-content: space-between;
-      width: 100%;
     }
 
     .thumbnail {
-      width: calc(25% - 0.75rem);
-      height: auto;
-      aspect-ratio: 1;
+      width: 60px;
+      height: 60px;
       cursor: pointer;
       border: 2px solid transparent;
       transition: border-color 0.3s;
       object-fit: cover;
-      max-width: 120px;
-      max-height: 120px;
     }
 
     .thumbnail.active {
