@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Product - blinkywink.co</title>
   <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
   <script 
@@ -143,22 +143,31 @@
       .product-grid {
         grid-template-columns: 1fr;
         gap: 2rem;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
       }
 
       .product-images {
         order: -1;
+        width: 100%;
+        max-width: 100vw;
       }
 
       .product-info {
         padding: 1rem 0;
+        width: 100%;
+        max-width: 100vw;
       }
 
       .main-image {
         height: 400px;
+        width: 100%;
       }
 
       .thumbnail-container {
         justify-content: center;
+        width: 100%;
       }
 
       .thumbnail {
@@ -176,6 +185,8 @@
 
       .header-content {
         padding: 0 1rem;
+        width: 100%;
+        max-width: 100vw;
       }
 
       .nav-links {
@@ -196,6 +207,13 @@
 
       .logo img {
         height: 30px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 100vw;
+        padding: 0 1rem;
+        overflow-x: hidden;
       }
     }
 
@@ -219,6 +237,10 @@
 
       .nav-links a {
         font-size: 0.85rem;
+      }
+
+      .container {
+        padding: 0 0.75rem;
       }
     }
 
