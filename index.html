@@ -418,6 +418,41 @@
       .products h2 {
         font-size: 2rem;
       }
+
+      .footer-content {
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .footer-links {
+        flex-shrink: 1;
+        min-width: 0;
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      .footer-links a {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .footer-links img {
+        height: 16px;
+        width: auto;
+      }
+
+      .footer-links .legend {
+        height: 22px;
+        width: auto;
+      }
+
+      .footer p {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
     }
 
     @media (max-width: 480px) {
@@ -435,6 +470,22 @@
 
       .products h2 {
         font-size: 1.8rem;
+      }
+
+      .footer-links a {
+        font-size: 0.7rem;
+      }
+
+      .footer-links img {
+        height: 14px;
+      }
+
+      .footer-links .legend {
+        height: 20px;
+      }
+
+      .footer p {
+        font-size: 0.7rem;
       }
     }
   </style>

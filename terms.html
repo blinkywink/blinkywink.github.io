@@ -75,6 +75,74 @@
       color: #ccc;
     }
 
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 2px;
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .mobile-menu.active {
+      display: block;
+    }
+
+    .mobile-menu a {
+      display: block;
+      padding: 1rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .mobile-menu a:hover {
+      background: #111;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+    }
+
     /* Content Styles */
     .content {
       padding: 8rem 0 4rem 0;
@@ -145,12 +213,67 @@
 
     .footer-links img {
       height: 20px;
-      filter: brightness(0) invert(1);
     }
 
     .footer-links .legend {
       height: 30px;
       margin-left: 0;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+      .footer-content {
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .footer-links {
+        flex-shrink: 1;
+        min-width: 0;
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      .footer-links a {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .footer-links img {
+        height: 16px;
+        width: auto;
+      }
+
+      .footer-links .legend {
+        height: 22px;
+        width: auto;
+      }
+
+      .footer p {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-links a {
+        font-size: 0.7rem;
+      }
+
+      .footer-links img {
+        height: 14px;
+      }
+
+      .footer-links .legend {
+        height: 20px;
+      }
+
+      .footer p {
+        font-size: 0.7rem;
+      }
     }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -170,6 +293,16 @@
         <a href="hoodies.html">Hoodies</a>
         <a href="shirts.html">Shirts</a>
       </nav>
+      <div class="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="products.html">Products</a>
+      <a href="hoodies.html">Hoodies</a>
+      <a href="shirts.html">Shirts</a>
     </div>
   </header>
 
@@ -242,14 +375,31 @@
         <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
       </div>
       <div class="footer-links">
-        <a href="terms.html">Terms of Service</a>
+        <a href="terms.html">Terms</a>
         <a href="contact.html">Contact</a>
         <a href="https://discord.gg/cXm7Dy8j" target="_blank">
           <img src="assets/images/discord.svg" alt="Discord">
         </a>
-        <img src="assets/images/legend.webp" alt="Legend" class="legend">
+        <a href="https://www.youtube.com/@blinkywink" target="_blank">
+          <img src="assets/images/profile.png" alt="Legend" class="legend">
+        </a>
       </div>
     </div>
   </footer>
+  <script>
+    function toggleMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!mobileMenu.contains(event.target) && !hamburger.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
 </body>
 </html> 
