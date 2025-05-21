@@ -313,6 +313,31 @@
       .footer p {
         font-size: 0.7rem;
       }
+
+      .sizing-popup {
+        padding: 0.5rem;
+      }
+
+      .sizing-popup h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .sizing-table {
+        font-size: 0.7rem;
+        min-width: 400px;
+      }
+
+      .sizing-table th,
+      .sizing-table td {
+        padding: 0.25rem 0.15rem;
+      }
+
+      .close-popup {
+        top: 0.25rem;
+        right: 0.25rem;
+        font-size: 1.1rem;
+      }
     }
 
     @media (max-width: 360px) {
@@ -324,6 +349,25 @@
         width: calc(25% - 0.375rem);
         height: 60px;
         max-width: 60px;
+      }
+
+      .sizing-popup {
+        padding: 0.35rem;
+      }
+
+      .sizing-popup h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.35rem;
+      }
+
+      .sizing-table {
+        font-size: 0.65rem;
+        min-width: 350px;
+      }
+
+      .sizing-table th,
+      .sizing-table td {
+        padding: 0.2rem 0.1rem;
       }
     }
 
@@ -434,6 +478,8 @@
       z-index: 1000;
       max-width: 600px;
       width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .sizing-popup.active {
@@ -445,10 +491,19 @@
       font-family: 'Dela Gothic One', sans-serif;
     }
 
+    .sizing-table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 1rem;
+    }
+
     .sizing-table {
       width: 100%;
+      min-width: 500px;
       border-collapse: collapse;
       margin-bottom: 1rem;
+      font-size: 0.9rem;
     }
 
     .sizing-table th,
@@ -620,6 +675,56 @@
       vertical-align: middle;
       filter: brightness(0) invert(1);
     }
+
+    @media (max-width: 768px) {
+      .sizing-popup {
+        padding: 1rem;
+        width: 95%;
+        max-height: 85vh;
+      }
+
+      .sizing-table-container {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        width: calc(100% + 2rem);
+      }
+
+      .sizing-popup h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .sizing-table {
+        font-size: 0.8rem;
+      }
+
+      .sizing-table th,
+      .sizing-table td {
+        padding: 0.4rem 0.3rem;
+        white-space: nowrap;
+      }
+
+      .close-popup {
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sizing-popup {
+        padding: 0.75rem;
+      }
+
+      .sizing-table {
+        font-size: 0.75rem;
+      }
+
+      .sizing-table th,
+      .sizing-table td {
+        padding: 0.3rem 0.2rem;
+      }
+    }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -722,54 +827,56 @@
   <div class="sizing-popup" id="sizingPopup">
     <button class="close-popup" onclick="closeSizingGuide()">&times;</button>
     <h2>Sizing Guide</h2>
-    <table class="sizing-table">
-      <thead>
-        <tr>
-          <th>Size</th>
-          <th>Length</th>
-          <th>Shoulder</th>
-          <th>Chest</th>
-          <th>Sleeve Length</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>S</td>
-          <td>25.98 in.</td>
-          <td>18.50 in.</td>
-          <td>19.68 in.</td>
-          <td>7.09 in.</td>
-        </tr>
-        <tr>
-          <td>M</td>
-          <td>26.77 in.</td>
-          <td>19.29 in.</td>
-          <td>20.67 in.</td>
-          <td>7.48 in.</td>
-        </tr>
-        <tr>
-          <td>L</td>
-          <td>27.56 in.</td>
-          <td>20.08 in.</td>
-          <td>21.46 in.</td>
-          <td>7.48 in.</td>
-        </tr>
-        <tr>
-          <td>XL</td>
-          <td>28.35 in.</td>
-          <td>20.87 in.</td>
-          <td>22.44 in.</td>
-          <td>7.87 in.</td>
-        </tr>
-        <tr>
-          <td>2XL</td>
-          <td>29.13 in.</td>
-          <td>21.65 in.</td>
-          <td>23.23 in.</td>
-          <td>8.27 in.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="sizing-table-container">
+      <table class="sizing-table">
+        <thead>
+          <tr>
+            <th>Size</th>
+            <th>Length</th>
+            <th>Shoulder</th>
+            <th>Chest</th>
+            <th>Sleeve Length</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>S</td>
+            <td>25.98 in.</td>
+            <td>18.50 in.</td>
+            <td>19.68 in.</td>
+            <td>7.09 in.</td>
+          </tr>
+          <tr>
+            <td>M</td>
+            <td>26.77 in.</td>
+            <td>19.29 in.</td>
+            <td>20.67 in.</td>
+            <td>7.48 in.</td>
+          </tr>
+          <tr>
+            <td>L</td>
+            <td>27.56 in.</td>
+            <td>20.08 in.</td>
+            <td>21.46 in.</td>
+            <td>7.48 in.</td>
+          </tr>
+          <tr>
+            <td>XL</td>
+            <td>28.35 in.</td>
+            <td>20.87 in.</td>
+            <td>22.44 in.</td>
+            <td>7.87 in.</td>
+          </tr>
+          <tr>
+            <td>2XL</td>
+            <td>29.13 in.</td>
+            <td>21.65 in.</td>
+            <td>23.23 in.</td>
+            <td>8.27 in.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -808,21 +915,6 @@
 
     // Close popup when clicking overlay
     document.getElementById('overlay').addEventListener('click', closeSizingGuide);
-
-    function selectSize(element) {
-      // Remove selected class from all size options
-      document.querySelectorAll('.size-option').forEach(option => {
-        option.classList.remove('selected');
-      });
-      
-      // Add selected class to clicked size
-      element.classList.add('selected');
-    }
-
-    // Initialize first size as selected
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelector('.size-option').classList.add('selected');
-    });
 
     function toggleMenu() {
       const mobileMenu = document.getElementById('mobileMenu');
