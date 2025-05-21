@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product - blinkywink.co</title>
+  <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
+  <script 
+    src="https://www.paypal.com/sdk/js?client-id=BAA6gEilOAKuAi5davuEXzUM4-BZczu7WIv5Fd8cp0wLDKQiDyxdpQnFhPrvsyWCuhqooRe2iELx2_GUyo&components=hosted-buttons&enable-funding=venmo&currency=USD">
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    /* Product Section */
+    .product {
+      padding: 8rem 0 4rem 0;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+
+    @media (max-width: 768px) {
+      .product-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .product-images {
+        order: -1;
+      }
+
+      .product-info {
+        padding: 1rem 0;
+      }
+
+      .size-selector {
+        flex-wrap: wrap;
+      }
+
+      .size-options {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      .sizing-guide-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    .product-images {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .main-image {
+      width: 100%;
+      height: 500px;
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .thumbnail-container {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .thumbnail {
+      width: 100px;
+      height: 100px;
+      background: #222;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      background-size: cover;
+      background-position: center;
+      object-fit: cover;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .thumbnail:hover {
+      opacity: 0.8;
+    }
+
+    .thumbnail.active {
+      border: 2px solid white;
+    }
+
+    .product-info {
+      padding: 2rem;
+    }
+
+    .product-title {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .product-price {
+      font-size: 1.5rem;
+      color: #ccc;
+      margin-bottom: 1rem;
+    }
+
+    .product-description {
+      margin-bottom: 2rem;
+      line-height: 1.8;
+    }
+
+    .buy-now-btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: white;
+      color: black;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: background 0.3s;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .buy-now-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .sizing-guide-btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      color: white;
+      text-decoration: none;
+      border: 1px solid white;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .sizing-guide-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sizing-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: black;
+      padding: 2rem;
+      border-radius: 8px;
+      border: 1px solid white;
+      z-index: 1000;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .sizing-popup.active {
+      display: block;
+    }
+
+    .sizing-popup h2 {
+      margin-bottom: 1rem;
+      font-family: 'Dela Gothic One', sans-serif;
+    }
+
+    .sizing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .sizing-table th,
+    .sizing-table td {
+      padding: 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+
+    .sizing-table th {
+      font-weight: 600;
+    }
+
+    .close-popup {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    /* Footer Styles */
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .footer-links img {
+      height: 20px;
+    }
+
+    .footer-links .legend {
+      height: 30px;
+      margin-left: 0;
+      vertical-align: middle;
+    }
+
+    .size-selector {
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .size-label {
+      min-width: 40px;
+    }
+
+    .size-options {
+      display: flex;
+      gap: 0.5rem;
+      flex-grow: 1;
+    }
+
+    .size-option {
+      padding: 0.5rem 1rem;
+      border: 1px solid white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .size-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .size-option.selected {
+      background: white;
+      color: black;
+    }
+
+    .product-details {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #333;
+    }
+
+    .pp-UC3YBPXPKCMW4 {
+      text-align: center;
+      border: none;
+      border-radius: 0.25rem;
+      min-width: 11.625rem;
+      padding: 0 2rem;
+      height: 2.625rem;
+      font-weight: bold;
+      background-color: white;
+      color: #000000;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-size: 1.1rem;
+      line-height: 1.25rem;
+      cursor: pointer;
+      transition: background 0.3s;
+      width: 100%;
+    }
+
+    .pp-UC3YBPXPKCMW4:hover {
+      background: #f0f0f0;
+    }
+
+    .paypal-form {
+      display: inline-grid;
+      justify-items: start;
+      align-content: start;
+      gap: 0.25rem;
+      width: 100%;
+    }
+
+    .paypal-form img[alt="cards"] {
+      opacity: 1;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .paypal-form section {
+      font-size: 0.75rem;
+      color: #ccc;
+    }
+
+    .paypal-form img[alt="paypal"] {
+      height: 0.875rem;
+      vertical-align: middle;
+      filter: brightness(0) invert(1);
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <img src="assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="products.html">Products</a>
+        <a href="hoodies.html">Hoodies</a>
+        <a href="shirts.html">Shirts</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Product Section -->
+  <section class="product">
+    <div class="container">
+      <div class="product-grid">
+        <div class="product-images">
+          <div class="main-image" style="background-image: url('assets/images/BAD1.png'); background-size: cover; background-position: center;"></div>
+          <div class="thumbnail-container">
+            <div class="thumbnail active" style="background-image: url('assets/images/BAD1.png'); background-size: cover; background-position: center;" onclick="changeImage(0)"></div>
+            <div class="thumbnail" style="background-image: url('assets/images/BAD2.png'); background-size: cover; background-position: center;" onclick="changeImage(1)"></div>
+            <div class="thumbnail" style="background-image: url('assets/images/BAD3.png'); background-size: cover; background-position: center;" onclick="changeImage(2)"></div>
+            <div class="thumbnail" style="background-image: url('assets/images/BAD4.png'); background-size: cover; background-position: center;" onclick="changeImage(3)"></div>
+          </div>
+        </div>
+        <div class="product-info">
+          <h1 class="product-title">THE BAD</h1>
+          <p class="product-price">$30</p>
+          
+          <div style="margin-bottom: 1rem; color: #ccc;">
+            <span>You can select your size during checkout.</span>
+            <span style="color: white; text-decoration: underline; cursor: pointer; margin-left: 0.25rem;" onclick="showSizingGuide()">Sizing Guide</span>
+          </div>
+
+          <form action="https://www.paypal.com/ncp/payment/UC3YBPXPKCMW4" method="post" target="_blank" class="paypal-form">
+            <input class="pp-UC3YBPXPKCMW4" type="submit" value="Buy Now" />
+            <img src=https://www.paypalobjects.com/images/Debit_Credit_APM.svg alt="cards" />
+            <section style="font-size: 0.75rem;"> Powered by <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;"/></section>
+          </form>
+          <p style="text-align: left; color: #ccc; margin-top: 0.5rem;">Free Shipping</p>
+
+          <div class="product-details" style="margin-top: 1.5rem; padding-top: 0; border-top: none;">
+            <p class="product-description" style="margin-bottom: 1rem;">
+              The baddest bilmp on a t-shirt.
+            </p>
+            <ul style="list-style-type: none; margin-top: 0;">
+              <li>• unisex</li>
+              <li>• girls will like you</li>
+              <li>• you'll be as good as blinkywink at btd6</li>
+              <li>• you'll get compliments 24/7</li>
+              <li>• your dad will come back</li>
+              <li>• get this shirt or you will be a f*cking loser</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="contact.html">Contact</a>
+        <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
+          <img src="assets/images/discord.svg" alt="Discord">
+        </a>
+        <img src="assets/images/profile.png" alt="Legend" class="legend">
+      </div>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sizing-popup" id="sizingPopup">
+    <button class="close-popup" onclick="closeSizingGuide()">&times;</button>
+    <h2>Sizing Guide</h2>
+    <table class="sizing-table">
+      <thead>
+        <tr>
+          <th>Size</th>
+          <th>Length</th>
+          <th>Shoulder</th>
+          <th>Chest</th>
+          <th>Sleeve Length</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>S</td>
+          <td>25.98 in.</td>
+          <td>18.50 in.</td>
+          <td>19.68 in.</td>
+          <td>7.09 in.</td>
+        </tr>
+        <tr>
+          <td>M</td>
+          <td>26.77 in.</td>
+          <td>19.29 in.</td>
+          <td>20.67 in.</td>
+          <td>7.48 in.</td>
+        </tr>
+        <tr>
+          <td>L</td>
+          <td>27.56 in.</td>
+          <td>20.08 in.</td>
+          <td>21.46 in.</td>
+          <td>7.48 in.</td>
+        </tr>
+        <tr>
+          <td>XL</td>
+          <td>28.35 in.</td>
+          <td>20.87 in.</td>
+          <td>22.44 in.</td>
+          <td>7.87 in.</td>
+        </tr>
+        <tr>
+          <td>2XL</td>
+          <td>29.13 in.</td>
+          <td>21.65 in.</td>
+          <td>23.23 in.</td>
+          <td>8.27 in.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const images = [
+      'assets/images/BAD1.png',
+      'assets/images/BAD2.png',
+      'assets/images/BAD3.png',
+      'assets/images/BAD4.png'
+    ];
+
+    function changeImage(index) {
+      // Update main image
+      const mainImage = document.querySelector('.main-image');
+      mainImage.style.backgroundImage = `url('${images[index]}')`;
+      
+      // Update thumbnail active state
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      thumbnails.forEach((thumb, i) => {
+        if (i === index) {
+          thumb.classList.add('active');
+        } else {
+          thumb.classList.remove('active');
+        }
+      });
+    }
+
+    function showSizingGuide() {
+      document.getElementById('sizingPopup').classList.add('active');
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    function closeSizingGuide() {
+      document.getElementById('sizingPopup').classList.remove('active');
+      document.getElementById('overlay').classList.remove('active');
+    }
+
+    // Close popup when clicking overlay
+    document.getElementById('overlay').addEventListener('click', closeSizingGuide);
+
+    function selectSize(element) {
+      // Remove selected class from all size options
+      document.querySelectorAll('.size-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      
+      // Add selected class to clicked size
+      element.classList.add('selected');
+    }
+
+    // Initialize first size as selected
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelector('.size-option').classList.add('selected');
+    });
+  </script>
+</body>
+</html> 

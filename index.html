@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>blinkywink.co</title>
+  <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    .search-cart {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-box {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+    }
+
+    .search-box.active {
+      display: block;
+    }
+
+    .search-box input {
+      width: 200px;
+      padding: 0.5rem;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: #111;
+      color: white;
+    }
+
+    .search-results {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      width: 200px;
+    }
+
+    .search-results.active {
+      display: block;
+    }
+
+    .search-results a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem;
+      border-bottom: 1px solid #333;
+    }
+
+    .search-results a:last-child {
+      border-bottom: none;
+    }
+
+    .search-results a:hover {
+      background: #222;
+    }
+
+    .search-icon img {
+      height: 20px;
+    }
+
+    /* Products Section */
+    .products {
+      padding: 8rem 0 4rem 0;
+    }
+
+    .products h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
+      font-family: 'Dela Gothic One', sans-serif;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .product-card {
+      background: #111;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .product-image {
+      width: 100%;
+      background: #222;
+      position: relative;
+      overflow: hidden;
+      height: 500px;
+    }
+
+    .product-image-front, .product-image-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #222;
+      transition: opacity 0.3s ease;
+    }
+
+    .product-image-back {
+      opacity: 0;
+    }
+
+    .product-image:hover .product-image-back {
+      opacity: 1;
+    }
+
+    .product-image:hover .product-image-front {
+      opacity: 0;
+    }
+
+    .product-info {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .product-title {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-price {
+      color: #ccc;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    /* Footer Styles */
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .footer-links img {
+      height: 20px;
+    }
+
+    .footer-links .legend {
+      height: 30px;
+      margin-left: 0;
+      vertical-align: middle;
+    }
+
+    /* Cart Popup Styles */
+    .cart-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #111;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 2000;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .cart-popup.active {
+      display: block;
+    }
+
+    .cart-popup h3 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .cart-popup-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .cart-popup-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    .continue-btn {
+      background: #222;
+      color: white;
+    }
+
+    .view-cart-btn {
+      background: white;
+      color: black;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1999;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <img src="assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="products.html">Products</a>
+        <a href="hoodies.html">Hoodies</a>
+        <a href="shirts.html">Shirts</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Products Section -->
+  <section class="products">
+    <div class="container">
+      <h2>Featured Products</h2>
+      <div class="product-grid">
+        <div class="product-card" onclick="window.location.href='BAD.html'">
+          <div class="product-image">
+            <div class="product-image-front" style="background-image: url('assets/images/BAD1.png');"></div>
+            <div class="product-image-back" style="background-image: url('assets/images/BAD2.png');"></div>
+          </div>
+          <div class="product-info">
+            <h2 class="product-title">THE BAD</h2>
+            <p class="product-price">$30</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="contact.html">Contact</a>
+        <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
+          <img src="assets/images/discord.svg" alt="Discord">
+        </a>
+        <img src="assets/images/profile.png" alt="Legend" class="legend">
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Popup -->
+  <div class="overlay" id="overlay"></div>
+  <div class="cart-popup" id="cartPopup">
+    <h3>Item Added to Cart</h3>
+    <p><strong id="popupItemName"></strong> has been added to your cart.</p>
+    <div class="cart-popup-buttons">
+      <button class="cart-popup-btn continue-btn" onclick="closePopup()">Continue Shopping</button>
+      <a href="cart.html" class="cart-popup-btn view-cart-btn">View Cart</a>
+    </div>
+  </div>
+
+  <script src="js/cart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Index page loaded - cart system initialized');
+      
+      // Initialize the cart system
+      const cart = new Cart();
+      
+      // Update all product buttons to use the cart system
+      const buttons = document.querySelectorAll('.btn');
+      buttons.forEach(button => {
+        button.onclick = function() {
+          const name = this.parentElement.querySelector('h3').textContent;
+          const price = parseFloat(this.parentElement.querySelector('p').textContent.replace('$', ''));
+          cart.addItem(name, price);
+        };
+      });
+    });
+  </script>
+</body>
+</html> 

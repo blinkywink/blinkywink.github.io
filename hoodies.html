@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hoodies - blinkywink.co</title>
+  <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    /* Coming Soon Section */
+    .coming-soon {
+      padding: 8rem 0 4rem 0;
+      text-align: center;
+    }
+
+    .coming-soon h1 {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .coming-soon p {
+      color: #ccc;
+      font-size: 1.2rem;
+    }
+
+    /* Footer Styles */
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .footer-links img {
+      height: 20px;
+    }
+
+    .footer-links .legend {
+      height: 30px;
+      margin-left: 0;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <img src="assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="products.html">Products</a>
+        <a href="hoodies.html">Hoodies</a>
+        <a href="shirts.html">Shirts</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Coming Soon Section -->
+  <section class="coming-soon">
+    <div class="container">
+      <h1>Hoodies</h1>
+      <p>Monkey Business Coming Soon...</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="contact.html">Contact</a>
+        <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
+          <img src="assets/images/discord.svg" alt="Discord">
+        </a>
+        <img src="assets/images/profile.png" alt="Legend" class="legend">
+      </div>
+    </div>
+  </footer>
+</body>
+</html> 
