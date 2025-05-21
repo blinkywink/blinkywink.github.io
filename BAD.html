@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Product - blinkywink.co</title>
   <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
   <script 
@@ -78,6 +78,56 @@
       color: #ccc;
     }
 
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 2px;
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .mobile-menu.active {
+      display: block;
+    }
+
+    .mobile-menu a {
+      display: block;
+      padding: 1rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .mobile-menu a:hover {
+      background: #111;
+    }
+
     /* Product Section */
     .product {
       padding: 8rem 0 4rem 0;
@@ -103,18 +153,72 @@
         padding: 1rem 0;
       }
 
-      .size-selector {
-        flex-wrap: wrap;
+      .main-image {
+        height: 400px;
       }
 
-      .size-options {
-        width: 100%;
-        margin-bottom: 0.5rem;
+      .thumbnail-container {
+        justify-content: center;
       }
 
-      .sizing-guide-btn {
-        width: 100%;
-        text-align: center;
+      .thumbnail {
+        width: 80px;
+        height: 80px;
+      }
+
+      .product-title {
+        font-size: 2rem;
+      }
+
+      .product-price {
+        font-size: 1.3rem;
+      }
+
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      .logo-text {
+        font-size: 1rem;
+      }
+
+      .logo img {
+        height: 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-image {
+        height: 300px;
+      }
+
+      .thumbnail {
+        width: 60px;
+        height: 60px;
+      }
+
+      .product-title {
+        font-size: 1.8rem;
+      }
+
+      .nav-links {
+        gap: 0.75rem;
+      }
+
+      .nav-links a {
+        font-size: 0.85rem;
       }
     }
 
@@ -438,6 +542,16 @@
         <a href="hoodies.html">Hoodies</a>
         <a href="shirts.html">Shirts</a>
       </nav>
+      <div class="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="products.html">Products</a>
+      <a href="hoodies.html">Hoodies</a>
+      <a href="shirts.html">Shirts</a>
     </div>
   </header>
 
@@ -475,6 +589,7 @@
               The baddest bilmp on a t-shirt.
             </p>
             <ul style="list-style-type: none; margin-top: 0;">
+              <li>• 180 gsm</li>
               <li>• unisex</li>
               <li>• girls will like you</li>
               <li>• you'll be as good as blinkywink at btd6</li>
@@ -500,7 +615,9 @@
         <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
           <img src="assets/images/discord.svg" alt="Discord">
         </a>
-        <img src="assets/images/profile.png" alt="Legend" class="legend">
+        <a href="https://youtube.com/@blinkywink" target="_blank">
+          <img src="assets/images/profile.png" alt="Legend" class="legend">
+        </a>
       </div>
     </div>
   </footer>
@@ -609,6 +726,20 @@
     // Initialize first size as selected
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelector('.size-option').classList.add('selected');
+    });
+
+    function toggleMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!mobileMenu.contains(event.target) && !hamburger.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+      }
     });
   </script>
 </body>
