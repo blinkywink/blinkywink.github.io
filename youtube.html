@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube - blinkywink.co</title>
+  <link rel="shortcut icon" href="assets/images/darkicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 2px;
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .mobile-menu.active {
+      display: block;
+    }
+
+    .mobile-menu a {
+      display: block;
+      padding: 1rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .mobile-menu a:hover {
+      background: #111;
+    }
+
+    /* YouTube Page Styles */
+    .youtube-page {
+      padding: 8rem 0 4rem 0;
+    }
+
+    .profile-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .profile-picture {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .youtube-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .youtube-title span {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2.5rem;
+    }
+
+    .youtube-title a {
+      text-decoration: underline;
+      color: white;
+    }
+
+    .youtube-title a:hover {
+      color: #ccc;
+    }
+
+    .video-section {
+      margin-bottom: 4rem;
+    }
+
+    .video-section h2 {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .load-more-container {
+      text-align: center;
+      margin-top: 2rem;
+      grid-column: 1 / -1;
+    }
+
+    .load-more-button {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 4px;
+      font-family: 'Golos Text', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .load-more-button:hover {
+      background: #222;
+    }
+
+    .load-more-button:disabled {
+      background: #333;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .video-card {
+      background: #111;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+
+    .video-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      position: relative;
+      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+    }
+
+    .video-info {
+      padding: 1.5rem;
+    }
+
+    .video-title {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .video-date {
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .youtube-page h1 {
+        font-size: 2rem;
+      }
+
+      .youtube-title span {
+        font-size: 2rem;
+      }
+
+      .video-section h2 {
+        font-size: 1.8rem;
+      }
+
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .youtube-page h1 {
+        font-size: 1.8rem;
+      }
+
+      .youtube-title span {
+        font-size: 1.8rem;
+      }
+
+      .video-section h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Footer Styles */
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .footer-links img {
+      height: 18px;
+      width: auto;
+      display: block;
+    }
+
+    .footer-links .legend {
+      height: 22px;
+      width: auto;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      .footer-content {
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .footer-links {
+        flex-shrink: 1;
+        min-width: 0;
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      .footer-links a {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .footer-links img {
+        height: 14px;
+      }
+
+      .footer-links .legend {
+        height: 18px;
+      }
+
+      .footer p {
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-links a {
+        font-size: 0.7rem;
+      }
+
+      .footer-links img {
+        height: 12px;
+      }
+
+      .footer-links .legend {
+        height: 16px;
+      }
+
+      .footer p {
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Modal Styles */
+    .video-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2000;
+      overflow-y: auto;
+    }
+
+    .video-modal.active {
+      display: block;
+    }
+
+    .modal-content {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: #111;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2001;
+    }
+
+    .modal-close:hover {
+      background: #222;
+    }
+
+    .video-container {
+      width: 100%;
+      position: relative;
+      padding-bottom: 56.25%;
+      margin-bottom: 2rem;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .video-details {
+      background: #111;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .video-details h2 {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .video-stats {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+
+    .video-description {
+      color: #ccc;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .comments-section {
+      background: #111;
+      padding: 2rem;
+      border-radius: 8px;
+    }
+
+    .comments-section h3 {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        margin: 1rem auto;
+      }
+
+      .video-details h2 {
+        font-size: 1.5rem;
+      }
+
+      .video-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <img src="assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="products.html">Products</a>
+        <a href="hoodies.html">Hoodies</a>
+        <a href="shirts.html">Shirts</a>
+        <a href="youtube.html">YouTube</a>
+      </nav>
+      <div class="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="products.html">Products</a>
+      <a href="hoodies.html">Hoodies</a>
+      <a href="shirts.html">Shirts</a>
+      <a href="youtube.html">YouTube</a>
+    </div>
+  </header>
+
+  <!-- YouTube Page Content -->
+  <section class="youtube-page">
+    <div class="container">
+      <div class="profile-section">
+        <img src="assets/images/profile.png" alt="blinkywink" class="profile-picture">
+      </div>
+      <div class="youtube-title">
+        <span><a href="https://youtube.com/@blinkywink" target="_blank">blinkywink</a> on YouTube</span>
+      </div>
+
+      <!-- Recent Videos Section -->
+      <div class="video-section">
+        <h2>Recent Videos</h2>
+        <div class="video-grid" id="recentVideos">
+          <!-- Videos will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Remove Popular Videos Section -->
+      <!-- Remove Live Streams Section -->
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+      <div class="footer-links">
+        <a href="terms.html">Terms</a>
+        <a href="contact.html">Contact</a>
+        <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
+          <img src="assets/images/discord.svg" alt="Discord">
+        </a>
+        <a href="https://youtube.com/@blinkywink" target="_blank">
+          <img src="assets/images/profile.png" alt="Legend" class="legend">
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="videoModal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-content">
+      <div class="video-container">
+        <iframe id="modalVideo" src="" allowfullscreen></iframe>
+      </div>
+      <div class="video-details">
+        <h2 id="modalTitle"></h2>
+        <div class="video-stats">
+          <span id="modalViews"></span>
+          <span id="modalDate"></span>
+        </div>
+        <div class="video-description" id="modalDescription"></div>
+      </div>
+      <div class="comments-section">
+        <h3>Comments</h3>
+        <div id="modalComments"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API Keys - we'll switch between these if one runs out
+    const API_KEYS = [
+      'AIzaSyDkFv73Ylt8756HI1WFxROBnxdxr7uLjjY',
+      'AIzaSyAJ4sfRabHXSFzNGCvazDInQfx-kLn1UL4'
+    ];
+    let currentKeyIndex = 0;
+
+    // Function to get current API key
+    function getCurrentApiKey() {
+      return API_KEYS[currentKeyIndex];
+    }
+
+    // Function to switch to next API key
+    function switchToNextApiKey() {
+      currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+      console.log('Switching to API key:', currentKeyIndex + 1);
+      return getCurrentApiKey();
+    }
+
+    // Function to check if we need to update the cache
+    function shouldUpdateCache() {
+      const lastUpdate = localStorage.getItem('youtubeLastUpdate');
+      if (!lastUpdate) return true;
+
+      const lastUpdateDate = new Date(lastUpdate);
+      const now = new Date();
+      const pacificTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      
+      // Check if it's a new day after 9 AM Pacific
+      return lastUpdateDate.getDate() !== pacificTime.getDate() || 
+             (lastUpdateDate.getDate() === pacificTime.getDate() && 
+              pacificTime.getHours() >= 9 && 
+              lastUpdateDate.getHours() < 9);
+    }
+
+    // Function to save data to cache
+    function saveToCache(data) {
+      localStorage.setItem('youtubeData', JSON.stringify(data));
+      localStorage.setItem('youtubeLastUpdate', new Date().toISOString());
+    }
+
+    // Function to get data from cache
+    function getFromCache() {
+      const cachedData = localStorage.getItem('youtubeData');
+      return cachedData ? JSON.parse(cachedData) : null;
+    }
+
+    // Function to fetch videos from YouTube channel
+    async function fetchVideos(pageToken = '') {
+      try {
+        // Check if we should use cached data (only for initial load)
+        if (!pageToken) {
+          const cachedData = getFromCache();
+          if (cachedData) {
+            console.log('Using cached data');
+            displayVideos(cachedData);
+            // Try to refresh cache in background
+            refreshCacheInBackground();
+            return;
+          }
+        }
+
+        console.log('Fetching fresh data...');
+        const data = {
+          recent: await fetchWithKeyRetry('https://www.googleapis.com/youtube/v3/search', {
+            channelId: 'UCPvSq1XYXSnujLtAzgWn3cA',
+            part: 'snippet,id',
+            order: 'date',
+            maxResults: 9,
+            type: 'video',
+            pageToken: pageToken
+          })
+        };
+
+        // Save to cache only if it's the initial load
+        if (!pageToken) {
+          saveToCache(data);
+        }
+        
+        // Display the videos
+        displayVideos(data, pageToken);
+      } catch (error) {
+        console.error('Error fetching YouTube videos:', error);
+        // Try to use cached data if available
+        const cachedData = getFromCache();
+        if (cachedData) {
+          console.log('Using cached data after error');
+          displayVideos(cachedData);
+        } else {
+          document.getElementById('recentVideos').innerHTML = '<p style="color: #666; text-align: center; grid-column: 1/-1;">Error loading videos. Please try again later.</p>';
+        }
+      }
+    }
+
+    // Function to fetch with API key retry
+    async function fetchWithKeyRetry(url, params) {
+      let attempts = 0;
+      while (attempts < API_KEYS.length) {
+        try {
+          const apiKey = getCurrentApiKey();
+          const queryString = new URLSearchParams({ ...params, key: apiKey }).toString();
+          const response = await fetch(`${url}?${queryString}`);
+          const data = await response.json();
+
+          if (data.error) {
+            if (data.error.code === 403) {
+              console.log('API key quota exceeded, switching to next key');
+              switchToNextApiKey();
+              attempts++;
+              continue;
+            }
+            throw new Error(data.error.message);
+          }
+
+          return data;
+        } catch (error) {
+          console.error('Error in fetchWithKeyRetry:', error);
+          attempts++;
+          if (attempts === API_KEYS.length) {
+            throw error;
+          }
+        }
+      }
+    }
+
+    // Track load more clicks for each section
+    const loadMoreClicks = {
+      recent: 0
+    };
+
+    // Function to display videos
+    function displayVideos(data, pageToken = '') {
+      // Update recent videos
+      const recentVideosContainer = document.getElementById('recentVideos');
+      if (data.recent.items && data.recent.items.length > 0) {
+        if (!pageToken) {
+          recentVideosContainer.innerHTML = '';
+        } else {
+          // Remove existing load more button when loading more
+          const existingButton = recentVideosContainer.querySelector('.load-more-container');
+          if (existingButton) {
+            existingButton.remove();
+          }
+        }
+
+        // Show first 3 videos on initial load, or next 3 on load more
+        const startIndex = pageToken ? 3 : 0;
+        const endIndex = pageToken ? 6 : 3;
+        data.recent.items.slice(startIndex, endIndex).forEach(video => {
+          const videoCard = createVideoCard(video);
+          recentVideosContainer.appendChild(videoCard);
+        });
+        
+        // Add load more button if there are more videos and we haven't reached max clicks
+        if (data.recent.items.length > (pageToken ? 6 : 3) && loadMoreClicks.recent < 2) {
+          const loadMoreContainer = document.createElement('div');
+          loadMoreContainer.className = 'load-more-container';
+          loadMoreContainer.innerHTML = `
+            <button class="load-more-button" onclick="loadMoreVideos('recent', '${data.recent.nextPageToken || ''}')">
+              Load More
+            </button>
+          `;
+          recentVideosContainer.appendChild(loadMoreContainer);
+        }
+      } else {
+        recentVideosContainer.innerHTML = '<p style="color: #666; text-align: center; grid-column: 1/-1;">No recent videos found</p>';
+      }
+    }
+
+    function createVideoCard(video) {
+      const videoId = video.id.videoId;
+      const title = video.snippet.title;
+      const publishedAt = new Date(video.snippet.publishedAt).toLocaleDateString();
+      const thumbnailUrl = video.snippet.thumbnails.high.url;
+
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      card.innerHTML = `
+        <div class="video-thumbnail" style="background-image: url('${thumbnailUrl}');" onclick="window.location.href='video.html?id=${videoId}'"></div>
+        <div class="video-info">
+          <h3 class="video-title">${title}</h3>
+          <p class="video-date">${publishedAt}</p>
+        </div>
+      `;
+      return card;
+    }
+
+    function openModal(videoId, title, date, description) {
+      const modal = document.getElementById('videoModal');
+      const modalVideo = document.getElementById('modalVideo');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalDate = document.getElementById('modalDate');
+      const modalDescription = document.getElementById('modalDescription');
+
+      modalVideo.src = `https://www.youtube.com/embed/${videoId}`;
+      modalTitle.textContent = title;
+      modalDate.textContent = `Published on ${date}`;
+      modalDescription.textContent = description;
+
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('videoModal');
+      const modalVideo = document.getElementById('modalVideo');
+      
+      modal.classList.remove('active');
+      modalVideo.src = '';
+      document.body.style.overflow = '';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('videoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // Call the function when the page loads
+    document.addEventListener('DOMContentLoaded', fetchVideos);
+
+    function toggleMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!mobileMenu.contains(event.target) && !hamburger.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+      }
+    });
+
+    // Function to refresh cache in background
+    async function refreshCacheInBackground() {
+      try {
+        const data = {
+          recent: await fetchWithKeyRetry('https://www.googleapis.com/youtube/v3/search', {
+            channelId: 'UCPvSq1XYXSnujLtAzgWn3cA',
+            part: 'snippet,id',
+            order: 'date',
+            maxResults: 9,
+            type: 'video'
+          })
+        };
+        saveToCache(data);
+        console.log('Cache refreshed successfully');
+      } catch (error) {
+        console.error('Error refreshing cache:', error);
+      }
+    }
+
+    // Function to load more videos
+    async function loadMoreVideos(section, pageToken) {
+      const container = document.getElementById(`${section}Videos`);
+      const loadMoreButton = container.querySelector('.load-more-button');
+      
+      try {
+        loadMoreButton.disabled = true;
+        loadMoreButton.textContent = 'Loading...';
+
+        // Fetch more videos
+        const data = {
+          recent: await fetchWithKeyRetry('https://www.googleapis.com/youtube/v3/search', {
+            channelId: 'UCPvSq1XYXSnujLtAzgWn3cA',
+            part: 'snippet,id',
+            order: 'date',
+            maxResults: 9,
+            type: 'video',
+            pageToken: pageToken
+          })
+        };
+
+        // Display the videos
+        displayVideos(data, pageToken);
+
+        // Increment click count
+        loadMoreClicks[section]++;
+
+        // Disable button if we've reached max clicks (2)
+        if (loadMoreClicks[section] >= 2) {
+          const loadMoreContainer = container.querySelector('.load-more-container');
+          if (loadMoreContainer) {
+            loadMoreContainer.remove();
+          }
+        }
+      } catch (error) {
+        console.error('Error loading more videos:', error);
+        loadMoreButton.disabled = false;
+        loadMoreButton.textContent = 'Error loading videos';
+      }
+    }
+  </script>
+</body>
+</html> 
