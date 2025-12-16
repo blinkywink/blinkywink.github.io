@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CASCADE - blinkywink</title>
+  <link rel="shortcut icon" href="../../assets/images/darkicon.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    main {
+      padding-top: 6rem;
+      padding-bottom: 3rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: #aaa;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover {
+      color: white;
+    }
+
+    .album-layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    .album-cover {
+      width: 100%;
+      max-width: 260px;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background-image: url('../../assets/music/CASCADE/cover.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+    }
+
+    .album-meta {
+      margin-top: 1.25rem;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    .album-title {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .album-subtitle {
+      color: #ccc;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .album-description {
+      color: #aaa;
+      font-size: 0.95rem;
+    }
+
+    .download-row {
+      margin-top: 1.25rem;
+    }
+
+    .download-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      border: 1px solid #444;
+      color: white;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .download-button:hover {
+      border-color: white;
+      background: #111;
+    }
+
+    .player-card {
+      background: radial-gradient(circle at top, #1c1c1c, #050505);
+      border-radius: 16px;
+      padding: 1.5rem 1.75rem;
+      border: 1px solid #222;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .player-track-title {
+      font-weight: 600;
+    }
+
+    .player-track-sub {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .play-button {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: black;
+      cursor: pointer;
+      font-size: 1.3rem;
+    }
+
+    .play-button:hover {
+      background: #f0f0f0;
+    }
+
+    .progress-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .progress-bar {
+      position: relative;
+      height: 6px;
+      border-radius: 999px;
+      background: #222;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #66ccff, #ff66ff);
+    }
+
+    .visualizer {
+      position: absolute;
+      inset: 0;
+      opacity: 0.14;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 0 1rem 1rem 1rem;
+    }
+
+    .visualizer-bar {
+      flex: 1;
+      max-width: 6px;
+      border-radius: 999px;
+      background: linear-gradient(to top, #66ccff, #ff66ff);
+      transform-origin: bottom;
+      transform: scaleY(0.2);
+      transition: transform 0.25s ease-out;
+    }
+
+    .visualizer-bar:nth-child(odd) {
+      transition-duration: 0.35s;
+    }
+
+    .visualizer-bar:nth-child(3n) {
+      transition-duration: 0.45s;
+    }
+
+    .player-card.visualizer-active .visualizer-bar {
+      transform: scaleY(0.4);
+    }
+
+    .player-card.visualizer-boost .visualizer-bar:nth-child(2n) {
+      transform: scaleY(0.9);
+    }
+
+    .tracklist {
+      margin-top: 1.75rem;
+      border-top: 1px solid #151515;
+      padding-top: 1.25rem;
+    }
+
+    .tracklist-title {
+      font-size: 0.95rem;
+      color: #aaa;
+      margin-bottom: 0.4rem;
+    }
+
+    .tracklist-sub {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.85rem;
+    }
+
+    .tracklist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .tracklist-table td {
+      padding: 0.35rem 0;
+      border-bottom: 1px solid #151515;
+      color: #ccc;
+    }
+
+    .tracklist-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tracklist-num {
+      width: 2rem;
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .tracklist-name {
+      padding-right: 0.5rem;
+    }
+
+    .tracklist-len {
+      width: 3.5rem;
+      text-align: right;
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: auto;
+      padding-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .album-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .album-cover {
+        max-width: 220px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .logo-text {
+        font-size: 1rem;
+      }
+
+      .logo img {
+        height: 30px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      main {
+        padding-top: 5.5rem;
+      }
+
+      .player-card {
+        padding: 1.25rem 1.2rem;
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <a href="../../" class="logo">
+        <img src="../../assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../../">Home</a>
+        <a href="../">Music</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <a href="../" class="back-link">
+        <span>←</span>
+        <span>Back to music</span>
+      </a>
+
+      <div class="album-layout">
+        <div>
+          <div class="album-cover"></div>
+          <div class="album-meta">
+            <div>9 tracks • FLAC</div>
+            <div>Written and produced by blinkywink</div>
+          </div>
+        </div>
+
+        <div>
+          <h1 class="album-title">CASCADE</h1>
+          <div class="album-subtitle">Debut album</div>
+          <p class="album-description">
+            A full story in nine tracks – highs, lows, and everything that spills out in between. 
+            Put on headphones, close your eyes, and let it flood your brain.
+          </p>
+
+          <div class="download-row">
+            <!-- TODO: point this at a real .zip if/when you add one -->
+            <a href="../../assets/music/CASCADE.zip" class="download-button">
+              <span>⬇</span>
+              <span>Download album (ZIP)</span>
+            </a>
+          </div>
+
+          <div class="player-card" id="playerCard">
+            <div class="visualizer" id="visualizer">
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+            </div>
+
+            <div class="player-header">
+              <div>
+                <div class="player-track-title" id="playerTitle">1. WASTED YOUTH</div>
+                <div class="player-track-sub" id="playerSub">CASCADE</div>
+              </div>
+            </div>
+
+            <div class="player-controls">
+              <button class="play-button" id="playButton">▶</button>
+              <div class="progress-wrapper">
+                <div class="progress-bar" id="progressBar">
+                  <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="time-row">
+                  <span id="currentTime">0:00</span>
+                  <span id="duration">0:00</span>
+                </div>
+              </div>
+            </div>
+
+            <audio id="audio" preload="metadata">
+              <source src="../../assets/music/CASCADE/1. WASTED YOUTH.flac" type="audio/flac">
+              Your browser does not support FLAC playback.
+            </audio>
+
+            <div class="tracklist">
+              <div class="tracklist-title">Tracklist</div>
+              <div class="tracklist-sub">Click a track name to switch what the player is playing.</div>
+              <table class="tracklist-table">
+                <tbody>
+                  <tr data-src="../../assets/music/CASCADE/1. WASTED YOUTH.flac" data-title="1. WASTED YOUTH">
+                    <td class="tracklist-num">1</td>
+                    <td class="tracklist-name">WASTED YOUTH</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/2. DIVIDED.flac" data-title="2. DIVIDED">
+                    <td class="tracklist-num">2</td>
+                    <td class="tracklist-name">DIVIDED</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/3. OCEAN RUSH.flac" data-title="3. OCEAN RUSH">
+                    <td class="tracklist-num">3</td>
+                    <td class="tracklist-name">OCEAN RUSH</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/4. MY WAY BACK.flac" data-title="4. MY WAY BACK">
+                    <td class="tracklist-num">4</td>
+                    <td class="tracklist-name">MY WAY BACK</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/5. MANIAC.flac" data-title="5. MANIAC">
+                    <td class="tracklist-num">5</td>
+                    <td class="tracklist-name">MANIAC</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/6. ECHOES OF DECEMBER (feat. Ryu Tanioka).flac" data-title="6. ECHOES OF DECEMBER (feat. Ryu Tanioka)">
+                    <td class="tracklist-num">6</td>
+                    <td class="tracklist-name">ECHOES OF DECEMBER (feat. Ryu Tanioka)</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/7. REBIRTH.flac" data-title="7. REBIRTH">
+                    <td class="tracklist-num">7</td>
+                    <td class="tracklist-name">REBIRTH</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/8. SOLACE.flac" data-title="8. SOLACE">
+                    <td class="tracklist-num">8</td>
+                    <td class="tracklist-name">SOLACE</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                  <tr data-src="../../assets/music/CASCADE/9. FADING STAR.flac" data-title="9. FADING STAR">
+                    <td class="tracklist-num">9</td>
+                    <td class="tracklist-name">FADING STAR</td>
+                    <td class="tracklist-len"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playButton = document.getElementById('playButton');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const playerTitle = document.getElementById('playerTitle');
+    const playerCard = document.getElementById('playerCard');
+    const trackRows = document.querySelectorAll('.tracklist-table tr');
+
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return m + ':' + (s < 10 ? '0' + s : s);
+    }
+
+    function updateProgress() {
+      if (!audio.duration) return;
+      const ratio = audio.currentTime / audio.duration;
+      progressFill.style.width = (ratio * 100) + '%';
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      durationEl.textContent = formatTime(audio.duration);
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+
+    playButton.addEventListener('click', togglePlay);
+
+    audio.addEventListener('play', () => {
+      playButton.textContent = '⏸';
+      playerCard.classList.add('visualizer-active');
+    });
+
+    audio.addEventListener('pause', () => {
+      playButton.textContent = '▶';
+      playerCard.classList.remove('visualizer-active');
+      playerCard.classList.remove('visualizer-boost');
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      updateProgress();
+      // Fake some extra movement in the visualizer so it doesn't look static
+      if (!audio.paused) {
+        if ((audio.currentTime % 2) > 1.0) {
+          playerCard.classList.add('visualizer-boost');
+        } else {
+          playerCard.classList.remove('visualizer-boost');
+        }
+      }
+    });
+
+    audio.addEventListener('loadedmetadata', updateProgress);
+
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      if (!isNaN(audio.duration)) {
+        audio.currentTime = ratio * audio.duration;
+      }
+    });
+
+    trackRows.forEach((row) => {
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', () => {
+        const src = row.getAttribute('data-src');
+        const title = row.getAttribute('data-title');
+        if (src) {
+          const wasPlaying = !audio.paused;
+          audio.pause();
+          audio.currentTime = 0;
+          audio.querySelector('source').src = src;
+          audio.load();
+          playerTitle.textContent = title;
+
+          trackRows.forEach(r => r.classList.remove('active-track'));
+          row.classList.add('active-track');
+
+          if (wasPlaying) {
+            audio.play();
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
