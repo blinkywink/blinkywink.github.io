@@ -18,6 +18,8 @@
       color: white;
       background: black;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .container {
@@ -269,7 +271,7 @@
       font-size: 1.1rem;
     }
 
-    /* Hero Section */
+    /* Hero / Intro */
     .hero {
       padding: 8rem 0 2rem 0;
       text-align: center;
@@ -277,74 +279,76 @@
 
     .hero h1 {
       font-family: 'Dela Gothic One', sans-serif;
-      font-size: 2.2rem;
-      margin-bottom: 2rem;
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
     }
 
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 2rem;
+    .hero p {
+      max-width: 700px;
+      margin: 0.5rem auto 0;
+      color: #ccc;
+    }
+
+    /* Quicklinks */
+    .quicklinks {
+      padding: 2rem 0 1rem 0;
+    }
+
+    .quicklinks-inner {
       max-width: 800px;
       margin: 0 auto;
-      padding: 0 20px;
     }
 
-    .channel-info {
-      text-align: left;
-      padding: 2rem;
-      background: #111;
-      border-radius: 8px;
-    }
-
-    .channel-info h2 {
+    .quicklinks h2 {
       font-family: 'Dela Gothic One', sans-serif;
-      font-size: 2rem;
+      font-size: 1.6rem;
       margin-bottom: 1rem;
+      text-align: left;
     }
 
-    .channel-info p {
-      color: #ccc;
-      margin-bottom: 1rem;
-      line-height: 1.6;
-    }
-
-    .video-section {
-      display: flex;
-      flex-direction: column;
+    .quicklinks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1rem;
     }
 
-    .video-section h3 {
-      font-family: 'Dela Gothic One', sans-serif;
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    .video-container {
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-      height: 0;
-      overflow: hidden;
+    .quicklink-card {
+      background: #111;
       border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      text-align: left;
+      border: 1px solid #222;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
 
-    .video-container iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
+    .quicklink-card a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 0.35rem;
     }
+
+    .quicklink-card p {
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    .quicklink-card:hover {
+      transform: translateY(-2px);
+      border-color: #444;
+      background: #151515;
+    }
+
+    /* (old video / content styles from store removed) */
 
     /* Footer Styles */
     .footer {
       background: black;
       color: white;
       padding: 2rem 0;
-      margin-top: 4rem;
+      margin-top: auto;
+      padding-top: 4rem;
     }
 
     .footer-content {
@@ -451,25 +455,12 @@
     }
 
     @media (max-width: 768px) {
-      .content-grid {
-        grid-template-columns: 1fr;
-      }
-
       .hero h1 {
         font-size: 2rem;
       }
 
-      .channel-info h2 {
-        font-size: 1.5rem;
-      }
-
-      .product-grid {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-      }
-
-      .product-image {
-        height: 400px;
+      .quicklinks h2 {
+        text-align: left;
       }
 
       .header-content {
@@ -535,10 +526,6 @@
     }
 
     @media (max-width: 480px) {
-      .product-image {
-        height: 300px;
-      }
-
       .nav-links {
         gap: 0.75rem;
       }
@@ -581,9 +568,7 @@
         <span class="logo-text">blinkywink.co</span>
       </a>
       <nav class="nav-links">
-        <a href="products.html">Products</a>
-        <a href="hoodies.html">Hoodies</a>
-        <a href="shirts.html">Shirts</a>
+        <!-- Nav links removed while other pages are deleted -->
       </nav>
       <div class="hamburger" onclick="toggleMenu()">
         <span></span>
@@ -592,40 +577,29 @@
       </div>
     </div>
     <div class="mobile-menu" id="mobileMenu">
-      <a href="products.html">Products</a>
-      <a href="hoodies.html">Hoodies</a>
-      <a href="shirts.html">Shirts</a>
+      <a href="music/">Music</a>
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Hero / Intro -->
   <section class="hero">
     <div class="container">
-      <h1>Welcome to the blinkywink website!</h1>
-      <div class="content-grid">
-        <div class="channel-info">
-          <h2>Hello monkey,</h2>
-          <p>Welcome to my merch store.</p>
-          <p>All prices are exact, and shipping is free.</p>
-          <p>Hope you enjoy :)</p>
-        </div>
-      </div>
+      <h1>This site is my life.</h1>
+      <p>
+        Everything that matters to me lives here – music, projects, ideas, and whatever else I feel like sharing.
+      </p>
     </div>
   </section>
 
-  <!-- Products Section -->
-  <section class="products">
+  <!-- Quicklinks -->
+  <section class="quicklinks">
     <div class="container">
-      <h1>Featured Products</h1>
-      <div class="product-grid">
-        <div class="product-card" onclick="window.location.href='BAD.html'">
-          <div class="product-image">
-            <div class="product-image-front" style="background-image: url('assets/images/BAD1.png');"></div>
-            <div class="product-image-back" style="background-image: url('assets/images/BAD2.png');"></div>
-          </div>
-          <div class="product-info">
-            <h2 class="product-title">THE BAD</h2>
-            <p class="product-price">$30</p>
+      <div class="quicklinks-inner">
+        <h2>Quicklinks</h2>
+        <div class="quicklinks-grid">
+          <div class="quicklink-card">
+            <a href="music/">Music</a>
+            <p>Tracks I’ve made, stuff I’m working on, and anything audio-related.</p>
           </div>
         </div>
       </div>
@@ -639,68 +613,12 @@
         <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
       </div>
       <div class="footer-links">
-        <a href="terms.html">Terms</a>
-        <a href="contact.html">Contact</a>
-        <a href="https://discord.gg/YKHuHPUM2m" target="_blank">
-          <img src="assets/images/discord.svg" alt="Discord">
-        </a>
-        <a href="https://youtube.com/@blinkywink" target="_blank">
-        <img src="assets/images/profile.png" alt="Legend" class="legend">
-        </a>
+        <!-- Links removed: Terms, Contact, Discord, Profile -->
       </div>
     </div>
   </footer>
 
-  <!-- Cart Popup -->
-  <div class="overlay" id="overlay"></div>
-  <div class="cart-popup" id="cartPopup">
-    <h3>Item Added to Cart</h3>
-    <p><strong id="popupItemName"></strong> has been added to your cart.</p>
-    <div class="cart-popup-buttons">
-      <button class="cart-popup-btn continue-btn" onclick="closePopup()">Continue Shopping</button>
-      <a href="cart.html" class="cart-popup-btn view-cart-btn">View Cart</a>
-    </div>
-  </div>
-
-  <script src="js/cart.js"></script>
   <script>
-    // Function to fetch latest video from YouTube channel
-    async function fetchLatestVideo() {
-      try {
-        const response = await fetch('https://www.googleapis.com/youtube/v3/search?key=AIzaSyDkFv73Ylt8756HI1WFxROBnxdxr7uLjjY&channelId=UCPvSq1XYXSnujLtAzgWn3cA&part=snippet,id&order=date&maxResults=1');
-        const data = await response.json();
-        
-        if (data.items && data.items.length > 0) {
-          const videoId = data.items[0].id.videoId;
-          const videoTitle = data.items[0].snippet.title;
-          
-          // Update main video
-          document.getElementById('mainVideo').src = `https://www.youtube.com/embed/${videoId}`;
-        }
-      } catch (error) {
-        console.error('Error fetching YouTube video:', error);
-      }
-    }
-
-    // Call the function when the page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchLatestVideo();
-      console.log('Index page loaded - cart system initialized');
-      
-      // Initialize the cart system
-      const cart = new Cart();
-      
-      // Update all product buttons to use the cart system
-      const buttons = document.querySelectorAll('.btn');
-      buttons.forEach(button => {
-        button.onclick = function() {
-          const name = this.parentElement.querySelector('h3').textContent;
-          const price = parseFloat(this.parentElement.querySelector('p').textContent.replace('$', ''));
-          cart.addItem(name, price);
-        };
-      });
-    });
-
     function toggleMenu() {
       const mobileMenu = document.getElementById('mobileMenu');
       mobileMenu.classList.toggle('active');
