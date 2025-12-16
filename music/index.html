@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Music - blinkywink</title>
+  <link rel="shortcut icon" href="../assets/images/darkicon.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Golos Text', sans-serif;
+      line-height: 1.6;
+      color: white;
+      background: black;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .header {
+      background: black;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-text {
+      font-family: 'Dela Gothic One', sans-serif;
+      margin-left: 10px;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a:hover {
+      color: #ccc;
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 2px;
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: black;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .mobile-menu.active {
+      display: block;
+    }
+
+    .mobile-menu a {
+      display: block;
+      padding: 1rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .mobile-menu a:hover {
+      background: #111;
+    }
+
+    .hero {
+      padding: 8rem 0 2rem 0;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 2.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+      color: #ccc;
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+
+    .section {
+      padding: 1rem 0 3rem 0;
+    }
+
+    .section h2 {
+      font-family: 'Dela Gothic One', sans-serif;
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .albums-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .album-card {
+      background: #111;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      border: 1px solid #222;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+    }
+
+    .album-cover {
+      width: 96px;
+      height: 96px;
+      border-radius: 6px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+
+    .album-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .album-title {
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .album-subtitle {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .album-note {
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    .album-link {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+    }
+
+    .album-link a {
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 1px;
+    }
+
+    .album-link a:hover {
+      border-bottom-color: white;
+    }
+
+    .album-card:hover {
+      transform: translateY(-2px);
+      border-color: #444;
+      background: #151515;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: #aaa;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover {
+      color: white;
+    }
+
+    .footer {
+      background: black;
+      color: white;
+      padding: 2rem 0;
+      margin-top: auto;
+      padding-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .logo-text {
+        font-size: 1rem;
+      }
+
+      .logo img {
+        height: 30px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <a href="../" class="logo">
+        <img src="../assets/images/dark.png" alt="blinkywink" style="height: 40px;">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+      <nav class="nav-links">
+        <a href="./">Music</a>
+      </nav>
+      <div class="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="./">Music</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title">Music</h1>
+        <p class="hero-subtitle">
+          A place for the sounds I’m messing around with – finished tracks, experiments, and ideas that might become something later.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Albums</h2>
+        <div class="albums-grid">
+          <div class="album-card" onclick="window.location.href='cascade/'">
+            <div class="album-cover" style="background-image: url('../assets/music/CASCADE/cover.jpg');"></div>
+            <div class="album-meta">
+              <div class="album-title">CASCADE</div>
+              <div class="album-subtitle">First album</div>
+              <div class="album-note">9 tracks. Heavy emotions, big moments, and everything in between.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Demos</h2>
+        <div class="albums-grid">
+          <div class="album-card" onclick="window.location.href='4-track-session/'">
+            <div class="album-cover" style="background-image: linear-gradient(135deg, #333, #111);"></div>
+            <div class="album-meta">
+              <div class="album-title">4 Track Session</div>
+              <div class="album-subtitle">Demo project</div>
+              <div class="album-note">A couple of rough demos capturing ideas before they turn into full tracks.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <p style="margin-bottom: 0.5rem;">&copy; 2025 blinkywink.co</p>
+      </div>
+    </div>
+  </footer>
+  <script>
+    function toggleMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!mobileMenu || !hamburger) return;
+      if (!mobileMenu.contains(event.target) && !hamburger.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
