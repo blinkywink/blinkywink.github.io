@@ -819,6 +819,11 @@
     const trackArray = Array.from(trackRows);
     let currentIndex = 0;
 
+    // mark first track as active on load to match initial audio source
+    if (trackArray.length > 0) {
+      trackArray[0].classList.add('active-track');
+    }
+
     trackArray.forEach((row, index) => {
       row.style.cursor = 'pointer';
       row.addEventListener('click', () => {
