@@ -52,7 +52,7 @@
       const grid = document.getElementById('product-grid');
       grid.innerHTML = products.map(product => {
         return `
-        <div class="product-item" onclick="window.location.href='product/'">
+        <div class="product-item" onclick="window.location.href='just-a-monkey/'">
           <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x300?text=Placeholder'" onload="this.classList.add('loaded')">
           <div class="product-name">${product.name}</div>
           <div class="product-price">$${product.price.toFixed(2)}</div>

@@ -33,6 +33,7 @@
           <p class="product-price-large">$25.00</p>
           <div class="product-description">
             <p>aren't we all?</p>
+            <a href="#" class="size-chart-link" onclick="event.preventDefault(); showSizeChart();">size chart</a>
             <br>
             <ul>
               <li>true to size</li>
@@ -83,6 +84,7 @@
         </div>
         <div class="product-description-mobile">
           <p>aren't we all?</p>
+          <a href="#" class="size-chart-link" onclick="event.preventDefault(); showSizeChart();">size chart</a>
           <br>
           <ul>
             <li>true to size</li>
@@ -93,6 +95,34 @@
       </div>
     </div>
   </main>
+
+  <!-- Size Chart Popup -->
+  <div id="size-chart-popup" class="size-chart-popup">
+    <div class="size-chart-overlay"></div>
+    <div class="size-chart-content">
+      <button class="size-chart-close" onclick="closeSizeChart()">×</button>
+      <img src="../assets/images/size.jpg" alt="Size chart diagram" class="size-chart-image">
+      <div class="size-chart-toggle">
+        <button id="inches-btn" class="size-chart-toggle-btn active" onclick="switchToInches()">Inches</button>
+        <button id="cm-btn" class="size-chart-toggle-btn" onclick="switchToCm()">cm</button>
+      </div>
+      <div id="size-chart-table-container">
+        <table class="size-chart-table" id="size-chart-table">
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Width</th>
+              <th>Length</th>
+              <th>Sleeve Length</th>
+            </tr>
+          </thead>
+          <tbody id="size-chart-tbody">
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer class="footer">
@@ -159,6 +189,96 @@
             purchaseBtnMobile.target = '_self';
           }
         }
+      }
+    });
+
+    // Size chart data
+    const sizeChartData = {
+      inches: {
+        headers: ['Size', 'Width (in)', 'Length (in)', 'Sleeve Length (in)'],
+        rows: [
+          ['S', '18.3', '28.0', '16.3'],
+          ['M', '20.3', '29.4', '17.8'],
+          ['L', '22.0', '30.8', '19.0'],
+          ['XL', '24.0', '31.6', '20.5'],
+          ['2XL', '26.0', '32.5', '21.8']
+        ]
+      },
+      cm: {
+        headers: ['Size', 'Width (cm)', 'Length (cm)', 'Sleeve Length (cm)'],
+        rows: [
+          ['S', '46.4', '71.1', '41.3'],
+          ['M', '51.4', '74.6', '45.1'],
+          ['L', '55.9', '78.1', '48.3'],
+          ['XL', '61.0', '80.3', '52.1'],
+          ['2XL', '66.0', '82.6', '55.3']
+        ]
+      }
+    };
+
+    let currentUnit = 'inches';
+
+    function showSizeChart() {
+      const popup = document.getElementById('size-chart-popup');
+      if (popup) {
+        popup.classList.add('active');
+        renderSizeChart();
+      }
+    }
+
+    function closeSizeChart() {
+      const popup = document.getElementById('size-chart-popup');
+      if (popup) {
+        popup.classList.remove('active');
+      }
+    }
+
+    function switchToInches() {
+      currentUnit = 'inches';
+      document.getElementById('inches-btn').classList.add('active');
+      document.getElementById('cm-btn').classList.remove('active');
+      renderSizeChart();
+    }
+
+    function switchToCm() {
+      currentUnit = 'cm';
+      document.getElementById('inches-btn').classList.remove('active');
+      document.getElementById('cm-btn').classList.add('active');
+      renderSizeChart();
+    }
+
+    function renderSizeChart() {
+      const tbody = document.getElementById('size-chart-tbody');
+      const thead = document.querySelector('.size-chart-table thead tr');
+      const data = sizeChartData[currentUnit];
+      
+      if (tbody && thead && data) {
+        // Update headers
+        thead.innerHTML = `
+          <th>${data.headers[0]}</th>
+          <th>${data.headers[1]}</th>
+          <th>${data.headers[2]}</th>
+          <th>${data.headers[3]}</th>
+        `;
+        
+        // Update rows
+        tbody.innerHTML = data.rows.map(row => `
+          <tr>
+            <td>${row[0]}</td>
+            <td>${row[1]}</td>
+            <td>${row[2]}</td>
+            <td>${row[3]}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // Close popup when clicking overlay
+    document.addEventListener('DOMContentLoaded', () => {
+      const popup = document.getElementById('size-chart-popup');
+      const overlay = popup?.querySelector('.size-chart-overlay');
+      if (overlay) {
+        overlay.addEventListener('click', closeSizeChart);
       }
     });
   </script>
