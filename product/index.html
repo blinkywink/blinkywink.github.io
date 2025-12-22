@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>just a monkey - blinkywink.co</title>
+  <link rel="shortcut icon" href="../assets/images/darkicon.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="../" class="logo">
+        <img src="../assets/images/icon.png" alt="icon" class="logo-icon">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Product Detail -->
+  <main class="product-detail-page">
+    <div class="product-detail-container">
+      <a href="../" class="back-to-home">← Back to Home</a>
+      <!-- Desktop Layout: Image in middle, info left, sizes/buttons right -->
+      <div class="product-detail-grid">
+        <!-- Left: Title, Price, Info -->
+        <div class="product-info-left">
+          <h1 class="product-title">just a monkey</h1>
+          <p class="product-price-large">$25.00</p>
+          <div class="product-description">
+            <p>aren't we all?</p>
+            <br>
+            <ul>
+              <li>true to size</li>
+              <li>100% cotton</li>
+              <li>6.1 oz/yd²</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Middle: Product Image -->
+        <div class="product-image-center">
+          <img src="../assets/products/just a monkey.jpg" alt="just a monkey" class="product-main-image" onload="this.classList.add('loaded')">
+        </div>
+
+        <!-- Right: Sizes and Purchase Button -->
+        <div class="product-actions-right">
+          <div class="size-selector">
+            <label>Size:</label>
+            <div class="size-buttons">
+              <button class="size-btn" data-size="S">S</button>
+              <button class="size-btn active" data-size="M">M</button>
+              <button class="size-btn" data-size="L">L</button>
+              <button class="size-btn" data-size="XL">XL</button>
+              <button class="size-btn" data-size="2XL">2XL</button>
+            </div>
+          </div>
+          <a href="https://buy.stripe.com/aFabJ33Zr4Xy7MGdBeeQM04" id="purchase-btn" class="purchase-btn-large" target="_blank">Purchase</a>
+        </div>
+      </div>
+
+      <!-- Mobile Layout: Stacked -->
+      <div class="product-detail-mobile">
+        <img src="../assets/products/just a monkey.jpg" alt="just a monkey" class="product-main-image-mobile" onload="this.classList.add('loaded')">
+        <h1 class="product-title-mobile">just a monkey</h1>
+        <p class="product-price-mobile">$25.00</p>
+        <div class="size-selector-mobile">
+          <label>Size:</label>
+          <div class="size-buttons">
+            <button class="size-btn" data-size="S">S</button>
+            <button class="size-btn active" data-size="M">M</button>
+            <button class="size-btn" data-size="L">L</button>
+            <button class="size-btn" data-size="XL">XL</button>
+            <button class="size-btn" data-size="2XL">2XL</button>
+          </div>
+        </div>
+        <div class="product-buttons-mobile">
+          <a href="https://buy.stripe.com/aFabJ33Zr4Xy7MGdBeeQM04" id="purchase-btn-mobile" class="purchase-btn-large" target="_blank">Purchase</a>
+        </div>
+        <div class="product-description-mobile">
+          <p>aren't we all?</p>
+          <br>
+          <ul>
+            <li>true to size</li>
+            <li>100% cotton</li>
+            <li>6.1 oz/yd²</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="../contact/" class="footer-link">Contact</a>
+        <a href="../about/" class="footer-link">About</a>
+      </div>
+      <div class="footer-copyright">
+        © blinkywink.co
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Size purchase links mapping
+    const sizeLinks = {
+      'S': 'https://buy.stripe.com/28EdRb7bDfCc0ke9kYeQM03',
+      'M': 'https://buy.stripe.com/aFabJ33Zr4Xy7MGdBeeQM04',
+      'L': 'https://buy.stripe.com/5kQaEZ53v75G7MG2WAeQM05',
+      'XL': 'https://buy.stripe.com/4gM14p67z1Lm7MGeFieQM06',
+      '2XL': 'https://buy.stripe.com/14A8wR53vahSeb4dBeeQM07'
+    };
+
+    // Handle size button clicks
+    document.addEventListener('DOMContentLoaded', () => {
+      const sizeButtons = document.querySelectorAll('.size-btn');
+      const purchaseBtn = document.getElementById('purchase-btn');
+      const purchaseBtnMobile = document.getElementById('purchase-btn-mobile');
+      
+      // Set initial purchase link (M is default/active)
+      updatePurchaseLink('M');
+      
+      sizeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remove active class from all buttons
+          sizeButtons.forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          btn.classList.add('active');
+          
+          // Get selected size and update purchase link
+          const selectedSize = btn.getAttribute('data-size');
+          updatePurchaseLink(selectedSize);
+        });
+      });
+      
+      function updatePurchaseLink(size) {
+        const link = sizeLinks[size] || '/2';
+        if (purchaseBtn) {
+          purchaseBtn.href = link;
+          // Open in new tab for external Stripe links
+          if (link.startsWith('http')) {
+            purchaseBtn.target = '_blank';
+          } else {
+            purchaseBtn.target = '_self';
+          }
+        }
+        if (purchaseBtnMobile) {
+          purchaseBtnMobile.href = link;
+          // Open in new tab for external Stripe links
+          if (link.startsWith('http')) {
+            purchaseBtnMobile.target = '_blank';
+          } else {
+            purchaseBtnMobile.target = '_self';
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+

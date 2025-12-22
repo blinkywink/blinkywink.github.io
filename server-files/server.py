@@ -77,6 +77,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             # File doesn't exist, serve 404.html
             self.send_404()
     
+    
     def send_404(self):
         """Serve 404.html for missing pages"""
         error_path = os.path.join(self.directory, '404.html')

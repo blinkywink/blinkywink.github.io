@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - blinkywink.co</title>
+  <link rel="shortcut icon" href="../assets/images/darkicon.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="../" class="logo">
+        <img src="../assets/images/icon.png" alt="icon" class="logo-icon">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Contact Form -->
+  <main class="contact-page">
+    <div class="contact-container">
+      <a href="../" class="back-to-home">← Back to Home</a>
+      <div class="contact-content">
+        <h1 class="contact-title">Contact</h1>
+        <p class="contact-info">Responses within 24 hrs.<br>You can also email <a href="mailto:blinkywinkcontact@pm.me" class="contact-email-link">blinkywinkcontact@pm.me</a></p>
+        <form id="form" class="contact-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Send</button>
+      </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success Popup -->
+  <div id="success-popup" class="success-popup">
+    <div class="success-popup-overlay"></div>
+    <div class="success-popup-content">
+      <button class="success-popup-close" onclick="closeSuccessPopup()">×</button>
+      <p class="success-popup-message">Your message has been sent.</p>
+      <a href="../" class="success-popup-btn">Return Home</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="../contact/" class="footer-link">Contact</a>
+        <a href="../about/" class="footer-link">About</a>
+      </div>
+      <div class="footer-copyright">
+        © blinkywink.co
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        formData.append("access_key", "b85d0fa9-867d-48e5-bc3c-2de4546d1b52");
+
+        const originalText = submitBtn.textContent;
+
+        submitBtn.textContent = "Sending...";
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch("https://api.web3forms.com/submit", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                form.reset();
+                showSuccessPopup();
+            } else {
+                alert("Error: " + data.message);
+            }
+
+        } catch (error) {
+            alert("Something went wrong. Please try again.");
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    function showSuccessPopup() {
+        const popup = document.getElementById('success-popup');
+        if (popup) {
+            popup.classList.add('active');
+        }
+    }
+
+    function closeSuccessPopup() {
+        const popup = document.getElementById('success-popup');
+        if (popup) {
+            popup.classList.remove('active');
+        }
+    }
+
+    // Close popup when clicking overlay
+    document.addEventListener('DOMContentLoaded', () => {
+        const popup = document.getElementById('success-popup');
+        const overlay = popup?.querySelector('.success-popup-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', closeSuccessPopup);
+        }
+    });
+  </script>
+</body>
+</html>
+
