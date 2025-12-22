@@ -830,11 +830,20 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
   }
 
   .size-selector-mobile label {
     font-weight: 500;
     color: #000;
+  }
+
+  .size-selector-mobile .size-buttons {
+    width: 100%;
+  }
+
+  .size-selector-mobile .size-btn {
+    flex: 1;
   }
 
   .product-buttons-mobile {
