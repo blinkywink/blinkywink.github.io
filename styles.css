@@ -610,11 +610,27 @@ body {
   margin: 0;
 }
 
+.product-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0.5rem 0 0 0;
+  font-family: 'Inconsolata', monospace;
+}
+
 .product-price-large {
   font-size: 0.92rem;
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.free-shipping {
+  font-size: 0.875rem;
+  color: #666;
+  margin-left: 0.5rem;
+  font-family: 'Inconsolata', monospace;
+  text-transform: lowercase;
+  font-weight: normal;
 }
 
 .product-description {
@@ -787,11 +803,27 @@ body {
     margin: 0;
   }
 
+  .product-subtitle-mobile {
+    font-size: 0.875rem;
+    color: #666;
+    margin: 0.5rem 0 0 0;
+    font-family: 'Inconsolata', monospace;
+  }
+
   .product-price-mobile {
     font-size: 1.125rem;
     font-weight: 600;
     color: #333;
     margin: 0;
+  }
+
+  .free-shipping-mobile {
+    font-size: 0.875rem;
+    color: #666;
+    margin-left: 0.5rem;
+    font-family: 'Inconsolata', monospace;
+    text-transform: lowercase;
+    font-weight: normal;
   }
 
   .size-selector-mobile {
@@ -812,7 +844,7 @@ body {
   }
 
   .product-description-mobile {
-    margin-top: 1.5rem;
+    margin-top: 0.5rem;
     color: #666;
     line-height: 1.6;
     font-size: 0.875rem;
