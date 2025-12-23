@@ -35,8 +35,8 @@
 body {
   font-family: 'Inconsolata', monospace;
   line-height: 1.6;
-  color: #333;
-  background: #fff;
+  color: #e0e0e0;
+  background: #1a1a1a;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -44,7 +44,7 @@ body {
 
 /* Header Styles */
 .header {
-  background: #fff;
+  background: #1a1a1a;
   padding: 1rem 0;
   position: sticky;
   top: 0;
@@ -83,17 +83,19 @@ body {
   width: 40px;
   display: block;
   object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .logo-text {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
 }
 
 .logo:hover .logo-text {
-  color: #666;
+  color: #ccc;
 }
+
 
 .header nav {
   display: flex;
@@ -143,7 +145,7 @@ body {
 .product-name {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   margin-bottom: 0.25rem;
   text-align: center;
 }
@@ -151,7 +153,7 @@ body {
 .product-price {
   font-size: 0.92rem;
   font-weight: 600;
-  color: #333;
+  color: #ccc;
   text-align: center;
 }
 
@@ -165,7 +167,7 @@ body {
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 2rem;
-  color: #000;
+  color: #fff;
 }
 
 .cart-items {
@@ -177,7 +179,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #444;
   gap: 1.25rem;
 }
 
@@ -202,11 +204,11 @@ body {
   font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  color: #000;
+  color: #fff;
 }
 
 .cart-item-price {
-  color: #666;
+  color: #ccc;
   font-size: 1.33rem;
 }
 
@@ -219,7 +221,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #444;
   border-radius: 4px;
   padding: 0;
 }
@@ -227,12 +229,12 @@ body {
 .quantity-btn {
   width: 28px;
   height: 36px;
-  background: #fff;
+  background: #2a2a2a;
   border: none;
   border-radius: 0;
   font-size: 1rem;
   cursor: pointer;
-  color: #333;
+  color: #fff;
   transition: background 0.2s ease;
   display: flex;
   align-items: center;
@@ -248,7 +250,7 @@ body {
 }
 
 .quantity-btn:hover {
-  background: #fff;
+  background: #333;
 }
 
 .quantity {
@@ -265,7 +267,7 @@ body {
   padding: 0.5rem 1rem;
   height: 36px;
   background: transparent;
-  color: #666;
+  color: #ccc;
   border: none;
   font-size: 0.9rem;
   font-family: 'Inconsolata', monospace;
@@ -276,12 +278,12 @@ body {
 }
 
 .remove-btn:hover {
-  color: #000;
+  color: #fff;
 }
 
 .cart-summary {
   padding: 2rem;
-  background: #fff;
+  background: #2a2a2a;
   border-radius: 8px;
   margin-top: 2rem;
 }
@@ -290,22 +292,22 @@ body {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   text-align: left;
-  color: #000;
+  color: #fff;
 }
 
 .currency {
   font-size: 1.5rem;
   font-weight: 600;
   font-family: 'Inconsolata', monospace;
-  color: #000;
+  color: #fff;
 }
 
 .checkout-btn {
   display: block;
   width: 100%;
   padding: 1rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   text-align: center;
   text-decoration: none;
   border: none;
@@ -318,7 +320,7 @@ body {
 }
 
 .checkout-btn:hover:not(:disabled) {
-  background: #333;
+  background: #ccc;
 }
 
 .checkout-btn:disabled {
@@ -333,15 +335,15 @@ body {
 
 .empty-cart p {
   font-size: 1.25rem;
-  color: #666;
+  color: #ccc;
   margin-bottom: 1.5rem;
 }
 
 .continue-shopping-btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   text-decoration: none;
   border-radius: 4px;
   font-weight: 500;
@@ -349,7 +351,7 @@ body {
 }
 
 .continue-shopping-btn:hover {
-  background: #333;
+  background: #ccc;
 }
 
 /* Responsive Design */
@@ -460,14 +462,14 @@ body {
 .back-to-home {
   display: inline-block;
   margin-bottom: 2rem;
-  color: #666;
+  color: #ccc;
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s ease;
 }
 
 .back-to-home:hover {
-  color: #000;
+  color: #fff;
 }
 
 /* Cart Popup */
@@ -502,7 +504,7 @@ body {
 
 .cart-popup-content {
   position: relative;
-  background: #fff;
+  background: #2a2a2a;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -533,7 +535,7 @@ body {
 .cart-popup-message {
   margin: 0 0 1.5rem 0;
   font-size: 1.1rem;
-  color: #000;
+  color: #fff;
   text-align: center;
 }
 
@@ -557,23 +559,23 @@ body {
 }
 
 .go-to-cart-btn {
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
 }
 
 .go-to-cart-btn:hover {
-  background: #333;
+  background: #ccc;
 }
 
 .continue-shopping-btn {
-  background: #fff;
-  color: #000;
-  border: 1px solid #e0e0e0;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
 }
 
 .continue-shopping-btn:hover {
-  background: #fff;
-  border-color: #ccc;
+  background: #333;
+  border-color: #555;
 }
 
 @media (max-width: 768px) {
@@ -606,7 +608,7 @@ body {
 .product-title {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   margin: 0;
 }
 
@@ -620,13 +622,13 @@ body {
 .product-price-large {
   font-size: 0.92rem;
   font-weight: 600;
-  color: #333;
+  color: #ccc;
   margin: 0;
 }
 
 .free-shipping {
   font-size: 0.875rem;
-  color: #666;
+  color: #ccc;
   margin-left: 0.5rem;
   font-family: 'Inconsolata', monospace;
   text-transform: lowercase;
@@ -634,7 +636,7 @@ body {
 }
 
 .product-description {
-  color: #666;
+  color: #ccc;
   line-height: 1.6;
   font-size: 0.875rem;
 }
@@ -648,7 +650,7 @@ body {
 .product-description li {
   margin-bottom: 0.5rem;
   font-family: 'Inconsolata', monospace;
-  color: #666;
+  color: #ccc;
   font-size: 0.875rem;
   padding-left: 1.2rem;
   position: relative;
@@ -658,7 +660,7 @@ body {
   content: "•";
   position: absolute;
   left: 0;
-  color: #666;
+  color: #ccc;
   font-size: 0.875rem;
 }
 
@@ -690,7 +692,7 @@ body {
 
 .size-selector label {
   font-weight: 500;
-  color: #000;
+  color: #fff;
 }
 
 .size-buttons {
@@ -701,12 +703,12 @@ body {
 
 .size-btn {
   padding: 0.75rem 1.25rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #444;
   border-radius: 4px;
   font-size: 1rem;
   font-family: 'Inconsolata', monospace;
-  background: #fff;
-  color: #000;
+  background: #2a2a2a;
+  color: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 50px;
@@ -715,21 +717,21 @@ body {
 }
 
 .size-btn:hover {
-  background: #fff;
-  border-color: #ccc;
+  background: #333;
+  border-color: #555;
 }
 
 .size-btn.active {
-  background: #000;
-  color: #fff;
-  border-color: #000;
+  background: #fff;
+  color: #000;
+  border-color: #fff;
 }
 
 .purchase-btn-large {
   width: 100%;
   padding: 0.75rem 1.25rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   text-align: center;
   text-decoration: none;
   border: 1px solid transparent;
@@ -745,14 +747,14 @@ body {
 }
 
 .purchase-btn-large:hover {
-  background: #333;
+  background: #ccc;
 }
 
 .add-to-cart-btn-large {
   width: 100%;
   padding: 1rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   border: none;
   border-radius: 4px;
   font-size: 1.1rem;
@@ -763,7 +765,7 @@ body {
 }
 
 .add-to-cart-btn-large:hover {
-  background: #333;
+  background: #ccc;
 }
 
 
@@ -799,7 +801,7 @@ body {
   .product-title-mobile {
     font-size: 1.75rem;
     font-weight: 600;
-    color: #000;
+    color: #fff;
     margin: 0;
   }
 
@@ -813,13 +815,13 @@ body {
   .product-price-mobile {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #333;
+    color: #ccc;
     margin: 0;
   }
 
   .free-shipping-mobile {
     font-size: 0.875rem;
-    color: #666;
+    color: #ccc;
     margin-left: 0.5rem;
     font-family: 'Inconsolata', monospace;
     text-transform: lowercase;
@@ -835,7 +837,7 @@ body {
 
   .size-selector-mobile label {
     font-weight: 500;
-    color: #000;
+    color: #fff;
   }
 
   .size-selector-mobile .size-buttons {
@@ -854,7 +856,7 @@ body {
 
   .product-description-mobile {
     margin-top: 0.5rem;
-    color: #666;
+    color: #ccc;
     line-height: 1.6;
     font-size: 0.875rem;
     font-family: 'Inconsolata', monospace;
@@ -869,7 +871,7 @@ body {
   .product-description-mobile li {
     margin-bottom: 0.5rem;
     font-family: 'Inconsolata', monospace;
-    color: #666;
+    color: #ccc;
     font-size: 0.875rem;
     padding-left: 1.2rem;
     position: relative;
@@ -879,14 +881,14 @@ body {
     content: "•";
     position: absolute;
     left: 0;
-    color: #666;
+    color: #ccc;
     font-size: 0.875rem;
   }
 }
 
 /* Footer Styles */
 .footer {
-  background: #fff;
+  background: #1a1a1a;
   padding: 2rem 0;
   margin-top: auto;
 }
@@ -908,7 +910,7 @@ body {
 }
 
 .footer-link {
-  color: #666;
+  color: #ccc;
   text-decoration: none;
   font-family: 'Inconsolata', monospace;
   font-size: 0.95rem;
@@ -916,11 +918,11 @@ body {
 }
 
 .footer-link:hover {
-  color: #000;
+  color: #fff;
 }
 
 .footer-copyright {
-  color: #666;
+  color: #ccc;
   font-family: 'Inconsolata', monospace;
   font-size: 0.95rem;
 }
@@ -957,27 +959,27 @@ body {
 .contact-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   margin-bottom: 1rem;
   font-family: 'Inconsolata', monospace;
 }
 
 .contact-info {
   font-size: 0.95rem;
-  color: #666;
+  color: #ccc;
   margin-bottom: 2rem;
   font-family: 'Inconsolata', monospace;
   line-height: 1.6;
 }
 
 .contact-email-link {
-  color: #666;
+  color: #ccc;
   text-decoration: underline;
   transition: color 0.2s ease;
 }
 
 .contact-email-link:hover {
-  color: #000;
+  color: #fff;
 }
 
 .contact-form {
@@ -995,19 +997,19 @@ body {
 .form-group label {
   font-family: 'Inconsolata', monospace;
   font-size: 0.95rem;
-  color: #000;
+  color: #fff;
   font-weight: 500;
 }
 
 .form-group input,
 .form-group textarea {
   padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #444;
   border-radius: 4px;
   font-size: 1rem;
   font-family: 'Inconsolata', monospace;
-  color: #000;
-  background: #fff;
+  color: #fff;
+  background: #2a2a2a;
   transition: border-color 0.2s ease;
   width: 100%;
   resize: vertical;
@@ -1033,13 +1035,13 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #000;
+  border-color: #fff;
 }
 
 .submit-btn {
   padding: 0.75rem 1.25rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
@@ -1051,7 +1053,7 @@ body {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #333;
+  background: #ccc;
 }
 
 .submit-btn:disabled {
@@ -1101,7 +1103,7 @@ body {
 
 .success-popup-content {
   position: relative;
-  background: #fff;
+  background: #2a2a2a;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -1118,7 +1120,7 @@ body {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #666;
+  color: #ccc;
   cursor: pointer;
   line-height: 1;
   padding: 0.25rem 0.5rem;
@@ -1127,13 +1129,13 @@ body {
 }
 
 .success-popup-close:hover {
-  color: #000;
+  color: #fff;
 }
 
 .success-popup-message {
   margin: 0 0 1.5rem 0;
   font-size: 1.1rem;
-  color: #000;
+  color: #fff;
   text-align: center;
   font-family: 'Inconsolata', monospace;
 }
@@ -1142,8 +1144,8 @@ body {
   display: block;
   width: 100%;
   padding: 0.75rem 1.25rem;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   text-align: center;
   text-decoration: none;
   border-radius: 4px;
@@ -1154,12 +1156,12 @@ body {
 }
 
 .success-popup-btn:hover {
-  background: #333;
+  background: #ccc;
 }
 
 /* Size Chart Link */
 .size-chart-link {
-  color: #666;
+  color: #ccc;
   text-decoration: underline;
   font-size: 0.875rem;
   font-family: 'Inconsolata', monospace;
@@ -1169,7 +1171,7 @@ body {
 }
 
 .size-chart-link:hover {
-  color: #000;
+  color: #fff;
 }
 
 /* Size Chart Popup */
@@ -1204,7 +1206,7 @@ body {
 
 .size-chart-content {
   position: relative;
-  background: #fff;
+  background: #2a2a2a;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -1223,7 +1225,7 @@ body {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #666;
+  color: #ccc;
   cursor: pointer;
   line-height: 1;
   padding: 0.25rem 0.5rem;
@@ -1232,13 +1234,13 @@ body {
 }
 
 .size-chart-close:hover {
-  color: #000;
+  color: #fff;
 }
 
 .size-chart-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   margin: 0 0 1.5rem 0;
   font-family: 'Inconsolata', monospace;
 }
@@ -1252,10 +1254,10 @@ body {
 
 .size-chart-toggle-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #444;
   border-radius: 4px;
-  background: #fff;
-  color: #000;
+  background: #2a2a2a;
+  color: #fff;
   font-size: 0.875rem;
   font-family: 'Inconsolata', monospace;
   cursor: pointer;
@@ -1263,22 +1265,15 @@ body {
 }
 
 .size-chart-toggle-btn:hover {
-  border-color: #ccc;
+  border-color: #555;
 }
 
 .size-chart-toggle-btn.active {
-  background: #000;
-  color: #fff;
-  border-color: #000;
+  background: #fff;
+  color: #000;
+  border-color: #fff;
 }
 
-.size-chart-image {
-  width: 100%;
-  max-width: 245px;
-  margin: 0 auto 0 auto;
-  display: block;
-  border-radius: 4px;
-}
 
 .size-chart-table {
   width: 100%;
@@ -1291,17 +1286,17 @@ body {
 .size-chart-table td {
   padding: 0.5rem 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #444;
 }
 
 .size-chart-table th {
   font-weight: 600;
-  color: #000;
-  background: #fafafa;
+  color: #fff;
+  background: #333;
 }
 
 .size-chart-table td {
-  color: #333;
+  color: #ccc;
 }
 
 .size-chart-table tr:last-child td {
@@ -1329,7 +1324,7 @@ body {
 .terms-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   margin-bottom: 2rem;
   font-family: 'Inconsolata', monospace;
 }
@@ -1341,14 +1336,14 @@ body {
 .terms-section-title {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #000;
+  color: #fff;
   margin-bottom: 1rem;
   font-family: 'Inconsolata', monospace;
 }
 
 .terms-section p {
   font-size: 0.95rem;
-  color: #333;
+  color: #ccc;
   line-height: 1.6;
   margin-bottom: 1rem;
   font-family: 'Inconsolata', monospace;
@@ -1371,4 +1366,5 @@ body {
     font-size: 0.95rem;
   }
 }
+
 
