@@ -42,6 +42,21 @@ body {
   flex-direction: column;
 }
 
+/* Global link styles - remove blue and underlines */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:visited {
+  color: inherit;
+}
+
 /* Header Styles */
 .header {
   background: #1a1a1a;
@@ -56,7 +71,7 @@ body {
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -155,6 +170,664 @@ body {
   font-weight: 600;
   color: #ccc;
   text-align: center;
+}
+
+/* Last.fm Stats Styles */
+.stats-view-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.view-btn {
+  padding: 0.5rem 1.5rem;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.view-btn:hover {
+  background: #333;
+  border-color: #555;
+}
+
+.view-btn.active {
+  background: #fff;
+  color: #1a1a1a;
+  border-color: #fff;
+}
+
+.time-period-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.period-btn {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.period-btn:hover {
+  border-color: #666;
+  color: #fff;
+}
+
+.period-btn.active {
+  background: #333;
+  border-color: #666;
+  color: #fff;
+}
+
+.loading-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #ccc;
+}
+
+.loading-state p {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stats-view {
+  display: none;
+}
+
+.stats-view.active {
+  display: block;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 1.5rem;
+}
+
+/* Overview Stats */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: #2a2a2a;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Now Playing */
+.now-playing-section {
+  margin-top: 2rem;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-title-update {
+  font-size: 0.9rem;
+  color: #999;
+  font-weight: 400;
+}
+
+.now-playing-card {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.now-playing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.now-playing-placeholder {
+  color: #666;
+  text-align: center;
+  padding: 2rem;
+}
+
+.now-playing-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.now-playing-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.now-playing-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.now-playing-track {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.now-playing-artist {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 0.25rem;
+}
+
+.now-playing-album {
+  font-size: 0.9rem;
+  color: #999;
+  margin-bottom: 0.25rem;
+}
+
+.now-playing-plays {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ccc;
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.now-playing-time {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.now-playing-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.now-playing-link:hover {
+  opacity: 0.8;
+}
+
+.now-playing-indicator {
+  font-size: 1.5rem;
+  color: #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Recent Tracks */
+.tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.track-item-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.track-item:hover {
+  background: #333;
+  border-color: #444;
+}
+
+.track-item.now-playing-track {
+  border-color: #666;
+  background: #2d2d2d;
+}
+
+.track-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.track-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.track-artist {
+  font-size: 0.95rem;
+  color: #ccc;
+  margin-bottom: 0.15rem;
+}
+
+.track-album {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.track-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.track-date {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.now-playing-badge {
+  font-size: 1.2rem;
+  color: #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Top Albums */
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.album-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.album-card {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.album-card:hover {
+  transform: translateY(-4px);
+  border-color: #555;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.album-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.album-info {
+  padding: 1rem;
+}
+
+.album-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.album-artist {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.album-plays {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Top Artists */
+.artists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.artist-item-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.artist-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.artist-item:hover {
+  background: #333;
+  border-color: #444;
+}
+
+.artist-rank {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #666;
+  min-width: 40px;
+  text-align: center;
+}
+
+.artist-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.artist-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.artist-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.artist-plays {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.empty-state,
+.error-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+  font-size: 1rem;
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+/* Detail Pages */
+.album-detail-header,
+.artist-detail-header,
+.track-detail-header {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  align-items: flex-start;
+}
+
+.album-detail-cover {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.artist-detail-image {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 16px;
+  flex-shrink: 0;
+}
+
+.track-detail-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.album-detail-info,
+.artist-detail-info,
+.track-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.album-detail-title,
+.artist-detail-title,
+.track-detail-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.album-detail-artist,
+.track-detail-artist {
+  font-size: 1.5rem;
+  color: #ccc;
+  margin-bottom: 0.5rem;
+  display: block;
+  transition: color 0.2s ease;
+}
+
+.album-detail-artist:hover,
+.track-detail-artist:hover {
+  color: #fff;
+}
+
+.track-detail-album {
+  font-size: 1.2rem;
+  color: #999;
+  margin-bottom: 1rem;
+  display: block;
+  transition: color 0.2s ease;
+}
+
+.track-detail-album:hover {
+  color: #ccc;
+}
+
+.album-detail-meta,
+.artist-detail-meta,
+.track-detail-meta {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  color: #999;
+  font-size: 0.95rem;
+}
+
+.artist-detail-bio {
+  margin-top: 1.5rem;
+  color: #ccc;
+  line-height: 1.8;
+  max-width: 600px;
+}
+
+.album-detail-section,
+.artist-detail-section,
+.track-detail-section {
+  margin-top: 3rem;
+}
+
+.track-number {
+  font-size: 1rem;
+  color: #666;
+  min-width: 30px;
+  text-align: right;
+}
+
+.track-duration,
+.track-plays {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+/* Listening Charts */
+.listening-chart {
+  width: 100%;
+  max-width: 800px;
+  height: 300px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .albums-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .now-playing-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .track-item {
+    flex-wrap: wrap;
+  }
+
+  .track-meta {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+  }
+
+  .album-detail-header,
+  .artist-detail-header,
+  .track-detail-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .album-detail-cover,
+  .artist-detail-image,
+  .track-detail-image {
+    width: 200px;
+    height: 200px;
+  }
+
+  .album-detail-title,
+  .artist-detail-title,
+  .track-detail-title {
+    font-size: 2rem;
+  }
+
+  .album-detail-meta,
+  .artist-detail-meta,
+  .track-detail-meta {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 }
 
 /* Cart Page Styles */
@@ -1367,4 +2040,92 @@ body {
   }
 }
 
+/* Username Input */
+.username-input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
 
+.username-input-box {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 3rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+.username-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.username-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.username-field {
+  padding: 0.75rem 1rem;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.username-field:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.username-submit {
+  padding: 0.75rem 1.5rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.username-submit:hover {
+  background: #444;
+  border-color: #555;
+}
+
+.username-submit:active {
+  background: #2a2a2a;
+}
+
+/* Change Username Button */
+.change-username-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #ccc;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-username-btn:hover {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #fff;
+}

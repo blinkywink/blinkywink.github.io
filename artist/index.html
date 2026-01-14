@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artist - blinkywink.co</title>
+  <link rel="shortcut icon" href="../assets/images/darkicon.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="../index.html" class="logo">
+        <img src="../assets/images/icon.png" alt="icon" class="logo-icon">
+        <span class="logo-text">blinkywink.co</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div id="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading artist...</p>
+    </div>
+
+    <div id="artist-content" style="display: none;">
+      <div class="artist-detail-header">
+        <img id="artist-image" src="" alt="Artist" class="artist-detail-image">
+        <div class="artist-detail-info">
+          <h1 id="artist-name" class="artist-detail-title"></h1>
+          <div id="artist-meta" class="artist-detail-meta"></div>
+          <div id="artist-bio" class="artist-detail-bio"></div>
+        </div>
+      </div>
+
+      <div class="artist-detail-section">
+        <h2 class="section-title">Your Top Albums</h2>
+        <div id="artist-albums" class="albums-grid"></div>
+      </div>
+
+      <div class="artist-detail-section">
+        <h2 class="section-title">Your Top Tracks</h2>
+        <div id="artist-tracks" class="tracks-list"></div>
+      </div>
+    </div>
+
+    <div id="error-state" class="error-state" style="display: none;">
+      Artist not found
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="../contact/" class="footer-link">Contact</a>
+        <a href="../about/" class="footer-link">About</a>
+      </div>
+      <div class="footer-copyright">
+        © blinkywink.co
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const LASTFM_API_KEY = '80823e348573d80af66fe59941020fa5';
+    const LASTFM_USERNAME = 'blinkywk';
+    const API_BASE = 'https://ws.audioscrobbler.com/2.0/';
+
+    async function fetchAPI(method, params = {}) {
+      try {
+        const queryParams = new URLSearchParams({
+          method,
+          api_key: LASTFM_API_KEY,
+          format: 'json',
+          ...params
+        });
+        const response = await fetch(`${API_BASE}?${queryParams}`);
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(`Last.fm API error: ${data.message || data.error}`);
+        }
+        return data;
+      } catch (error) {
+        console.error(`API error for ${method}:`, error);
+        throw error;
+      }
+    }
+
+    function getImageUrl(imageArray, size = 'large') {
+      if (!imageArray || !Array.isArray(imageArray) || imageArray.length === 0) {
+        return 'https://via.placeholder.com/300';
+      }
+      
+      // Last.fm image sizes: [small, medium, large, extralarge, mega]
+      let imageIndex = 2; // default to large
+      if (size === 'small') imageIndex = 0;
+      else if (size === 'medium') imageIndex = 1;
+      else if (size === 'large') imageIndex = 2;
+      else if (size === 'extralarge') imageIndex = 3;
+      else if (size === 'mega') imageIndex = 4;
+      
+      const image = imageArray[Math.min(imageIndex, imageArray.length - 1)] || imageArray[imageArray.length - 1];
+      const url = image && image['#text'] ? image['#text'] : '';
+      return url && url.trim() !== '' ? url : 'https://via.placeholder.com/300';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getAlbumUrl(artistName, albumName) {
+      return `../album/?artist=${encodeURIComponent(artistName)}&album=${encodeURIComponent(albumName)}`;
+    }
+
+    function getTrackUrl(artistName, trackName) {
+      return `../track/?artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}`;
+    }
+
+    async function loadArtist() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const artist = urlParams.get('artist');
+
+      if (!artist) {
+        showError();
+        return;
+      }
+
+      try {
+        const [artistInfo, userTopAlbums, userTopTracks, userTopArtists, recentTracks] = await Promise.all([
+          fetchAPI('artist.getInfo', { artist: decodeURIComponent(artist), username: LASTFM_USERNAME }).catch(err => {
+            console.error('Artist API error:', err);
+            return { error: true, message: err.message };
+          }),
+          fetchAPI('user.getTopAlbums', { user: LASTFM_USERNAME, limit: 1000 }).catch(() => {
+            return { topalbums: { album: [] } };
+          }),
+          fetchAPI('user.getTopTracks', { user: LASTFM_USERNAME, limit: 1000 }).catch(() => {
+            return { toptracks: { track: [] } };
+          }),
+          fetchAPI('user.getTopArtists', { user: LASTFM_USERNAME, limit: 200 }).catch(() => {
+            return { topartists: { artist: [] } };
+          }),
+          fetchAPI('user.getRecentTracks', { user: LASTFM_USERNAME, limit: 1000 }).catch(() => {
+            return { recenttracks: { track: [] } };
+          })
+        ]);
+
+        if (artistInfo.error || !artistInfo.artist) {
+          console.error('Artist not found:', artist);
+          showError();
+          return;
+        }
+
+        const artistData = artistInfo.artist;
+        
+        // Update page title
+        document.title = `Artist - ${artistData.name}`;
+        
+        // Get image - try artist image first, then from top albums
+        let image = getImageUrl(artistData.image, 'extralarge');
+        if (!image || image.includes('placeholder') || image === '') {
+          // Try to get image from top albums
+          if (userTopAlbums.topalbums && userTopAlbums.topalbums.album) {
+            const albums = Array.isArray(userTopAlbums.topalbums.album) 
+              ? userTopAlbums.topalbums.album 
+              : [userTopAlbums.topalbums.album];
+            if (albums.length > 0 && albums[0].image) {
+              image = getImageUrl(albums[0].image, 'extralarge');
+            }
+          }
+        }
+        
+        document.getElementById('artist-image').src = image;
+        document.getElementById('artist-name').textContent = artistData.name;
+        
+        // Get user playcount from user.getTopArtists if available
+        let playcount = 0;
+        if (artistData.stats && artistData.stats.userplaycount) {
+          playcount = parseInt(artistData.stats.userplaycount);
+        } else if (userTopArtists.topartists && userTopArtists.topartists.artist) {
+          const artists = Array.isArray(userTopArtists.topartists.artist) 
+            ? userTopArtists.topartists.artist 
+            : [userTopArtists.topartists.artist];
+          const foundArtist = artists.find(a => a.name.toLowerCase() === artist.toLowerCase());
+          if (foundArtist && foundArtist.playcount) {
+            playcount = parseInt(foundArtist.playcount);
+          }
+        }
+        
+        document.getElementById('artist-meta').innerHTML = `
+          <div>${playcount.toLocaleString()} plays</div>
+        `;
+
+        // Bio
+        if (artistData.bio && artistData.bio.summary) {
+          const bioText = artistData.bio.summary.split('<a')[0].trim();
+          document.getElementById('artist-bio').textContent = bioText;
+        }
+
+        // Your Top Albums for this artist
+        if (userTopAlbums.topalbums && userTopAlbums.topalbums.album) {
+          const allAlbums = Array.isArray(userTopAlbums.topalbums.album) 
+            ? userTopAlbums.topalbums.album 
+            : [userTopAlbums.topalbums.album];
+          
+          // Filter to only this artist's albums
+          const artistAlbums = allAlbums.filter(album => {
+            const albumArtist = album.artist.name || '';
+            return albumArtist.toLowerCase() === artist.toLowerCase();
+          }).slice(0, 12);
+          
+          const albumsGrid = document.getElementById('artist-albums');
+          if (artistAlbums.length > 0) {
+            albumsGrid.innerHTML = artistAlbums.map(album => {
+              let albumImage = getImageUrl(album.image);
+              // If album image is missing, try to use artist image as fallback
+              if (!albumImage || albumImage.includes('placeholder') || albumImage === '') {
+                albumImage = image;
+              }
+              return `
+                <a href="${getAlbumUrl(artist, album.name)}" class="album-card-link">
+                  <div class="album-card">
+                    <img src="${albumImage}" alt="${album.name}" class="album-cover" onerror="this.src='https://via.placeholder.com/300'">
+                    <div class="album-info">
+                      <div class="album-name">${escapeHtml(album.name)}</div>
+                      <div class="album-artist">${escapeHtml(artist)}</div>
+                      <div class="album-plays">${parseInt(album.playcount || 0).toLocaleString()} plays</div>
+                    </div>
+                  </div>
+                </a>
+              `;
+            }).join('');
+          } else {
+            albumsGrid.innerHTML = '<div class="empty-state">No albums found in your listening history</div>';
+          }
+        }
+
+        // Your Top Tracks for this artist
+        if (userTopTracks.toptracks && userTopTracks.toptracks.track) {
+          const allTracks = Array.isArray(userTopTracks.toptracks.track) 
+            ? userTopTracks.toptracks.track 
+            : [userTopTracks.toptracks.track];
+          
+          // Filter to only this artist's tracks
+          const artistTracks = allTracks.filter(track => {
+            const trackArtist = track.artist.name || '';
+            return trackArtist.toLowerCase() === artist.toLowerCase();
+          }).slice(0, 20);
+          
+          const tracksList = document.getElementById('artist-tracks');
+          if (artistTracks.length > 0) {
+            // Fetch track info to get album images
+            const trackInfoPromises = artistTracks.map(track => 
+              fetchAPI('track.getInfo', { 
+                artist: artist, 
+                track: track.name,
+                username: LASTFM_USERNAME 
+              }).catch(() => null)
+            );
+            const trackInfos = await Promise.all(trackInfoPromises);
+            
+            tracksList.innerHTML = artistTracks.map((track, index) => {
+              // Try to get album image from track info
+              let trackImage = image; // fallback to artist image
+              if (trackInfos[index] && trackInfos[index].track && trackInfos[index].track.album) {
+                const albumImage = trackInfos[index].track.album.image;
+                if (albumImage && albumImage.length > 0) {
+                  trackImage = getImageUrl(albumImage, 'large');
+                }
+              }
+              // If still no image, try track.image
+              if (!trackImage || trackImage === image) {
+                const trackImg = getImageUrl(track.image, 'large');
+                if (trackImg && !trackImg.includes('placeholder')) {
+                  trackImage = trackImg;
+                }
+              }
+              
+              return `
+                <a href="${getTrackUrl(artist, track.name)}" class="track-item-link">
+                  <div class="track-item">
+                    <img src="${trackImage}" alt="${track.name}" class="track-image" onerror="this.src='https://via.placeholder.com/80'">
+                    <div class="track-info">
+                      <div class="track-name">${escapeHtml(track.name)}</div>
+                      <div class="track-artist">${escapeHtml(artist)}</div>
+                    </div>
+                    <div class="track-meta">
+                      <div class="track-plays">${parseInt(track.playcount || 0).toLocaleString()} plays</div>
+                    </div>
+                  </div>
+                </a>
+              `;
+            }).join('');
+          } else {
+            tracksList.innerHTML = '<div class="empty-state">No tracks found in your listening history</div>';
+          }
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('artist-content').style.display = 'block';
+      } catch (error) {
+        console.error('Error loading artist:', error);
+        showError();
+      }
+    }
+
+    function showError() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-state').style.display = 'block';
+    }
+
+    // Register service worker for image caching
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .catch((error) => console.log('Service Worker registration failed:', error));
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadArtist);
+  </script>
+</body>
+</html>
