@@ -14,7 +14,7 @@
   <!-- Header -->
   <header class="header">
     <div class="header-content">
-      <a href="index.html" class="logo">
+      <a href="index.html" class="logo" id="logo-link">
         <img src="assets/images/icon.png" alt="icon" class="logo-icon">
         <span class="logo-text">blinkywink.co</span>
       </a>
@@ -26,10 +26,9 @@
   <main class="main-content">
     <!-- View Switcher -->
     <div class="stats-view-switcher">
-      <button class="view-btn active" data-view="overview">Overview</button>
-      <button class="view-btn" data-view="tracks">Top Tracks</button>
-      <button class="view-btn" data-view="albums">Top Albums</button>
-      <button class="view-btn" data-view="artists">Top Artists</button>
+      <button class="view-btn" data-view="tracks">Tracks</button>
+      <button class="view-btn" data-view="albums">Albums</button>
+      <button class="view-btn" data-view="artists">Artists</button>
     </div>
 
     <!-- Time Period Selector -->
@@ -85,21 +84,30 @@
 
     </div>
 
-    <!-- Top Albums View -->
+    <!-- Albums View -->
     <div id="albums-view" class="stats-view">
-      <h2 class="section-title">Top Albums</h2>
+      <div class="summary-card">
+        <div class="summary-text">You have listened to <span id="albums-count">-</span> different albums <span id="albums-total-plays">-</span> times.</div>
+      </div>
+      <h2 class="section-title">Albums</h2>
       <div id="top-albums" class="albums-grid"></div>
     </div>
 
-    <!-- Top Tracks View -->
+    <!-- Tracks View -->
     <div id="tracks-view" class="stats-view">
-      <h2 class="section-title">Top Tracks</h2>
+      <div class="summary-card">
+        <div class="summary-text">You have listened to <span id="tracks-count">-</span> different tracks <span id="tracks-total-plays">-</span> times.</div>
+      </div>
+      <h2 class="section-title">Tracks</h2>
       <div id="top-tracks" class="now-playing-list"></div>
     </div>
 
-    <!-- Top Artists View -->
+    <!-- Artists View -->
     <div id="artists-view" class="stats-view">
-      <h2 class="section-title">Top Artists</h2>
+      <div class="summary-card">
+        <div class="summary-text">You have listened to <span id="artists-count">-</span> different artists <span id="artists-total-plays">-</span> times.</div>
+      </div>
+      <h2 class="section-title">Artists</h2>
       <div id="top-artists" class="artists-list"></div>
     </div>
   </main>
@@ -132,12 +140,24 @@
     };
     let isLoadingMore = false;
 
+    // Logo click handler - switch to overview
+    document.getElementById('logo-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      switchView('overview');
+    });
+
     // View switching
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const view = btn.dataset.view;
         switchView(view);
       });
+    });
+
+    // Logo click handler - switch to overview
+    document.getElementById('logo-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      switchView('overview');
     });
 
     // Period switching
@@ -210,7 +230,8 @@
         }
       } catch (error) {
         console.error('Error loading data:', error);
-        showError('Failed to load data. Please try again.');
+        console.error('Error details:', error.message, error.stack);
+        showError(`Failed to load data: ${error.message}. Please check the console for details.`);
       } finally {
         hideLoading();
       }
@@ -224,13 +245,21 @@
         const queryParams = new URLSearchParams({
           method,
           api_key: LASTFM_API_KEY,
-          format: 'json',
-          ...params
+          format: 'json'
         });
-        // Only add user parameter for user.* methods
+        
+        // Add user parameter for user.* methods
         if (method.startsWith('user.') && LASTFM_USERNAME) {
           queryParams.set('user', LASTFM_USERNAME);
         }
+        
+        // Add other params (excluding username if it's not a user.* method)
+        Object.keys(params).forEach(key => {
+          if (key !== 'username' || method.startsWith('user.')) {
+            queryParams.set(key, params[key]);
+          }
+        });
+        
         const response = await fetch(`${API_BASE}?${queryParams}`);
         if (!response.ok) {
           throw new Error(`API request failed: ${response.status}`);
@@ -241,36 +270,56 @@
         }
         return data;
       } catch (error) {
-        console.error(`API error for ${method}:`, error);
+        // Don't log errors for artist.getInfo and track.getInfo - they're handled by the caller
+        if (method !== 'artist.getInfo' && method !== 'track.getInfo') {
+          console.error(`API error for ${method}:`, error);
+        }
         throw error;
       }
     }
 
     async function loadOverviewTracks(playedTracks) {
+      // Check if overview view is active
+      const overviewView = document.getElementById('overview-view');
+      if (!overviewView || !overviewView.classList.contains('active')) {
+        return; // Don't update if view is not active
+      }
+      
       const nowPlayingDiv = document.getElementById('now-playing');
-      if (playedTracks.length > 0) {
+      if (!nowPlayingDiv) {
+        return; // Element doesn't exist
+      }
+      
+      if (playedTracks && playedTracks.length > 0) {
         // Get most recent track for the title
         const mostRecent = playedTracks[0];
         let dateText = '';
-        if (mostRecent.date && mostRecent.date['#text']) {
+        if (mostRecent && mostRecent.date && mostRecent.date['#text']) {
           dateText = formatDate(mostRecent.date['#text']);
         }
         
         const titleElement = document.getElementById('now-playing-title');
-        titleElement.textContent = 'Last Played';
+        if (titleElement) {
+          titleElement.textContent = 'Last Played';
+        }
         
         const updateElement = document.getElementById('now-playing-update');
-        updateElement.textContent = dateText ? `updated ${dateText}` : '';
+        if (updateElement) {
+          updateElement.textContent = dateText ? `updated ${dateText}` : '';
+        }
         
-        // Fetch track info to get playcounts
-        const trackInfoPromises = playedTracks.map(track => 
-          fetchAPI('track.getInfo', { 
-            artist: track.artist['#text'] || track.artist.name, 
-            track: track.name,
-            username: LASTFM_USERNAME 
-          }).catch(() => null)
-        );
-        const trackInfos = await Promise.all(trackInfoPromises);
+        // Get playcounts from user.getTopTracks (EXACT same as tracks view)
+        const topTracksData = await fetchAPI('user.getTopTracks', { period: 'overall', limit: 1000 }).catch(() => ({ toptracks: { track: [] } }));
+        const topTracksMap = new Map();
+        if (topTracksData.toptracks && topTracksData.toptracks.track) {
+          const topTracks = Array.isArray(topTracksData.toptracks.track) 
+            ? topTracksData.toptracks.track 
+            : [topTracksData.toptracks.track];
+          topTracks.forEach(t => {
+            const key = `${(t.artist.name || '').toLowerCase()}|${(t.name || '').toLowerCase()}`;
+            topTracksMap.set(key, parseInt(t.playcount || 0));
+          });
+        }
         
         const html = playedTracks.map((track, index) => {
           const image = getImageUrl(track.image, 'extralarge');
@@ -278,11 +327,9 @@
           const trackName = track.name || 'Unknown Track';
           const albumName = track.album['#text'] || track.album || 'Unknown Album';
           
-          // Get playcount from track info
-          let playcount = 0;
-          if (trackInfos[index] && trackInfos[index].track && trackInfos[index].track.userplaycount) {
-            playcount = parseInt(trackInfos[index].track.userplaycount || 0);
-          }
+          // Get playcount from top tracks map (EXACT same as tracks view)
+          const key = `${artistName.toLowerCase()}|${trackName.toLowerCase()}`;
+          const playcount = topTracksMap.get(key) || 0;
           
           return `
             <a href="${getArtistUrl(artistName)}" class="now-playing-card">
@@ -293,7 +340,6 @@
                   <div class="now-playing-artist">${escapeHtml(artistName)}</div>
                   <div class="now-playing-album">${escapeHtml(albumName)}</div>
                 </div>
-                <div class="now-playing-plays">${playcount.toLocaleString()} ${playcount === 1 ? 'play' : 'plays'}</div>
               </div>
             </a>
           `;
@@ -306,78 +352,105 @@
     }
 
     async function loadOverview() {
-      const [userInfo, recentTracks, topArtists, topAlbums, topTracks] = await Promise.all([
-        fetchAPI('user.getInfo'),
-        fetchAPI('user.getRecentTracks', { limit: 3 }),
-        fetchAPI('user.getTopArtists', { period: currentPeriod, limit: 1 }),
-        fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: 1 }),
-        fetchAPI('user.getTopTracks', { period: currentPeriod, limit: 1 })
-      ]);
-
-      if (!userInfo || !userInfo.user) {
-        throw new Error('Failed to load user info');
-      }
-
-      const user = userInfo.user;
-      
-      // Get stats from period-specific data
-      let totalScrobbles = parseInt(user.playcount || 0);
-      let totalArtists = parseInt(user.artist_count || 0);
-      let totalAlbums = parseInt(user.album_count || 0);
-      let totalTracks = parseInt(user.track_count || 0);
-      
-      // If period is not overall, fetch more data to get accurate counts
-      if (currentPeriod !== 'overall') {
-        const [fullTopArtists, fullTopAlbums, fullTopTracks] = await Promise.all([
-          fetchAPI('user.getTopArtists', { period: currentPeriod, limit: 1000 }),
-          fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: 1000 }),
-          fetchAPI('user.getTopTracks', { period: currentPeriod, limit: 1000 })
+      try {
+        if (!LASTFM_USERNAME) {
+          throw new Error('No username set');
+        }
+        
+        const [userInfo, recentTracks, topArtists, topAlbums, topTracks] = await Promise.all([
+          fetchAPI('user.getInfo'),
+          fetchAPI('user.getRecentTracks', { limit: 3 }),
+          fetchAPI('user.getTopArtists', { period: currentPeriod, limit: 1 }),
+          fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: 1 }),
+          fetchAPI('user.getTopTracks', { period: currentPeriod, limit: 1 })
         ]);
-        
-        // Count unique artists
-        if (fullTopArtists.topartists && fullTopArtists.topartists.artist) {
-          const artists = Array.isArray(fullTopArtists.topartists.artist) 
-            ? fullTopArtists.topartists.artist 
-            : [fullTopArtists.topartists.artist];
-          totalArtists = artists.length;
-          // Sum playcounts for scrobbles
-          totalScrobbles = artists.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
-        }
-        
-        // Count unique albums
-        if (fullTopAlbums.topalbums && fullTopAlbums.topalbums.album) {
-          const albums = Array.isArray(fullTopAlbums.topalbums.album) 
-            ? fullTopAlbums.topalbums.album 
-            : [fullTopAlbums.topalbums.album];
-          totalAlbums = albums.length;
-        }
-        
-        // Count unique tracks
-        if (fullTopTracks.toptracks && fullTopTracks.toptracks.track) {
-          const tracks = Array.isArray(fullTopTracks.toptracks.track) 
-            ? fullTopTracks.toptracks.track 
-            : [fullTopTracks.toptracks.track];
-          totalTracks = tracks.length;
-        }
-      }
-      
-      document.getElementById('total-scrobbles').textContent = totalScrobbles.toLocaleString();
-      document.getElementById('total-artists').textContent = totalArtists.toLocaleString();
-      document.getElementById('total-albums').textContent = totalAlbums.toLocaleString();
-      document.getElementById('total-tracks').textContent = totalTracks.toLocaleString();
 
-      // Show last played tracks
-      if (recentTracks.recenttracks && recentTracks.recenttracks.track) {
-        const tracks = Array.isArray(recentTracks.recenttracks.track) 
-          ? recentTracks.recenttracks.track 
-          : [recentTracks.recenttracks.track];
+        if (!userInfo || !userInfo.user) {
+          console.error('userInfo response:', userInfo);
+          throw new Error('Failed to load user info');
+        }
+
+        const user = userInfo.user;
         
-        // Filter out now playing tracks
-        const playedTracks = tracks.filter(t => !t['@attr'] || !t['@attr'].nowplaying);
-        await loadOverviewTracks(playedTracks);
-      } else {
-        const nowPlayingDiv = document.getElementById('now-playing');
-        nowPlayingDiv.innerHTML = '<div class="now-playing-placeholder">No recent tracks</div>';
+        // Get stats from period-specific data
+        let totalScrobbles = parseInt(user.playcount || 0);
+        let totalArtists = parseInt(user.artist_count || 0);
+        let totalAlbums = parseInt(user.album_count || 0);
+        let totalTracks = parseInt(user.track_count || 0);
+        
+        // If period is not overall, fetch more data to get accurate counts
+        if (currentPeriod !== 'overall') {
+          const [fullTopArtists, fullTopAlbums, fullTopTracks] = await Promise.all([
+            fetchAPI('user.getTopArtists', { period: currentPeriod, limit: 1000 }),
+            fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: 1000 }),
+            fetchAPI('user.getTopTracks', { period: currentPeriod, limit: 1000 })
+          ]);
+          
+          // Count unique artists and sum playcounts
+          if (fullTopArtists.topartists && fullTopArtists.topartists.artist) {
+            const artists = Array.isArray(fullTopArtists.topartists.artist) 
+              ? fullTopArtists.topartists.artist 
+              : [fullTopArtists.topartists.artist];
+            totalArtists = artists.length;
+            // Sum playcounts for scrobbles
+            totalScrobbles = artists.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+          } else {
+            // If no artists returned, set to 0
+            totalArtists = 0;
+            totalScrobbles = 0;
+          }
+          
+          // Count unique albums
+          if (fullTopAlbums.topalbums && fullTopAlbums.topalbums.album) {
+            const albums = Array.isArray(fullTopAlbums.topalbums.album) 
+              ? fullTopAlbums.topalbums.album 
+              : [fullTopAlbums.topalbums.album];
+            totalAlbums = albums.length;
+          } else {
+            totalAlbums = 0;
+          }
+          
+          // Count unique tracks
+          if (fullTopTracks.toptracks && fullTopTracks.toptracks.track) {
+            const tracks = Array.isArray(fullTopTracks.toptracks.track) 
+              ? fullTopTracks.toptracks.track 
+              : [fullTopTracks.toptracks.track];
+            totalTracks = tracks.length;
+          } else {
+            totalTracks = 0;
+          }
+        }
+        
+        // Check if overview view is active before updating
+        const overviewView = document.getElementById('overview-view');
+        if (overviewView && overviewView.classList.contains('active')) {
+          const totalScrobblesEl = document.getElementById('total-scrobbles');
+          const totalArtistsEl = document.getElementById('total-artists');
+          const totalAlbumsEl = document.getElementById('total-albums');
+          const totalTracksEl = document.getElementById('total-tracks');
+          
+          if (totalScrobblesEl) totalScrobblesEl.textContent = totalScrobbles.toLocaleString();
+          if (totalArtistsEl) totalArtistsEl.textContent = totalArtists.toLocaleString();
+          if (totalAlbumsEl) totalAlbumsEl.textContent = totalAlbums.toLocaleString();
+          if (totalTracksEl) totalTracksEl.textContent = totalTracks.toLocaleString();
+        }
+
+        // Show last played tracks
+        if (recentTracks.recenttracks && recentTracks.recenttracks.track) {
+          const tracks = Array.isArray(recentTracks.recenttracks.track) 
+            ? recentTracks.recenttracks.track 
+            : [recentTracks.recenttracks.track];
+          
+          // Filter out now playing tracks
+          const playedTracks = tracks.filter(t => !t['@attr'] || !t['@attr'].nowplaying);
+          await loadOverviewTracks(playedTracks);
+        } else {
+          const nowPlayingDiv = document.getElementById('now-playing');
+          nowPlayingDiv.innerHTML = '<div class="now-playing-placeholder">No recent tracks</div>';
+        }
+      } catch (error) {
+        console.error('Error in loadOverview:', error);
+        throw error;
       }
     }
 
@@ -444,6 +517,30 @@
       }
 
       const trackArray = Array.isArray(tracks) ? tracks : [tracks];
+      
+      // Update summary card (only on first page) - need to fetch all to get accurate totals
+      if (page === 1) {
+        const totalTracks = parseInt(data.toptracks['@attr']?.total || trackArray.length);
+        // For total plays, we need to sum all playcounts - fetch all pages if needed
+        let totalPlays = trackArray.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
+        if (totalTracks > limit) {
+          // Fetch remaining pages to get accurate total plays
+          const remainingPages = Math.ceil(totalTracks / limit) - 1;
+          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
+            try {
+              const moreData = await fetchAPI('user.getTopTracks', { period: currentPeriod, limit: limit, page: p });
+              if (moreData.toptracks && moreData.toptracks.track) {
+                const moreTracks = Array.isArray(moreData.toptracks.track) ? moreData.toptracks.track : [moreData.toptracks.track];
+                totalPlays += moreTracks.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
+              }
+            } catch (e) {
+              break;
+            }
+          }
+        }
+        document.getElementById('tracks-count').textContent = totalTracks.toLocaleString();
+        document.getElementById('tracks-total-plays').textContent = totalPlays.toLocaleString();
+      }
       
       // Fetch track info to get album images
       const trackInfoPromises = trackArray.map(track => 
@@ -517,6 +614,28 @@
       }
 
       const albumArray = Array.isArray(albums) ? albums : [albums];
+      
+      // Update summary card (only on first page) - need to fetch all to get accurate totals
+      if (page === 1) {
+        const totalAlbums = parseInt(data.topalbums['@attr']?.total || albumArray.length);
+        let totalPlays = albumArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+        if (totalAlbums > limit) {
+          const remainingPages = Math.ceil(totalAlbums / limit) - 1;
+          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
+            try {
+              const moreData = await fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: limit, page: p });
+              if (moreData.topalbums && moreData.topalbums.album) {
+                const moreAlbums = Array.isArray(moreData.topalbums.album) ? moreData.topalbums.album : [moreData.topalbums.album];
+                totalPlays += moreAlbums.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+              }
+            } catch (e) {
+              break;
+            }
+          }
+        }
+        document.getElementById('albums-count').textContent = totalAlbums.toLocaleString();
+        document.getElementById('albums-total-plays').textContent = totalPlays.toLocaleString();
+      }
       const html = albumArray.map(album => {
         const image = getImageUrl(album.image, 'extralarge');
         const albumName = album.name || 'Unknown Album';
@@ -560,28 +679,51 @@
 
       const artistArray = Array.isArray(artists) ? artists : [artists];
       
-      // Fetch artist info for images
-      const artistPromises = artistArray.map(artist => 
-        fetchAPI('artist.getInfo', { artist: artist.name }).catch(() => null)
-      );
-      const artistInfos = await Promise.all(artistPromises);
+      // Update summary card (only on first page) - need to fetch all to get accurate totals
+      if (page === 1) {
+        const totalArtists = parseInt(data.topartists['@attr']?.total || artistArray.length);
+        let totalPlays = artistArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+        if (totalArtists > limit) {
+          const remainingPages = Math.ceil(totalArtists / limit) - 1;
+          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
+            try {
+              const moreData = await fetchAPI('user.getTopArtists', { period: currentPeriod, limit: limit, page: p });
+              if (moreData.topartists && moreData.topartists.artist) {
+                const moreArtists = Array.isArray(moreData.topartists.artist) ? moreData.topartists.artist : [moreData.topartists.artist];
+                totalPlays += moreArtists.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+              }
+            } catch (e) {
+              break;
+            }
+          }
+        }
+        document.getElementById('artists-count').textContent = totalArtists.toLocaleString();
+        document.getElementById('artists-total-plays').textContent = totalPlays.toLocaleString();
+      }
       
+      // Use images directly from top artists response
       const html = artistArray.map((artist, index) => {
         const artistName = artist.name || 'Unknown Artist';
-        // Try to get image from artist info
-        let image = 'https://via.placeholder.com/100';
-        if (artistInfos[index] && artistInfos[index].artist && artistInfos[index].artist.image) {
-          const artistImg = getImageUrl(artistInfos[index].artist.image, 'extralarge');
-          if (artistImg && !artistImg.includes('placeholder')) {
-            image = artistImg;
+        
+        // Get image directly from artist object
+        let image = '';
+        if (artist.image) {
+          // artist.image is an array of image objects with '#text' property
+          if (Array.isArray(artist.image) && artist.image.length > 0) {
+            image = getImageUrl(artist.image, 'extralarge');
           }
+        }
+        
+        // If no valid image URL, use a data URI placeholder (dark gray square)
+        if (!image || image.trim() === '') {
+          image = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\'%3E%3Crect fill=\'%23333\' width=\'300\' height=\'300\'/%3E%3C/svg%3E';
         }
         
         return `
           <a href="${getArtistUrl(artistName)}" class="artist-item-link">
             <div class="artist-item">
-              <div class="artist-rank">#${index + 1}</div>
-              <img src="${image}" alt="${artistName}" class="artist-image" onerror="this.src='https://via.placeholder.com/100'">
+              <div class="artist-rank">#${(page - 1) * limit + index + 1}</div>
+              <img src="${image}" alt="${artistName}" class="artist-image" onerror="this.style.display='none'">
               <div class="artist-info">
                 <div class="artist-name">${escapeHtml(artistName)}</div>
                 <div class="artist-plays">${parseInt(artist.playcount || 0).toLocaleString()} plays</div>
@@ -667,7 +809,7 @@
 
     function getImageUrl(imageArray, size = 'large') {
       if (!imageArray || !Array.isArray(imageArray) || imageArray.length === 0) {
-        return 'https://via.placeholder.com/300';
+        return '';
       }
       
       // Last.fm image sizes: [small, medium, large, extralarge, mega]
@@ -679,11 +821,35 @@
       else if (size === 'extralarge') imageIndex = 3;
       else if (size === 'mega') imageIndex = 4;
       
-      // Use the requested size, or fall back to largest available
-      const image = imageArray[Math.min(imageIndex, imageArray.length - 1)] || imageArray[imageArray.length - 1];
-      const url = image && image['#text'] ? image['#text'] : '';
-      // Last.fm sometimes returns empty strings, use placeholder if empty
-      return url && url.trim() !== '' ? url : 'https://via.placeholder.com/300';
+      // Try to get the requested size first
+      let targetIndex = Math.min(imageIndex, imageArray.length - 1);
+      let image = imageArray[targetIndex];
+      let url = image && image['#text'] ? image['#text'] : '';
+      
+      // If the requested size is empty, try to find any non-empty image starting from the requested size
+      if (!url || url.trim() === '') {
+        for (let i = targetIndex; i < imageArray.length; i++) {
+          const img = imageArray[i];
+          if (img && img['#text'] && img['#text'].trim() !== '') {
+            url = img['#text'];
+            break;
+          }
+        }
+      }
+      
+      // If still no URL, try going backwards from requested size
+      if (!url || url.trim() === '') {
+        for (let i = targetIndex - 1; i >= 0; i--) {
+          const img = imageArray[i];
+          if (img && img['#text'] && img['#text'].trim() !== '') {
+            url = img['#text'];
+            break;
+          }
+        }
+      }
+      
+      // Return empty string if no URL found - let caller handle fallback
+      return url && url.trim() !== '' ? url : '';
     }
 
     function getArtistUrl(artistName) {
@@ -809,13 +975,30 @@
         // Show all views
         document.querySelectorAll('.stats-view').forEach(v => v.style.display = '');
         document.querySelector('.stats-view-switcher').style.display = 'flex';
+        document.getElementById('time-period-selector').style.display = 'flex';
         loadViewData();
         setupInfiniteScroll();
       }
     });
 
-    // Initial load
+    // Initial load and setup event listeners
     document.addEventListener('DOMContentLoaded', () => {
+      // Change username button handler
+      const changeUserBtn = document.getElementById('change-username-btn');
+      if (changeUserBtn) {
+        changeUserBtn.addEventListener('click', () => {
+          LASTFM_USERNAME = '';
+          localStorage.removeItem('lastfm_username');
+          document.getElementById('username-input').style.display = 'flex';
+          document.getElementById('change-username-btn').style.display = 'none';
+          document.getElementById('username-field').value = '';
+          // Hide all views
+          document.querySelectorAll('.stats-view').forEach(v => v.style.display = 'none');
+          document.querySelector('.stats-view-switcher').style.display = 'none';
+          document.getElementById('time-period-selector').style.display = 'none';
+        });
+      }
+      
       if (LASTFM_USERNAME) {
         document.getElementById('username-input').style.display = 'none';
         document.getElementById('change-username-btn').style.display = 'block';

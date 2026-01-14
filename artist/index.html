@@ -23,7 +23,7 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <div id="loading" class="loading-state">
+    <div id="loading" class="loading-state" style="display: flex;">
       <div class="loading-spinner"></div>
       <p>Loading artist...</p>
     </div>
@@ -31,7 +31,7 @@
     <div id="artist-content" style="display: none;">
       <div class="artist-detail-header">
         <img id="artist-image" src="" alt="Artist" class="artist-detail-image">
-        <div class="artist-detail-info">
+        <div class="artist-detail-info" id="artist-detail-info">
           <h1 id="artist-name" class="artist-detail-title"></h1>
           <div id="artist-meta" class="artist-detail-meta"></div>
           <div id="artist-bio" class="artist-detail-bio"></div>
@@ -136,6 +136,11 @@
         return;
       }
 
+      // Show loading immediately
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('artist-content').style.display = 'none';
+      document.getElementById('error-state').style.display = 'none';
+      
       try {
         const [artistInfo, userTopAlbums, userTopTracks, userTopArtists, recentTracks] = await Promise.all([
           fetchAPI('artist.getInfo', { artist: decodeURIComponent(artist), username: LASTFM_USERNAME }).catch(err => {
@@ -167,16 +172,19 @@
         // Update page title
         document.title = `Artist - ${artistData.name}`;
         
-        // Get image - try artist image first, then from top albums
-        let image = getImageUrl(artistData.image, 'extralarge');
-        if (!image || image.includes('placeholder') || image === '') {
+        // Get image - try artist image first, then from top albums (use mega for higher res)
+        let image = getImageUrl(artistData.image, 'mega');
+        if (!image || image.includes('placeholder') || image === '' || image === 'https://via.placeholder.com/300') {
           // Try to get image from top albums
           if (userTopAlbums.topalbums && userTopAlbums.topalbums.album) {
             const albums = Array.isArray(userTopAlbums.topalbums.album) 
               ? userTopAlbums.topalbums.album 
               : [userTopAlbums.topalbums.album];
             if (albums.length > 0 && albums[0].image) {
-              image = getImageUrl(albums[0].image, 'extralarge');
+              const albumImg = getImageUrl(albums[0].image, 'mega');
+              if (albumImg && !albumImg.includes('placeholder') && albumImg !== 'https://via.placeholder.com/300') {
+                image = albumImg;
+              }
             }
           }
         }
@@ -229,16 +237,14 @@
                 albumImage = image;
               }
               return `
-                <a href="${getAlbumUrl(artist, album.name)}" class="album-card-link">
-                  <div class="album-card">
-                    <img src="${albumImage}" alt="${album.name}" class="album-cover" onerror="this.src='https://via.placeholder.com/300'">
-                    <div class="album-info">
-                      <div class="album-name">${escapeHtml(album.name)}</div>
-                      <div class="album-artist">${escapeHtml(artist)}</div>
-                      <div class="album-plays">${parseInt(album.playcount || 0).toLocaleString()} plays</div>
-                    </div>
+                <div class="album-card">
+                  <img src="${albumImage}" alt="${album.name}" class="album-cover" onerror="this.src='https://via.placeholder.com/300'">
+                  <div class="album-info">
+                    <div class="album-name">${escapeHtml(album.name)}</div>
+                    <div class="album-artist">${escapeHtml(artist)}</div>
+                    <div class="album-plays">${parseInt(album.playcount || 0).toLocaleString()} plays</div>
                   </div>
-                </a>
+                </div>
               `;
             }).join('');
           } else {
@@ -288,18 +294,16 @@
               }
               
               return `
-                <a href="${getTrackUrl(artist, track.name)}" class="track-item-link">
-                  <div class="track-item">
-                    <img src="${trackImage}" alt="${track.name}" class="track-image" onerror="this.src='https://via.placeholder.com/80'">
-                    <div class="track-info">
-                      <div class="track-name">${escapeHtml(track.name)}</div>
-                      <div class="track-artist">${escapeHtml(artist)}</div>
-                    </div>
-                    <div class="track-meta">
-                      <div class="track-plays">${parseInt(track.playcount || 0).toLocaleString()} plays</div>
-                    </div>
+                <div class="track-item">
+                  <img src="${trackImage}" alt="${track.name}" class="track-image" onerror="this.src='https://via.placeholder.com/80'">
+                  <div class="track-info">
+                    <div class="track-name">${escapeHtml(track.name)}</div>
+                    <div class="track-artist">${escapeHtml(artist)}</div>
                   </div>
-                </a>
+                  <div class="track-meta">
+                    <div class="track-plays">${parseInt(track.playcount || 0).toLocaleString()} plays</div>
+                  </div>
+                </div>
               `;
             }).join('');
           } else {
