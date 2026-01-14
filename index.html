@@ -701,20 +701,52 @@
         document.getElementById('artists-total-plays').textContent = totalPlays.toLocaleString();
       }
       
-      // Use images directly from top artists response
+      // Fetch artist info for images - EXACT SAME METHOD AS ARTIST PAGE (line 145-162)
+      const [userTopAlbums] = await Promise.all([
+        fetchAPI('user.getTopAlbums', { user: LASTFM_USERNAME, limit: 1000 }).catch(() => {
+          return { topalbums: { album: [] } };
+        })
+      ]);
+      
+      const artistPromises = artistArray.map(artist => 
+        fetchAPI('artist.getInfo', { artist: artist.name, username: LASTFM_USERNAME }).catch(err => {
+          return { error: true, message: err.message };
+        })
+      );
+      const artistInfos = await Promise.all(artistPromises);
+      
       const html = artistArray.map((artist, index) => {
         const artistName = artist.name || 'Unknown Artist';
         
-        // Get image directly from artist object
+        // Get image - EXACT SAME LOGIC AS ARTIST PAGE (line 176-190)
         let image = '';
-        if (artist.image) {
-          // artist.image is an array of image objects with '#text' property
-          if (Array.isArray(artist.image) && artist.image.length > 0) {
-            image = getImageUrl(artist.image, 'extralarge');
+        if (artistInfos[index] && !artistInfos[index].error && artistInfos[index].artist) {
+          const artistData = artistInfos[index].artist;
+          // First try artist image - EXACT SAME AS ARTIST PAGE LINE 176
+          image = getImageUrl(artistData.image, 'extralarge'); // Use extralarge for list view (artist page uses mega)
+          // Check if it's placeholder, empty, or Last.fm generic placeholder - EXACT SAME CHECK AS ARTIST PAGE LINE 177
+          if (!image || image.includes('placeholder') || image === '' || image === 'https://via.placeholder.com/300' || image.includes('2a96cbd8b46e442fc41c2b86b821562f')) {
+            // Try to get image from top albums - filter by this specific artist
+            if (userTopAlbums.topalbums && userTopAlbums.topalbums.album) {
+              const albums = Array.isArray(userTopAlbums.topalbums.album) 
+                ? userTopAlbums.topalbums.album 
+                : [userTopAlbums.topalbums.album];
+              // Find albums for THIS specific artist (not just first album)
+              const artistAlbums = albums.filter(album => {
+                const albumArtist = album.artist && album.artist.name ? album.artist.name : (album.artist || '');
+                return albumArtist && albumArtist.toLowerCase() === artistName.toLowerCase();
+              });
+              if (artistAlbums.length > 0 && artistAlbums[0].image) {
+                const albumImg = getImageUrl(artistAlbums[0].image, 'extralarge');
+                if (albumImg && !albumImg.includes('placeholder') && albumImg !== 'https://via.placeholder.com/300') {
+                  image = albumImg;
+                }
+              }
+            }
           }
         }
         
-        // If no valid image URL, use a data URI placeholder (dark gray square)
+        // If still no valid image, use data URI placeholder
         if (!image || image.trim() === '') {
           image = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\'%3E%3Crect fill=\'%23333\' width=\'300\' height=\'300\'/%3E%3C/svg%3E';
         }
@@ -933,9 +965,9 @@
                               <div class="now-playing-track">${escapeHtml(trackName)}</div>
                               <div class="now-playing-artist">${escapeHtml(artistName)}</div>
                               <div class="now-playing-album">${escapeHtml(albumName)}</div>
-                            </div>
+      </div>
                             <div class="now-playing-plays">${playcount.toLocaleString()} ${playcount === 1 ? 'play' : 'plays'}</div>
-                          </div>
+      </div>
                         </a>
                       `;
                     }).join('');
