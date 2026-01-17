@@ -334,7 +334,10 @@
           return `
             <a href="${getArtistUrl(artistName)}" class="now-playing-card">
               <div class="now-playing-content">
-                <img src="${image}" alt="${trackName}" class="now-playing-image" onerror="this.src='https://via.placeholder.com/100'">
+                <div class="image-loading-container">
+                  <div class="image-loading-spinner"></div>
+                  <img src="${image}" alt="${trackName}" class="now-playing-image" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+                </div>
                 <div class="now-playing-info">
                   <div class="now-playing-track">${escapeHtml(trackName)}</div>
                   <div class="now-playing-artist">${escapeHtml(artistName)}</div>
@@ -479,7 +482,10 @@
         return `
           <a href="${getTrackUrl(artistName, trackName)}" class="track-item-link">
             <div class="track-item ${isNowPlaying ? 'now-playing-track' : ''}">
-              <img src="${image}" alt="${trackName}" class="track-image" onerror="this.src='https://via.placeholder.com/80'">
+              <div class="track-image-container">
+                <div class="image-loading-spinner"></div>
+                <img src="${image}" alt="${trackName}" class="track-image" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+              </div>
               <div class="track-info">
                 <div class="track-name">${escapeHtml(trackName)}</div>
                 <div class="track-artist">${escapeHtml(artistName)}</div>
@@ -521,20 +527,32 @@
       // Update summary card (only on first page) - need to fetch all to get accurate totals
       if (page === 1) {
         const totalTracks = parseInt(data.toptracks['@attr']?.total || trackArray.length);
-        // For total plays, we need to sum all playcounts - fetch all pages if needed
-        let totalPlays = trackArray.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
-        if (totalTracks > limit) {
-          // Fetch remaining pages to get accurate total plays
-          const remainingPages = Math.ceil(totalTracks / limit) - 1;
-          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
-            try {
-              const moreData = await fetchAPI('user.getTopTracks', { period: currentPeriod, limit: limit, page: p });
-              if (moreData.toptracks && moreData.toptracks.track) {
-                const moreTracks = Array.isArray(moreData.toptracks.track) ? moreData.toptracks.track : [moreData.toptracks.track];
-                totalPlays += moreTracks.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
+        let totalPlays;
+        
+        // For "all time" period, use total scrobbles from user.getInfo
+        if (currentPeriod === 'overall') {
+          const userInfo = await fetchAPI('user.getInfo');
+          totalPlays = parseInt(userInfo.user?.playcount || 0);
+        } else {
+          // For other periods, sum all playcounts - fetch pages with rate limiting
+          totalPlays = trackArray.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
+          if (totalTracks > limit) {
+            const totalPages = Math.ceil(totalTracks / limit);
+            // Limit to reasonable number of pages to avoid API errors (max 50 pages = 2500 tracks)
+            const maxPages = Math.min(totalPages, 50);
+            for (let p = 2; p <= maxPages; p++) {
+              try {
+                // Add small delay to avoid rate limiting
+                if (p > 2) await new Promise(resolve => setTimeout(resolve, 100));
+                const moreData = await fetchAPI('user.getTopTracks', { period: currentPeriod, limit: limit, page: p });
+                if (moreData.toptracks && moreData.toptracks.track) {
+                  const moreTracks = Array.isArray(moreData.toptracks.track) ? moreData.toptracks.track : [moreData.toptracks.track];
+                  totalPlays += moreTracks.reduce((sum, t) => sum + parseInt(t.playcount || 0), 0);
+                }
+              } catch (e) {
+                console.warn(`Failed to fetch page ${p} for tracks:`, e);
+                break;
               }
-            } catch (e) {
-              break;
             }
           }
         }
@@ -579,7 +597,10 @@
         return `
           <a href="${getTrackUrl(artistName, trackName)}" class="now-playing-card">
             <div class="now-playing-content">
-              <img src="${image}" alt="${trackName}" class="now-playing-image" onerror="this.src='https://via.placeholder.com/100'">
+              <div class="image-loading-container">
+                <div class="image-loading-spinner"></div>
+                <img src="${image}" alt="${trackName}" class="now-playing-image" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+              </div>
               <div class="now-playing-info">
                 <div class="now-playing-track">${escapeHtml(trackName)}</div>
                 <div class="now-playing-artist">${escapeHtml(artistName)}</div>
@@ -618,18 +639,32 @@
       // Update summary card (only on first page) - need to fetch all to get accurate totals
       if (page === 1) {
         const totalAlbums = parseInt(data.topalbums['@attr']?.total || albumArray.length);
-        let totalPlays = albumArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
-        if (totalAlbums > limit) {
-          const remainingPages = Math.ceil(totalAlbums / limit) - 1;
-          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
-            try {
-              const moreData = await fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: limit, page: p });
-              if (moreData.topalbums && moreData.topalbums.album) {
-                const moreAlbums = Array.isArray(moreData.topalbums.album) ? moreData.topalbums.album : [moreData.topalbums.album];
-                totalPlays += moreAlbums.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+        let totalPlays;
+        
+        // For "all time" period, use total scrobbles from user.getInfo
+        if (currentPeriod === 'overall') {
+          const userInfo = await fetchAPI('user.getInfo');
+          totalPlays = parseInt(userInfo.user?.playcount || 0);
+        } else {
+          // For other periods, sum all playcounts - fetch pages with rate limiting
+          totalPlays = albumArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+          if (totalAlbums > limit) {
+            const totalPages = Math.ceil(totalAlbums / limit);
+            // Limit to reasonable number of pages to avoid API errors (max 50 pages = 2500 albums)
+            const maxPages = Math.min(totalPages, 50);
+            for (let p = 2; p <= maxPages; p++) {
+              try {
+                // Add small delay to avoid rate limiting
+                if (p > 2) await new Promise(resolve => setTimeout(resolve, 100));
+                const moreData = await fetchAPI('user.getTopAlbums', { period: currentPeriod, limit: limit, page: p });
+                if (moreData.topalbums && moreData.topalbums.album) {
+                  const moreAlbums = Array.isArray(moreData.topalbums.album) ? moreData.topalbums.album : [moreData.topalbums.album];
+                  totalPlays += moreAlbums.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+                }
+              } catch (e) {
+                console.warn(`Failed to fetch page ${p} for albums:`, e);
+                break;
               }
-            } catch (e) {
-              break;
             }
           }
         }
@@ -644,7 +679,10 @@
         return `
           <a href="${getAlbumUrl(artistName, albumName)}" class="album-card-link">
             <div class="album-card">
-              <img src="${image}" alt="${albumName}" class="album-cover" onerror="this.src='https://via.placeholder.com/300'">
+              <div class="album-cover-container">
+                <div class="image-loading-spinner"></div>
+                <img src="${image}" alt="${albumName}" class="album-cover" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+              </div>
               <div class="album-info">
                 <div class="album-name">${escapeHtml(albumName)}</div>
                 <div class="album-artist">${escapeHtml(artistName)}</div>
@@ -682,18 +720,32 @@
       // Update summary card (only on first page) - need to fetch all to get accurate totals
       if (page === 1) {
         const totalArtists = parseInt(data.topartists['@attr']?.total || artistArray.length);
-        let totalPlays = artistArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
-        if (totalArtists > limit) {
-          const remainingPages = Math.ceil(totalArtists / limit) - 1;
-          for (let p = 2; p <= Math.min(remainingPages + 1, 20); p++) {
-            try {
-              const moreData = await fetchAPI('user.getTopArtists', { period: currentPeriod, limit: limit, page: p });
-              if (moreData.topartists && moreData.topartists.artist) {
-                const moreArtists = Array.isArray(moreData.topartists.artist) ? moreData.topartists.artist : [moreData.topartists.artist];
-                totalPlays += moreArtists.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+        let totalPlays;
+        
+        // For "all time" period, use total scrobbles from user.getInfo
+        if (currentPeriod === 'overall') {
+          const userInfo = await fetchAPI('user.getInfo');
+          totalPlays = parseInt(userInfo.user?.playcount || 0);
+        } else {
+          // For other periods, sum all playcounts - fetch pages with rate limiting
+          totalPlays = artistArray.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+          if (totalArtists > limit) {
+            const totalPages = Math.ceil(totalArtists / limit);
+            // Limit to reasonable number of pages to avoid API errors (max 50 pages = 2500 artists)
+            const maxPages = Math.min(totalPages, 50);
+            for (let p = 2; p <= maxPages; p++) {
+              try {
+                // Add small delay to avoid rate limiting
+                if (p > 2) await new Promise(resolve => setTimeout(resolve, 100));
+                const moreData = await fetchAPI('user.getTopArtists', { period: currentPeriod, limit: limit, page: p });
+                if (moreData.topartists && moreData.topartists.artist) {
+                  const moreArtists = Array.isArray(moreData.topartists.artist) ? moreData.topartists.artist : [moreData.topartists.artist];
+                  totalPlays += moreArtists.reduce((sum, a) => sum + parseInt(a.playcount || 0), 0);
+                }
+              } catch (e) {
+                console.warn(`Failed to fetch page ${p} for artists:`, e);
+                break;
               }
-            } catch (e) {
-              break;
             }
           }
         }
@@ -755,7 +807,10 @@
           <a href="${getArtistUrl(artistName)}" class="artist-item-link">
             <div class="artist-item">
               <div class="artist-rank">#${(page - 1) * limit + index + 1}</div>
-              <img src="${image}" alt="${artistName}" class="artist-image" onerror="this.style.display='none'">
+              <div class="artist-image-container">
+                <div class="image-loading-spinner"></div>
+                <img src="${image}" alt="${artistName}" class="artist-image" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+              </div>
               <div class="artist-info">
                 <div class="artist-name">${escapeHtml(artistName)}</div>
                 <div class="artist-plays">${parseInt(artist.playcount || 0).toLocaleString()} plays</div>
@@ -960,7 +1015,10 @@
                       return `
                         <a href="${getArtistUrl(artistName)}" class="now-playing-card">
                           <div class="now-playing-content">
-                            <img src="${image}" alt="${trackName}" class="now-playing-image" onerror="this.src='https://via.placeholder.com/100'">
+                            <div class="image-loading-container">
+                              <div class="image-loading-spinner"></div>
+                              <img src="${image}" alt="${trackName}" class="now-playing-image" onload="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none';" onerror="this.classList.add('loaded'); this.parentElement.querySelector('.image-loading-spinner').style.display='none'; this.style.display='none';">
+                            </div>
                             <div class="now-playing-info">
                               <div class="now-playing-track">${escapeHtml(trackName)}</div>
                               <div class="now-playing-artist">${escapeHtml(artistName)}</div>

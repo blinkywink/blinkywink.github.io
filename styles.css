@@ -380,6 +380,38 @@ a:visited {
   object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: relative;
+}
+
+.now-playing-image.loaded {
+  opacity: 1;
+}
+
+.image-loading-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.image-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #333;
+  border-top-color: #666;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .now-playing-info {
@@ -486,6 +518,30 @@ a:visited {
   object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.track-image.loaded {
+  opacity: 1;
+}
+
+.track-image-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.track-image-container .image-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
 }
 
 .track-info {
@@ -562,6 +618,28 @@ a:visited {
   aspect-ratio: 1;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.album-cover.loaded {
+  opacity: 1;
+}
+
+.album-cover-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.album-cover-container .image-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
 }
 
 .album-info {
@@ -636,6 +714,30 @@ a:visited {
   object-fit: cover;
   border-radius: 12px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.artist-image.loaded {
+  opacity: 1;
+}
+
+.artist-image-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  border-radius: 12px;
+}
+
+.artist-image-container .image-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
 }
 
 .artist-info {
