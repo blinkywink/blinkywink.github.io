@@ -148,6 +148,68 @@ def excerpt_from_mirror_html(html: str, max_len: int = 118) -> str:
     return cut.rstrip(" ,.;:") + "..."
 
 
+def _normalize_card_thumb(url: str, width: int = 220) -> str:
+    u = (url or "").strip()
+    if not u or _WIKIA_CDN not in u:
+        return u
+    if "scale-to-width-down/" in u:
+        return re.sub(r"scale-to-width-down/\d+", f"scale-to-width-down/{width}", u)
+    base, _, qs = u.partition("?")
+    if "/revision/latest" in base:
+        base = re.sub(r"/revision/latest(?:/scale-to-width-down/\d+)?$", f"/revision/latest/scale-to-width-down/{width}", base)
+    return base + (f"?{qs}" if qs else "")
+
+
+def outfit_card_thumb_from_mirror_html(html: str, fallback: str | None = None) -> str | None:
+    """Outfit browse card: prefer Featured render from the hero infobox image tabber."""
+    block = None
+    hero_m = re.search(
+        r'<div class="wiki-char-hero-card[^"]*"[\s\S]*?<aside\b[^>]*\bportable-infobox\b[^>]*>([\s\S]*?)</aside>',
+        html,
+        re.I,
+    )
+    if hero_m:
+        block = hero_m.group(1)
+    else:
+        infobox_m = re.search(r'<aside[^>]*\bportable-infobox\b[^>]*>([\s\S]{0,56000})</aside>', html, re.I)
+        if infobox_m:
+            block = infobox_m.group(1)
+
+    if block:
+        coll_m = re.search(
+            r'data-source=["\']image["\'][\s\S]{0,14000}?(?=</section>|<h2 class="pi-item pi-header|data-source=["\']featured["\'])',
+            block,
+            re.I,
+        )
+        chunk = coll_m.group(0) if coll_m else block
+        featured_hit = None
+        thumb_hit = None
+        for m in re.finditer(r"<img\b([^>]+)>", chunk, re.I):
+            attrs = m.group(1)
+            if "pi-image-thumbnail" not in attrs:
+                continue
+            for cand in _img_urls_from_attributes(attrs):
+                if _WIKIA_CDN not in cand or _is_junk_thumb_url(cand):
+                    continue
+                if not thumb_hit:
+                    thumb_hit = cand
+                if re.search(r'alt=["\']Featured["\']', attrs, re.I):
+                    featured_hit = cand
+                    break
+                if re.search(r"Featured", attrs) and "Outfit" in attrs:
+                    featured_hit = cand
+                    break
+            if featured_hit:
+                break
+        if featured_hit:
+            return _normalize_card_thumb(featured_hit)
+        if thumb_hit:
+            return _normalize_card_thumb(thumb_hit)
+
+    extracted = thumb_from_mirror_html(html, fallback)
+    return _normalize_card_thumb(extracted) if extracted else None
+
+
 def thumb_from_mirror_html(html: str, existing: str | None) -> str | None:
     """Prefer infobox / hero / overview / og:image / gallery over generic hero / placeholders."""
     ex = (existing or "").strip()

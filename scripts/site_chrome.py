@@ -5,6 +5,7 @@ from __future__ import annotations
 SITE_NAME = "Fortnite Wiki Project"
 THEME_COLOR = "#12081c"
 LOGO_SRC = "/assets/logo.png"
+APP_JS_SRC = "/app.js?v=20260609"
 
 NAV_LINKS = """
           <a href="/characters">Outfits</a>
@@ -41,7 +42,6 @@ def header_html() -> str:
           <span class="brand-mark" aria-hidden="true">
             <img class="brand-img" src="{LOGO_SRC}" alt="Fortnite Wiki Project" loading="eager" decoding="async" />
           </span>
-          <span class="brand-text">Wiki</span>
         </a>
 
         <input class="menu-toggle" type="checkbox" id="menu-toggle" />

@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from site_chrome import NAV_HREFS, NAV_LINKS, THEME_COLOR, footer_html, header_html
+from site_chrome import APP_JS_SRC, NAV_HREFS, NAV_LINKS, THEME_COLOR, footer_html, header_html
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,6 +25,8 @@ NAV_RE = re.compile(
 THEME_RE = re.compile(r'<meta name="theme-color" content="[^"]*" />')
 
 REPLACEMENTS = [
+    ('<script src="/app.js" defer></script>', f'<script src="{APP_JS_SRC}" defer></script>'),
+    ('<script src="/app.js?v=20260607" defer></script>', f'<script src="{APP_JS_SRC}" defer></script>'),
     ("Ninjago lore", "Fortnite lore"),
     ("A cleaner, faster way to explore Ninjago lore.", "A cleaner, faster way to explore Fortnite lore."),
     ("exploring Ninjago lore", "exploring Fortnite lore"),

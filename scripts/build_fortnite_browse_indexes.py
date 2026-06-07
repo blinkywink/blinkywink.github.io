@@ -498,16 +498,8 @@ def build_maps(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: dict)
 
     interactive = find_node(tree, "Category:Interactive Maps")
     if interactive:
-        rows = pages_from_node_recursive(
-            interactive,
-            by_title,
-            thumbs,
-            cache,
-            seen,
-            search_tags="interactive maps creative",
-            kind="map",
-        )
-        _append_browse_group(groups_out, seen, "Interactive Maps", "interactive-maps", rows)
+        # Skip — Fandom interactive map widgets do not render in static mirrors (empty pages).
+        pass
 
     maps_root = find_node(tree, "Category:Maps")
     if maps_root:

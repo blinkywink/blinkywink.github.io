@@ -14,7 +14,7 @@ import sys
 import urllib.parse
 from pathlib import Path
 
-from site_chrome import THEME_COLOR, footer_html, header_html
+from site_chrome import APP_JS_SRC, THEME_COLOR, footer_html, header_html
 
 BASE = "https://fortnite.fandom.com"
 API = f"{BASE}/api.php"
@@ -738,6 +738,7 @@ def import_character(
     body = (
         TEMPLATE.replace("__SITE_HEADER__", header_html())
         .replace("__SITE_FOOTER__", footer_html())
+        .replace("__APP_JS__", APP_JS_SRC)
         .format(
         display=display_label,
         extra_head="",
@@ -1308,7 +1309,7 @@ __SITE_FOOTER__
         }})();
       }})();
     </script>
-    <script src="/app.js" defer></script>
+    <script src="__APP_JS__" defer></script>
   </body>
 </html>
 """

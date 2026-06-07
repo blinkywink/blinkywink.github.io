@@ -1091,45 +1091,53 @@
   }
 
   // Weapons, items, maps: grouped browse indexes (see scripts/build_fortnite_browse_indexes.py).
-  initGroupedBrowseIndex({
-    searchEl: document.getElementById("weapons-search"),
-    gridEl: document.getElementById("weapons-grid"),
-    loadStatusEl: document.getElementById("weapons-load-status"),
-    browseRootEl: document.getElementById("weapons-browse-root"),
-    searchPanelEl: document.getElementById("weapons-search-panel"),
-    searchNoteEl: document.getElementById("weapons-search-note"),
-    jsonUrl: "/assets/data/weapons_index.json",
-    emptyMessage:
-      "No weapon data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
-    errorMessage: "Could not load weapons. Try refreshing.",
-    defaultGroupTitle: "Weapons",
-  });
+  function bootGroupedBrowseIndexes() {
+    initGroupedBrowseIndex({
+      searchEl: document.getElementById("weapons-search"),
+      gridEl: document.getElementById("weapons-grid"),
+      loadStatusEl: document.getElementById("weapons-load-status"),
+      browseRootEl: document.getElementById("weapons-browse-root"),
+      searchPanelEl: document.getElementById("weapons-search-panel"),
+      searchNoteEl: document.getElementById("weapons-search-note"),
+      jsonUrl: "/assets/data/weapons_index.json",
+      emptyMessage:
+        "No weapon data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+      errorMessage: "Could not load weapons. Try refreshing.",
+      defaultGroupTitle: "Weapons",
+    });
 
-  initGroupedBrowseIndex({
-    searchEl: document.getElementById("items-search"),
-    gridEl: document.getElementById("items-grid"),
-    loadStatusEl: document.getElementById("items-load-status"),
-    browseRootEl: document.getElementById("items-browse-root"),
-    searchPanelEl: document.getElementById("items-search-panel"),
-    searchNoteEl: document.getElementById("items-search-note"),
-    jsonUrl: "/assets/data/items_index.json",
-    emptyMessage: "No item data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
-    errorMessage: "Could not load items. Try refreshing.",
-    defaultGroupTitle: "Items",
-  });
+    initGroupedBrowseIndex({
+      searchEl: document.getElementById("items-search"),
+      gridEl: document.getElementById("items-grid"),
+      loadStatusEl: document.getElementById("items-load-status"),
+      browseRootEl: document.getElementById("items-browse-root"),
+      searchPanelEl: document.getElementById("items-search-panel"),
+      searchNoteEl: document.getElementById("items-search-note"),
+      jsonUrl: "/assets/data/items_index.json",
+      emptyMessage: "No item data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+      errorMessage: "Could not load items. Try refreshing.",
+      defaultGroupTitle: "Items",
+    });
 
-  initGroupedBrowseIndex({
-    searchEl: document.getElementById("maps-search"),
-    gridEl: document.getElementById("maps-grid"),
-    loadStatusEl: document.getElementById("maps-load-status"),
-    browseRootEl: document.getElementById("maps-browse-root"),
-    searchPanelEl: document.getElementById("maps-search-panel"),
-    searchNoteEl: document.getElementById("maps-search-note"),
-    jsonUrl: "/assets/data/maps_index.json",
-    emptyMessage: "No map data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
-    errorMessage: "Could not load maps. Try refreshing.",
-    defaultGroupTitle: "Maps",
-  });
+    initGroupedBrowseIndex({
+      searchEl: document.getElementById("maps-search"),
+      gridEl: document.getElementById("maps-grid"),
+      loadStatusEl: document.getElementById("maps-load-status"),
+      browseRootEl: document.getElementById("maps-browse-root"),
+      searchPanelEl: document.getElementById("maps-search-panel"),
+      searchNoteEl: document.getElementById("maps-search-note"),
+      jsonUrl: "/assets/data/maps_index.json",
+      emptyMessage: "No map data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+      errorMessage: "Could not load maps. Try refreshing.",
+      defaultGroupTitle: "Maps",
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootGroupedBrowseIndexes);
+  } else {
+    bootGroupedBrowseIndexes();
+  }
 
   // Sets index: groups from sets_index.json (see scripts/build_fortnite_browse_indexes.py).
   const setsSearch = document.getElementById("sets-search");
@@ -1717,7 +1725,7 @@
       let path;
       try {
         const u = new URL(wu);
-        if (!/ninjago\.fandom\.com$/i.test(u.hostname)) continue;
+        if (!/fortnite\.fandom\.com$/i.test(u.hostname)) continue;
         path = decodeURIComponent(u.pathname).replace(/\/$/, "").toLowerCase();
       } catch {
         continue;
@@ -1749,7 +1757,7 @@
           } catch {
             return;
           }
-          if (!/ninjago\.fandom\.com$/i.test(u.hostname)) return;
+          if (!/fortnite\.fandom\.com$/i.test(u.hostname)) return;
           let path = decodeURIComponent(u.pathname).replace(/\/$/, "").toLowerCase();
           if (!path.startsWith("/wiki/")) return;
           if (WIKI_SKIP_PREFIXES.some((p) => path.startsWith(p))) return;
@@ -1766,6 +1774,118 @@
   };
 
   fixFandomCharacterAnchors(document.body);
+
+  /** Compact play buttons for Fandom `.sound` clips (weapon Sounds tables, boss audio, etc.). */
+  function initWikiSounds(root) {
+    const scope = root || document;
+    let currentAudio = null;
+    let currentBtn = null;
+
+    const resetBtn = (btn) => {
+      if (!btn) return;
+      btn.classList.remove("is-playing");
+      btn.setAttribute("aria-label", "Play sound");
+    };
+
+    scope.querySelectorAll(".wiki-import span.sound:not([data-wiki-sound-init])").forEach((span) => {
+      span.setAttribute("data-wiki-sound-init", "1");
+      const audio = span.querySelector(".sound-audio audio");
+      if (!audio || !audio.getAttribute("src")) return;
+
+      audio.setAttribute("referrerpolicy", "no-referrer");
+      audio.preload = "none";
+      audio.removeAttribute("controls");
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "wiki-sound-play";
+      btn.setAttribute("aria-label", "Play sound");
+      btn.innerHTML = '<span class="wiki-sound-play-icon" aria-hidden="true"></span>';
+
+      btn.addEventListener("click", () => {
+        if (audio.paused) {
+          if (currentAudio && currentAudio !== audio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            resetBtn(currentBtn);
+          }
+          audio.play().catch(() => {});
+          currentAudio = audio;
+          currentBtn = btn;
+          btn.classList.add("is-playing");
+          btn.setAttribute("aria-label", "Pause sound");
+        } else {
+          audio.pause();
+          resetBtn(btn);
+          currentAudio = null;
+          currentBtn = null;
+        }
+      });
+
+      audio.addEventListener("ended", () => {
+        resetBtn(btn);
+        if (currentAudio === audio) {
+          currentAudio = null;
+          currentBtn = null;
+        }
+      });
+
+      span.classList.add("wiki-sound--ready");
+      span.insertBefore(btn, span.firstChild);
+    });
+  }
+
+  /** MediaWiki collapsible tables — Fandom JS/CSS not loaded on mirror. */
+  function initWikiCollapsibleTables(root) {
+    const scope = root || document;
+    scope
+      .querySelectorAll(".wiki-import table.mw-collapsible:not([data-wiki-collapsible-init])")
+      .forEach((table) => {
+        table.setAttribute("data-wiki-collapsible-init", "1");
+        const firstRow = table.querySelector("tbody > tr:first-child");
+        if (!firstRow) return;
+
+        if (table.querySelector(".sound")) {
+          table.classList.remove("mw-collapsed");
+        }
+
+        firstRow.classList.add("wiki-collapsible-toggle");
+        firstRow.setAttribute("role", "button");
+        firstRow.setAttribute("tabindex", "0");
+        firstRow.setAttribute("aria-expanded", table.classList.contains("mw-collapsed") ? "false" : "true");
+
+        const toggle = () => {
+          const collapsed = table.classList.toggle("mw-collapsed");
+          firstRow.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        };
+
+        firstRow.addEventListener("click", toggle);
+        firstRow.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      });
+  }
+
+  function openSoundSections() {
+    document.querySelectorAll("details.wiki-char-msection").forEach((det) => {
+      if (det.querySelector("#Sounds, .sound")) det.open = true;
+    });
+  }
+
+  function bootWikiAudio() {
+    initWikiCollapsibleTables(document);
+    initWikiSounds(document);
+    openSoundSections();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootWikiAudio);
+  } else {
+    bootWikiAudio();
+  }
 
   function escapeHtml(s) {
     return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");

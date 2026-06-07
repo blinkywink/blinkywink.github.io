@@ -12,6 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 CAT_JSON = ROOT / "scripts" / "cat_all_characters_with_thumbs.json"
 OUT = ROOT / "assets" / "data" / "characters.json"
 
+import sys
+
+sys.path.insert(0, str(ROOT / "scripts"))
+from search_snippet_extract import outfit_card_thumb_from_mirror_html  # noqa: E402
+
 FEATURED_TITLES = [
     "Drift",
     "Peely",
@@ -55,7 +60,14 @@ def main() -> None:
         seen.add(slug)
         local = ROOT / "characters" / slug / "index.html"
         href = f"/characters/{slug}" if local.is_file() else wiki_url(title)
-        thumb = (row.get("thumb_url") or "").strip() or "/assets/hero.png"
+        thumb = (row.get("thumb_url") or "").strip()
+        if local.is_file():
+            html = local.read_text(encoding="utf-8", errors="ignore")
+            extracted = outfit_card_thumb_from_mirror_html(html, thumb or None)
+            if extracted:
+                thumb = extracted
+        if not thumb:
+            thumb = "/assets/hero.png"
         manifest.append(
             {
                 "slug": slug,
