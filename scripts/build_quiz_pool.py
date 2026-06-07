@@ -36,6 +36,20 @@ _EPISODE_SKIP_SLUGS = frozenset(
 )
 
 _EPISODE_POOL_JUNK = re.compile(r"Nav_Seasons", re.I)
+_EPISODE_IMAGE_JUNK = re.compile(
+    r"_-_Weapon_-_Fortnite|Outfit_-_Fortnite|Glider_-_Fortnite|Pickaxe_-_Fortnite|"
+    r"Emote_-_Fortnite|Emoticon_-_Fortnite|Wrap_-_Fortnite|Back_Bling|Arrow_Right|"
+    r"V-Bucks|xp_boost|Schematic|Ammo_-_Fortnite|Trap_-_Fortnite|Item_-_Fortnite|"
+    r"Quests_-_|Challenges_-_Icon|Battle_Pass.*Icon|Banners-Icons|Hashflag|"
+    r"Free_Pass|Free_Challenges|Season_XP|Personal_xp|Friend_xp|Daily_Quests",
+    re.I,
+)
+_EPISODE_IMAGE_GOOD = re.compile(
+    r"Key[_ -]?Art|Keyart|Loading[_ ]Screen|_-_Logo_-_|Teaser|Lobby_Background|"
+    r"Lobby_Screen|Promo_-_Fortnite|Trailer|Full\)|_\(Full\)|Event_-_Fortnite|"
+    r"Battle_Pass_-_Fortnite|Chapter.*Loading|Chapter.*Key|Remix",
+    re.I,
+)
 _CHARACTER_POOL_JUNK = re.compile(r"Fall_Guys|_-_Fall_Guys\.", re.I)
 _MAP_POOL_JUNK = re.compile(
     r"Spray_-_Fortnite|Emoticon_-_Fortnite|Emote_-_Fortnite|"
@@ -54,10 +68,21 @@ _MAP_SKIP_DISPLAY = frozenset({"Map Gallery", "Map:Fortbytes", "Venture/Maps"})
 _ITEM_WEAPON_HREF = re.compile(
     r"/weapons-battle-royale/|/weaponry|/ranged-weapons|/assault-weapons|"
     r"/shotguns/|/sniper-rifles|/submachine-guns|/bows/|/crossbows/|"
-    r"/melee-weapons|/explosive-weapons|/marksman-rifles|/pistols/",
+    r"/melee-weapons|/explosive-weapons|/marksman-rifles|/pistols/|"
+    r"/ballistic/|/vehicles/",
     re.I,
 )
-_ITEM_WEAPON_IMAGE = re.compile(r"_-_Weapon_-_Fortnite", re.I)
+_ITEM_WEAPON_IMAGE = re.compile(
+    r"_-_Weapon_-_Fortnite|Weapon_-_Ballistic|_-_Vehicle_-_Fortnite|"
+    r"Outfit_-_Fortnite|Emote_-_Fortnite|Pickaxe_-_Fortnite|Glider_-_Fortnite|"
+    r"Wrap_-_Fortnite|Back_Bling|Schematic_-_Icon|Question_-_Icon|Hashflag",
+    re.I,
+)
+_ITEM_POOL_GOOD = re.compile(
+    r"_-_Item_-_Fortnite|_-_Trap_-_Fortnite|_-_Ammo_-_Fortnite|"
+    r"_-_Resource_-_Fortnite|_-_Ingredient_-_Fortnite|_-_Power_-_Fortnite",
+    re.I,
+)
 
 # Category / index hub pages — not individual quiz targets
 _HUB_NAMES = frozenset(
@@ -225,8 +250,13 @@ def _is_episode_quiz_row(row: dict) -> bool:
 
 
 def _is_episode_pool_image(url: str) -> bool:
-    """Drop season-sidebar nav thumbs — they appear on every season page."""
-    return not _EPISODE_POOL_JUNK.search(unquote(url or ""))
+    """Season quiz visuals only — key art, loading screens, teasers, logos."""
+    u = unquote(url or "")
+    if _EPISODE_POOL_JUNK.search(u):
+        return False
+    if _EPISODE_IMAGE_JUNK.search(u):
+        return False
+    return bool(_EPISODE_IMAGE_GOOD.search(u))
 
 
 def _episode_row_images(row: dict) -> list[str] | None:
@@ -575,7 +605,10 @@ def _is_item_quiz_row(row: dict, weapon_hrefs: set[str]) -> bool:
 
 
 def _is_item_pool_image(url: str) -> bool:
-    return not _ITEM_WEAPON_IMAGE.search(unquote(url or ""))
+    u = unquote(url or "")
+    if _ITEM_WEAPON_IMAGE.search(u):
+        return False
+    return bool(_ITEM_POOL_GOOD.search(u))
 
 
 def _item_row_images(row: dict) -> list[str] | None:

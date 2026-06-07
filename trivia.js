@@ -46,20 +46,79 @@
 
   const BASE_QUIZ_TYPES = ["episode", "character", "set", "weapon", "map", "item"];
   const WEAPON_MIN_IMAGES = 1;
-  const CHARACTER_MIN_IMAGES = 4;
+  const CHARACTER_MIN_IMAGES = 2;
+  const EPISODE_MIN_IMAGES = 2;
+  const MAP_MIN_IMAGES = 2;
+  const MULTI_IMAGE_COUNT = 3;
+  const SINGLE_IMAGE_TYPES = new Set(["set", "weapon", "item"]);
   const EPISODE_NAV_IMAGE = /Nav_Seasons/i;
+  const EPISODE_IMAGE_JUNK =
+    /_-_Weapon_-_Fortnite|Outfit_-_Fortnite|Glider_-_Fortnite|Pickaxe_-_Fortnite|Emote_-_Fortnite|Emoticon_-_Fortnite|Wrap_-_Fortnite|Back_Bling|Arrow_Right|V-Bucks|xp_boost|Schematic|Ammo_-_Fortnite|Trap_-_Fortnite|Item_-_Fortnite|Quests_-_|Challenges_-_Icon|Battle_Pass.*Icon|Banners-Icons|Hashflag|Free_Pass|Free_Challenges|Season_XP|Personal_xp|Friend_xp|Daily_Quests/i;
+  const EPISODE_IMAGE_GOOD =
+    /Key[_ -]?Art|Keyart|Loading[_ ]Screen|_-_Logo_-_|Teaser|Lobby_Background|Lobby_Screen|Promo_-_Fortnite|Trailer|Full\)|_\(Full\)|Event_-_Fortnite|Battle_Pass_-_Fortnite|Chapter.*Loading|Chapter.*Key|Remix/i;
+  const EPISODE_IMAGES_PER_QUESTION = 3;
   const CHARACTER_JUNK = /Fall_Guys|Hashflag/i;
   const MAP_JUNK =
     /Spray|Emoticon|Emote|Back_Bling|Arrow_Right|Outfit|Glider|Wrap|Pickaxe|Hashflag|disambig|Schematic_-_Icon|Question_-_Icon/i;
   const MAP_GOOD = /Island|Location|Map|Landmark|Promo.*Ballistic/i;
-  const ITEM_WEAPON_HREF = /\/weapons-battle-royale\/|\/weaponry|\/assault-weapons|\/shotguns\/|\/sniper-rifles|\/submachine-guns|\/bows\/|\/crossbows\/|\/melee-weapons|\/explosive-weapons|\/ranged-weapons|\/marksman-rifles|\/pistols\//i;
-  const ITEM_WEAPON_IMAGE = /_-_Weapon_-_Fortnite/i;
+  const ITEM_WEAPON_HREF =
+    /\/weapons-battle-royale\/|\/weaponry|\/assault-weapons|\/shotguns\/|\/sniper-rifles|\/submachine-guns|\/bows\/|\/crossbows\/|\/melee-weapons|\/explosive-weapons|\/ranged-weapons|\/marksman-rifles|\/pistols\/|\/ballistic\/|\/vehicles\//i;
+  const ITEM_WEAPON_IMAGE =
+    /_-_Weapon_-_Fortnite|Weapon_-_Ballistic|_-_Vehicle_-_Fortnite|Outfit_-_Fortnite|Emote_-_Fortnite|Pickaxe_-_Fortnite|Glider_-_Fortnite|Wrap_-_Fortnite|Back_Bling|Schematic_-_Icon|Question_-_Icon|Hashflag/i;
+  const ITEM_POOL_GOOD =
+    /_-_Item_-_Fortnite|_-_Trap_-_Fortnite|_-_Ammo_-_Fortnite|_-_Resource_-_Fortnite|_-_Ingredient_-_Fortnite|_-_Power_-_Fortnite/i;
 
   const episodeImages = (row) =>
-    (row?.images || []).filter((url) => !EPISODE_NAV_IMAGE.test(decodeURIComponent(url)));
+    (row?.images || []).filter((url) => {
+      const d = decodeURIComponent(url);
+      if (EPISODE_NAV_IMAGE.test(d) || EPISODE_IMAGE_JUNK.test(d)) return false;
+      return EPISODE_IMAGE_GOOD.test(d);
+    });
+
+  const episodeImageRank = (url) => {
+    const d = decodeURIComponent(url);
+    if (/Key[_ -]?Art|Keyart/i.test(d)) return 0;
+    if (/Season.*Loading|Chapter.*Loading|Battle_Royale.*Loading|\(Full\)/i.test(d)) return 1;
+    if (/Teaser|Promo_-_Fortnite/i.test(d)) return 2;
+    if (/Loading_Screen/i.test(d)) return 3;
+    if (/Battle_Pass_-_Fortnite/i.test(d)) return 4;
+    if (/Logo|Lobby/i.test(d)) return 5;
+    return 6;
+  };
+
+  const pickEpisodeImages = (row, count = EPISODE_IMAGES_PER_QUESTION) => {
+    const ranked = episodeImages(row)
+      .slice()
+      .sort((a, b) => episodeImageRank(a) - episodeImageRank(b));
+    if (!ranked.length) return [];
+    const top = ranked.filter((url) => episodeImageRank(url) <= 2);
+    const pool = top.length >= count ? top : ranked;
+    return sample(pool, Math.min(count, pool.length));
+  };
 
   const characterImages = (row) =>
     (row?.images || []).filter((url) => !CHARACTER_JUNK.test(decodeURIComponent(url)));
+
+  const characterImageRank = (url) => {
+    const d = decodeURIComponent(url);
+    if (/Featured|Default_Featured/i.test(d)) return 0;
+    if (/Render|_-_Outfit_-_Fortnite/i.test(d)) return 1;
+    if (/Loading_Screen|Promo|Screenshot|In-Game/i.test(d)) return 2;
+    return 3;
+  };
+
+  const pickCharacterImages = (row, count = MULTI_IMAGE_COUNT) => {
+    const ranked = characterImages(row)
+      .slice()
+      .sort((a, b) => characterImageRank(a) - characterImageRank(b));
+    if (!ranked.length) return [];
+    return sample(ranked, Math.min(count, ranked.length));
+  };
+
+  const pickMultiImages = (imgs, count = MULTI_IMAGE_COUNT) => {
+    if (!imgs.length) return [];
+    return sample(imgs, Math.min(count, imgs.length));
+  };
 
   const mapImages = (row) => {
     const good = (row?.images || []).filter((url) => {
@@ -73,12 +132,36 @@
   const isItemQuizRow = (row) => {
     const href = row?.href || "";
     if (ITEM_WEAPON_HREF.test(href)) return false;
-    const imgs = (row?.images || []).filter((url) => !ITEM_WEAPON_IMAGE.test(decodeURIComponent(url)));
-    return imgs.length >= 1;
+    return itemImages(row).length >= 1;
   };
 
-  const itemImages = (row) =>
-    (row?.images || []).filter((url) => !ITEM_WEAPON_IMAGE.test(decodeURIComponent(url)));
+  const itemImages = (row) => {
+    const pool = (row?.images || []).filter((url) => {
+      const d = decodeURIComponent(url);
+      if (ITEM_WEAPON_IMAGE.test(d)) return false;
+      return ITEM_POOL_GOOD.test(d);
+    });
+    return pool;
+  };
+
+  const quizImagesForRow = (type, row) => {
+    if (type === "episode") return episodeImages(row);
+    if (type === "character") return characterImages(row);
+    if (type === "map") return mapImages(row);
+    if (type === "item") return itemImages(row);
+    return row?.images || [];
+  };
+
+  const pickQuestionImages = (type, row) => {
+    if (type === "episode") return pickEpisodeImages(row);
+    const imgs = quizImagesForRow(type, row);
+    if (!imgs.length) return [];
+    if (SINGLE_IMAGE_TYPES.has(type)) return [imgs[0]];
+    if (type === "character") return pickCharacterImages(row);
+    return pickMultiImages(imgs);
+  };
+
+  const questionHasImages = (type, row) => pickQuestionImages(type, row).length > 0;
 
   const hub = document.getElementById("trivia-hub");
   const quizEl = document.getElementById("trivia-quiz");
@@ -446,10 +529,10 @@
       return rows.filter((r) => (r.images || []).length >= WEAPON_MIN_IMAGES);
     }
     if (type === "episode") {
-      return rows.filter((r) => episodeImages(r).length >= 1);
+      return rows.filter((r) => episodeImages(r).length >= EPISODE_MIN_IMAGES);
     }
     if (type === "map") {
-      return rows.filter((r) => mapImages(r).length >= 1);
+      return rows.filter((r) => mapImages(r).length >= MAP_MIN_IMAGES);
     }
     if (type === "item") {
       return rows.filter((r) => isItemQuizRow(r));
@@ -461,26 +544,7 @@
     BASE_QUIZ_TYPES.every((type) => eligiblePool(type).length >= 4);
 
   const buildQuestion = (type, row, allRows) => {
-    const pool =
-      type === "episode"
-        ? episodeImages(row)
-        : type === "character"
-          ? characterImages(row)
-          : type === "map"
-            ? mapImages(row)
-            : type === "item"
-              ? itemImages(row)
-              : row.images || [];
-    let imgs;
-    if (type === "weapon" || type === "item" || type === "set") {
-      imgs = pool.length ? [pool[0]] : [];
-    } else if (type === "map") {
-      imgs = pool.length ? sample(pool, 1) : [];
-    } else if (type === "episode") {
-      imgs = sample(pool, Math.min(2, pool.length));
-    } else {
-      imgs = sample(pool, Math.min(3, pool.length));
-    }
+    const imgs = pickQuestionImages(type, row);
     const correct = row.display;
     const peerRows = type === "weapon" ? weaponPeerRows(row, allRows) : allRows;
     const others = peerRows.filter((r) => r.display !== correct);
@@ -492,7 +556,6 @@
       label: row.display,
       href: row.href || "",
       images: imgs,
-      imagePool: pool,
       options,
       prompt: QUIZ_META[type].prompt,
       categoryTitle: type === "weapon" ? row.categoryTitle || "" : "",
@@ -503,7 +566,7 @@
     if (type === "combo") {
       return buildComboQuiz();
     }
-    const rows = eligiblePool(type);
+    const rows = eligiblePool(type).filter((row) => questionHasImages(type, row));
     if (rows.length < 4) return [];
     let pickFrom = rows;
     if (type === "weapon") {
@@ -518,7 +581,10 @@
     if (!comboPoolsReady()) return [];
 
     const pools = Object.fromEntries(
-      BASE_QUIZ_TYPES.map((type) => [type, eligiblePool(type)]),
+      BASE_QUIZ_TYPES.map((type) => [
+        type,
+        eligiblePool(type).filter((row) => questionHasImages(type, row)),
+      ]),
     );
     const weaponPickPool = pools.weapon.filter(
       (row) => weaponPeerRows(row, pools.weapon).length >= 4,
@@ -610,17 +676,24 @@
     hideNext();
     hideFeedback();
     questionShell.classList.remove("is-correct", "is-wrong");
-    questionEl.textContent = q.prompt;
+    questionEl.replaceChildren();
+    if (quizType === "combo" && q.type) {
+      const kind = document.createElement("span");
+      kind.className = "trivia-question-kind";
+      kind.textContent = QUIZ_META[q.type]?.kindLabel || q.type;
+      questionEl.appendChild(kind);
+    }
+    questionEl.append(document.createTextNode(q.prompt));
 
     resetImagesTrack();
-    imagesEl.hidden = q.images.length === 0;
+    imagesEl.hidden = !q.images.length;
     imagesEl.className = "trivia-images";
     const isMobile = MOBILE_MQ.matches;
     const imagesShell = questionShell.querySelector(".trivia-images-shell");
-    if (imagesShell) imagesShell.hidden = q.images.length === 0;
+    if (imagesShell) imagesShell.hidden = !q.images.length;
     if (q.images.length > 0) {
       imagesEl.classList.add(`trivia-images--${Math.min(q.images.length, 3)}`);
-      if (isMobile) imagesEl.classList.add("trivia-images--carousel");
+      if (isMobile && q.images.length > 1) imagesEl.classList.add("trivia-images--carousel");
     }
 
     const renderGen = imageRenderGen;
@@ -817,7 +890,7 @@
     if (quizType) startQuiz(quizType);
   });
 
-  fetch("/assets/data/quiz_pool.json?v=20260618")
+  fetch("/assets/data/quiz_pool.json?v=20260626")
     .then((r) => {
       if (!r.ok) throw new Error("load failed");
       return r.json();
