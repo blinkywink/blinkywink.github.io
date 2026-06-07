@@ -47,5 +47,6 @@ while true; do
 done
 
 python3 scripts/build_site_routes.py --no-enrich-search >> "$LOG" 2>&1
+python3 scripts/patch_site_chrome.py >> "$LOG" 2>&1
 python3 scripts/rewrite_fandom_character_links.py --apply >> "$LOG" 2>&1
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] All wiki pages imported." | tee -a "$LOG"

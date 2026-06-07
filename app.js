@@ -14,6 +14,37 @@
     return s;
   };
 
+  /** Canonical primary nav — keep in sync with scripts/site_chrome.py NAV_HREFS / NAV_LINKS. */
+  const PRIMARY_NAV_HREFS = [
+    "/characters",
+    "/episodes",
+    "/weapons",
+    "/sets",
+    "/items",
+    "/maps",
+    "/trivia",
+    "/all-pages",
+  ];
+  const PRIMARY_NAV_HTML = `
+          <a href="/characters">Outfits</a>
+          <a href="/episodes">Seasons</a>
+          <a href="/weapons">Weapons</a>
+          <a href="/sets">Cosmetics</a>
+          <a href="/items">Items</a>
+          <a href="/maps">Maps</a>
+          <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
+          <a href="/all-pages">All Pages</a>`;
+
+  (function ensurePrimaryNav() {
+    const nav = document.querySelector("header.site-header nav.nav");
+    if (!nav) return;
+    const have = [...nav.querySelectorAll('a[href]')].map((a) => a.getAttribute("href") || "");
+    const ok =
+      have.length === PRIMARY_NAV_HREFS.length &&
+      PRIMARY_NAV_HREFS.every((href, i) => have[i] === href);
+    if (!ok) nav.innerHTML = PRIMARY_NAV_HTML;
+  })();
+
   const searchInput = document.getElementById("search-input");
   const searchClear = document.getElementById("search-clear");
   const resultsEl = document.getElementById("search-results");
@@ -847,31 +878,30 @@
       });
   }
 
-  // Weapons index: groups from weapons_index.json (see scripts/build_fortnite_browse_indexes.py).
-  const weaponsSearch = document.getElementById("weapons-search");
-  const weaponsGrid = document.getElementById("weapons-grid");
-  const weaponsLoadStatus = document.getElementById("weapons-load-status");
-  const weaponsBrowseRoot = document.getElementById("weapons-browse-root");
-  const weaponsSearchPanel = document.getElementById("weapons-search-panel");
-  const weaponsSearchNote = document.getElementById("weapons-search-note");
+  function initGroupedBrowseIndex({
+    searchEl,
+    gridEl,
+    loadStatusEl,
+    browseRootEl,
+    searchPanelEl,
+    searchNoteEl,
+    jsonUrl,
+    emptyMessage,
+    errorMessage,
+    defaultGroupTitle,
+  }) {
+    if (!searchEl || !gridEl || !loadStatusEl || !browseRootEl || !searchPanelEl) return;
 
-  if (
-    weaponsSearch &&
-    weaponsGrid &&
-    weaponsLoadStatus &&
-    weaponsBrowseRoot &&
-    weaponsSearchPanel
-  ) {
     /** @type {{ display: string, href: string, slug: string, filter: string, img: string, codes?: string[] }[]} */
-    let weaponManifest = [];
+    let manifest = [];
 
-    const foldWeaponQuery = (raw) =>
+    const foldQuery = (raw) =>
       String(raw || "")
         .trim()
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "");
 
-    const weaponDisplaySearchRank = (display, qFold) => {
+    const displaySearchRank = (display, qFold) => {
       if (!qFold) return 0;
       const full = foldSearch(display);
       if (full.startsWith(qFold)) return 100;
@@ -885,19 +915,19 @@
       return 0;
     };
 
-    const weaponMatchRank = (row, qFold) => {
-      const r = weaponDisplaySearchRank(row.display, qFold);
+    const matchRank = (row, qFold) => {
+      const r = displaySearchRank(row.display, qFold);
       if (r) return r;
       const hay = foldSearch(`${row.filter || ""} ${row.display}`);
       if (hay.includes(qFold)) return 25;
       return 0;
     };
 
-    const applyWeaponImgSrc = (img) => {
+    const applyImgSrc = (img) => {
       img.src = cardImageSrc(img.getAttribute("data-card-image"));
     };
 
-    const makeWeaponCard = (row) => {
+    const makeCard = (row) => {
       const a = document.createElement("a");
       a.className = "char-card char-card--episode";
       if (row.slug) a.id = row.slug;
@@ -913,7 +943,7 @@
         img.referrerPolicy = "no-referrer";
       }
       img.setAttribute("data-card-image", im);
-      applyWeaponImgSrc(img);
+      applyImgSrc(img);
       const nm = document.createElement("div");
       nm.className = "char-name";
       nm.textContent = row.display;
@@ -922,63 +952,62 @@
       return a;
     };
 
-    const removeWeaponSearchCards = () => {
-      weaponsGrid.querySelectorAll(".char-card").forEach((el) => el.remove());
+    const removeSearchCards = () => {
+      gridEl.querySelectorAll(".char-card").forEach((el) => el.remove());
     };
 
-    const exitWeaponsSearchToBrowse = () => {
-      removeWeaponSearchCards();
-      weaponsSearchPanel.hidden = true;
-      weaponsBrowseRoot.hidden = false;
-      weaponsLoadStatus.textContent = "";
-      if (weaponsSearchNote) {
-        weaponsSearchNote.hidden = true;
-        weaponsSearchNote.textContent = "";
+    const exitSearchToBrowse = () => {
+      removeSearchCards();
+      searchPanelEl.hidden = true;
+      browseRootEl.hidden = false;
+      loadStatusEl.textContent = "";
+      if (searchNoteEl) {
+        searchNoteEl.hidden = true;
+        searchNoteEl.textContent = "";
       }
     };
 
-    const runWeaponSearch = (qFold) => {
-      weaponsBrowseRoot.hidden = true;
-      weaponsSearchPanel.hidden = false;
-      if (weaponsSearchNote) {
-        weaponsSearchNote.hidden = true;
-        weaponsSearchNote.textContent = "";
+    const runSearch = (qFold) => {
+      browseRootEl.hidden = true;
+      searchPanelEl.hidden = false;
+      if (searchNoteEl) {
+        searchNoteEl.hidden = true;
+        searchNoteEl.textContent = "";
       }
-      removeWeaponSearchCards();
-      const matches = weaponManifest.filter((row) => weaponMatchRank(row, qFold) > 0);
+      removeSearchCards();
+      const matches = manifest.filter((row) => matchRank(row, qFold) > 0);
       matches.sort((a, b) => {
-        const ra = weaponMatchRank(a, qFold);
-        const rb = weaponMatchRank(b, qFold);
+        const ra = matchRank(a, qFold);
+        const rb = matchRank(b, qFold);
         if (rb !== ra) return rb - ra;
         return a.display.localeCompare(b.display, undefined, { sensitivity: "base" });
       });
       const frag = document.createDocumentFragment();
       for (const row of matches) {
-        frag.appendChild(makeWeaponCard(row));
+        frag.appendChild(makeCard(row));
       }
-      weaponsGrid.appendChild(frag);
-      weaponsLoadStatus.textContent = "";
+      gridEl.appendChild(frag);
+      loadStatusEl.textContent = "";
     };
 
-    const scrollWeaponHash = () => {
+    const scrollHash = () => {
       const h = decodeURIComponent((location.hash || "").slice(1));
       if (!h) return;
       document.getElementById(h)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     };
 
-    const buildWeaponsBrowse = (data) => {
-      weaponsBrowseRoot.innerHTML = "";
+    const buildBrowse = (data) => {
+      browseRootEl.innerHTML = "";
       const groups = data && Array.isArray(data.groups) ? data.groups : [];
       if (!groups.length) {
-        weaponsBrowseRoot.innerHTML =
-          '<p class="characters-browse-empty">No item data. Run scripts/build_fortnite_browse_indexes.py and refresh.</p>';
+        browseRootEl.innerHTML = `<p class="characters-browse-empty">${emptyMessage}</p>`;
         return;
       }
 
-      weaponManifest = [];
+      manifest = [];
       for (const g of groups) {
         for (const row of g.sets || []) {
-          weaponManifest.push(row);
+          manifest.push(row);
         }
       }
 
@@ -996,71 +1025,111 @@
           const link = document.createElement("a");
           link.className = "char-group-title-link";
           link.href = href;
-          link.textContent = g.title || "Weapons";
+          link.textContent = g.title || defaultGroupTitle;
           h2.appendChild(link);
         } else {
-          h2.textContent = g.title || "Weapons";
+          h2.textContent = g.title || defaultGroupTitle;
         }
 
         const grid = document.createElement("div");
         grid.className = "characters-grid characters-grid--group";
-        grid.setAttribute("aria-label", g.title || "Weapons");
+        grid.setAttribute("aria-label", g.title || defaultGroupTitle);
 
         for (const row of rows) {
-          grid.appendChild(makeWeaponCard(row));
+          grid.appendChild(makeCard(row));
         }
 
         section.appendChild(h2);
         section.appendChild(grid);
-        weaponsBrowseRoot.appendChild(section);
+        browseRootEl.appendChild(section);
       }
     };
 
-    weaponsSearch.addEventListener(
+    searchEl.addEventListener(
       "input",
       () => {
-        const raw = String(weaponsSearch.value || "").trim();
+        const raw = String(searchEl.value || "").trim();
         if (!raw) {
-          exitWeaponsSearchToBrowse();
+          exitSearchToBrowse();
           return;
         }
-        const qFold = foldWeaponQuery(raw);
+        const qFold = foldQuery(raw);
         if (!qFold) {
-          exitWeaponsSearchToBrowse();
-          if (weaponsSearchNote) {
-            weaponsSearchNote.hidden = false;
-            weaponsSearchNote.textContent = "Use letters or numbers in your search.";
+          exitSearchToBrowse();
+          if (searchNoteEl) {
+            searchNoteEl.hidden = false;
+            searchNoteEl.textContent = "Use letters or numbers in your search.";
           }
           return;
         }
-        if (weaponsSearchNote) {
-          weaponsSearchNote.hidden = true;
-          weaponsSearchNote.textContent = "";
+        if (searchNoteEl) {
+          searchNoteEl.hidden = true;
+          searchNoteEl.textContent = "";
         }
-        runWeaponSearch(qFold);
+        runSearch(qFold);
       },
       { passive: true },
     );
 
-    fetch("/assets/data/weapons_index.json")
+    fetch(jsonUrl)
       .then((r) => {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       })
       .then((data) => {
-        buildWeaponsBrowse(data);
-        weaponsBrowseRoot.hidden = false;
-        weaponsSearchPanel.hidden = true;
-        scrollWeaponHash();
+        buildBrowse(data);
+        browseRootEl.hidden = false;
+        searchPanelEl.hidden = true;
+        scrollHash();
         window.addEventListener("hashchange", () => {
-          if (!String(weaponsSearch.value || "").trim()) scrollWeaponHash();
+          if (!String(searchEl.value || "").trim()) scrollHash();
         });
       })
       .catch(() => {
-        weaponsBrowseRoot.innerHTML =
-          '<p class="characters-browse-empty">Could not load weapons. Try refreshing.</p>';
+        browseRootEl.innerHTML = `<p class="characters-browse-empty">${errorMessage}</p>`;
       });
   }
+
+  // Weapons, items, maps: grouped browse indexes (see scripts/build_fortnite_browse_indexes.py).
+  initGroupedBrowseIndex({
+    searchEl: document.getElementById("weapons-search"),
+    gridEl: document.getElementById("weapons-grid"),
+    loadStatusEl: document.getElementById("weapons-load-status"),
+    browseRootEl: document.getElementById("weapons-browse-root"),
+    searchPanelEl: document.getElementById("weapons-search-panel"),
+    searchNoteEl: document.getElementById("weapons-search-note"),
+    jsonUrl: "/assets/data/weapons_index.json",
+    emptyMessage:
+      "No weapon data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+    errorMessage: "Could not load weapons. Try refreshing.",
+    defaultGroupTitle: "Weapons",
+  });
+
+  initGroupedBrowseIndex({
+    searchEl: document.getElementById("items-search"),
+    gridEl: document.getElementById("items-grid"),
+    loadStatusEl: document.getElementById("items-load-status"),
+    browseRootEl: document.getElementById("items-browse-root"),
+    searchPanelEl: document.getElementById("items-search-panel"),
+    searchNoteEl: document.getElementById("items-search-note"),
+    jsonUrl: "/assets/data/items_index.json",
+    emptyMessage: "No item data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+    errorMessage: "Could not load items. Try refreshing.",
+    defaultGroupTitle: "Items",
+  });
+
+  initGroupedBrowseIndex({
+    searchEl: document.getElementById("maps-search"),
+    gridEl: document.getElementById("maps-grid"),
+    loadStatusEl: document.getElementById("maps-load-status"),
+    browseRootEl: document.getElementById("maps-browse-root"),
+    searchPanelEl: document.getElementById("maps-search-panel"),
+    searchNoteEl: document.getElementById("maps-search-note"),
+    jsonUrl: "/assets/data/maps_index.json",
+    emptyMessage: "No map data. Run scripts/build_fortnite_browse_indexes.py and refresh.",
+    errorMessage: "Could not load maps. Try refreshing.",
+    defaultGroupTitle: "Maps",
+  });
 
   // Sets index: groups from sets_index.json (see scripts/build_fortnite_browse_indexes.py).
   const setsSearch = document.getElementById("sets-search");

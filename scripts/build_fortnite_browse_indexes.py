@@ -19,7 +19,25 @@ TREE_JSON = ROOT / "assets/data/fandom_content_category_tree.json"
 EPISODES_OUT = ROOT / "assets/data/episodes_index.json"
 SETS_OUT = ROOT / "assets/data/sets_index.json"
 WEAPONS_OUT = ROOT / "assets/data/weapons_index.json"
+ITEMS_OUT = ROOT / "assets/data/items_index.json"
+MAPS_OUT = ROOT / "assets/data/maps_index.json"
 MEDIA_OUT = ROOT / "assets/data/media_index.json"
+
+COSMETIC_SKIP_TITLES = frozenset({"Category:Outfits"})
+ITEM_META_SKIP_TITLES = frozenset(
+    {
+        "Category:Items (Battle Royale)",
+        "Category:Items (Save the World)",
+        "Category:Items by rarity",
+        "Category:Scrapped Items",
+    }
+)
+FILTER_KIND_TAGS = {
+    "weapon": "gun weapon guns",
+    "item": "item consumable trap vehicle healing",
+    "map": "map island location poi",
+    "cosmetic": "cosmetic emote back bling pickaxe",
+}
 
 GENERIC_THUMBS = frozenset({"/assets/hero.png", "/assets/hero-mobile.png", ""})
 
@@ -96,6 +114,7 @@ def row_from_page(
     html_cache: dict[str, str],
     *,
     search_tags: str = "",
+    kind: str = "",
 ) -> dict | None:
     href = (page.get("href") or "").strip()
     display = (page.get("display") or page.get("wikiTitle") or "").strip()
@@ -116,24 +135,33 @@ def row_from_page(
         th = thumb_from_mirror_html(html_cache[key], page.get("thumb")) or ""
     kw = norm_key(display)
     tags = (search_tags or "").strip()
+    kind_tags = FILTER_KIND_TAGS.get(kind, "")
     return {
         "display": display,
         "href": href,
         "slug": slug,
-        "filter": f"{kw} {display} {tags} gun weapon guns".strip(),
+        "filter": f"{kw} {display} {tags} {kind_tags}".strip(),
         "codes": page.get("codes") or [],
         "img": th or "",
     }
 
 
-def pages_from_tree_node(node: dict, by_title: dict[str, dict], thumbs: dict, cache: dict) -> list[dict]:
+def pages_from_tree_node(
+    node: dict,
+    by_title: dict[str, dict],
+    thumbs: dict,
+    cache: dict,
+    *,
+    kind: str = "",
+    search_tags: str = "",
+) -> list[dict]:
     rows: list[dict] = []
     seen: set[str] = set()
     for title in node.get("directPages") or []:
         page = by_title.get(norm_key(title))
         if not page:
             continue
-        built = row_from_page(page, thumbs, cache)
+        built = row_from_page(page, thumbs, cache, search_tags=search_tags, kind=kind)
         if not built or built["href"] in seen:
             continue
         seen.add(built["href"])
@@ -224,8 +252,12 @@ def build_cosmetics(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: 
         return []
     groups_out: list[dict] = []
     for ch in node.get("children") or []:
+        if (ch.get("title") or "") in COSMETIC_SKIP_TITLES:
+            continue
         title = ch.get("displayName") or ch.get("title") or "Set"
-        sets_rows = pages_from_tree_node(ch, by_title, thumbs, cache)
+        sets_rows = pages_from_tree_node(
+            ch, by_title, thumbs, cache, kind="cosmetic", search_tags=title.replace("Category:", "")
+        )
         if not sets_rows:
             continue
         groups_out.append(
@@ -249,13 +281,14 @@ def pages_from_node_recursive(
     seen: set[str],
     *,
     search_tags: str = "",
+    kind: str = "",
 ) -> list[dict]:
     rows: list[dict] = []
     for title in node.get("directPages") or []:
         page = by_title.get(norm_key(title))
         if not page:
             continue
-        built = row_from_page(page, thumbs, cache, search_tags=search_tags)
+        built = row_from_page(page, thumbs, cache, search_tags=search_tags, kind=kind)
         if not built or built["href"] in seen:
             continue
         rows.append(built)
@@ -264,13 +297,23 @@ def pages_from_node_recursive(
             continue
         rows.extend(
             pages_from_node_recursive(
-                ch, by_title, thumbs, cache, seen, search_tags=search_tags
+                ch,
+                by_title,
+                thumbs,
+                cache,
+                seen,
+                search_tags=search_tags,
+                kind=kind,
             )
         )
     return rows
 
 
-def _append_weapon_group(
+def _is_weapon_category(title: str, display: str) -> bool:
+    return "weapon" in f"{title} {display}".lower()
+
+
+def _append_browse_group(
     groups: list[dict],
     seen: set[str],
     title: str,
@@ -301,9 +344,9 @@ def build_weapons(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: di
 
     br = find_node(tree, "Category:Weapons (Battle Royale)")
     if br:
-        root_rows = pages_from_tree_node(br, by_title, thumbs, cache)
+        root_rows = pages_from_tree_node(br, by_title, thumbs, cache, kind="weapon")
         root_rows = [r for r in root_rows if r["href"] not in seen]
-        _append_weapon_group(
+        _append_browse_group(
             groups_out,
             seen,
             "Battle Royale — Other",
@@ -333,8 +376,9 @@ def build_weapons(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: di
                         cache,
                         seen,
                         search_tags=f"{ch_title} {sub_title}",
+                        kind="weapon",
                     )
-                    _append_weapon_group(groups_out, seen, sub_title, sub_slug, rows)
+                    _append_browse_group(groups_out, seen, sub_title, sub_slug, rows)
             else:
                 rows = pages_from_node_recursive(
                     ch,
@@ -343,15 +387,145 @@ def build_weapons(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: di
                     cache,
                     seen,
                     search_tags=ch_title,
+                    kind="weapon",
                 )
-                _append_weapon_group(groups_out, seen, ch_title, ch_slug, rows)
+                _append_browse_group(groups_out, seen, ch_title, ch_slug, rows)
 
     melee = find_node(tree, "Category:Melee Weapons")
     if melee:
         rows = pages_from_node_recursive(
-            melee, by_title, thumbs, cache, seen, search_tags="melee weapons"
+            melee, by_title, thumbs, cache, seen, search_tags="melee weapons", kind="weapon"
         )
-        _append_weapon_group(groups_out, seen, "Melee Weapons", "melee-weapons", rows)
+        _append_browse_group(groups_out, seen, "Melee Weapons", "melee-weapons", rows)
+
+    return groups_out
+
+
+def build_items(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: dict) -> list[dict]:
+    """Battle Royale items and general item categories, excluding weapons."""
+    groups_out: list[dict] = []
+    seen: set[str] = set()
+
+    br = find_node(tree, "Category:Items (Battle Royale)")
+    if br:
+        for ch in br.get("children") or []:
+            if ch.get("duplicate"):
+                continue
+            if _is_weapon_category(ch.get("title") or "", ch.get("displayName") or ""):
+                continue
+            ch_title = (ch.get("displayName") or ch.get("title") or "Items").replace(
+                "Category:", ""
+            )
+            ch_slug = ch.get("slug") or norm_key(ch_title)
+            subcats = [c for c in ch.get("children") or [] if not c.get("duplicate")]
+
+            if subcats:
+                for sub in subcats:
+                    if _is_weapon_category(sub.get("title") or "", sub.get("displayName") or ""):
+                        continue
+                    sub_title = (sub.get("displayName") or sub.get("title") or "").replace(
+                        "Category:", ""
+                    )
+                    sub_slug = sub.get("slug") or norm_key(sub_title)
+                    rows = pages_from_node_recursive(
+                        sub,
+                        by_title,
+                        thumbs,
+                        cache,
+                        seen,
+                        search_tags=f"{ch_title} {sub_title}",
+                        kind="item",
+                    )
+                    _append_browse_group(groups_out, seen, sub_title, sub_slug, rows)
+            else:
+                rows = pages_from_node_recursive(
+                    ch,
+                    by_title,
+                    thumbs,
+                    cache,
+                    seen,
+                    search_tags=ch_title,
+                    kind="item",
+                )
+                _append_browse_group(groups_out, seen, ch_title, ch_slug, rows)
+
+    items_root = find_node(tree, "Category:Items")
+    if items_root:
+        for ch in items_root.get("children") or []:
+            title = ch.get("title") or ""
+            display = ch.get("displayName") or title
+            if title in ITEM_META_SKIP_TITLES:
+                continue
+            if _is_weapon_category(title, display):
+                continue
+            ch_title = display.replace("Category:", "")
+            ch_slug = ch.get("slug") or norm_key(ch_title)
+            rows = pages_from_node_recursive(
+                ch,
+                by_title,
+                thumbs,
+                cache,
+                seen,
+                search_tags=ch_title,
+                kind="item",
+            )
+            _append_browse_group(groups_out, seen, ch_title, ch_slug, rows)
+
+    return groups_out
+
+
+def build_maps(tree: dict, by_title: dict[str, dict], thumbs: dict, cache: dict) -> list[dict]:
+    groups_out: list[dict] = []
+    seen: set[str] = set()
+
+    br = find_node(tree, "Category:Maps (Battle Royale)")
+    if br:
+        root_rows = pages_from_tree_node(
+            br, by_title, thumbs, cache, kind="map", search_tags="battle royale maps"
+        )
+        _append_browse_group(groups_out, seen, "Battle Royale Maps", "battle-royale-maps", root_rows)
+        for ch in br.get("children") or []:
+            if ch.get("duplicate"):
+                continue
+            ch_title = (ch.get("displayName") or ch.get("title") or "Maps").replace(
+                "Category:", ""
+            )
+            ch_slug = ch.get("slug") or norm_key(ch_title)
+            rows = pages_from_node_recursive(
+                ch, by_title, thumbs, cache, seen, search_tags=ch_title, kind="map"
+            )
+            _append_browse_group(groups_out, seen, ch_title, ch_slug, rows)
+
+    interactive = find_node(tree, "Category:Interactive Maps")
+    if interactive:
+        rows = pages_from_node_recursive(
+            interactive,
+            by_title,
+            thumbs,
+            cache,
+            seen,
+            search_tags="interactive maps creative",
+            kind="map",
+        )
+        _append_browse_group(groups_out, seen, "Interactive Maps", "interactive-maps", rows)
+
+    maps_root = find_node(tree, "Category:Maps")
+    if maps_root:
+        root_rows = pages_from_tree_node(
+            maps_root, by_title, thumbs, cache, kind="map", search_tags="maps"
+        )
+        _append_browse_group(groups_out, seen, "Maps — Featured", "maps-featured", root_rows)
+        for ch in maps_root.get("children") or []:
+            if ch.get("duplicate"):
+                continue
+            ch_title = (ch.get("displayName") or ch.get("title") or "Maps").replace(
+                "Category:", ""
+            )
+            ch_slug = ch.get("slug") or norm_key(ch_title)
+            rows = pages_from_node_recursive(
+                ch, by_title, thumbs, cache, seen, search_tags=ch_title, kind="map"
+            )
+            _append_browse_group(groups_out, seen, ch_title, ch_slug, rows)
 
     return groups_out
 
@@ -412,6 +586,32 @@ def main() -> None:
     )
     n_weapons = sum(len(g["sets"]) for g in weapons)
     print(f"Wrote {WEAPONS_OUT.name} — {len(weapons)} groups, {n_weapons} weapons")
+
+    items = build_items(tree_root, by_title, thumbs, cache)
+    ITEMS_OUT.write_text(
+        json.dumps(
+            {"v": 2, "source": "Category:Items (Battle Royale)", "groups": items},
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    n_items = sum(len(g["sets"]) for g in items)
+    print(f"Wrote {ITEMS_OUT.name} — {len(items)} groups, {n_items} items")
+
+    maps = build_maps(tree_root, by_title, thumbs, cache)
+    MAPS_OUT.write_text(
+        json.dumps(
+            {"v": 2, "source": "Category:Maps", "groups": maps},
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    n_maps = sum(len(g["sets"]) for g in maps)
+    print(f"Wrote {MAPS_OUT.name} — {len(maps)} groups, {n_maps} maps")
 
     media = build_media(tree_root, by_title, thumbs, cache)
     MEDIA_OUT.write_text(

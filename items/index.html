@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Items — browse consumables, traps, vehicles, and more (no weapons)" />
+    <title>Items • Fortnite Wiki Project</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <meta name="theme-color" content="#12081c" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+            <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">
+            <img class="brand-img" src="/assets/logo.png" alt="Fortnite Wiki Project" loading="eager" decoding="async" />
+          </span>
+          <span class="brand-text">Wiki</span>
+        </a>
+
+        <input class="menu-toggle" type="checkbox" id="menu-toggle" />
+        <label class="menu-button" for="menu-toggle" aria-label="Open navigation" role="button">
+          <span class="menu-button-lines" aria-hidden="true">
+            <span></span>
+          </span>
+        </label>
+
+        <nav class="nav" aria-label="Primary">
+
+          <a href="/characters">Outfits</a>
+          <a href="/episodes">Seasons</a>
+          <a href="/weapons">Weapons</a>
+          <a href="/sets">Cosmetics</a>
+          <a href="/items">Items</a>
+          <a href="/maps">Maps</a>
+          <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
+          <a href="/all-pages">All Pages</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="page">
+      <section class="section section--tight">
+        <div class="container">
+          <div class="page-search page-search--characters-top" role="search" aria-label="Item search">
+            <div class="search-bar">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input
+                id="items-search"
+                class="search-input"
+                type="search"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Search items… medkit, chug splash, trap, vehicle…"
+                aria-label="Search items"
+              />
+            </div>
+            <p class="characters-search-note" id="items-search-note" hidden aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="container">
+          <div id="items-browse-root" class="characters-browse-root" aria-label="Items by type"></div>
+        </div>
+
+        <div class="container characters-search-panel" id="items-search-panel" hidden>
+          <p class="characters-load-status" id="items-load-status" aria-live="polite"></p>
+          <div class="characters-grid" id="items-grid" aria-label="Search results"></div>
+        </div>
+      </section>
+    </main>
+
+            <footer class="site-footer">
+      <div class="container footer-inner footer-inner--min">
+        <div class="footer-left">
+          <div class="footer-meta">
+            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with Epic Games.</div>
+          </div>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a class="footer-link" href="/about">About</a>
+          <a class="footer-link" href="https://www.epicgames.com/fortnite" rel="noopener noreferrer" target="_blank">Epic Games</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

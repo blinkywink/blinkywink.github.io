@@ -11,9 +11,25 @@ NAV_LINKS = """
           <a href="/episodes">Seasons</a>
           <a href="/weapons">Weapons</a>
           <a href="/sets">Cosmetics</a>
-          <a href="/media">Media</a>
+          <a href="/items">Items</a>
+          <a href="/maps">Maps</a>
           <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
           <a href="/all-pages">All Pages</a>"""
+
+NAV_HREFS = (
+    "/characters",
+    "/episodes",
+    "/weapons",
+    "/sets",
+    "/items",
+    "/maps",
+    "/trivia",
+    "/all-pages",
+)
+
+
+def nav_links_html() -> str:
+    return NAV_LINKS
 
 FOOTER_LINE = "Fan-made Fortnite wiki. Not affiliated with Epic Games."
 
