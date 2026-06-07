@@ -1,43 +1,99 @@
 #!/usr/bin/env python3
-"""Build assets/data/quiz_pool.json — images for trivia quizzes."""
+"""Build assets/data/quiz_pool.json — images for Fortnite trivia quizzes."""
 
 from __future__ import annotations
 
 import json
 import re
 from pathlib import Path
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "assets" / "data"
 OUT = DATA / "quiz_pool.json"
 
 _WIKIA = "static.wikia.nocookie.net"
-_JUNK = re.compile(r"noimage|spacer|logo\.png|brand-img|svg", re.I)
+_JUNK = re.compile(r"noimage|spacer|logo\.png|brand-img|disambig", re.I)
+_ICON_THUMB = re.compile(r"scale-to-width-down/(?:1[0-9]|2[0-5])\b|scale-to-width-down/30\b", re.I)
 _TITLE_CARD = re.compile(r"titlecard|title.card|title_card|title-card", re.I)
 _VIDEO_URL = re.compile(
-    r"Full_Episode|Full_Episodes|Cartoon_Network|Character_Spot|"
-    r"LEGO_Ninjago_-_Season|Episode_\d+_LEGO|"
-    r"Soundtrack|compilation|Animation_for_Kids|"
-    r"Jay_Vincent|Ninjago_Soundtrack|\(Clip\)|"
-    r"ytimg|youtube|video-thumbnail",
+    r"ytimg|youtube|video-thumbnail|Soundtrack|compilation|\(Clip\)",
     re.I,
 )
-CHARACTER_MIN_IMAGES = 6
-WEAPON_MIN_IMAGES = 15
-# Main-line boxed Ninjago sets (705xx–707xx, 717xx–718xx, etc.) — not polybags, magazines, merch.
-_TRADITIONAL_SET = re.compile(r"^(70[5-9]\d{2}|71[0-9]\d{2})$")
+CHARACTER_MIN_IMAGES = 4
+WEAPON_MIN_IMAGES = 1
+COSMETIC_MIN_IMAGES = 1
+MAP_MIN_IMAGES = 1
+ITEM_MIN_IMAGES = 1
 
+# Oninoshima POI wiki pages listed under Chapter 6 — locations, not seasons.
+_EPISODE_SKIP_SLUGS = frozenset(
+    {
+        "creepy-camps",
+        "gourdy-gate",
+        "viney-shafts",
+    }
+)
 
-def _set_code(row: dict) -> str:
-    codes = row.get("codes") or []
-    if codes:
-        return str(codes[0])
-    m = re.match(r"^(\d+)", row.get("display") or "")
-    return m.group(1) if m else ""
+_EPISODE_POOL_JUNK = re.compile(r"Nav_Seasons", re.I)
+_CHARACTER_POOL_JUNK = re.compile(r"Fall_Guys|_-_Fall_Guys\.", re.I)
+_MAP_POOL_JUNK = re.compile(
+    r"Spray_-_Fortnite|Emoticon_-_Fortnite|Emote_-_Fortnite|"
+    r"Back_Bling_-_Fortnite|Arrow_Right_-_Icon|Wrap_-_Fortnite|"
+    r"Pickaxe_-_Fortnite|Outfit_-_Fortnite|Glider_-_Fortnite|"
+    r"Hashflag|disambig|Schematic_-_Icon|Question_-_Icon",
+    re.I,
+)
+_MAP_POOL_GOOD = re.compile(
+    r"_Island_-_|_Location_-_|_Map_-_|_Landmark_-_|"
+    r"Promo_-_Ballistic|Promo_-_Blitz|Unnamed_Location|_POI_-_",
+    re.I,
+)
+_MAP_SKIP_DISPLAY = frozenset({"Map Gallery", "Map:Fortbytes", "Venture/Maps"})
 
+_ITEM_WEAPON_HREF = re.compile(
+    r"/weapons-battle-royale/|/weaponry|/ranged-weapons|/assault-weapons|"
+    r"/shotguns/|/sniper-rifles|/submachine-guns|/bows/|/crossbows/|"
+    r"/melee-weapons|/explosive-weapons|/marksman-rifles|/pistols/",
+    re.I,
+)
+_ITEM_WEAPON_IMAGE = re.compile(r"_-_Weapon_-_Fortnite", re.I)
 
-def _is_traditional_retail_set(row: dict) -> bool:
-    return bool(_TRADITIONAL_SET.match(_set_code(row)))
+# Category / index hub pages — not individual quiz targets
+_HUB_NAMES = frozenset(
+    {
+        "consumables (battle royale)",
+        "backpack items",
+        "assault weapons",
+        "shotguns",
+        "sniper rifles",
+        "bows",
+        "crossbows",
+        "melee weapons",
+        "explosive weapons",
+        "mythic items",
+        "outfits",
+        "emotes",
+        "gliders",
+        "pickaxes",
+        "back blings",
+        "wraps",
+        "lobby music",
+        "loading screens",
+        "sprays",
+        "contrails",
+        "banners",
+        "vehicles",
+        "traps",
+        "healing items",
+        "available items (spy games)",
+        "weaponry (battle royale)",
+        "ranged weapons",
+        "pistols",
+        "submachine guns",
+        "marksman rifles",
+    }
+)
 
 
 def _norm(url: str) -> str:
@@ -53,29 +109,12 @@ def _upgrade_image_url(url: str, width: int = 800) -> str:
         return u
     u = re.sub(r"/scale-to-width-down/\d+", f"/scale-to-width-down/{width}", u, flags=re.I)
     u = re.sub(r"/scale-to-width/\d+", f"/scale-to-width/{width}", u, flags=re.I)
+    if _WIKIA in u and "/scale-to-width" not in u and "/revision/latest" in u:
+        base, _, qs = u.partition("?")
+        u = f"{base.rstrip('/')}/scale-to-width-down/{width}"
+        if qs:
+            u = f"{u}?{qs}"
     return u
-
-
-def extract_release_year(html: str, *, href: str, group_title: str) -> int | None:
-    m = re.search(
-        r'data-source="released"[\s\S]*?pi-data-value[^>]*>([\s\S]*?)</div>',
-        html,
-        re.I,
-    )
-    if m:
-        years = re.findall(r"\b(20\d{2})\b", m.group(1))
-        if years:
-            return int(years[-1])
-
-    m = re.search(r"\b(20\d{2})\b", group_title or "")
-    if m:
-        return int(m.group(1))
-
-    m = re.search(r"/year/(20\d{2})/", href)
-    if m:
-        return int(m.group(1))
-
-    return None
 
 
 def _good_url(url: str) -> bool:
@@ -87,6 +126,14 @@ def _good_url(url: str) -> bool:
     if _JUNK.search(u):
         return False
     return True
+
+
+def _is_icon_thumb(url: str) -> bool:
+    return bool(_ICON_THUMB.search(url or ""))
+
+
+def _is_hub_row(display: str) -> bool:
+    return (display or "").strip().lower() in _HUB_NAMES
 
 
 def _img_srcs_from_attrs(blob: str) -> list[str]:
@@ -129,6 +176,8 @@ def _img_is_screenshot(*, img_tag: str, src: str, html: str, pos: int) -> bool:
         return False
     if _VIDEO_URL.search(src):
         return False
+    if _is_icon_thumb(src):
+        return False
 
     window = html[max(0, pos - 1200) : pos]
     if re.search(
@@ -165,6 +214,47 @@ def extract_quiz_images(html: str, *, exclude: set[str] | None = None) -> list[s
     return urls
 
 
+def _is_episode_quiz_row(row: dict) -> bool:
+    slug = (row.get("slug") or "").strip().lower()
+    href = (row.get("href") or "").strip().lower()
+    if slug in _EPISODE_SKIP_SLUGS:
+        return False
+    if "/oninoshima/" in href:
+        return False
+    return True
+
+
+def _is_episode_pool_image(url: str) -> bool:
+    """Drop season-sidebar nav thumbs — they appear on every season page."""
+    return not _EPISODE_POOL_JUNK.search(unquote(url or ""))
+
+
+def _episode_row_images(row: dict) -> list[str] | None:
+    """Full season page image pool for trivia (no 24-image cap)."""
+    if not _is_episode_quiz_row(row):
+        return None
+
+    href = row.get("href") or ""
+    display = row.get("display") or ""
+    if not href or not display:
+        return None
+
+    thumb = (row.get("img") or "").strip()
+    exclude = {_norm(thumb)} if thumb else set()
+    imgs: list[str] = []
+
+    if _good_url(thumb) and not _is_icon_thumb(thumb) and _is_episode_pool_image(thumb):
+        imgs.append(_upgrade_image_url(thumb))
+
+    html = _read_html(href)
+    if html:
+        for url in extract_quiz_images(html, exclude=exclude):
+            if _is_episode_pool_image(url) and url not in imgs:
+                imgs.append(url)
+
+    return imgs if imgs else None
+
+
 def _read_html(href: str) -> str | None:
     path = ROOT / href.strip("/") / "index.html"
     if not path.is_file():
@@ -177,136 +267,361 @@ def _read_html(href: str) -> str | None:
         return None
 
 
+def _row_images(
+    row: dict,
+    *,
+    min_count: int,
+    enrich_html: bool = True,
+    card_only: bool = False,
+) -> list[str] | None:
+    href = row.get("href") or ""
+    display = row.get("display") or ""
+    if not href or not display or _is_hub_row(display):
+        return None
+
+    thumb = (row.get("img") or "").strip()
+    exclude = {_norm(thumb)} if thumb else set()
+    imgs: list[str] = []
+
+    if _good_url(thumb) and not _is_icon_thumb(thumb):
+        imgs.append(_upgrade_image_url(thumb))
+
+    if card_only:
+        return imgs if len(imgs) >= min_count else None
+
+    if enrich_html and len(imgs) < max(min_count, 3):
+        html = _read_html(href)
+        if html:
+            for url in extract_quiz_images(html, exclude=exclude):
+                if url not in imgs:
+                    imgs.append(url)
+                if len(imgs) >= 24:
+                    break
+
+    if len(imgs) < min_count:
+        return None
+    return imgs[:24]
+
+
+def _append_row(
+    out: list[dict],
+    seen: set[str],
+    row: dict,
+    imgs: list[str],
+    *,
+    category: str = "",
+    category_title: str = "",
+) -> None:
+    href = row.get("href") or ""
+    display = row.get("display") or ""
+    if href in seen:
+        return
+    seen.add(href)
+    entry: dict = {
+        "display": display,
+        "href": href,
+        "images": imgs,
+    }
+    slug = row.get("slug")
+    if slug:
+        entry["slug"] = slug
+    if category:
+        entry["category"] = category
+    if category_title:
+        entry["categoryTitle"] = category_title
+    out.append(entry)
+
+
+def _build_from_index(
+    path: Path,
+    *,
+    min_count: int,
+    enrich_html: bool = True,
+    card_only: bool = False,
+) -> list[dict]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    seen: set[str] = set()
+    out: list[dict] = []
+    for group in data.get("groups") or []:
+        for row in group.get("sets") or []:
+            imgs = _row_images(
+                row,
+                min_count=min_count,
+                enrich_html=enrich_html,
+                card_only=card_only,
+            )
+            if imgs:
+                _append_row(out, seen, row, imgs)
+    return out
+
+
+def _is_character_pool_image(url: str) -> bool:
+    """Drop Fall Guys crossover renders — they appear on most outfit pages."""
+    return not _CHARACTER_POOL_JUNK.search(unquote(url or ""))
+
+
+def _character_row_images(row: dict) -> list[str] | None:
+    href = row.get("href") or ""
+    display = row.get("display") or ""
+    if not href or not display:
+        return None
+
+    thumb = (row.get("img") or "").strip()
+    exclude = {_norm(thumb)} if thumb else set()
+    imgs: list[str] = []
+
+    if _good_url(thumb) and not _is_icon_thumb(thumb) and _is_character_pool_image(thumb):
+        imgs.append(_upgrade_image_url(thumb))
+
+    html = _read_html(href)
+    if html:
+        for url in extract_quiz_images(html, exclude=exclude):
+            if _is_character_pool_image(url) and url not in imgs:
+                imgs.append(url)
+            if len(imgs) >= 24:
+                break
+
+    if len(imgs) < CHARACTER_MIN_IMAGES:
+        return None
+    return imgs
+
+
 def build_episodes() -> list[dict]:
     data = json.loads((DATA / "episodes_index.json").read_text(encoding="utf-8"))
+    seen: set[str] = set()
     out: list[dict] = []
     for season in data.get("seasons") or []:
-        for ep in season.get("episodes") or []:
-            href = ep.get("href") or ""
-            display = ep.get("display") or ""
-            if not href or not display:
+        for row in season.get("episodes") or []:
+            if not _is_episode_quiz_row(row):
                 continue
-            html = _read_html(href)
-            if not html:
-                continue
-            exclude = {_norm(ep.get("img") or "")}
-            imgs = extract_quiz_images(html, exclude=exclude)
-            if len(imgs) < 1:
-                continue
-            out.append(
-                {
-                    "display": display,
-                    "href": href,
-                    "images": imgs[:24],
-                }
-            )
+            imgs = _episode_row_images(row)
+            if imgs:
+                _append_row(out, seen, row, imgs)
     return out
 
 
 def build_characters() -> list[dict]:
     data = json.loads((DATA / "characters.json").read_text(encoding="utf-8"))
+    seen: set[str] = set()
     out: list[dict] = []
     for row in data.get("characters") or []:
-        href = row.get("href") or ""
-        display = row.get("display") or ""
-        slug = row.get("slug") or ""
-        if not href or not display:
+        if not str(row.get("href") or "").startswith("/characters/"):
             continue
-        html = _read_html(href)
-        if not html:
-            continue
-        exclude = {_norm(row.get("img") or "")}
-        imgs = extract_quiz_images(html, exclude=exclude)
-        if len(imgs) < CHARACTER_MIN_IMAGES:
-            continue
-        out.append(
-            {
-                "display": display,
-                "href": href,
-                "slug": slug,
-                "images": imgs[:24],
-            }
-        )
+        imgs = _character_row_images(row)
+        if imgs:
+            _append_row(out, seen, row, imgs)
     return out
 
 
 def build_sets() -> list[dict]:
-    data = json.loads((DATA / "sets_index.json").read_text(encoding="utf-8"))
-    out: list[dict] = []
-    for group in data.get("groups") or []:
-        group_title = group.get("title") or ""
-        for row in group.get("sets") or []:
-            href = row.get("href") or ""
-            display = row.get("display") or ""
-            if not href or not display:
-                continue
-            if not _is_traditional_retail_set(row):
-                continue
-            html = _read_html(href)
-            if not html:
-                continue
-            year = extract_release_year(html, href=href, group_title=group_title)
-            if year is None:
-                continue
-            exclude = {_norm(row.get("img") or "")}
-            imgs = extract_quiz_images(html, exclude=exclude)
-            if len(imgs) < 1:
-                continue
-            out.append(
-                {
-                    "display": display,
-                    "href": href,
-                    "year": year,
-                    "setNumber": _set_code(row),
-                    "images": imgs[:24],
-                }
-            )
-    return out
+    """Cosmetic quiz pool (emotes, pickaxes, gliders, etc.)."""
+    return _build_from_index(
+        DATA / "sets_index.json",
+        min_count=COSMETIC_MIN_IMAGES,
+        enrich_html=False,
+        card_only=True,
+    )
 
 
 def build_weapons() -> list[dict]:
     data = json.loads((DATA / "weapons_index.json").read_text(encoding="utf-8"))
-    seen_hrefs: set[str] = set()
+    seen: set[str] = set()
+    out: list[dict] = []
+    for group in data.get("groups") or []:
+        category_id = (group.get("id") or group.get("groupKey") or "").strip()
+        category_title = (group.get("title") or "").strip()
+        for row in group.get("sets") or []:
+            imgs = _row_images(
+                row,
+                min_count=WEAPON_MIN_IMAGES,
+                enrich_html=False,
+                card_only=True,
+            )
+            if imgs:
+                _append_row(
+                    out,
+                    seen,
+                    row,
+                    imgs,
+                    category=category_id,
+                    category_title=category_title,
+                )
+    return out
+
+
+def build_maps() -> list[dict]:
+    data = json.loads((DATA / "maps_index.json").read_text(encoding="utf-8"))
+    seen: set[str] = set()
+    out: list[dict] = []
+    for row in _select_map_rows(data):
+        imgs = _map_row_images(row)
+        if imgs:
+            _append_row(out, seen, row, imgs)
+    return out
+
+
+    return imgs
+
+
+def _map_base_name(display: str) -> str:
+    d = (display or "").strip()
+    if d.endswith("/Maps") or d.endswith("/maps"):
+        return d.rsplit("/", 1)[0].strip()
+    return d
+
+
+def _is_map_pool_image(url: str) -> bool:
+    u = unquote(url or "")
+    if not u or not _good_url(u):
+        return False
+    if _MAP_POOL_JUNK.search(u):
+        return False
+    if _MAP_POOL_GOOD.search(u):
+        return True
+    if re.search(r"\(Icon\).*Island", u, re.I):
+        return True
+    return False
+
+
+def _map_image_rank(url: str) -> int:
+    u = unquote(url or "").lower()
+    if "_island_-_" in u and "icon" not in u:
+        return 0
+    if "_map_-_" in u:
+        return 1
+    if "_location_-_" in u:
+        return 2
+    if "_landmark_-_" in u:
+        return 3
+    if "icon" in u and "_island_-_" in u:
+        return 4
+    return 5
+
+
+def _select_map_rows(data: dict) -> list[dict]:
+    """Prefer */Maps gallery pages over hub pages; one row per island name."""
+    by_base: dict[str, dict] = {}
+    for group in data.get("groups") or []:
+        for row in group.get("sets") or []:
+            display = (row.get("display") or "").strip()
+            if not display or display in _MAP_SKIP_DISPLAY:
+                continue
+            base = _map_base_name(display)
+            is_maps_page = display.endswith("/Maps") or display.endswith("/maps")
+            key = base.lower()
+            existing = by_base.get(key)
+            if existing is None or is_maps_page:
+                entry = dict(row)
+                entry["display"] = base
+                entry["_maps_page"] = is_maps_page
+                by_base[key] = entry
+    return list(by_base.values())
+
+
+def _map_row_images(row: dict) -> list[str] | None:
+    href = row.get("href") or ""
+    display = row.get("display") or ""
+    if not href or not display:
+        return None
+
+    thumb = (row.get("img") or "").strip()
+    exclude = {_norm(thumb)} if thumb else set()
+    imgs: list[str] = []
+
+    if _is_map_pool_image(thumb):
+        imgs.append(_upgrade_image_url(thumb))
+
+    html = _read_html(href)
+    if html:
+        for url in extract_quiz_images(html, exclude=exclude):
+            if _is_map_pool_image(url) and url not in imgs:
+                imgs.append(url)
+
+    if not imgs:
+        return None
+
+    imgs.sort(key=_map_image_rank)
+    return imgs
+
+
+    return imgs
+
+
+def _weapon_hrefs() -> set[str]:
+    path = DATA / "weapons_index.json"
+    if not path.is_file():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    hrefs: set[str] = set()
+    for group in data.get("groups") or []:
+        for row in group.get("sets") or []:
+            href = (row.get("href") or "").strip()
+            if href:
+                hrefs.add(href)
+    return hrefs
+
+
+def _is_item_quiz_row(row: dict, weapon_hrefs: set[str]) -> bool:
+    display = (row.get("display") or "").strip()
+    href = (row.get("href") or "").strip()
+    if not href or not display or _is_hub_row(display):
+        return False
+    if href in weapon_hrefs or _ITEM_WEAPON_HREF.search(href):
+        return False
+    thumb = unquote(row.get("img") or "")
+    if _ITEM_WEAPON_IMAGE.search(thumb):
+        return False
+    return True
+
+
+def _is_item_pool_image(url: str) -> bool:
+    return not _ITEM_WEAPON_IMAGE.search(unquote(url or ""))
+
+
+def _item_row_images(row: dict) -> list[str] | None:
+    imgs = _row_images(row, min_count=ITEM_MIN_IMAGES, enrich_html=True)
+    if not imgs:
+        return None
+    good = [u for u in imgs if _is_item_pool_image(u)]
+    if len(good) < ITEM_MIN_IMAGES:
+        return None
+    return good[:24]
+
+
+def build_items() -> list[dict]:
+    weapon_hrefs = _weapon_hrefs()
+    data = json.loads((DATA / "items_index.json").read_text(encoding="utf-8"))
+    seen: set[str] = set()
     out: list[dict] = []
     for group in data.get("groups") or []:
         for row in group.get("sets") or []:
-            href = row.get("href") or ""
-            display = row.get("display") or ""
-            if not href or not display or href in seen_hrefs:
+            if not _is_item_quiz_row(row, weapon_hrefs):
                 continue
-            seen_hrefs.add(href)
-            html = _read_html(href)
-            if not html:
-                continue
-            exclude = {_norm(row.get("img") or "")}
-            imgs = extract_quiz_images(html, exclude=exclude)
-            if len(imgs) < WEAPON_MIN_IMAGES:
-                continue
-            out.append(
-                {
-                    "display": display,
-                    "href": href,
-                    "images": imgs[:24],
-                }
-            )
+            imgs = _item_row_images(row)
+            if imgs:
+                _append_row(out, seen, row, imgs)
     return out
 
 
 def main() -> None:
     payload = {
-        "v": 1,
+        "v": 2,
         "episodes": build_episodes(),
         "characters": build_characters(),
         "sets": build_sets(),
         "weapons": build_weapons(),
+        "maps": build_maps(),
+        "items": build_items(),
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"Wrote {OUT.name}: "
-        f"{len(payload['episodes'])} episodes, "
-        f"{len(payload['characters'])} characters, "
-        f"{len(payload['sets'])} sets, "
-        f"{len(payload['weapons'])} weapons"
+        f"{len(payload['episodes'])} seasons, "
+        f"{len(payload['characters'])} outfits, "
+        f"{len(payload['sets'])} cosmetics, "
+        f"{len(payload['weapons'])} weapons, "
+        f"{len(payload['maps'])} maps, "
+        f"{len(payload['items'])} items"
     )
 
 

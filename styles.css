@@ -24,14 +24,6 @@
   --container: 1120px;
 }
 
-@font-face{
-  font-family: "FortniteDisplay";
-  src: url("./assets/font.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 *{ box-sizing:border-box; }
 html{
   min-height: 100%;

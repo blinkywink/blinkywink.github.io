@@ -8,24 +8,34 @@
 
   const QUIZ_META = {
     episode: {
-      title: "Episode Quiz",
-      prompt: "Which episode is this?",
-      kindLabel: "Episode",
+      title: "Season Quiz",
+      prompt: "Which season is this?",
+      kindLabel: "Season",
     },
     character: {
-      title: "Character Quiz",
-      prompt: "Who is this character?",
-      kindLabel: "Character",
+      title: "Outfit Quiz",
+      prompt: "Which outfit is this?",
+      kindLabel: "Outfit",
     },
     set: {
-      title: "Set Quiz",
-      prompt: "What year was this set released?",
-      kindLabel: "Set",
+      title: "Cosmetic Quiz",
+      prompt: "What is this cosmetic?",
+      kindLabel: "Cosmetic",
     },
     weapon: {
       title: "Weapon Quiz",
       prompt: "What weapon is this?",
       kindLabel: "Weapon",
+    },
+    map: {
+      title: "Map Quiz",
+      prompt: "Which map or island is this?",
+      kindLabel: "Map",
+    },
+    item: {
+      title: "Item Quiz",
+      prompt: "What is this item?",
+      kindLabel: "Item",
     },
     combo: {
       title: "Mixed Quiz",
@@ -34,8 +44,41 @@
     },
   };
 
-  const BASE_QUIZ_TYPES = ["episode", "character", "set", "weapon"];
-  const WEAPON_MIN_IMAGES = 15;
+  const BASE_QUIZ_TYPES = ["episode", "character", "set", "weapon", "map", "item"];
+  const WEAPON_MIN_IMAGES = 1;
+  const CHARACTER_MIN_IMAGES = 4;
+  const EPISODE_NAV_IMAGE = /Nav_Seasons/i;
+  const CHARACTER_JUNK = /Fall_Guys|Hashflag/i;
+  const MAP_JUNK =
+    /Spray|Emoticon|Emote|Back_Bling|Arrow_Right|Outfit|Glider|Wrap|Pickaxe|Hashflag|disambig|Schematic_-_Icon|Question_-_Icon/i;
+  const MAP_GOOD = /Island|Location|Map|Landmark|Promo.*Ballistic/i;
+  const ITEM_WEAPON_HREF = /\/weapons-battle-royale\/|\/weaponry|\/assault-weapons|\/shotguns\/|\/sniper-rifles|\/submachine-guns|\/bows\/|\/crossbows\/|\/melee-weapons|\/explosive-weapons|\/ranged-weapons|\/marksman-rifles|\/pistols\//i;
+  const ITEM_WEAPON_IMAGE = /_-_Weapon_-_Fortnite/i;
+
+  const episodeImages = (row) =>
+    (row?.images || []).filter((url) => !EPISODE_NAV_IMAGE.test(decodeURIComponent(url)));
+
+  const characterImages = (row) =>
+    (row?.images || []).filter((url) => !CHARACTER_JUNK.test(decodeURIComponent(url)));
+
+  const mapImages = (row) => {
+    const good = (row?.images || []).filter((url) => {
+      const d = decodeURIComponent(url);
+      if (MAP_JUNK.test(d)) return false;
+      return MAP_GOOD.test(d);
+    });
+    return good.length ? good : row?.images || [];
+  };
+
+  const isItemQuizRow = (row) => {
+    const href = row?.href || "";
+    if (ITEM_WEAPON_HREF.test(href)) return false;
+    const imgs = (row?.images || []).filter((url) => !ITEM_WEAPON_IMAGE.test(decodeURIComponent(url)));
+    return imgs.length >= 1;
+  };
+
+  const itemImages = (row) =>
+    (row?.images || []).filter((url) => !ITEM_WEAPON_IMAGE.test(decodeURIComponent(url)));
 
   const hub = document.getElementById("trivia-hub");
   const quizEl = document.getElementById("trivia-quiz");
@@ -71,6 +114,7 @@
   let feedbackTimer = null;
   let scrimFadeTimer = null;
   let nextGlowTimer = null;
+  let imageRenderGen = 0;
   const FEEDBACK_MS = 1800;
   const SCRIM_FADE_MS = 400;
 
@@ -146,7 +190,7 @@
     return `${s.slice(0, q)}/scale-to-width-down/${width}${s.slice(q)}`;
   };
 
-  const quizImageCandidates = (raw, alternates = [], width = QUIZ_IMAGE_WIDTH) => {
+  const quizImageCandidates = (raw, width = QUIZ_IMAGE_WIDTH) => {
     const urls = [];
     const add = (value) => {
       const primary = normalizeQuizImageUrl(value, width);
@@ -155,7 +199,6 @@
       if (rawUrl.startsWith("http") && !urls.includes(rawUrl)) urls.push(rawUrl);
     };
     add(raw);
-    alternates.forEach(add);
     if (!urls.includes(NO_IMAGE)) urls.push(NO_IMAGE);
     return urls;
   };
@@ -168,7 +211,7 @@
     });
   };
 
-  const mountQuizImage = (wrap, src, alternates = [], width = QUIZ_IMAGE_WIDTH) => {
+  const mountQuizImage = (wrap, src, width = QUIZ_IMAGE_WIDTH, renderGen = 0) => {
     wrap.classList.add("is-loading");
     const canZoom = !MOBILE_MQ.matches;
     if (canZoom) {
@@ -190,7 +233,7 @@
     img.referrerPolicy = "no-referrer";
     img.dataset.fullSrc = String(src || "").trim();
 
-    const candidates = quizImageCandidates(src, alternates, width);
+    const candidates = quizImageCandidates(src, width);
     let finished = false;
     let attempt = 0;
     let loadId = 0;
@@ -214,13 +257,13 @@
       const url = candidates[attempt++];
 
       const onLoad = () => {
-        if (finished || currentLoad !== loadId) return;
+        if (finished || currentLoad !== loadId || renderGen !== imageRenderGen) return;
         img.removeEventListener("error", onError);
         if (img.naturalWidth > 0) finish();
         else tryNext();
       };
       const onError = () => {
-        if (finished || currentLoad !== loadId) return;
+        if (finished || currentLoad !== loadId || renderGen !== imageRenderGen) return;
         img.removeEventListener("load", onLoad);
         tryNext();
       };
@@ -230,7 +273,7 @@
       img.src = url;
 
       requestAnimationFrame(() => {
-        if (finished || currentLoad !== loadId) return;
+        if (finished || currentLoad !== loadId || renderGen !== imageRenderGen) return;
         if (img.complete && img.naturalWidth > 0) {
           img.removeEventListener("load", onLoad);
           img.removeEventListener("error", onError);
@@ -307,16 +350,14 @@
     const shell = questionShell?.querySelector(".trivia-images-shell");
     if (!shell) return imagesEl;
 
+    imageRenderGen += 1;
     teardownCarouselControls(shell, imagesEl);
 
+    shell.replaceChildren();
     const next = document.createElement("div");
     next.id = "trivia-images";
     next.className = "trivia-images";
-    if (imagesEl?.parentElement === shell) {
-      imagesEl.replaceWith(next);
-    } else {
-      shell.replaceChildren(next);
-    }
+    shell.appendChild(next);
     imagesEl = next;
     return imagesEl;
   };
@@ -378,16 +419,18 @@
     if (type === "episode") return "episodes";
     if (type === "character") return "characters";
     if (type === "weapon") return "weapons";
+    if (type === "map") return "maps";
+    if (type === "item") return "items";
     return "sets";
   };
 
-  const TRADITIONAL_SET_RE = /^(70[5-9]\d{2}|71[0-9]\d{2})$/;
+  const weaponCategoryKey = (row) =>
+    String(row?.category || row?.categoryTitle || "").trim() || "__other__";
 
-  const isTraditionalRetailSet = (row) => {
-    const code = String(row?.setNumber || "").trim()
-      || (row?.display || "").match(/^(\d{5})\b/)?.[1]
-      || "";
-    return TRADITIONAL_SET_RE.test(code);
+  const weaponPeerRows = (row, allRows) => {
+    const key = weaponCategoryKey(row);
+    const same = allRows.filter((r) => weaponCategoryKey(r) === key);
+    return same.length >= 4 ? same : allRows;
   };
 
   const eligiblePool = (type) => {
@@ -397,51 +440,50 @@
     const key = poolKey(type);
     const rows = pool?.[key] || [];
     if (type === "character") {
-      return rows.filter((r) => (r.images || []).length >= 6);
+      return rows.filter((r) => characterImages(r).length >= CHARACTER_MIN_IMAGES);
     }
     if (type === "weapon") {
       return rows.filter((r) => (r.images || []).length >= WEAPON_MIN_IMAGES);
     }
-    if (type === "set") {
-      return rows.filter(
-        (r) => r.year && (r.images || []).length >= 1 && isTraditionalRetailSet(r),
-      );
+    if (type === "episode") {
+      return rows.filter((r) => episodeImages(r).length >= 1);
+    }
+    if (type === "map") {
+      return rows.filter((r) => mapImages(r).length >= 1);
+    }
+    if (type === "item") {
+      return rows.filter((r) => isItemQuizRow(r));
     }
     return rows.filter((r) => (r.images || []).length >= 1);
   };
 
-  const setQuizYears = (rows) => [...new Set(rows.map((r) => r.year).filter(Boolean))];
-
   const comboPoolsReady = () =>
-    BASE_QUIZ_TYPES.every((type) => {
-      const rows = eligiblePool(type);
-      if (type === "set") {
-        return rows.length >= 4 && setQuizYears(rows).length >= 4;
-      }
-      return rows.length >= 4;
-    });
+    BASE_QUIZ_TYPES.every((type) => eligiblePool(type).length >= 4);
 
-  const buildQuestion = (type, row, allRows, allYears) => {
-    const imgs = sample(row.images || [], 3);
-    if (type === "set") {
-      const correct = String(row.year);
-      const others = allYears.filter((y) => String(y) !== correct);
-      const distractors = sample(others, 3).map(String);
-      const options = shuffle([correct, ...distractors]);
-      return {
-        type,
-        correct,
-        label: row.display,
-        href: row.href || "",
-        images: imgs,
-        imagePool: row.images || [],
-        options,
-        prompt: QUIZ_META[type].prompt,
-      };
+  const buildQuestion = (type, row, allRows) => {
+    const pool =
+      type === "episode"
+        ? episodeImages(row)
+        : type === "character"
+          ? characterImages(row)
+          : type === "map"
+            ? mapImages(row)
+            : type === "item"
+              ? itemImages(row)
+              : row.images || [];
+    let imgs;
+    if (type === "weapon" || type === "item" || type === "set") {
+      imgs = pool.length ? [pool[0]] : [];
+    } else if (type === "map") {
+      imgs = pool.length ? sample(pool, 1) : [];
+    } else if (type === "episode") {
+      imgs = sample(pool, Math.min(2, pool.length));
+    } else {
+      imgs = sample(pool, Math.min(3, pool.length));
     }
-
     const correct = row.display;
-    const others = allRows.filter((r) => r.display !== correct);
+    const peerRows = type === "weapon" ? weaponPeerRows(row, allRows) : allRows;
+    const others = peerRows.filter((r) => r.display !== correct);
     const distractors = sample(others, 3).map((r) => r.display);
     const options = shuffle([correct, ...distractors]);
     return {
@@ -450,9 +492,10 @@
       label: row.display,
       href: row.href || "",
       images: imgs,
-      imagePool: row.images || [],
+      imagePool: pool,
       options,
       prompt: QUIZ_META[type].prompt,
+      categoryTitle: type === "weapon" ? row.categoryTitle || "" : "",
     };
   };
 
@@ -462,10 +505,13 @@
     }
     const rows = eligiblePool(type);
     if (rows.length < 4) return [];
-    const allYears = type === "set" ? setQuizYears(rows) : [];
-    if (type === "set" && allYears.length < 4) return [];
-    const picked = sample(rows, QUIZ_LENGTH);
-    return picked.map((row) => buildQuestion(type, row, rows, allYears));
+    let pickFrom = rows;
+    if (type === "weapon") {
+      pickFrom = rows.filter((row) => weaponPeerRows(row, rows).length >= 4);
+      if (pickFrom.length < 4) return [];
+    }
+    const picked = sample(pickFrom, QUIZ_LENGTH);
+    return picked.map((row) => buildQuestion(type, row, rows));
   };
 
   const buildComboQuiz = () => {
@@ -474,16 +520,18 @@
     const pools = Object.fromEntries(
       BASE_QUIZ_TYPES.map((type) => [type, eligiblePool(type)]),
     );
-    const yearsByType = {
-      set: setQuizYears(pools.set),
-    };
+    const weaponPickPool = pools.weapon.filter(
+      (row) => weaponPeerRows(row, pools.weapon).length >= 4,
+    );
 
     const questions = [];
     for (let i = 0; i < QUIZ_LENGTH; i += 1) {
       const type = sample(BASE_QUIZ_TYPES, 1)[0];
-      const rows = pools[type];
+      let rows = pools[type];
+      if (type === "weapon") rows = weaponPickPool;
+      if (!rows.length) return [];
       const row = sample(rows, 1)[0];
-      questions.push(buildQuestion(type, row, rows, yearsByType.set));
+      questions.push(buildQuestion(type, row, pools[type]));
     }
     return questions;
   };
@@ -575,11 +623,11 @@
       if (isMobile) imagesEl.classList.add("trivia-images--carousel");
     }
 
-    const alternates = (q.imagePool || []).filter((url) => !q.images.includes(url));
+    const renderGen = imageRenderGen;
     q.images.forEach((src) => {
       const wrap = document.createElement("div");
       wrap.className = "trivia-image-wrap";
-      mountQuizImage(wrap, src, alternates);
+      mountQuizImage(wrap, src, QUIZ_IMAGE_WIDTH, renderGen);
       imagesEl.appendChild(wrap);
     });
 
@@ -656,7 +704,7 @@
           ? "Nice work!"
           : pct >= 40
             ? "Not bad — keep studying."
-            : "Keep training, ninja.";
+            : "Keep dropping in — you'll get it next time.";
 
     resultsCard.classList.remove("is-great", "is-ok", "is-low");
     if (pct >= 70) resultsCard.classList.add("is-great");
@@ -701,12 +749,6 @@
 
       const answer = document.createElement("div");
       answer.className = "trivia-result-answer";
-      if (a.type === "set" && a.label) {
-        const setName = document.createElement("span");
-        setName.className = "trivia-result-set-name";
-        setName.textContent = a.label;
-        answer.appendChild(setName);
-      }
       if (a.ok) {
         const line = document.createElement("span");
         line.className = "trivia-result-line trivia-result-line--ok";
@@ -775,7 +817,7 @@
     if (quizType) startQuiz(quizType);
   });
 
-  fetch("/assets/data/quiz_pool.json")
+  fetch("/assets/data/quiz_pool.json?v=20260618")
     .then((r) => {
       if (!r.ok) throw new Error("load failed");
       return r.json();
