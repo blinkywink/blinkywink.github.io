@@ -5,7 +5,7 @@ from __future__ import annotations
 SITE_NAME = "Fortnite Wiki Project"
 THEME_COLOR = "#12081c"
 LOGO_SRC = "/assets/logo.png"
-APP_JS_SRC = "/app.js?v=20260609"
+APP_JS_SRC = "/app.js?v=20260622"
 
 NAV_LINKS = """
           <a href="/characters">Outfits</a>

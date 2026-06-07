@@ -1,5 +1,5 @@
 :root{
-  --header-h: 72px;
+  --header-h: 84px;
   --bg0:#08050f;
   --bg1:#0f0818;
   --card:#161022;
@@ -121,7 +121,7 @@ body::before{
   align-items:center;
   justify-content:space-between;
   gap:16px;
-  padding: 14px 0;
+  padding: 12px 0;
 }
 
 .brand{
@@ -130,13 +130,14 @@ body::before{
   gap:10px;
   text-decoration:none;
   color:var(--text);
+  flex-shrink: 0;
 }
 .brand-mark{
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   justify-content:center;
   width:auto;
-  height:38px;
+  height:56px;
   padding:0;
   border:none;
   border-radius:0;
@@ -145,9 +146,10 @@ body::before{
 .brand-img{
   width:auto;
   height:100%;
-  max-width: 140px;
+  max-width: 240px;
   display:block;
   object-fit: contain;
+  object-position: center bottom;
   filter: drop-shadow(0 2px 8px rgba(45,171,255,.25));
 }
 .nav{
@@ -3624,11 +3626,84 @@ a.char-group-title-link:hover{
 .wiki-import table{
   max-width: 100%;
 }
-.wiki-import img,
-.wiki-import video{
+.wiki-import img{
   max-width: 100%;
   height: auto;
   vertical-align: middle;
+}
+/* Native wiki videos — Fandom inline width/height (often square) must not override intrinsic ratio */
+.wiki-import video,
+.wiki-import video.mw-file-element{
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-width: min(100%, 480px) !important;
+  max-height: min(70vh, 540px) !important;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-inline: auto;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.wiki-import table td video,
+.wiki-import .thumb video{
+  max-width: min(100%, 360px) !important;
+}
+.wiki-import span[typeof="mw:File"]:has(> video){
+  display: block;
+  max-width: min(100%, 480px);
+}
+/* YouTube thumbnail links in tables / prose */
+.wiki-import a.video.video-thumbnail{
+  display: block;
+  position: relative;
+  width: min(100%, 480px);
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0a0a0c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-inline: auto;
+  text-decoration: none;
+}
+.wiki-import a.video.video-thumbnail img{
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover;
+}
+.wiki-import a.video.video-thumbnail .thumbnail-play-icon-container{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* Inline YouTube embeds (tables, prose — not wikia gallery tiles) */
+.wiki-import .wiki-video-embed--inline{
+  position: relative;
+  display: block;
+  width: min(100%, 560px);
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0a0a0c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+.wiki-import .wiki-video-embed--inline iframe{
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 .wiki-import .thumb,
 .wiki-import .thumbinner{
@@ -3775,13 +3850,55 @@ a.char-group-title-link:hover{
 .wiki-import table.mw-collapsible.mw-collapsed > tbody > tr.wiki-collapsible-toggle > td::before{
   content: "▶ ";
 }
+.wiki-import .wiki-sounds-table-wrap{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  margin: 12px 0 16px;
+}
+.wiki-import table.wiki-sounds-table{
+  width: 100%;
+  min-width: min(100%, 480px);
+}
+/* Fandom .animated cycles sound IDs — static mirror shows every variant stacked */
+.wiki-import .animated{
+  display: none;
+}
+.wiki-import .sound-id{
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  word-break: break-word;
+}
 .wiki-import span.sound{
+  position: relative;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
   margin: 2px 3px;
+  flex-wrap: wrap;
+  gap: 4px;
 }
-.wiki-import span.sound.wiki-sound--ready .sound-audio{
+.wiki-import span.sound.wiki-sound--native{
+  display: block;
+  margin: 8px 0;
+}
+.wiki-import span.sound.wiki-sound--native .sound-title:empty{
+  display: none;
+}
+.wiki-import span.sound.wiki-sound--native .sound-audio{
+  display: block;
+  width: min(100%, 220px);
+  max-width: 100%;
+}
+.wiki-import span.sound.wiki-sound--native .sound-audio audio{
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 36px;
+  min-height: 36px;
+}
+.wiki-import span.sound.wiki-sound--ready:not(.wiki-sound--native) .sound-audio{
   position: absolute;
   width: 1px;
   height: 1px;
@@ -3839,6 +3956,31 @@ a.char-group-title-link:hover{
       transparent 65%,
       currentColor 65%
     );
+}
+
+@media (max-width: 899px){
+  .wiki-import .wiki-sounds-table-wrap{
+    margin-inline: -2px;
+    padding-bottom: 6px;
+  }
+  .wiki-import table.wiki-sounds-table{
+    min-width: 560px;
+  }
+  .wiki-import table.wiki-sounds-table td:has(.wiki-sound--native){
+    min-width: 140px;
+  }
+  .wiki-import span.sound.wiki-sound--native .sound-audio{
+    width: min(100%, 200px);
+  }
+  .wiki-import span.sound.wiki-sound--native .sound-audio audio{
+    height: 40px;
+    min-height: 40px;
+  }
+  .wiki-import .wiki-sound-play{
+    width: 44px;
+    height: 44px;
+    touch-action: manipulation;
+  }
 }
 
 .wiki-import .thumbcaption{
@@ -4789,6 +4931,9 @@ a.char-group-title-link:hover{
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+.trivia-card-images--1{
+  grid-template-columns: 1fr;
+}
 .trivia-card-images--2{
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -4826,7 +4971,7 @@ a.char-group-title-link:hover{
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.trivia-card-faux-options span:nth-child(2){
+.trivia-card-faux-options span.is-correct{
   border-color: rgba(56, 189, 248, 0.35);
   background: rgba(56, 189, 248, 0.08);
   color: var(--text);

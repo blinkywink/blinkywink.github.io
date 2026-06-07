@@ -89,6 +89,55 @@
       return true;
     };
 
+    const normalizeSearchThumb = (raw) => {
+      const s = String(raw || "").trim();
+      if (!isRealSearchThumb(s)) return "";
+      if (/static\.wikia\.nocookie\.net/i.test(s)) {
+        if (/\/scale-to-width-down\/\d+/i.test(s)) {
+          return s.replace(/\/scale-to-width-down\/\d+/gi, "/scale-to-width-down/96");
+        }
+        if (/\/scale-to-width\/\d+/i.test(s)) {
+          return s.replace(/\/scale-to-width\/\d+/gi, "/scale-to-width/96");
+        }
+        const q = s.indexOf("?");
+        if (q === -1) return `${s}/scale-to-width-down/96`;
+        return `${s.slice(0, q)}/scale-to-width-down/96${s.slice(q)}`;
+      }
+      return s;
+    };
+
+    const thumbByHref = new Map();
+
+    const registerSearchThumb = (href, img) => {
+      const h = String(href || "")
+        .trim()
+        .split("?")[0];
+      const im = String(img || "").trim();
+      if (h && isRealSearchThumb(im)) thumbByHref.set(h, im);
+    };
+
+    const ingestBrowseGroups = (data) => {
+      for (const group of data?.groups || []) {
+        for (const row of group.sets || []) registerSearchThumb(row.href, row.img);
+      }
+    };
+
+    const ingestEpisodesIndex = (data) => {
+      for (const season of data?.seasons || []) {
+        for (const ep of season.episodes || []) registerSearchThumb(ep.href, ep.img);
+      }
+    };
+
+    const buildThumbLookup = (charData, browsePayloads) => {
+      thumbByHref.clear();
+      for (const c of charData?.characters || []) registerSearchThumb(c.href, c.img);
+      for (const data of browsePayloads) {
+        if (!data) continue;
+        if (Array.isArray(data.seasons)) ingestEpisodesIndex(data);
+        else ingestBrowseGroups(data);
+      }
+    };
+
     const wikiExcludedFromSearch = (p) => {
       const t = String(p.wikiTitle || p.display || "").toLowerCase();
       if (t.includes("disambiguation")) return true;
@@ -109,8 +158,16 @@
     };
 
     const thumbForItem = (it) => {
-      if (isRealSearchThumb(it.searchThumb)) return it.searchThumb;
-      if (it.anchor) return thumbForAnchor(it.anchor);
+      if (isRealSearchThumb(it.searchThumb)) return normalizeSearchThumb(it.searchThumb);
+      const href = String(it.url || "")
+        .trim()
+        .split("?")[0];
+      const fromBrowse = thumbByHref.get(href);
+      if (isRealSearchThumb(fromBrowse)) return normalizeSearchThumb(fromBrowse);
+      if (it.anchor) {
+        const fromAnchor = thumbForAnchor(it.anchor);
+        if (fromAnchor) return normalizeSearchThumb(fromAnchor);
+      }
       return "";
     };
 
@@ -192,14 +249,31 @@
       fetch("/assets/data/characters.json")
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
-      fetch("/assets/data/wiki_search_index.json")
+      fetch("/assets/data/wiki_search_index.json?v=20260619")
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
       fetch("/assets/data/wiki_pages.json")
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
+      fetch("/assets/data/weapons_index.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch("/assets/data/sets_index.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch("/assets/data/items_index.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch("/assets/data/maps_index.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch("/assets/data/episodes_index.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
     ])
-      .then(([charData, wikiSearch, wikiFull]) => {
+      .then(([charData, wikiSearch, wikiFull, weaponsIdx, setsIdx, itemsIdx, mapsIdx, episodesIdx]) => {
+        buildThumbLookup(charData, [weaponsIdx, setsIdx, itemsIdx, mapsIdx, episodesIdx]);
+
         const packPages =
           wikiSearch && Array.isArray(wikiSearch.pages) && wikiSearch.pages.length
             ? wikiSearch.pages
@@ -216,6 +290,13 @@
         if (charData && Array.isArray(charData.characters)) {
           const map = localCharacterHrefMap(charData.characters);
           next = applyLocalCharacterHrefs(next, map);
+          next = next.map((it) => {
+            const href = String(it.url || "")
+              .split("?")[0];
+            const img = thumbByHref.get(href);
+            if (!img) return it;
+            return { ...it, searchThumb: img };
+          });
         }
 
         const jsonUrls = new Set(next.map((x) => String(x.url || "").split("?")[0]));
@@ -1775,11 +1856,27 @@
 
   fixFandomCharacterAnchors(document.body);
 
+  const WIKI_SOUND_MOBILE_MQ = window.matchMedia("(max-width: 899px)");
+  const WIKI_SOUND_TOUCH =
+    typeof window !== "undefined" &&
+    ("ontouchstart" in window || (navigator.maxTouchPoints || 0) > 0);
+
+  const wikiSoundUseNativeUi = () => WIKI_SOUND_MOBILE_MQ.matches || WIKI_SOUND_TOUCH;
+
+  const wrapSoundTable = (table) => {
+    if (!table || table.parentElement?.classList.contains("wiki-sounds-table-wrap")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "wiki-sounds-table-wrap";
+    table.parentNode.insertBefore(wrap, table);
+    wrap.appendChild(table);
+  };
+
   /** Compact play buttons for Fandom `.sound` clips (weapon Sounds tables, boss audio, etc.). */
   function initWikiSounds(root) {
     const scope = root || document;
     let currentAudio = null;
     let currentBtn = null;
+    const nativeUi = wikiSoundUseNativeUi();
 
     const resetBtn = (btn) => {
       if (!btn) return;
@@ -1793,6 +1890,15 @@
       if (!audio || !audio.getAttribute("src")) return;
 
       audio.setAttribute("referrerpolicy", "no-referrer");
+      audio.setAttribute("playsinline", "");
+      audio.preload = "metadata";
+
+      if (nativeUi) {
+        span.classList.add("wiki-sound--native");
+        audio.setAttribute("controls", "");
+        return;
+      }
+
       audio.preload = "none";
       audio.removeAttribute("controls");
 
@@ -1802,25 +1908,37 @@
       btn.setAttribute("aria-label", "Play sound");
       btn.innerHTML = '<span class="wiki-sound-play-icon" aria-hidden="true"></span>';
 
-      btn.addEventListener("click", () => {
+      const playFromButton = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (audio.paused) {
           if (currentAudio && currentAudio !== audio) {
             currentAudio.pause();
             currentAudio.currentTime = 0;
             resetBtn(currentBtn);
           }
-          audio.play().catch(() => {});
-          currentAudio = audio;
-          currentBtn = btn;
-          btn.classList.add("is-playing");
-          btn.setAttribute("aria-label", "Pause sound");
+          audio
+            .play()
+            .then(() => {
+              currentAudio = audio;
+              currentBtn = btn;
+              btn.classList.add("is-playing");
+              btn.setAttribute("aria-label", "Pause sound");
+            })
+            .catch(() => {
+              audio.setAttribute("controls", "");
+              span.classList.add("wiki-sound--native");
+              btn.remove();
+            });
         } else {
           audio.pause();
           resetBtn(btn);
           currentAudio = null;
           currentBtn = null;
         }
-      });
+      };
+
+      btn.addEventListener("click", playFromButton);
 
       audio.addEventListener("ended", () => {
         resetBtn(btn);
@@ -1847,6 +1965,9 @@
 
         if (table.querySelector(".sound")) {
           table.classList.remove("mw-collapsed");
+          table.classList.add("wiki-sounds-table");
+          wrapSoundTable(table);
+          return;
         }
 
         firstRow.classList.add("wiki-collapsible-toggle");
@@ -1875,10 +1996,58 @@
     });
   }
 
+  function bindSoundSectionObservers() {
+    document.querySelectorAll("details.wiki-char-msection").forEach((det) => {
+      if (det.getAttribute("data-wiki-sound-section-init")) return;
+      if (!det.querySelector(".sound")) return;
+      det.setAttribute("data-wiki-sound-section-init", "1");
+      det.addEventListener("toggle", () => {
+        if (det.open) initWikiSounds(det);
+      });
+    });
+  }
+
+  /** Native videos + YouTube thumbs/embeds — Fandom inline sizes are often wrong (square boxes). */
+  function initWikiVideos(root) {
+    const scope = root || document;
+    scope.querySelectorAll(".wiki-import").forEach((importRoot) => {
+      importRoot
+        .querySelectorAll(".wikia-gallery a.image.video[data-youtube-id]")
+        .forEach((anchor) => {
+          if (anchor.closest(".wiki-video-embed")) return;
+          const id = anchor.getAttribute("data-youtube-id");
+          if (!id) return;
+          const rawTitle = anchor.getAttribute("title") || "YouTube video";
+          const title =
+            rawTitle.indexOf("(") > 0 ? rawTitle.split("(")[0].trim() : rawTitle;
+          const inGallery = Boolean(anchor.closest(".wikia-gallery"));
+          const wrap = document.createElement("div");
+          wrap.className = inGallery ? "wiki-video-embed" : "wiki-video-embed wiki-video-embed--inline";
+          const ifr = document.createElement("iframe");
+          ifr.setAttribute(
+            "src",
+            "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0"
+          );
+          ifr.setAttribute("title", title);
+          ifr.setAttribute("allowfullscreen", "");
+          ifr.setAttribute("loading", "lazy");
+          ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+          ifr.setAttribute(
+            "allow",
+            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          );
+          wrap.appendChild(ifr);
+          anchor.replaceWith(wrap);
+        });
+    });
+  }
+
   function bootWikiAudio() {
     initWikiCollapsibleTables(document);
     initWikiSounds(document);
+    initWikiVideos(document);
     openSoundSections();
+    bindSoundSectionObservers();
   }
 
   if (document.readyState === "loading") {

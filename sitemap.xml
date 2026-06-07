@@ -12,4 +12,8 @@
     <loc>https://blinkywink.co/sitemap-wiki.xml</loc>
     <lastmod>2026-06-07</lastmod>
   </sitemap>
+  <sitemap>
+    <loc>https://blinkywink.co/sitemap-other.xml</loc>
+    <lastmod>2026-06-07</lastmod>
+  </sitemap>
 </sitemapindex>

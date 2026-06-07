@@ -1052,29 +1052,7 @@ __SITE_FOOTER__
             }});
           }});
         }})();
-        /* Wikia video gallery: real YouTube iframes (thumbnails are tiny; play icon clicks missed <img>) */
-        (function () {{
-          document.querySelectorAll(".wiki-import .wikia-gallery a.image.video[data-youtube-id]").forEach(function (anchor) {{
-            var id = anchor.getAttribute("data-youtube-id");
-            if (!id) return;
-            var rawTitle = anchor.getAttribute("title") || "YouTube video";
-            var title = rawTitle.indexOf("(") > 0 ? rawTitle.split("(")[0].trim() : rawTitle;
-            var wrap = document.createElement("div");
-            wrap.className = "wiki-video-embed";
-            var ifr = document.createElement("iframe");
-            ifr.setAttribute("src", "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0");
-            ifr.setAttribute("title", title);
-            ifr.setAttribute("allowfullscreen", "");
-            ifr.setAttribute("loading", "lazy");
-            ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-            ifr.setAttribute(
-              "allow",
-              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            );
-            wrap.appendChild(ifr);
-            anchor.replaceWith(wrap);
-          }});
-        }})();
+        /* YouTube embeds handled site-wide in app.js (initWikiVideos) */
         /* Full-screen media viewer: images + YouTube embeds, scrollable thumbnails */
         (function () {{
           var root = document.getElementById("wiki-lightbox");
