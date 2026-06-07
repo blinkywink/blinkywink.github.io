@@ -42,7 +42,16 @@
       prompt: "",
       kindLabel: "Mixed",
     },
+    hard: {
+      title: "Super Hard Quiz",
+      prompt: "",
+      kindLabel: "Super Hard",
+    },
   };
+
+  const HARD_QUIZ_LENGTH = 15;
+  const HARD_OPTION_COUNT = 6;
+  const HARD_POOL_MIN = 7;
 
   const BASE_QUIZ_TYPES = ["episode", "character", "set", "weapon", "map", "item"];
   const WEAPON_MIN_IMAGES = 1;
@@ -58,6 +67,9 @@
   const EPISODE_IMAGE_GOOD =
     /Key[_ -]?Art|Keyart|Loading[_ ]Screen|_-_Logo_-_|Teaser|Lobby_Background|Lobby_Screen|Promo_-_Fortnite|Trailer|Full\)|_\(Full\)|Event_-_Fortnite|Battle_Pass_-_Fortnite|Chapter.*Loading|Chapter.*Key|Remix/i;
   const EPISODE_IMAGES_PER_QUESTION = 3;
+  const EPISODE_QUIZ_MIN_IMAGES = 3;
+  const EPISODE_GIVEAWAY_IMAGE =
+    /Key[_ -]?Art|Keyart|_-_Logo_-_|Battle_Pass_-_Fortnite|Lobby_Screen|Lobby_Background/i;
   const CHARACTER_JUNK = /Fall_Guys|Hashflag/i;
   const MAP_JUNK =
     /Spray|Emoticon|Emote|Back_Bling|Arrow_Right|Outfit|Glider|Wrap|Pickaxe|Hashflag|disambig|Schematic_-_Icon|Question_-_Icon/i;
@@ -76,50 +88,24 @@
       return EPISODE_IMAGE_GOOD.test(d);
     });
 
-  const episodeImageRank = (url) => {
-    const d = decodeURIComponent(url);
-    if (/Key[_ -]?Art|Keyart/i.test(d)) return 0;
-    if (/Season.*Loading|Chapter.*Loading|Battle_Royale.*Loading|\(Full\)/i.test(d)) return 1;
-    if (/Teaser|Promo_-_Fortnite/i.test(d)) return 2;
-    if (/Loading_Screen/i.test(d)) return 3;
-    if (/Battle_Pass_-_Fortnite/i.test(d)) return 4;
-    if (/Logo|Lobby/i.test(d)) return 5;
-    return 6;
-  };
+  const isEpisodeGiveawayImage = (url) =>
+    EPISODE_GIVEAWAY_IMAGE.test(decodeURIComponent(url));
 
-  const pickEpisodeImages = (row, count = EPISODE_IMAGES_PER_QUESTION) => {
-    const ranked = episodeImages(row)
-      .slice()
-      .sort((a, b) => episodeImageRank(a) - episodeImageRank(b));
-    if (!ranked.length) return [];
-    const top = ranked.filter((url) => episodeImageRank(url) <= 2);
-    const pool = top.length >= count ? top : ranked;
-    return sample(pool, Math.min(count, pool.length));
+  /** Season quiz clues — loading screens, teasers, promos (not key art / logos). */
+  const episodeQuizImages = (row) =>
+    episodeImages(row).filter((url) => !isEpisodeGiveawayImage(url));
+
+  const pickWithPrimaryImage = (pool, count) => {
+    if (!pool.length) return [];
+    const primary = pool[0];
+    if (count <= 1) return [primary];
+    const rest = pool.slice(1);
+    const extras = sample(rest, Math.min(count - 1, rest.length));
+    return [primary, ...extras];
   };
 
   const characterImages = (row) =>
     (row?.images || []).filter((url) => !CHARACTER_JUNK.test(decodeURIComponent(url)));
-
-  const characterImageRank = (url) => {
-    const d = decodeURIComponent(url);
-    if (/Featured|Default_Featured/i.test(d)) return 0;
-    if (/Render|_-_Outfit_-_Fortnite/i.test(d)) return 1;
-    if (/Loading_Screen|Promo|Screenshot|In-Game/i.test(d)) return 2;
-    return 3;
-  };
-
-  const pickCharacterImages = (row, count = MULTI_IMAGE_COUNT) => {
-    const ranked = characterImages(row)
-      .slice()
-      .sort((a, b) => characterImageRank(a) - characterImageRank(b));
-    if (!ranked.length) return [];
-    return sample(ranked, Math.min(count, ranked.length));
-  };
-
-  const pickMultiImages = (imgs, count = MULTI_IMAGE_COUNT) => {
-    if (!imgs.length) return [];
-    return sample(imgs, Math.min(count, imgs.length));
-  };
 
   const mapImages = (row) => {
     const good = (row?.images || []).filter((url) => {
@@ -146,23 +132,91 @@
   };
 
   const quizImagesForRow = (type, row) => {
-    if (type === "episode") return episodeImages(row);
+    if (type === "episode") return episodeQuizImages(row);
     if (type === "character") return characterImages(row);
     if (type === "map") return mapImages(row);
     if (type === "item") return itemImages(row);
     return row?.images || [];
   };
 
+  const primaryQuestionImage = (type, row) => quizImagesForRow(type, row)[0] || null;
+
   const pickQuestionImages = (type, row) => {
-    if (type === "episode") return pickEpisodeImages(row);
-    const imgs = quizImagesForRow(type, row);
-    if (!imgs.length) return [];
-    if (SINGLE_IMAGE_TYPES.has(type)) return [imgs[0]];
-    if (type === "character") return pickCharacterImages(row);
-    return pickMultiImages(imgs);
+    if (type === "episode") {
+      return pickWithPrimaryImage(episodeQuizImages(row), EPISODE_IMAGES_PER_QUESTION);
+    }
+    const pool = quizImagesForRow(type, row);
+    if (!pool.length) return [];
+    if (SINGLE_IMAGE_TYPES.has(type)) return [pool[0]];
+    if (type === "character") {
+      return pickWithPrimaryImage(characterImages(row), MULTI_IMAGE_COUNT);
+    }
+    return pickWithPrimaryImage(pool, MULTI_IMAGE_COUNT);
   };
 
-  const questionHasImages = (type, row) => pickQuestionImages(type, row).length > 0;
+  const pickHardQuestionImages = (type, row) => {
+    const primary = primaryQuestionImage(type, row);
+    return primary ? [primary] : [];
+  };
+
+  const answerSimilarity = (correct, candidate) => {
+    const tokenize = (value) =>
+      new Set(
+        String(value)
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter((token) => token.length >= 2),
+      );
+    const correctTokens = tokenize(correct);
+    const candidateTokens = tokenize(candidate);
+    if (!correctTokens.size || !candidateTokens.size) return 0;
+    let shared = 0;
+    correctTokens.forEach((token) => {
+      if (candidateTokens.has(token)) shared += token.length;
+    });
+    const a = correct.toLowerCase();
+    const b = candidate.toLowerCase();
+    let prefix = 0;
+    for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
+      if (a[i] === b[i]) prefix += 1;
+      else break;
+    }
+    return shared * 2 + prefix;
+  };
+
+  const pickHardDistractors = (correct, others, count, fallbackRows = []) => {
+    const seen = new Set([correct]);
+    const unique = [];
+    others.forEach((row) => {
+      if (!row?.display || seen.has(row.display)) return;
+      seen.add(row.display);
+      unique.push(row);
+    });
+    const scored = unique
+      .map((row) => ({
+        display: row.display,
+        score: answerSimilarity(correct, row.display) + Math.random() * 0.35,
+      }))
+      .sort((a, b) => b.score - a.score);
+    const picks = sample(
+      scored.slice(0, Math.min(scored.length, Math.max(count * 3, count))),
+      count,
+    ).map((entry) => entry.display);
+    if (picks.length >= count) return picks;
+
+    const extras = [];
+    fallbackRows.forEach((row) => {
+      if (!row?.display || row.display === correct || picks.includes(row.display)) return;
+      if (seen.has(row.display)) return;
+      seen.add(row.display);
+      extras.push(row.display);
+    });
+    return [...picks, ...sample(extras, count - picks.length)];
+  };
+
+  const questionHasImages = (type, row, hard = false) =>
+    (hard ? pickHardQuestionImages(type, row) : pickQuestionImages(type, row)).length > 0;
 
   const hub = document.getElementById("trivia-hub");
   const quizEl = document.getElementById("trivia-quiz");
@@ -190,6 +244,7 @@
 
   let pool = null;
   let quizType = null;
+  let quizLength = QUIZ_LENGTH;
   let questions = [];
   let qIndex = 0;
   let score = 0;
@@ -518,8 +573,8 @@
   };
 
   const eligiblePool = (type) => {
-    if (type === "combo") {
-      return comboPoolsReady() ? [{ combo: true }] : [];
+    if (type === "combo" || type === "hard") {
+      return (type === "hard" ? hardPoolsReady() : comboPoolsReady()) ? [{ combo: true }] : [];
     }
     const key = poolKey(type);
     const rows = pool?.[key] || [];
@@ -530,7 +585,11 @@
       return rows.filter((r) => (r.images || []).length >= WEAPON_MIN_IMAGES);
     }
     if (type === "episode") {
-      return rows.filter((r) => episodeImages(r).length >= EPISODE_MIN_IMAGES);
+      return rows.filter(
+        (r) =>
+          episodeImages(r).length >= EPISODE_MIN_IMAGES &&
+          episodeQuizImages(r).length >= EPISODE_QUIZ_MIN_IMAGES,
+      );
     }
     if (type === "map") {
       return rows.filter((r) => mapImages(r).length >= MAP_MIN_IMAGES);
@@ -544,13 +603,34 @@
   const comboPoolsReady = () =>
     BASE_QUIZ_TYPES.every((type) => eligiblePool(type).length >= 4);
 
-  const buildQuestion = (type, row, allRows) => {
-    const imgs = pickQuestionImages(type, row);
+  const hardTypeRows = (type) =>
+    eligiblePool(type).filter((row) => questionHasImages(type, row, true));
+
+  const hardWeaponPickPool = (rows) =>
+    rows.filter((row) => {
+      const peers = weaponPeerRows(row, rows);
+      return peers.length >= HARD_POOL_MIN || rows.length >= HARD_POOL_MIN;
+    });
+
+  const hardPoolsReady = () => {
+    if (!comboPoolsReady()) return false;
+    return BASE_QUIZ_TYPES.every((type) => {
+      const rows = hardTypeRows(type);
+      if (type === "weapon") return hardWeaponPickPool(rows).length >= 1 && rows.length >= HARD_POOL_MIN;
+      return rows.length >= HARD_POOL_MIN;
+    });
+  };
+
+  const buildQuestion = (type, row, allRows, { hard = false } = {}) => {
+    const imgs = hard ? pickHardQuestionImages(type, row) : pickQuestionImages(type, row);
     const correct = row.display;
     const peerRows = type === "weapon" ? weaponPeerRows(row, allRows) : allRows;
     const others = peerRows.filter((r) => r.display !== correct);
-    const distractors = sample(others, 3).map((r) => r.display);
-    const options = shuffle([correct, ...distractors]);
+    const distractorCount = hard ? HARD_OPTION_COUNT : 3;
+    const distractors = hard
+      ? pickHardDistractors(correct, others, distractorCount, allRows)
+      : sample(others, distractorCount).map((r) => r.display);
+    const options = shuffle([correct, ...distractors]).slice(0, hard ? HARD_OPTION_COUNT + 1 : 4);
     return {
       type,
       correct,
@@ -566,6 +646,9 @@
   const buildQuiz = (type) => {
     if (type === "combo") {
       return buildComboQuiz();
+    }
+    if (type === "hard") {
+      return buildHardQuiz();
     }
     const rows = eligiblePool(type).filter((row) => questionHasImages(type, row));
     if (rows.length < 4) return [];
@@ -603,6 +686,26 @@
     return questions;
   };
 
+  const buildHardQuiz = () => {
+    if (!hardPoolsReady()) return [];
+
+    const pools = Object.fromEntries(
+      BASE_QUIZ_TYPES.map((type) => [type, hardTypeRows(type)]),
+    );
+    const weaponPickPool = hardWeaponPickPool(pools.weapon);
+
+    const out = [];
+    for (let i = 0; i < HARD_QUIZ_LENGTH; i += 1) {
+      const type = sample(BASE_QUIZ_TYPES, 1)[0];
+      let rows = pools[type];
+      if (type === "weapon") rows = weaponPickPool.length ? weaponPickPool : pools.weapon;
+      if (!rows.length) return [];
+      const row = sample(rows, 1)[0];
+      out.push(buildQuestion(type, row, pools[type], { hard: true }));
+    }
+    return out;
+  };
+
   const hideNext = () => {
     if (!nextBtn) return;
     clearTimeout(nextGlowTimer);
@@ -613,7 +716,7 @@
 
   const showNext = () => {
     if (!nextBtn) return;
-    nextBtn.textContent = qIndex >= QUIZ_LENGTH - 1 ? "See results" : "Next";
+    nextBtn.textContent = qIndex >= quizLength - 1 ? "See results" : "Next";
     nextBtn.hidden = false;
     nextBtn.classList.remove("is-glowing");
     requestAnimationFrame(() => {
@@ -630,7 +733,7 @@
   const advanceQuestion = () => {
     hideNext();
     qIndex += 1;
-    if (qIndex >= QUIZ_LENGTH) {
+    if (qIndex >= quizLength) {
       renderResults();
     } else {
       renderQuestion();
@@ -642,6 +745,7 @@
     hub.hidden = false;
     quizEl.hidden = true;
     resultsEl.hidden = true;
+    quizEl?.classList.remove("trivia-quiz--hard");
     quizType = null;
     questions = [];
     qIndex = 0;
@@ -654,6 +758,7 @@
     hub.hidden = true;
     quizEl.hidden = false;
     resultsEl.hidden = true;
+    quizEl?.classList.toggle("trivia-quiz--hard", quizType === "hard");
   };
 
   const showResults = () => {
@@ -664,9 +769,12 @@
 
   const renderProgress = () => {
     const n = qIndex + 1;
-    const pct = (qIndex / QUIZ_LENGTH) * 100;
+    const pct = (qIndex / quizLength) * 100;
     progressBar.style.width = `${Math.max(8, pct)}%`;
-    progressText.textContent = `${Math.min(n, QUIZ_LENGTH)} / ${QUIZ_LENGTH}`;
+    progressText.textContent =
+      quizType === "hard"
+        ? `${Math.min(n, quizLength)} / ${quizLength} · Hard`
+        : `${Math.min(n, quizLength)} / ${quizLength}`;
   };
 
   const renderQuestion = () => {
@@ -681,6 +789,11 @@
     if (quizType === "combo" && q.type) {
       const kind = document.createElement("span");
       kind.className = "trivia-question-kind";
+      kind.textContent = QUIZ_META[q.type]?.kindLabel || q.type;
+      questionEl.appendChild(kind);
+    } else if (quizType === "hard") {
+      const kind = document.createElement("span");
+      kind.className = "trivia-question-kind trivia-question-kind--hard";
       kind.textContent = QUIZ_META[q.type]?.kindLabel || q.type;
       questionEl.appendChild(kind);
     }
@@ -715,6 +828,7 @@
     if (nextQ) prefetchImages(nextQ.images);
 
     optionsEl.innerHTML = "";
+    optionsEl.classList.toggle("trivia-options--many", q.options.length > 4);
     q.options.forEach((label) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -769,19 +883,34 @@
 
   const renderResults = () => {
     showResults();
-    const pct = Math.round((score / QUIZ_LENGTH) * 100);
-    resultsScore.textContent = `${score} / ${QUIZ_LENGTH}`;
-    resultsTitle.textContent =
-      pct === 100
-        ? "Perfect score!"
-        : pct >= 70
-          ? "Nice work!"
-          : pct >= 40
-            ? "Not bad — keep studying."
-            : "Keep dropping in — you'll get it next time.";
+    const pct = Math.round((score / quizLength) * 100);
+    resultsScore.textContent = `${score} / ${quizLength}`;
+    if (quizType === "hard") {
+      resultsTitle.textContent =
+        pct === 100
+          ? "Legendary — you beat Super Hard!"
+          : pct >= 60
+            ? "Impressive run on brutal mode."
+            : pct >= 30
+              ? "Super Hard lives up to its name."
+              : "That mode is no joke — try again.";
+    } else {
+      resultsTitle.textContent =
+        pct === 100
+          ? "Perfect score!"
+          : pct >= 70
+            ? "Nice work!"
+            : pct >= 40
+              ? "Not bad — keep studying."
+              : "Keep dropping in — you'll get it next time.";
+    }
 
     resultsCard.classList.remove("is-great", "is-ok", "is-low");
-    if (pct >= 70) resultsCard.classList.add("is-great");
+    if (quizType === "hard") {
+      if (pct >= 60) resultsCard.classList.add("is-great");
+      else if (pct >= 30) resultsCard.classList.add("is-ok");
+      else resultsCard.classList.add("is-low");
+    } else if (pct >= 70) resultsCard.classList.add("is-great");
     else if (pct >= 40) resultsCard.classList.add("is-ok");
     else resultsCard.classList.add("is-low");
 
@@ -814,9 +943,10 @@
       const main = document.createElement("div");
       main.className = "trivia-result-main";
 
-      if (quizType === "combo" && a.type) {
+      if ((quizType === "combo" || quizType === "hard") && a.type) {
         const kind = document.createElement("span");
-        kind.className = "trivia-result-kind";
+        kind.className =
+          quizType === "hard" ? "trivia-result-kind trivia-result-kind--hard" : "trivia-result-kind";
         kind.textContent = QUIZ_META[a.type]?.kindLabel || a.type;
         main.appendChild(kind);
       }
@@ -865,8 +995,9 @@
   const startQuiz = (type) => {
     if (!pool) return;
     quizType = type;
+    quizLength = type === "hard" ? HARD_QUIZ_LENGTH : QUIZ_LENGTH;
     questions = buildQuiz(type);
-    if (questions.length < QUIZ_LENGTH) {
+    if (questions.length < quizLength) {
       window.alert("Not enough data for this quiz yet. Try another one!");
       return;
     }
@@ -891,7 +1022,7 @@
     if (quizType) startQuiz(quizType);
   });
 
-  fetch("/assets/data/quiz_pool.json?v=20260628")
+  fetch("/assets/data/quiz_pool.json?v=20260701")
     .then((r) => {
       if (!r.ok) throw new Error("load failed");
       return r.json();
@@ -903,7 +1034,11 @@
       cardsRoot.querySelectorAll("[data-quiz]").forEach((card) => {
         const type = card.getAttribute("data-quiz");
         const available =
-          type === "combo" ? comboPoolsReady() : eligiblePool(type).length >= 4;
+          type === "combo"
+            ? comboPoolsReady()
+            : type === "hard"
+              ? hardPoolsReady()
+              : eligiblePool(type).length >= 4;
         card.disabled = !available;
         if (!available) card.classList.add("is-disabled");
       });

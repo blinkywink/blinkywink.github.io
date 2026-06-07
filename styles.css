@@ -4863,6 +4863,53 @@ a.char-group-title-link:hover{
 .trivia-card--combo:hover:not(:disabled){
   border-color: rgba(167, 139, 250, 0.5);
 }
+.trivia-card--hard{
+  border-color: rgba(248, 113, 113, 0.28);
+  background: linear-gradient(180deg, rgba(36, 18, 22, 0.96), rgba(15, 17, 24, 0.98));
+}
+.trivia-card--hard:hover:not(:disabled){
+  border-color: rgba(248, 113, 113, 0.55);
+  box-shadow: 0 16px 44px rgba(127, 29, 29, 0.22);
+}
+.trivia-card-badge{
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.trivia-card-mix-tags--hard span{
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+}
+.trivia-card-faux-options--many{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.trivia-card-faux-options--many span{
+  font-size: 0.72rem;
+}
+.trivia-quiz--hard .trivia-progress-bar{
+  background: linear-gradient(90deg, #f87171, #fb923c);
+}
+.trivia-question-kind--hard,
+.trivia-result-kind--hard{
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+}
+.trivia-options--many{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .trivia-card-mix-tags{
   display: flex;
   flex-wrap: wrap;
@@ -5776,6 +5823,9 @@ a.char-group-title-link:hover{
     min-height: 50px;
     font-size: 1rem;
     padding: 15px 16px;
+  }
+  .trivia-options--many{
+    grid-template-columns: 1fr;
   }
   .trivia-results-card{
     padding: 22px 18px 18px;
