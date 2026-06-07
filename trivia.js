@@ -46,9 +46,10 @@
 
   const BASE_QUIZ_TYPES = ["episode", "character", "set", "weapon", "map", "item"];
   const WEAPON_MIN_IMAGES = 1;
-  const CHARACTER_MIN_IMAGES = 2;
-  const EPISODE_MIN_IMAGES = 2;
-  const MAP_MIN_IMAGES = 2;
+  const MULTI_IMAGE_POOL_MIN = 12;
+  const CHARACTER_MIN_IMAGES = MULTI_IMAGE_POOL_MIN;
+  const EPISODE_MIN_IMAGES = MULTI_IMAGE_POOL_MIN;
+  const MAP_MIN_IMAGES = MULTI_IMAGE_POOL_MIN;
   const MULTI_IMAGE_COUNT = 3;
   const SINGLE_IMAGE_TYPES = new Set(["set", "weapon", "item"]);
   const EPISODE_NAV_IMAGE = /Nav_Seasons/i;
@@ -890,7 +891,7 @@
     if (quizType) startQuiz(quizType);
   });
 
-  fetch("/assets/data/quiz_pool.json?v=20260626")
+  fetch("/assets/data/quiz_pool.json?v=20260628")
     .then((r) => {
       if (!r.ok) throw new Error("load failed");
       return r.json();

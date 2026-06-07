@@ -20,10 +20,12 @@ _VIDEO_URL = re.compile(
     r"ytimg|youtube|video-thumbnail|Soundtrack|compilation|\(Clip\)",
     re.I,
 )
-CHARACTER_MIN_IMAGES = 4
+MULTI_IMAGE_MIN_IMAGES = 12
+CHARACTER_MIN_IMAGES = MULTI_IMAGE_MIN_IMAGES
+EPISODE_MIN_IMAGES = MULTI_IMAGE_MIN_IMAGES
+MAP_MIN_IMAGES = MULTI_IMAGE_MIN_IMAGES
 WEAPON_MIN_IMAGES = 1
 COSMETIC_MIN_IMAGES = 1
-MAP_MIN_IMAGES = 1
 ITEM_MIN_IMAGES = 1
 
 # Oninoshima POI wiki pages listed under Chapter 6 — locations, not seasons.
@@ -282,7 +284,9 @@ def _episode_row_images(row: dict) -> list[str] | None:
             if _is_episode_pool_image(url) and url not in imgs:
                 imgs.append(url)
 
-    return imgs if imgs else None
+    if len(imgs) < EPISODE_MIN_IMAGES:
+        return None
+    return imgs
 
 
 def _read_html(href: str) -> str | None:
@@ -571,6 +575,8 @@ def _map_row_images(row: dict) -> list[str] | None:
         return None
 
     imgs.sort(key=_map_image_rank)
+    if len(imgs) < MAP_MIN_IMAGES:
+        return None
     return imgs
 
 
