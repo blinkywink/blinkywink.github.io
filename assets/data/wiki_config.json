@@ -1,0 +1,94 @@
+{
+  "fandomHost": "fortnite.fandom.com",
+  "fandomBaseUrl": "https://fortnite.fandom.com",
+  "categoryRoot": "Category:Fortnite",
+  "siteName": "Fortnite Wiki Project",
+  "siteShortName": "Fortnite Wiki",
+  "franchiseName": "Fortnite",
+  "userAgent": "FortniteWikiMirror/1.0 (local mirror; contact: site maintainer)",
+  "mirrorUserAgent": "FortniteWikiLocalMirror/1.0",
+  "wikiaCdnPath": "static.wikia.nocookie.net/fortnite",
+  "sitemapBaseUrl": "https://blinkywink.co",
+  "replacements": [
+    [
+      "https://ninjago.fandom.com",
+      "https://fortnite.fandom.com"
+    ],
+    [
+      "ninjago.fandom.com",
+      "fortnite.fandom.com"
+    ],
+    [
+      "Ninjago Wiki Project",
+      "Fortnite Wiki Project"
+    ],
+    [
+      "NinjagoSiteMirror",
+      "FortniteWikiMirror"
+    ],
+    [
+      "NinjagoWikiLocalMirror",
+      "FortniteWikiLocalMirror"
+    ],
+    [
+      "Category:Content",
+      "Category:Fortnite"
+    ],
+    [
+      "Search Ninjago...",
+      "Search Fortnite..."
+    ],
+    [
+      "Search Ninjago",
+      "Search Fortnite"
+    ],
+    [
+      "Built by Ninjago fans, for Ninjago Fans.",
+      "Built by Fortnite fans, for Fortnite fans."
+    ],
+    [
+      "Ninjago fan community",
+      "Fortnite fan community"
+    ],
+    [
+      "fan-made Ninjago wiki",
+      "fan-made Fortnite wiki"
+    ],
+    [
+      "the Ninjago series",
+      "Fortnite"
+    ],
+    [
+      "Ninjago fandom",
+      "Fortnite fandom"
+    ],
+    [
+      "Ninjago fans",
+      "Fortnite fans"
+    ],
+    [
+      "independent fan-made effort to create a cleaner, faster, and more modern wiki experience for fans of the Ninjago series",
+      "independent fan-made effort to create a cleaner, faster, and more modern wiki experience for Fortnite fans"
+    ],
+    [
+      "static.wikia.nocookie.net/ninjago",
+      "static.wikia.nocookie.net/fortnite"
+    ],
+    [
+      "https://blinkywink.co/ninjagowiki",
+      "https://blinkywink.co"
+    ],
+    [
+      "Fan-made Ninjago wiki",
+      "Fan-made Fortnite wiki"
+    ],
+    [
+      "Ninjago trivia quizzes",
+      "Fortnite trivia quizzes"
+    ],
+    [
+      "aria-label=\"Ninjago Wiki Project hero\"",
+      "aria-label=\"Fortnite Wiki Project hero\""
+    ]
+  ]
+}
