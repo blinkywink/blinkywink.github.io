@@ -1,4 +1,20 @@
 {
   "v": 2,
-  "groups": []
+  "source": "fortnite media categories",
+  "groups": [
+    {
+      "id": "fortnite-festival",
+      "title": "Fortnite Festival",
+      "items": [
+        {
+          "display": "Fortnite Festival",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival",
+          "slug": "fortnite-festival",
+          "filter": "fortnite festival Fortnite Festival",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/2/22/Fortnite_Festival_-_Logo_-_Fortnite.png/revision/latest/scale-to-width-down/250?cb=20231221181425"
+        }
+      ]
+    }
+  ]
 }

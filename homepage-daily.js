@@ -165,13 +165,13 @@
 
       const spinGrid = addBlock(root, "Today's Spin", "", "daily-spin-grid");
 
-      if (char) spinGrid.appendChild(makeCard(char, "Character of the day"));
-      if (set) spinGrid.appendChild(makeCard(set, "Set of the day"));
-      if (ep) spinGrid.appendChild(makeCard(ep, "Episode of the day"));
-      if (weapon) spinGrid.appendChild(makeCard(weapon, "Weapon of the day"));
+      if (char) spinGrid.appendChild(makeCard(char, "Outfit of the day"));
+      if (set) spinGrid.appendChild(makeCard(set, "Cosmetic of the day"));
+      if (ep) spinGrid.appendChild(makeCard(ep, "Season highlight"));
+      if (weapon) spinGrid.appendChild(makeCard(weapon, "Item of the day"));
 
       if (spotlight.length) {
-        const spotGrid = addBlock(root, "Daily Set Spotlight", "", "simple-grid");
+        const spotGrid = addBlock(root, "Daily Cosmetic Spotlight", "", "simple-grid");
         for (const row of spotlight) {
           spotGrid.appendChild(makeCard(row, "Spotlight"));
         }

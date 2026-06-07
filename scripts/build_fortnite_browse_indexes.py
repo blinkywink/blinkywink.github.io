@@ -107,7 +107,7 @@ def row_from_page(page: dict, thumbs: dict[str, str], html_cache: dict[str, str]
                 html_cache[key] = path.read_text(encoding="utf-8", errors="replace")[:900_000]
             except OSError:
                 html_cache[key] = ""
-        th = thumb_from_mirror_html(html_cache[key]) or page.get("thumb") or ""
+        th = thumb_from_mirror_html(html_cache[key], page.get("thumb")) or ""
     kw = norm_key(display)
     return {
         "display": display,

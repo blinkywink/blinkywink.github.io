@@ -24,16 +24,16 @@ DATA_DIR = ROOT / "assets" / "data"
 CHARACTERS_JSON = DATA_DIR / "characters.json"
 
 FEATURED: list[dict] = [
-    {"wiki_title": "Lloyd", "display": "Lloyd", "slug": "lloyd", "local": "lloyd.webp", "filter": "lloyd green ninja"},
-    {"wiki_title": "Kai", "display": "Kai", "filter": "kai fire ninja"},
-    {"wiki_title": "Jay", "display": "Jay", "filter": "jay lightning ninja"},
-    {"wiki_title": "Cole", "display": "Cole", "filter": "cole earth ninja"},
-    {"wiki_title": "Zane", "display": "Zane", "filter": "zane ice ninja nindroid"},
-    {"wiki_title": "Nya", "display": "Nya", "filter": "nya water ninja"},
-    {"wiki_title": "Wu", "display": "Sensei Wu", "filter": "wu sensei master sensei wu"},
-    {"wiki_title": "Garmadon", "display": "Garmadon", "filter": "garmadon lord garmadon"},
-    {"wiki_title": "Pythor", "display": "Pythor", "filter": "pythor serpentine"},
-    {"wiki_title": "The Overlord", "display": "Overlord", "slug": "overlord", "filter": "overlord darkness"},
+    {"wiki_title": "Drift", "display": "Drift", "slug": "drift", "filter": "drift fox clan"},
+    {"wiki_title": "Peely", "display": "Peely", "slug": "peely", "filter": "peely banana"},
+    {"wiki_title": "Fishstick", "display": "Fishstick", "slug": "fishstick", "filter": "fishstick fish"},
+    {"wiki_title": "Renegade Raider", "display": "Renegade Raider", "slug": "renegade-raider", "filter": "renegade raider og"},
+    {"wiki_title": "Skull Trooper", "display": "Skull Trooper", "slug": "skull-trooper", "filter": "skull trooper halloween"},
+    {"wiki_title": "Midas", "display": "Midas", "slug": "midas", "filter": "midas golden touch"},
+    {"wiki_title": "Raven", "display": "Raven", "slug": "raven", "filter": "raven dark"},
+    {"wiki_title": "Black Knight", "display": "Black Knight", "slug": "black-knight", "filter": "black knight season 2"},
+    {"wiki_title": "Omega", "display": "Omega", "slug": "omega", "filter": "omega season 4"},
+    {"wiki_title": "Jules", "display": "Jules", "slug": "jules", "filter": "jules mechanic"},
 ]
 
 
@@ -151,10 +151,7 @@ def fill_featured_thumbs() -> None:
 def search_link(*, slug: str, display: str, data_filter: str, thumb: str) -> str:
     esc = html.escape
     t = abs_asset(thumb)
-    if slug == "kai":
-        page_href = "/characters/kai"
-    else:
-        page_href = f"/characters#{esc(slug)}"
+    page_href = f"/characters/{slug}"
     return (
         f'        <a href="{page_href}" data-search="{esc(data_filter)}" data-search-thumb="{esc(t)}">'
         f'<span class="article-name">{esc(display)}</span></a>'

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -58,7 +59,7 @@ def main() -> None:
     if args.limit:
         missing = missing[: args.limit]
 
-    print(f"Missing on disk: {len(missing)} row(s) to import.", file=sys.stderr)
+    print(f"Missing on disk: {len(missing)} row(s) to import.", file=sys.stderr, flush=True)
     ok = err = 0
     for i, row in enumerate(missing):
         slug = (row.get("slug") or "").strip()
@@ -66,16 +67,32 @@ def main() -> None:
         if not slug or not title:
             err += 1
             continue
+        print(f"[{ok + 1}/{len(missing)}] {title!r}", file=sys.stderr, flush=True)
+        t0 = time.time()
         try:
             cat = (row.get("categoryPath") or "").strip() or None
             import_wiki_page(title, slug=slug, category_path=cat, root=root, quiet=True)
             ok += 1
+            elapsed = time.time() - t0
+            if elapsed > 8:
+                print(f"  (slow: {elapsed:.0f}s)", file=sys.stderr, flush=True)
         except (OSError, RuntimeError, ValueError, FileNotFoundError, KeyError, TypeError) as e:
-            print(f"FAIL {slug!r} ({title!r}): {e}", file=sys.stderr)
+            print(f"FAIL {slug!r} ({title!r}): {e}", file=sys.stderr, flush=True)
             err += 1
             continue
         if ok % 25 == 0:
-            print(f"… {ok} imported", file=sys.stderr, flush=True)
+            print(f"… {ok} imported total", file=sys.stderr, flush=True)
+        if ok > 0 and ok % 500 == 0:
+            print("… refreshing routes (partial rebuild)", file=sys.stderr, flush=True)
+            try:
+                subprocess.run(
+                    [sys.executable, str(SCRIPT_DIR / "build_site_routes.py"), "--no-enrich-search"],
+                    cwd=root,
+                    check=False,
+                    timeout=600,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                pass
         if args.delay > 0:
             time.sleep(args.delay)
 

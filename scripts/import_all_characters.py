@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -122,6 +123,16 @@ def main() -> None:
             c["href"] = local_href
             save_data(data)
         ok += 1
+        if ok % 50 == 0:
+            print(f"… {ok} imported (refreshing outfit manifest)", file=sys.stderr, flush=True)
+            try:
+                subprocess.run(
+                    [sys.executable, str(SCRIPT_DIR / "build_fortnite_characters_manifest.py")],
+                    cwd=ROOT,
+                    check=False,
+                )
+            except OSError:
+                pass
         if args.delay > 0 and i < len(chars):
             time.sleep(args.delay)
 

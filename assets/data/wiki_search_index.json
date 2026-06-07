@@ -1,12 +1,3713 @@
 {
   "v": 2,
-  "generatedAt": "2026-06-07T06:46:39.661344+00:00",
+  "generatedAt": "2026-06-07T08:09:56.987326+00:00",
   "stats": {
-    "pagesOnDisk": 0,
-    "charactersOnDisk": 0,
-    "manifestRows": 0,
+    "pagesOnDisk": 185,
+    "charactersOnDisk": 226,
+    "manifestRows": 33181,
     "searchEnrichedFromHtml": false
   },
-  "pages": [],
-  "characters": []
+  "pages": [
+    {
+      "slug": "page",
+      "display": "!",
+      "wikiTitle": "!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/!",
+      "categoryPath": "fortnite/cosmetics/sets/sneaking-set",
+      "href": "/pages/fortnite/cosmetics/sets/sneaking-set/page",
+      "keywords": "!"
+    },
+    {
+      "slug": "page",
+      "display": "!?!",
+      "wikiTitle": "!?!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/!%3F!",
+      "categoryPath": "fortnite/cosmetics/sets/the-seven-set",
+      "href": "/pages/fortnite/cosmetics/sets/the-seven-set/page",
+      "keywords": "!?!"
+    },
+    {
+      "slug": "friendly-finger",
+      "display": "\"Friendly Finger\"",
+      "wikiTitle": "\"Friendly Finger\"",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/%22Friendly_Finger%22",
+      "categoryPath": "fortnite/availability/removed/scrapped-cosmetics",
+      "href": "/pages/fortnite/availability/removed/scrapped-cosmetics/friendly-finger",
+      "keywords": "\"friendly finger\""
+    },
+    {
+      "slug": "brella-fire",
+      "display": "'Brella Fire",
+      "wikiTitle": "'Brella Fire",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/'Brella_Fire",
+      "categoryPath": "fortnite/cosmetics/customizable-emoticon-cosmetics/boundless-set",
+      "href": "/pages/fortnite/cosmetics/customizable-emoticon-cosmetics/boundless-set/brella-fire",
+      "keywords": "'brella fire"
+    },
+    {
+      "slug": "copter-fox",
+      "display": "'Copter Fox",
+      "wikiTitle": "'Copter Fox",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/'Copter_Fox",
+      "categoryPath": "fortnite/availability/unreleased-content/unreleased-cosmetics",
+      "href": "/pages/fortnite/availability/unreleased-content/unreleased-cosmetics/copter-fox",
+      "keywords": "'copter fox"
+    },
+    {
+      "slug": "loon-pawntoon",
+      "display": "'Loon Pawntoon",
+      "wikiTitle": "'Loon Pawntoon",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/'Loon_Pawntoon",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-3/artemis",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-3/artemis/loon-pawntoon",
+      "keywords": "'loon pawntoon"
+    },
+    {
+      "slug": "mato-marauder",
+      "display": "'Mato Marauder",
+      "wikiTitle": "'Mato Marauder",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/'Mato_Marauder",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/mato-marauder",
+      "keywords": "'mato marauder"
+    },
+    {
+      "slug": "stools-fuels",
+      "display": "'Stools Fuels",
+      "wikiTitle": "'Stools Fuels",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/'Stools_Fuels",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-3/artemis",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-3/artemis/stools-fuels",
+      "keywords": "'stools fuels"
+    },
+    {
+      "slug": "dont-fear-the-reaper",
+      "display": "(Don't Fear) The Reaper",
+      "wikiTitle": "(Don't Fear) The Reaper",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(Don't_Fear)_The_Reaper",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-blue-öyster-cult",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-blue-öyster-cult/dont-fear-the-reaper",
+      "keywords": "(don't fear) the reaper"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun",
+      "display": "(PH) Kang and Kodos Ray Gun",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun",
+      "keywords": "(ph) kang and kodos ray gun"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun-damage-siphon",
+      "display": "(PH) Kang and Kodos Ray Gun (Damage Siphon)",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun (Damage Siphon)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun_(Damage_Siphon)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-damage-siphon",
+      "keywords": "(ph) kang and kodos ray gun (damage siphon)"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun-delay",
+      "display": "(PH) Kang and Kodos Ray Gun (Delay)",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun (Delay)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun_(Delay)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-delay",
+      "keywords": "(ph) kang and kodos ray gun (delay)"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun-elim-siphon",
+      "display": "(PH) Kang and Kodos Ray Gun (Elim Siphon)",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun (Elim Siphon)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun_(Elim_Siphon)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-elim-siphon",
+      "keywords": "(ph) kang and kodos ray gun (elim siphon)"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun-emp",
+      "display": "(PH) Kang and Kodos Ray Gun (EMP)",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun (EMP)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun_(EMP)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-emp",
+      "keywords": "(ph) kang and kodos ray gun (emp)"
+    },
+    {
+      "slug": "ph-kang-and-kodos-ray-gun-exotic",
+      "display": "(PH) Kang and Kodos Ray Gun (Exotic)",
+      "wikiTitle": "(PH) Kang and Kodos Ray Gun (Exotic)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(PH)_Kang_and_Kodos_Ray_Gun_(Exotic)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-exotic",
+      "keywords": "(ph) kang and kodos ray gun (exotic)"
+    },
+    {
+      "slug": "proto-belly-blaster-shotgun",
+      "display": "(Proto) Belly Blaster Shotgun",
+      "wikiTitle": "(Proto) Belly Blaster Shotgun",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(Proto)_Belly_Blaster_Shotgun",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/shotguns",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/shotguns/proto-belly-blaster-shotgun",
+      "keywords": "(proto) belly blaster shotgun"
+    },
+    {
+      "slug": "proto-scattershot-crossbow",
+      "display": "(Proto) Scattershot Crossbow",
+      "wikiTitle": "(Proto) Scattershot Crossbow",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(Proto)_Scattershot_Crossbow",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/crossbows",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/crossbows/proto-scattershot-crossbow",
+      "keywords": "(proto) scattershot crossbow"
+    },
+    {
+      "slug": "snikt",
+      "display": "(Snikt!)",
+      "wikiTitle": "(Snikt!)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/(Snikt!)",
+      "categoryPath": "fortnite/cosmetics/sets/peelverine-set",
+      "href": "/pages/fortnite/cosmetics/sets/peelverine-set/snikt",
+      "keywords": "(snikt!)"
+    },
+    {
+      "slug": "buurrrpp",
+      "display": "* BUURRRPP *",
+      "wikiTitle": "* BUURRRPP *",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/%2A_BUURRRPP_%2A",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/rick-c-137-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/rick-c-137-set/buurrrpp",
+      "keywords": "* buurrrpp *"
+    },
+    {
+      "slug": "redacted",
+      "display": "**REDACTED**",
+      "wikiTitle": "**REDACTED**",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/%2A%2AREDACTED%2A%2A",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-2/apollo",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-2/apollo/redacted",
+      "keywords": "**redacted**"
+    },
+    {
+      "slug": "page",
+      "display": "...",
+      "wikiTitle": "...",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/...",
+      "categoryPath": "fortnite/cosmetics/sets/calculator-crew-set",
+      "href": "/pages/fortnite/cosmetics/sets/calculator-crew-set/page",
+      "keywords": "..."
+    },
+    {
+      "slug": "has-its-thorn",
+      "display": "... Has Its Thorn",
+      "wikiTitle": "... Has Its Thorn",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/..._Has_Its_Thorn",
+      "categoryPath": "fortnite/fortnite-by-game-mode/save-the-world/questlines/spring-it-on",
+      "href": "/pages/fortnite/fortnite-by-game-mode/save-the-world/questlines/spring-it-on/has-its-thorn",
+      "keywords": "... has its thorn"
+    },
+    {
+      "slug": "007s-aston-martin-db5-car-body",
+      "display": "007's Aston Martin DB5 (Car Body)",
+      "wikiTitle": "007's Aston Martin DB5 (Car Body)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/007's_Aston_Martin_DB5_(Car_Body)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/007s-aston-martin-db5-car-body",
+      "keywords": "007's aston martin db5 (car body)"
+    },
+    {
+      "slug": "007s-aston-martin-dbs-car-body",
+      "display": "007's Aston Martin DBS (Car Body)",
+      "wikiTitle": "007's Aston Martin DBS (Car Body)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/007's_Aston_Martin_DBS_(Car_Body)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/007s-aston-martin-dbs-car-body",
+      "keywords": "007's aston martin dbs (car body)"
+    },
+    {
+      "slug": "1-hp",
+      "display": "1 HP",
+      "wikiTitle": "1 HP",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/1_HP",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/1-hp",
+      "keywords": "1 hp"
+    },
+    {
+      "slug": "1-ball",
+      "display": "1-Ball",
+      "wikiTitle": "1-Ball",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/1-Ball",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/1-ball",
+      "keywords": "1-ball"
+    },
+    {
+      "slug": "1-ball-loading-screen",
+      "display": "1-Ball (Loading Screen)",
+      "wikiTitle": "1-Ball (Loading Screen)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/1-Ball_(Loading_Screen)",
+      "categoryPath": "fortnite/cosmetics/sets/in-the-pocket-set",
+      "href": "/pages/fortnite/cosmetics/sets/in-the-pocket-set/1-ball-loading-screen",
+      "keywords": "1-ball (loading screen)"
+    },
+    {
+      "slug": "100-thieves",
+      "display": "100 Thieves",
+      "wikiTitle": "100 Thieves",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/100_Thieves",
+      "categoryPath": "fortnite/cosmetics/sets/courage-set",
+      "href": "/pages/fortnite/cosmetics/sets/courage-set/100-thieves",
+      "keywords": "100 thieves"
+    },
+    {
+      "slug": "18s-kama",
+      "display": "18's Kama",
+      "wikiTitle": "18's Kama",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/18's_Kama",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/flail-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/flail-pickaxes/18s-kama",
+      "keywords": "18's kama"
+    },
+    {
+      "slug": "1966-cadillac-deville",
+      "display": "1966 Cadillac Deville",
+      "wikiTitle": "1966 Cadillac Deville",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/1966_Cadillac_Deville",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/1966-cadillac-deville",
+      "keywords": "1966 cadillac deville"
+    },
+    {
+      "slug": "25d-boost",
+      "display": "2.5D (Boost)",
+      "wikiTitle": "2.5D (Boost)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2.5D_(Boost)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-15",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-15/25d-boost",
+      "keywords": "2.5d (boost)"
+    },
+    {
+      "slug": "200-iq",
+      "display": "200 IQ",
+      "wikiTitle": "200 IQ",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/200_IQ",
+      "categoryPath": "fortnite/cosmetics/sets/mrsavage-set",
+      "href": "/pages/fortnite/cosmetics/sets/mrsavage-set/200-iq",
+      "keywords": "200 iq"
+    },
+    {
+      "slug": "2020-kickflip",
+      "display": "2020 Kickflip",
+      "wikiTitle": "2020 Kickflip",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2020_Kickflip",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/2020-kickflip",
+      "keywords": "2020 kickflip"
+    },
+    {
+      "slug": "2099-cape",
+      "display": "2099 Cape",
+      "wikiTitle": "2099 Cape",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2099_Cape",
+      "categoryPath": "fortnite/cosmetics/sets/rivals-set",
+      "href": "/pages/fortnite/cosmetics/sets/rivals-set/2099-cape",
+      "keywords": "2099 cape"
+    },
+    {
+      "slug": "2099-web-cape",
+      "display": "2099 Web Cape",
+      "wikiTitle": "2099 Web Cape",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2099_Web_Cape",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/reactive-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/reactive-cosmetics/2099-web-cape",
+      "keywords": "2099 web cape"
+    },
+    {
+      "slug": "24-karat-crash",
+      "display": "24-Karat Crash",
+      "wikiTitle": "24-Karat Crash",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/24-Karat_Crash",
+      "categoryPath": "fortnite/cosmetics/sets/robber-queen-set",
+      "href": "/pages/fortnite/cosmetics/sets/robber-queen-set/24-karat-crash",
+      "keywords": "24-karat crash"
+    },
+    {
+      "slug": "2ds-megaphone",
+      "display": "2D's Megaphone",
+      "wikiTitle": "2D's Megaphone",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2D's_Megaphone",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/gorillaz-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/gorillaz-set/2ds-megaphone",
+      "keywords": "2d's megaphone"
+    },
+    {
+      "slug": "2ds-mic-back-bling",
+      "display": "2D's Mic (Back Bling)",
+      "wikiTitle": "2D's Mic (Back Bling)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2D's_Mic_(Back_Bling)",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/gorillaz-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/gorillaz-set/2ds-mic-back-bling",
+      "keywords": "2d's mic (back bling)"
+    },
+    {
+      "slug": "2ds-mic-pickaxe",
+      "display": "2D's Mic (Pickaxe)",
+      "wikiTitle": "2D's Mic (Pickaxe)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/2D's_Mic_(Pickaxe)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/spear-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/spear-pickaxes/2ds-mic-pickaxe",
+      "keywords": "2d's mic (pickaxe)"
+    },
+    {
+      "slug": "3-jokerz-monte",
+      "display": "3 Jokerz Monte",
+      "wikiTitle": "3 Jokerz Monte",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/3_Jokerz_Monte",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/batman-beyond-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/batman-beyond-set/3-jokerz-monte",
+      "keywords": "3 jokerz monte"
+    },
+    {
+      "slug": "4-me",
+      "display": "4 Me???",
+      "wikiTitle": "4 Me???",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/4_Me%3F%3F%3F",
+      "categoryPath": "fortnite/cosmetics/sets/b-d4y-set",
+      "href": "/pages/fortnite/cosmetics/sets/b-d4y-set/4-me",
+      "keywords": "4 me???"
+    },
+    {
+      "slug": "4-raws",
+      "display": "4 Raws",
+      "wikiTitle": "4 Raws",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/4_Raws",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-esdeekid",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-esdeekid/4-raws",
+      "keywords": "4 raws"
+    },
+    {
+      "slug": "8-ball-janky",
+      "display": "8-Ball Janky",
+      "wikiTitle": "8-Ball Janky",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/8-Ball_Janky",
+      "categoryPath": "fortnite/cosmetics/sets/guggimon-set",
+      "href": "/pages/fortnite/cosmetics/sets/guggimon-set/8-ball-janky",
+      "keywords": "8-ball janky"
+    },
+    {
+      "slug": "8-bit-beat",
+      "display": "8-bit Beat",
+      "wikiTitle": "8-bit Beat",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/8-bit_Beat",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-epic-games",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-epic-games/8-bit-beat",
+      "keywords": "8-bit beat"
+    },
+    {
+      "slug": "8-bit-wave",
+      "display": "8-Bit Wave",
+      "wikiTitle": "8-Bit Wave",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/8-Bit_Wave",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/reactive-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/reactive-cosmetics/8-bit-wave",
+      "keywords": "8-bit wave"
+    },
+    {
+      "slug": "8-kit",
+      "display": "8-Kit",
+      "wikiTitle": "8-Kit",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/8-Kit",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/8-kit",
+      "keywords": "8-kit"
+    },
+    {
+      "slug": "999",
+      "display": "999",
+      "wikiTitle": "999",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/999",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/reactive-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/reactive-cosmetics/999",
+      "keywords": "999"
+    },
+    {
+      "slug": "999-knives-back-bling",
+      "display": "999 Knives (Back Bling)",
+      "wikiTitle": "999 Knives (Back Bling)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/999_Knives_(Back_Bling)",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/999-knives-back-bling",
+      "keywords": "999 knives (back bling)"
+    },
+    {
+      "slug": "999-knives-pickaxe",
+      "display": "999 Knives (Pickaxe)",
+      "wikiTitle": "999 Knives (Pickaxe)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/999_Knives_(Pickaxe)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes/999-knives-pickaxe",
+      "keywords": "999 knives (pickaxe)"
+    },
+    {
+      "slug": "a-bar-song-emote",
+      "display": "A Bar Song (Emote)",
+      "wikiTitle": "A Bar Song (Emote)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/A_Bar_Song_(Emote)",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/dance-emotes",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/dance-emotes/a-bar-song-emote",
+      "keywords": "a bar song (emote)"
+    },
+    {
+      "slug": "a-bar-song-jam-track",
+      "display": "A Bar Song (Jam Track)",
+      "wikiTitle": "A Bar Song (Jam Track)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/A_Bar_Song_(Jam_Track)",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-shaboozey",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-shaboozey/a-bar-song-jam-track",
+      "keywords": "a bar song (jam track)"
+    },
+    {
+      "slug": "a-snowman",
+      "display": "A Snowman!",
+      "wikiTitle": "A Snowman!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/A_Snowman!",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/reactive-cosmetics/time-reactive-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/reactive-cosmetics/time-reactive-cosmetics/a-snowman",
+      "keywords": "a snowman!"
+    },
+    {
+      "slug": "abduction",
+      "display": "Abduction!",
+      "wikiTitle": "Abduction!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Abduction!",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/abduction",
+      "keywords": "abduction!"
+    },
+    {
+      "slug": "ac-milan-puma-x-off-white-boost",
+      "display": "AC Milan (PUMA x Off-White) (Boost)",
+      "wikiTitle": "AC Milan (PUMA x Off-White) (Boost)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/AC_Milan_(PUMA_x_Off-White)_(Boost)",
+      "categoryPath": "fortnite/cosmetics/sets/ac-milan-puma-x-off-white-set",
+      "href": "/pages/fortnite/cosmetics/sets/ac-milan-puma-x-off-white-set/ac-milan-puma-x-off-white-boost",
+      "keywords": "ac milan (puma x off-white) (boost)"
+    },
+    {
+      "slug": "aces-fly",
+      "display": "Aces Fly",
+      "wikiTitle": "Aces Fly",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Aces_Fly",
+      "categoryPath": "fortnite/cosmetics/sets/quinn-of-spades-set",
+      "href": "/pages/fortnite/cosmetics/sets/quinn-of-spades-set/aces-fly",
+      "keywords": "aces fly"
+    },
+    {
+      "slug": "adam-smashers-shoulder-cannon",
+      "display": "Adam Smasher's Shoulder Cannon",
+      "wikiTitle": "Adam Smasher's Shoulder Cannon",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Adam_Smasher's_Shoulder_Cannon",
+      "categoryPath": "fortnite/collaborations/promotionals/promotional-cosmetics",
+      "href": "/pages/fortnite/collaborations/promotionals/promotional-cosmetics/adam-smashers-shoulder-cannon",
+      "keywords": "adam smasher's shoulder cannon"
+    },
+    {
+      "slug": "adamantium-claws",
+      "display": "Adamantium Claws",
+      "wikiTitle": "Adamantium Claws",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Adamantium_Claws",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/claw-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/claw-pickaxes/adamantium-claws",
+      "keywords": "adamantium claws"
+    },
+    {
+      "slug": "admiral",
+      "display": "Admiral",
+      "wikiTitle": "Admiral",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Admiral",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-14",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-14/admiral",
+      "keywords": "admiral"
+    },
+    {
+      "slug": "adventure-pack",
+      "display": "Adventure Pack",
+      "wikiTitle": "Adventure Pack",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Adventure_Pack",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/adventure-pack",
+      "keywords": "adventure pack"
+    },
+    {
+      "slug": "aerial-assault-one",
+      "display": "Aerial Assault One",
+      "wikiTitle": "Aerial Assault One",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Aerial_Assault_One",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/aerial-assault-one",
+      "keywords": "aerial assault one"
+    },
+    {
+      "slug": "aerial-assault-trooper",
+      "display": "Aerial Assault Trooper",
+      "wikiTitle": "Aerial Assault Trooper",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Aerial_Assault_Trooper",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/aerial-assault-trooper",
+      "keywords": "aerial assault trooper"
+    },
+    {
+      "slug": "afterburner",
+      "display": "Afterburner",
+      "wikiTitle": "Afterburner",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Afterburner",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/afterburner",
+      "keywords": "afterburner"
+    },
+    {
+      "slug": "age-restricted-cosmetics",
+      "display": "Age Restricted Cosmetics",
+      "wikiTitle": "Age Restricted Cosmetics",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Age_Restricted_Cosmetics",
+      "categoryPath": "fortnite/cosmetics/age-restricted-cosmetics",
+      "href": "/pages/fortnite/cosmetics/age-restricted-cosmetics/age-restricted-cosmetics",
+      "keywords": "age restricted cosmetics"
+    },
+    {
+      "slug": "ageless-guitar-back-bling",
+      "display": "Ageless Guitar (Back Bling)",
+      "wikiTitle": "Ageless Guitar (Back Bling)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ageless_Guitar_(Back_Bling)",
+      "categoryPath": "fortnite/cosmetics/back-blings",
+      "href": "/pages/fortnite/cosmetics/back-blings/ageless-guitar-back-bling",
+      "keywords": "ageless guitar (back bling)"
+    },
+    {
+      "slug": "agony",
+      "display": "Agony",
+      "wikiTitle": "Agony",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Agony",
+      "categoryPath": "fortnite/cosmetics/sets/symbiotes-set",
+      "href": "/pages/fortnite/cosmetics/sets/symbiotes-set/agony",
+      "keywords": "agony"
+    },
+    {
+      "slug": "aint-it-fun-emote",
+      "display": "Ain't It Fun (Emote)",
+      "wikiTitle": "Ain't It Fun (Emote)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ain't_It_Fun_(Emote)",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/dance-emotes",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/dance-emotes/aint-it-fun-emote",
+      "keywords": "ain't it fun (emote)"
+    },
+    {
+      "slug": "airbound-eyes",
+      "display": "Airbound Eyes",
+      "wikiTitle": "Airbound Eyes",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Airbound_Eyes",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/sight-beyond-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/sight-beyond-set/airbound-eyes",
+      "keywords": "airbound eyes"
+    },
+    {
+      "slug": "airheart",
+      "display": "Airheart",
+      "wikiTitle": "Airheart",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Airheart",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/airheart",
+      "keywords": "airheart"
+    },
+    {
+      "slug": "all-gooped-up",
+      "display": "All Gooped Up",
+      "wikiTitle": "All Gooped Up",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/All_Gooped_Up",
+      "categoryPath": "fortnite/cosmetics/sets/chew-it-yourself-set",
+      "href": "/pages/fortnite/cosmetics/sets/chew-it-yourself-set/all-gooped-up",
+      "keywords": "all gooped up"
+    },
+    {
+      "slug": "all-might",
+      "display": "All Might",
+      "wikiTitle": "All Might",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/All_Might",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/my-hero-academia-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/my-hero-academia-set/all-might",
+      "keywords": "all might"
+    },
+    {
+      "slug": "all-mights-transform",
+      "display": "All Might's Transform",
+      "wikiTitle": "All Might's Transform",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/All_Might's_Transform",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/my-hero-academia-set",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/my-hero-academia-set/all-mights-transform",
+      "keywords": "all might's transform"
+    },
+    {
+      "slug": "all-star",
+      "display": "All-Star",
+      "wikiTitle": "All-Star",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/All-Star",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/all-star",
+      "keywords": "all-star"
+    },
+    {
+      "slug": "alphabet-soup",
+      "display": "Alphabet Soup",
+      "wikiTitle": "Alphabet Soup",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Alphabet_Soup",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/alphabet-soup",
+      "keywords": "alphabet soup"
+    },
+    {
+      "slug": "alpine-ace",
+      "display": "Alpine Ace",
+      "wikiTitle": "Alpine Ace",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Alpine_Ace",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/alpine-ace",
+      "keywords": "alpine ace"
+    },
+    {
+      "slug": "amazing-unmasking",
+      "display": "Amazing Unmasking",
+      "wikiTitle": "Amazing Unmasking",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Amazing_Unmasking",
+      "categoryPath": "fortnite/cosmetics/emotes/built-in-emotes",
+      "href": "/pages/fortnite/cosmetics/emotes/built-in-emotes/amazing-unmasking",
+      "keywords": "amazing unmasking"
+    },
+    {
+      "slug": "ancestral-shift",
+      "display": "Ancestral Shift",
+      "wikiTitle": "Ancestral Shift",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ancestral_Shift",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/transformative-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/transformative-cosmetics/ancestral-shift",
+      "keywords": "ancestral shift"
+    },
+    {
+      "slug": "animus-banner",
+      "display": "Animus Banner",
+      "wikiTitle": "Animus Banner",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Animus_Banner",
+      "categoryPath": "fortnite/cosmetics/sets/tales-from-the-animus-set",
+      "href": "/pages/fortnite/cosmetics/sets/tales-from-the-animus-set/animus-banner",
+      "keywords": "animus banner"
+    },
+    {
+      "slug": "anodite-evolution",
+      "display": "Anodite Evolution",
+      "wikiTitle": "Anodite Evolution",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Anodite_Evolution",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/cel-shaded-cosmetics/anodite-evolution",
+      "keywords": "anodite evolution"
+    },
+    {
+      "slug": "antenna-nator",
+      "display": "Antenna-nator",
+      "wikiTitle": "Antenna-nator",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Antenna-nator",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/switching-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/switching-pickaxes/antenna-nator",
+      "keywords": "antenna-nator"
+    },
+    {
+      "slug": "apt",
+      "display": "APT.",
+      "wikiTitle": "APT.",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/APT.",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/dance-emotes",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/dance-emotes/apt",
+      "keywords": "apt."
+    },
+    {
+      "slug": "apt-jam-track",
+      "display": "APT. (Jam Track)",
+      "wikiTitle": "APT. (Jam Track)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/APT._(Jam_Track)",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-bruno-mars",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-bruno-mars/apt-jam-track",
+      "keywords": "apt. (jam track)"
+    },
+    {
+      "slug": "archetype",
+      "display": "Archetype",
+      "wikiTitle": "Archetype",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Archetype",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/archetype",
+      "keywords": "archetype"
+    },
+    {
+      "slug": "art-of-revenge",
+      "display": "Art of Revenge",
+      "wikiTitle": "Art of Revenge",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Art_of_Revenge",
+      "categoryPath": "fortnite/cosmetics/sets/joness-revenge-set",
+      "href": "/pages/fortnite/cosmetics/sets/joness-revenge-set/art-of-revenge",
+      "keywords": "art of revenge"
+    },
+    {
+      "slug": "assault-trooper",
+      "display": "Assault Trooper",
+      "wikiTitle": "Assault Trooper",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Assault_Trooper",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/assault-trooper",
+      "keywords": "assault trooper"
+    },
+    {
+      "slug": "aston-martin-valhalla-car-body",
+      "display": "Aston Martin Valhalla (Car Body)",
+      "wikiTitle": "Aston Martin Valhalla (Car Body)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Aston_Martin_Valhalla_(Car_Body)",
+      "categoryPath": "fortnite/cosmetics/car-bodies/sports-car-body",
+      "href": "/pages/fortnite/cosmetics/car-bodies/sports-car-body/aston-martin-valhalla-car-body",
+      "keywords": "aston martin valhalla (car body)"
+    },
+    {
+      "slug": "auras",
+      "display": "Auras",
+      "wikiTitle": "Auras",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Auras",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/auras",
+      "keywords": "auras"
+    },
+    {
+      "slug": "aurora-aura",
+      "display": "Aurora Aura",
+      "wikiTitle": "Aurora Aura",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Aurora_Aura",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/aurora-aura",
+      "keywords": "aurora aura"
+    },
+    {
+      "slug": "autumns-mantle",
+      "display": "Autumn's Mantle",
+      "wikiTitle": "Autumn's Mantle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Autumn's_Mantle",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics/changing-seasons-set",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/changing-seasons-set/autumns-mantle",
+      "keywords": "autumn's mantle"
+    },
+    {
+      "slug": "avatar-elemental",
+      "display": "Avatar Elemental",
+      "wikiTitle": "Avatar Elemental",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Avatar_Elemental",
+      "categoryPath": "fortnite/collaborations/collaboration-cosmetics",
+      "href": "/pages/fortnite/collaborations/collaboration-cosmetics/avatar-elemental",
+      "keywords": "avatar elemental"
+    },
+    {
+      "slug": "awoo",
+      "display": "AWOO!",
+      "wikiTitle": "AWOO!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/AWOO!",
+      "categoryPath": "fortnite/cosmetics/sets/blood-moon-set",
+      "href": "/pages/fortnite/cosmetics/sets/blood-moon-set/awoo",
+      "keywords": "awoo!"
+    },
+    {
+      "slug": "azura",
+      "display": "Azura",
+      "wikiTitle": "Azura",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Azura",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-18",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-18/azura",
+      "keywords": "azura"
+    },
+    {
+      "slug": "backbone",
+      "display": "Backbone",
+      "wikiTitle": "Backbone",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Backbone",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/backbone",
+      "keywords": "backbone"
+    },
+    {
+      "slug": "ballistic",
+      "display": "Ballistic",
+      "wikiTitle": "Ballistic",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ballistic",
+      "categoryPath": "fortnite/cosmetics/sets/cobra-crew-set",
+      "href": "/pages/fortnite/cosmetics/sets/cobra-crew-set/ballistic",
+      "keywords": "ballistic"
+    },
+    {
+      "slug": "bandolier",
+      "display": "Bandolier",
+      "wikiTitle": "Bandolier",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bandolier",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/bandolier",
+      "keywords": "bandolier"
+    },
+    {
+      "slug": "banner-icons",
+      "display": "Banner Icons",
+      "wikiTitle": "Banner Icons",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-icons",
+      "keywords": "banner icons"
+    },
+    {
+      "slug": "banner-iconsalpha-test",
+      "display": "Banner Icons/Alpha Test",
+      "wikiTitle": "Banner Icons/Alpha Test",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FAlpha_Test",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconsalpha-test",
+      "keywords": "banner icons/alpha test"
+    },
+    {
+      "slug": "banner-iconsbattle-royale",
+      "display": "Banner Icons/Battle Royale",
+      "wikiTitle": "Banner Icons/Battle Royale",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FBattle_Royale",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconsbattle-royale",
+      "keywords": "banner icons/battle royale"
+    },
+    {
+      "slug": "banner-iconsfestival",
+      "display": "Banner Icons/Festival",
+      "wikiTitle": "Banner Icons/Festival",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FFestival",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconsfestival",
+      "keywords": "banner icons/festival"
+    },
+    {
+      "slug": "banner-iconsfounders-pack",
+      "display": "Banner Icons/Founder's Pack",
+      "wikiTitle": "Banner Icons/Founder's Pack",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FFounder's_Pack",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconsfounders-pack",
+      "keywords": "banner icons/founder's pack"
+    },
+    {
+      "slug": "banner-iconslego",
+      "display": "Banner Icons/LEGO",
+      "wikiTitle": "Banner Icons/LEGO",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FLEGO",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconslego",
+      "keywords": "banner icons/lego"
+    },
+    {
+      "slug": "banner-iconsog",
+      "display": "Banner Icons/OG",
+      "wikiTitle": "Banner Icons/OG",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Banner_Icons%2FOG",
+      "categoryPath": "fortnite/cosmetics/banners",
+      "href": "/pages/fortnite/cosmetics/banners/banner-iconsog",
+      "keywords": "banner icons/og"
+    },
+    {
+      "slug": "bark-basher",
+      "display": "Bark Basher",
+      "wikiTitle": "Bark Basher",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bark_Basher",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics/changing-seasons-set",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/changing-seasons-set/bark-basher",
+      "keywords": "bark basher"
+    },
+    {
+      "slug": "batmobile-1989-boost",
+      "display": "Batmobile (1989) (Boost)",
+      "wikiTitle": "Batmobile (1989) (Boost)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Batmobile_(1989)_(Boost)",
+      "categoryPath": "fortnite/cosmetics/sets/batmobile-1989-set",
+      "href": "/pages/fortnite/cosmetics/sets/batmobile-1989-set/batmobile-1989-boost",
+      "keywords": "batmobile (1989) (boost)"
+    },
+    {
+      "slug": "bats-aura",
+      "display": "Bats! (Aura)",
+      "wikiTitle": "Bats! (Aura)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bats!_(Aura)",
+      "categoryPath": "fortnite/cosmetics/sets/grim-grooves-set",
+      "href": "/pages/fortnite/cosmetics/sets/grim-grooves-set/bats-aura",
+      "keywords": "bats! (aura)"
+    },
+    {
+      "slug": "battle-pass",
+      "display": "Battle Pass",
+      "wikiTitle": "Battle Pass",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Battle_Pass",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/seasons/passes",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/battle-pass",
+      "keywords": "battle pass"
+    },
+    {
+      "slug": "beachy-beat",
+      "display": "Beachy Beat",
+      "wikiTitle": "Beachy Beat",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Beachy_Beat",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/beachy-beat",
+      "keywords": "beachy beat"
+    },
+    {
+      "slug": "beast-mode",
+      "display": "Beast Mode",
+      "wikiTitle": "Beast Mode",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Beast_Mode",
+      "categoryPath": "fortnite/rarity/series/tesla-series",
+      "href": "/pages/fortnite/rarity/series/tesla-series/beast-mode",
+      "keywords": "beast mode"
+    },
+    {
+      "slug": "bee-hive",
+      "display": "Bee Hive",
+      "wikiTitle": "Bee Hive",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bee_Hive",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/bee-hive",
+      "keywords": "bee hive"
+    },
+    {
+      "slug": "bell-saver",
+      "display": "Bell Saver",
+      "wikiTitle": "Bell Saver",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bell_Saver",
+      "categoryPath": "fortnite/cosmetics/boosts",
+      "href": "/pages/fortnite/cosmetics/boosts/bell-saver",
+      "keywords": "bell saver"
+    },
+    {
+      "slug": "big-mouth",
+      "display": "Big Mouth",
+      "wikiTitle": "Big Mouth",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Big_Mouth",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/big-mouth",
+      "keywords": "big mouth"
+    },
+    {
+      "slug": "bird-call",
+      "display": "Bird Call",
+      "wikiTitle": "Bird Call",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bird_Call",
+      "categoryPath": "fortnite/collaborations/promotionals/promotional-cosmetics",
+      "href": "/pages/fortnite/collaborations/promotionals/promotional-cosmetics/bird-call",
+      "keywords": "bird call"
+    },
+    {
+      "slug": "black-hole-sun",
+      "display": "Black Hole Sun",
+      "wikiTitle": "Black Hole Sun",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Black_Hole_Sun",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-soundgarden",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-soundgarden/black-hole-sun",
+      "keywords": "black hole sun"
+    },
+    {
+      "slug": "bladeblast-boost",
+      "display": "Bladeblast (Boost)",
+      "wikiTitle": "Bladeblast (Boost)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bladeblast_(Boost)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/bladeblast-boost",
+      "keywords": "bladeblast (boost)"
+    },
+    {
+      "slug": "bmw-1-series-car-body",
+      "display": "BMW 1 Series (Car Body)",
+      "wikiTitle": "BMW 1 Series (Car Body)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/BMW_1_Series_(Car_Body)",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-16",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/rocket-pass/rocket-pass-16/bmw-1-series-car-body",
+      "keywords": "bmw 1 series (car body)"
+    },
+    {
+      "slug": "bmw-m2-racing-car-body",
+      "display": "BMW M2 Racing (Car Body)",
+      "wikiTitle": "BMW M2 Racing (Car Body)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/BMW_M2_Racing_(Car_Body)",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/bmw-m2-racing-car-body",
+      "keywords": "bmw m2 racing (car body)"
+    },
+    {
+      "slug": "bonfire",
+      "display": "Bonfire",
+      "wikiTitle": "Bonfire",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bonfire",
+      "categoryPath": "fortnite/cosmetics/code-cosmetics",
+      "href": "/pages/fortnite/cosmetics/code-cosmetics/bonfire",
+      "keywords": "bonfire"
+    },
+    {
+      "slug": "boogie-down",
+      "display": "Boogie Down",
+      "wikiTitle": "Boogie Down",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Boogie_Down",
+      "categoryPath": "fortnite/collaborations/promotionals/promotional-cosmetics",
+      "href": "/pages/fortnite/collaborations/promotionals/promotional-cosmetics/boogie-down",
+      "keywords": "boogie down"
+    },
+    {
+      "slug": "bouncing-bars",
+      "display": "Bouncing Bars",
+      "wikiTitle": "Bouncing Bars",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bouncing_Bars",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/bouncing-bars",
+      "keywords": "bouncing bars"
+    },
+    {
+      "slug": "bow-blades",
+      "display": "Bow Blades",
+      "wikiTitle": "Bow Blades",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bow_Blades",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes/bow-blades",
+      "keywords": "bow blades"
+    },
+    {
+      "slug": "breaking-me",
+      "display": "Breaking Me",
+      "wikiTitle": "Breaking Me",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Breaking_Me",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-a7s",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-a7s/breaking-me",
+      "keywords": "breaking me"
+    },
+    {
+      "slug": "brite-show",
+      "display": "Brite Show",
+      "wikiTitle": "Brite Show",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Brite_Show",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/brite-show",
+      "keywords": "brite show"
+    },
+    {
+      "slug": "bundles",
+      "display": "Bundles",
+      "wikiTitle": "Bundles",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Bundles",
+      "categoryPath": "fortnite/cosmetics/bundles",
+      "href": "/pages/fortnite/cosmetics/bundles/bundles",
+      "keywords": "bundles"
+    },
+    {
+      "slug": "burning-hot",
+      "display": "Burning Hot",
+      "wikiTitle": "Burning Hot",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Burning_Hot",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/burning-hot",
+      "keywords": "burning hot"
+    },
+    {
+      "slug": "butter-buddy",
+      "display": "Butter Buddy",
+      "wikiTitle": "Butter Buddy",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Butter_Buddy",
+      "categoryPath": "fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite",
+      "href": "/pages/fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite/butter-buddy",
+      "keywords": "butter buddy"
+    },
+    {
+      "slug": "c3s2-champion-i",
+      "display": "C3S2 Champion I",
+      "wikiTitle": "C3S2 Champion I",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Champion_I",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-champion-i",
+      "keywords": "c3s2 champion i"
+    },
+    {
+      "slug": "c3s2-champion-ii",
+      "display": "C3S2 Champion II",
+      "wikiTitle": "C3S2 Champion II",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Champion_II",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-champion-ii",
+      "keywords": "c3s2 champion ii"
+    },
+    {
+      "slug": "c3s2-champion-iii",
+      "display": "C3S2 Champion III",
+      "wikiTitle": "C3S2 Champion III",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Champion_III",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-champion-iii",
+      "keywords": "c3s2 champion iii"
+    },
+    {
+      "slug": "c3s2-contender-i",
+      "display": "C3S2 Contender I",
+      "wikiTitle": "C3S2 Contender I",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Contender_I",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-contender-i",
+      "keywords": "c3s2 contender i"
+    },
+    {
+      "slug": "c3s2-contender-ii",
+      "display": "C3S2 Contender II",
+      "wikiTitle": "C3S2 Contender II",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Contender_II",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-contender-ii",
+      "keywords": "c3s2 contender ii"
+    },
+    {
+      "slug": "c3s2-contender-iii",
+      "display": "C3S2 Contender III",
+      "wikiTitle": "C3S2 Contender III",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S2_Contender_III",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s2-contender-iii",
+      "keywords": "c3s2 contender iii"
+    },
+    {
+      "slug": "c3s3-champion-i",
+      "display": "C3S3 Champion I",
+      "wikiTitle": "C3S3 Champion I",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S3_Champion_I",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s3-champion-i",
+      "keywords": "c3s3 champion i"
+    },
+    {
+      "slug": "c3s3-champion-ii",
+      "display": "C3S3 Champion II",
+      "wikiTitle": "C3S3 Champion II",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/C3S3_Champion_II",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/c3s3-champion-ii",
+      "keywords": "c3s3 champion ii"
+    },
+    {
+      "slug": "cameo-needs-loot",
+      "display": "Cameo Needs Loot!",
+      "wikiTitle": "Cameo Needs Loot!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Cameo_Needs_Loot!",
+      "categoryPath": "fortnite/cosmetics/code-cosmetics",
+      "href": "/pages/fortnite/cosmetics/code-cosmetics/cameo-needs-loot",
+      "keywords": "cameo needs loot!"
+    },
+    {
+      "slug": "carnage",
+      "display": "Carnage",
+      "wikiTitle": "Carnage",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Carnage",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/carnage",
+      "keywords": "carnage"
+    },
+    {
+      "slug": "carnage-cleaver",
+      "display": "Carnage Cleaver",
+      "wikiTitle": "Carnage Cleaver",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Carnage_Cleaver",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/single-hand-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/pickaxe-types/single-hand-pickaxes/carnage-cleaver",
+      "keywords": "carnage cleaver"
+    },
+    {
+      "slug": "celebration-heart",
+      "display": "Celebration Heart",
+      "wikiTitle": "Celebration Heart",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Celebration_Heart",
+      "categoryPath": "fortnite/cosmetics/animated-cosmetics",
+      "href": "/pages/fortnite/cosmetics/animated-cosmetics/celebration-heart",
+      "keywords": "celebration heart"
+    },
+    {
+      "slug": "check-the-map",
+      "display": "Check the Map",
+      "wikiTitle": "Check the Map",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Check_the_Map",
+      "categoryPath": "fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite",
+      "href": "/pages/fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite/check-the-map",
+      "keywords": "check the map"
+    },
+    {
+      "slug": "cine-magic",
+      "display": "Cine-magic",
+      "wikiTitle": "Cine-magic",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Cine-magic",
+      "categoryPath": "fortnite/cosmetics/auras",
+      "href": "/pages/fortnite/cosmetics/auras/cine-magic",
+      "keywords": "cine-magic"
+    },
+    {
+      "slug": "cliffhanger",
+      "display": "Cliffhanger",
+      "wikiTitle": "Cliffhanger",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Cliffhanger",
+      "categoryPath": "fortnite/collaborations/promotionals/promotional-cosmetics",
+      "href": "/pages/fortnite/collaborations/promotionals/promotional-cosmetics/cliffhanger",
+      "keywords": "cliffhanger"
+    },
+    {
+      "slug": "cobalt-snowfoot-bundle",
+      "display": "Cobalt Snowfoot Bundle",
+      "wikiTitle": "Cobalt Snowfoot Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Cobalt_Snowfoot_Bundle",
+      "categoryPath": "fortnite/cosmetics/sets/cobalt-snow-set",
+      "href": "/pages/fortnite/cosmetics/sets/cobalt-snow-set/cobalt-snowfoot-bundle",
+      "keywords": "cobalt snowfoot bundle"
+    },
+    {
+      "slug": "cobb",
+      "display": "Cobb",
+      "wikiTitle": "Cobb",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Cobb",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/cobb",
+      "keywords": "cobb"
+    },
+    {
+      "slug": "combat-palette",
+      "display": "Combat Palette",
+      "wikiTitle": "Combat Palette",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Combat_Palette",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/dual-wield-pickaxes/combat-palette",
+      "keywords": "combat palette"
+    },
+    {
+      "slug": "coqto-crest",
+      "display": "Coqto Crest",
+      "wikiTitle": "Coqto Crest",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Coqto_Crest",
+      "categoryPath": "fortnite/collaborations/collaboration-cosmetics",
+      "href": "/pages/fortnite/collaborations/collaboration-cosmetics/coqto-crest",
+      "keywords": "coqto crest"
+    },
+    {
+      "slug": "corazón",
+      "display": "Corazón",
+      "wikiTitle": "Corazón",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Coraz%C3%B3n",
+      "categoryPath": "fortnite/cosmetics/sets/karol-g-set",
+      "href": "/pages/fortnite/cosmetics/sets/karol-g-set/corazón",
+      "keywords": "corazón"
+    },
+    {
+      "slug": "crank-that-soulja-boy",
+      "display": "Crank That (Soulja Boy)",
+      "wikiTitle": "Crank That (Soulja Boy)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Crank_That_(Soulja_Boy)",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-soulja-boy-tell-em",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-soulja-boy-tell-em/crank-that-soulja-boy",
+      "keywords": "crank that (soulja boy)"
+    },
+    {
+      "slug": "dark-apex-bundle",
+      "display": "Dark Apex Bundle",
+      "wikiTitle": "Dark Apex Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Dark_Apex_Bundle",
+      "categoryPath": "fortnite/cosmetics/sets/dark-apex-set",
+      "href": "/pages/fortnite/cosmetics/sets/dark-apex-set/dark-apex-bundle",
+      "keywords": "dark apex bundle"
+    },
+    {
+      "slug": "dark-symbiote",
+      "display": "Dark Symbiote",
+      "wikiTitle": "Dark Symbiote",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Dark_Symbiote",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/glider-types/hang-gliders",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/cosmetic-subtypes/glider-types/hang-gliders/dark-symbiote",
+      "keywords": "dark symbiote"
+    },
+    {
+      "slug": "demogorgon",
+      "display": "Demogorgon",
+      "wikiTitle": "Demogorgon",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Demogorgon",
+      "categoryPath": "fortnite/cosmetics/sets/stranger-things-set",
+      "href": "/pages/fortnite/cosmetics/sets/stranger-things-set/demogorgon",
+      "keywords": "demogorgon"
+    },
+    {
+      "slug": "double-barrels",
+      "display": "Double Barrels",
+      "wikiTitle": "Double Barrels",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Double_Barrels",
+      "categoryPath": "fortnite/cosmetics/sets/fncs-set",
+      "href": "/pages/fortnite/cosmetics/sets/fncs-set/double-barrels",
+      "keywords": "double barrels"
+    },
+    {
+      "slug": "double-helix-bundle",
+      "display": "Double Helix Bundle",
+      "wikiTitle": "Double Helix Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Double_Helix_Bundle",
+      "categoryPath": "fortnite/cosmetics/sets/double-helix-set",
+      "href": "/pages/fortnite/cosmetics/sets/double-helix-set/double-helix-bundle",
+      "keywords": "double helix bundle"
+    },
+    {
+      "slug": "emotes",
+      "display": "Emotes",
+      "wikiTitle": "Emotes",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Emotes",
+      "categoryPath": "fortnite/cosmetics/battle-pass-cosmetics",
+      "href": "/pages/fortnite/cosmetics/battle-pass-cosmetics/emotes",
+      "keywords": "emotes"
+    },
+    {
+      "slug": "eon-bundle",
+      "display": "Eon Bundle",
+      "wikiTitle": "Eon Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Eon_Bundle",
+      "categoryPath": "fortnite/cosmetics/sets/eon-set",
+      "href": "/pages/fortnite/cosmetics/sets/eon-set/eon-bundle",
+      "keywords": "eon bundle"
+    },
+    {
+      "slug": "falling-leaf",
+      "display": "Falling Leaf",
+      "wikiTitle": "Falling Leaf",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Falling_Leaf",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics/changing-seasons-set",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/changing-seasons-set/falling-leaf",
+      "keywords": "falling leaf"
+    },
+    {
+      "slug": "fleet-force-bundle",
+      "display": "Fleet Force Bundle",
+      "wikiTitle": "Fleet Force Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Fleet_Force_Bundle",
+      "categoryPath": "fortnite/cosmetics/sets/fleet-force-set",
+      "href": "/pages/fortnite/cosmetics/sets/fleet-force-set/fleet-force-bundle",
+      "keywords": "fleet force bundle"
+    },
+    {
+      "slug": "flowering-chaos-bundle",
+      "display": "Flowering Chaos Bundle",
+      "wikiTitle": "Flowering Chaos Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Flowering_Chaos_Bundle",
+      "categoryPath": "fortnite/availability/unreleased-content/unreleased-cosmetics/flowering-chaos-set",
+      "href": "/pages/fortnite/availability/unreleased-content/unreleased-cosmetics/flowering-chaos-set/flowering-chaos-bundle",
+      "keywords": "flowering chaos bundle"
+    },
+    {
+      "slug": "fortnite",
+      "display": "Fortnite",
+      "wikiTitle": "Fortnite",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Fortnite",
+      "categoryPath": "fortnite",
+      "href": "/pages/fortnite/fortnite",
+      "keywords": "fortnite"
+    },
+    {
+      "slug": "fortnite-festival",
+      "display": "Fortnite Festival",
+      "wikiTitle": "Fortnite Festival",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Fortnite_Festival",
+      "categoryPath": "fortnite/fortnite-by-game-mode/fortnite-festival",
+      "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival",
+      "keywords": "fortnite festival"
+    },
+    {
+      "slug": "fortnite-save-the-world",
+      "display": "Fortnite: Save the World",
+      "wikiTitle": "Fortnite: Save the World",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Fortnite%3A_Save_the_World",
+      "categoryPath": "fortnite/fortnite-by-game-mode/game-modes",
+      "href": "/pages/fortnite/fortnite-by-game-mode/game-modes/fortnite-save-the-world",
+      "keywords": "fortnite: save the world"
+    },
+    {
+      "slug": "frigid-foregoer",
+      "display": "Frigid Foregoer",
+      "wikiTitle": "Frigid Foregoer",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Frigid_Foregoer",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/frigid-foregoer",
+      "keywords": "frigid foregoer"
+    },
+    {
+      "slug": "front-page-pose",
+      "display": "Front Page Pose",
+      "wikiTitle": "Front Page Pose",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Front_Page_Pose",
+      "categoryPath": "fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite",
+      "href": "/pages/fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite/front-page-pose",
+      "keywords": "front page pose"
+    },
+    {
+      "slug": "galaxy-cup",
+      "display": "Galaxy Cup",
+      "wikiTitle": "Galaxy Cup",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Galaxy_Cup",
+      "categoryPath": "fortnite/tournaments",
+      "href": "/pages/fortnite/tournaments/galaxy-cup",
+      "keywords": "galaxy cup"
+    },
+    {
+      "slug": "geforce-fortnite-bundle-1",
+      "display": "GeForce Fortnite Bundle 1",
+      "wikiTitle": "GeForce Fortnite Bundle 1",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/GeForce_Fortnite_Bundle_1",
+      "categoryPath": "fortnite/cosmetics/sets/counterattack-set",
+      "href": "/pages/fortnite/cosmetics/sets/counterattack-set/geforce-fortnite-bundle-1",
+      "keywords": "geforce fortnite bundle 1"
+    },
+    {
+      "slug": "ghost-portal",
+      "display": "Ghost Portal",
+      "wikiTitle": "Ghost Portal",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ghost_Portal",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/ghost-portal",
+      "keywords": "ghost portal"
+    },
+    {
+      "slug": "ghoul-trooper",
+      "display": "Ghoul Trooper",
+      "wikiTitle": "Ghoul Trooper",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Ghoul_Trooper",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/ghoul-trooper",
+      "keywords": "ghoul trooper"
+    },
+    {
+      "slug": "gliders",
+      "display": "Gliders",
+      "wikiTitle": "Gliders",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Gliders",
+      "categoryPath": "fortnite/cosmetics/gliders",
+      "href": "/pages/fortnite/cosmetics/gliders/gliders",
+      "keywords": "gliders"
+    },
+    {
+      "slug": "go-home",
+      "display": "Go Home!",
+      "wikiTitle": "Go Home!",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Go_Home!",
+      "categoryPath": "fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite",
+      "href": "/pages/fortnite/cosmetics/emotes/emotes-present-in-lego-fortnite/go-home",
+      "keywords": "go home!"
+    },
+    {
+      "slug": "harvests-bounty-bundle",
+      "display": "Harvest's Bounty Bundle",
+      "wikiTitle": "Harvest's Bounty Bundle",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Harvest's_Bounty_Bundle",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics/bakers-nightmare-set",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/bakers-nightmare-set/harvests-bounty-bundle",
+      "keywords": "harvest's bounty bundle"
+    },
+    {
+      "slug": "healing-items",
+      "display": "Healing Items",
+      "wikiTitle": "Healing Items",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Healing_Items",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/healing-items",
+      "keywords": "healing items"
+    },
+    {
+      "slug": "heartbreaker",
+      "display": "Heartbreaker",
+      "wikiTitle": "Heartbreaker",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Heartbreaker",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/heartbreaker",
+      "keywords": "heartbreaker"
+    },
+    {
+      "slug": "hollow-bones",
+      "display": "Hollow Bones",
+      "wikiTitle": "Hollow Bones",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Hollow_Bones",
+      "categoryPath": "fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set",
+      "href": "/pages/fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set/hollow-bones",
+      "keywords": "hollow bones"
+    },
+    {
+      "slug": "hollow-horn",
+      "display": "Hollow Horn",
+      "wikiTitle": "Hollow Horn",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Hollow_Horn",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics/changing-seasons-set",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/changing-seasons-set/hollow-horn",
+      "keywords": "hollow horn"
+    },
+    {
+      "slug": "impasto-back-bling",
+      "display": "Impasto! (Back Bling)",
+      "wikiTitle": "Impasto! (Back Bling)",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Impasto!_(Back_Bling)",
+      "categoryPath": "fortnite/cosmetics/autumn-cosmetics",
+      "href": "/pages/fortnite/cosmetics/autumn-cosmetics/impasto-back-bling",
+      "keywords": "impasto! (back bling)"
+    },
+    {
+      "slug": "item-shop",
+      "display": "Item Shop",
+      "wikiTitle": "Item Shop",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Item_Shop",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/item-shop",
+      "keywords": "item shop"
+    },
+    {
+      "slug": "loading-screens",
+      "display": "Loading Screens",
+      "wikiTitle": "Loading Screens",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Loading_Screens",
+      "categoryPath": "fortnite/cosmetics/loading-screens",
+      "href": "/pages/fortnite/cosmetics/loading-screens/loading-screens",
+      "keywords": "loading screens"
+    },
+    {
+      "slug": "nalia",
+      "display": "Nalia",
+      "wikiTitle": "Nalia",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Nalia",
+      "categoryPath": "fortnite/cosmetics/outfits/outfits-with-a-bean-style",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits-with-a-bean-style/nalia",
+      "keywords": "nalia"
+    },
+    {
+      "slug": "outfits",
+      "display": "Outfits",
+      "wikiTitle": "Outfits",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Outfits",
+      "categoryPath": "fortnite/cosmetics/outfits",
+      "href": "/pages/fortnite/cosmetics/outfits/outfits",
+      "keywords": "outfits"
+    },
+    {
+      "slug": "pickaxes",
+      "display": "Pickaxes",
+      "wikiTitle": "Pickaxes",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Pickaxes",
+      "categoryPath": "fortnite/cosmetics/pickaxes",
+      "href": "/pages/fortnite/cosmetics/pickaxes/pickaxes",
+      "keywords": "pickaxes"
+    },
+    {
+      "slug": "poker-face",
+      "display": "Poker Face",
+      "wikiTitle": "Poker Face",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Poker_Face",
+      "categoryPath": "fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-lady-gaga",
+      "href": "/pages/fortnite/cosmetics/jam-tracks/jam-tracks-by-artist/jam-tracks-by-lady-gaga/poker-face",
+      "keywords": "poker face"
+    },
+    {
+      "slug": "raiders-revenge",
+      "display": "Raider's Revenge",
+      "wikiTitle": "Raider's Revenge",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Raider's_Revenge",
+      "categoryPath": "fortnite/cosmetics/outfits/cosmetic-type/selectable-styles",
+      "href": "/pages/fortnite/cosmetics/outfits/cosmetic-type/selectable-styles/raiders-revenge",
+      "keywords": "raider's revenge"
+    },
+    {
+      "slug": "sinister-glare",
+      "display": "Sinister Glare",
+      "wikiTitle": "Sinister Glare",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Sinister_Glare",
+      "categoryPath": "fortnite/cosmetics/cosmetic-features/reactive-cosmetics",
+      "href": "/pages/fortnite/cosmetics/cosmetic-features/reactive-cosmetics/sinister-glare",
+      "keywords": "sinister glare"
+    },
+    {
+      "slug": "the-ending",
+      "display": "The Ending",
+      "wikiTitle": "The Ending",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/The_Ending",
+      "categoryPath": "fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set",
+      "href": "/pages/fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set/the-ending",
+      "keywords": "the ending"
+    },
+    {
+      "slug": "undying-sorrow",
+      "display": "Undying Sorrow",
+      "wikiTitle": "Undying Sorrow",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Undying_Sorrow",
+      "categoryPath": "fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set",
+      "href": "/pages/fortnite/cosmetics/fortnitemares-cosmetics/restless-dead-set/undying-sorrow",
+      "keywords": "undying sorrow"
+    },
+    {
+      "slug": "v-bucks",
+      "display": "V-Bucks",
+      "wikiTitle": "V-Bucks",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/V-Bucks",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/currency",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/currency/v-bucks",
+      "keywords": "v-bucks"
+    },
+    {
+      "slug": "victory-royale",
+      "display": "Victory Royale",
+      "wikiTitle": "Victory Royale",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Victory_Royale",
+      "categoryPath": "fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale",
+      "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/victory-royale",
+      "keywords": "victory royale"
+    },
+    {
+      "slug": "wraps",
+      "display": "Wraps",
+      "wikiTitle": "Wraps",
+      "wikiUrl": "https://fortnite.fandom.com/wiki/Wraps",
+      "categoryPath": "fortnite/cosmetics/wraps",
+      "href": "/pages/fortnite/cosmetics/wraps/wraps",
+      "keywords": "wraps"
+    }
+  ],
+  "characters": [
+    {
+      "kind": "character",
+      "href": "/characters/mato-marauder",
+      "display": "'Mato Marauder",
+      "wikiTitle": "'Mato Marauder",
+      "slug": "mato-marauder",
+      "keywords": "mato marauder",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/82/%27Mato_Marauder_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220706082931"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/1-ball",
+      "display": "1-Ball",
+      "wikiTitle": "1-Ball",
+      "slug": "1-ball",
+      "keywords": "1 ball",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/76/1-Ball_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241102100314"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/10-ball",
+      "display": "10-Ball",
+      "wikiTitle": "10-Ball",
+      "slug": "10-ball",
+      "keywords": "10 ball",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/04/10-Ball_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241102100318"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/2-ball",
+      "display": "2-Ball",
+      "wikiTitle": "2-Ball",
+      "slug": "2-ball",
+      "keywords": "2 ball",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6a/2-Ball_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250807072412"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/212th-battalion-trooper",
+      "display": "212th Battalion Trooper",
+      "wikiTitle": "212th Battalion Trooper",
+      "slug": "212th-battalion-trooper",
+      "keywords": "212th battalion trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/dd/212th_Battalion_Trooper_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230502092849"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/213-m-kpop",
+      "display": "213-M-KPop",
+      "wikiTitle": "213-M-KPop",
+      "slug": "213-m-kpop",
+      "keywords": "213 m kpop",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b5/K-Pop_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20201003101618"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/2d",
+      "display": "2D",
+      "wikiTitle": "2D",
+      "slug": "2d",
+      "keywords": "2d",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d4/2D_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250826092938"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/417-f-stealthwhiteblue",
+      "display": "417-F-StealthWhiteBlue",
+      "wikiTitle": "417-F-StealthWhiteBlue",
+      "slug": "417-f-stealthwhiteblue",
+      "keywords": "417 f stealthwhiteblue",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/af/Stealth_White_Blue_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260108095906"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/501st-trooper",
+      "display": "501st Trooper",
+      "wikiTitle": "501st Trooper",
+      "slug": "501st-trooper",
+      "keywords": "501st trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/57/501st_Trooper_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230502092850"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/7-ball",
+      "display": "7-Ball",
+      "wikiTitle": "7-Ball",
+      "slug": "7-ball",
+      "keywords": "7 ball",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/51/7-Ball_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250918091918"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/8-ball-vs-scratch",
+      "display": "8-Ball vs Scratch",
+      "wikiTitle": "8-Ball vs Scratch",
+      "slug": "8-ball-vs-scratch",
+      "keywords": "8 ball vs scratch",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/4f/Trick_Shot_%28Full%29_-_Loading_Screen_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220408181549"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/a-goat",
+      "display": "A Goat",
+      "wikiTitle": "A Goat",
+      "slug": "a-goat",
+      "keywords": "a goat",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e4/A_Goat_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220929142442"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/a-426-m-mitosis",
+      "display": "A-426-M-Mitosis",
+      "wikiTitle": "A-426-M-Mitosis",
+      "slug": "a-426-m-mitosis",
+      "keywords": "a 426 m mitosis",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2d/Survey_Outfit_64_%28Icon%29_-_Survey_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251019175020"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aim",
+      "display": "A.I.M.",
+      "wikiTitle": "A.I.M.",
+      "slug": "aim",
+      "keywords": "a i m",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b0/A.I.M._%28v31.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240923205135"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aaliyah",
+      "display": "Aaliyah",
+      "wikiTitle": "Aaliyah",
+      "slug": "aaliyah",
+      "keywords": "aaliyah",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/99/Aaliyah_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260305100430"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aang",
+      "display": "Aang",
+      "wikiTitle": "Aang",
+      "slug": "aang",
+      "keywords": "aang",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f0/Aang_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240409213237"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/absenz",
+      "display": "Absenz",
+      "wikiTitle": "Absenz",
+      "slug": "absenz",
+      "keywords": "absenz",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/86/Absenz_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220627164824"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/absolute-zero",
+      "display": "Absolute Zero",
+      "wikiTitle": "Absolute Zero",
+      "slug": "absolute-zero",
+      "keywords": "absolute zero",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/79/Absolute_Zero_%28v34.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250221131845"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/abstrakt",
+      "display": "Abstrakt",
+      "wikiTitle": "Abstrakt",
+      "slug": "abstrakt",
+      "keywords": "abstrakt",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/35/Abstrakt_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200401160444"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/abyss",
+      "display": "Abyss",
+      "wikiTitle": "Abyss",
+      "slug": "abyss",
+      "keywords": "abyss",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/67/Abyss_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221018084023"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ace-academic",
+      "display": "Ace Academic",
+      "wikiTitle": "Ace Academic",
+      "slug": "ace-academic",
+      "keywords": "ace academic",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f0/Ace_Academic_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230517175749"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aces-wild-card",
+      "display": "Aces Wild Card",
+      "wikiTitle": "Aces Wild Card",
+      "slug": "aces-wild-card",
+      "keywords": "aces wild card",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5c/Aces_Wild_Card_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250131112834"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/acoustics-tech",
+      "display": "Acoustics Tech",
+      "wikiTitle": "Acoustics Tech",
+      "slug": "acoustics-tech",
+      "keywords": "acoustics tech",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/39/Acoustics_Tech_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231204015831"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adam-smasher",
+      "display": "Adam Smasher",
+      "wikiTitle": "Adam Smasher",
+      "slug": "adam-smasher",
+      "keywords": "adam smasher",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/ac/Adam_Smasher_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260401084846"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adanna-of-the-deep",
+      "display": "Adanna of the Deep",
+      "wikiTitle": "Adanna of the Deep",
+      "slug": "adanna-of-the-deep",
+      "keywords": "adanna of the deep",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/79/Adanna_of_the_Deep_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240208073130"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adeline",
+      "display": "Adeline",
+      "wikiTitle": "Adeline",
+      "slug": "adeline",
+      "keywords": "adeline",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/ea/Adeline_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200805091318"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adira",
+      "display": "Adira",
+      "wikiTitle": "Adira",
+      "slug": "adira",
+      "keywords": "adira",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8f/Adira_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220605093910"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adonis-creed",
+      "display": "Adonis Creed",
+      "wikiTitle": "Adonis Creed",
+      "slug": "adonis-creed",
+      "keywords": "adonis creed",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/94/Adonis_Creed_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230301022618"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/adventure-peely",
+      "display": "Adventure Peely",
+      "wikiTitle": "Adventure Peely",
+      "slug": "adventure-peely",
+      "keywords": "adventure peely",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/08/Adventure_Peely_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231203125217"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aerial-assault-bomber",
+      "display": "Aerial Assault Bomber",
+      "wikiTitle": "Aerial Assault Bomber",
+      "slug": "aerial-assault-bomber",
+      "keywords": "aerial assault bomber",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/66/Aerial_Assault_Bomber_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241201055234"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aerial-assault-trooper",
+      "display": "Aerial Assault Trooper",
+      "wikiTitle": "Aerial Assault Trooper",
+      "slug": "aerial-assault-trooper",
+      "keywords": "aerial assault trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9d/Aerial_Assault_Trooper_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250311112515"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aerial-threat",
+      "display": "Aerial Threat",
+      "wikiTitle": "Aerial Threat",
+      "slug": "aerial-threat",
+      "keywords": "aerial threat",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b6/Aerial_Threat_%28v33.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241210141543"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aerobic-assassin-outfit",
+      "display": "Aerobic Assassin (Outfit)",
+      "wikiTitle": "Aerobic Assassin (Outfit)",
+      "slug": "aerobic-assassin-outfit",
+      "keywords": "aerobic assassin outfit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/4e/Aerobic_Assassin_%28v33.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241208021932"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aeronaut",
+      "display": "Aeronaut",
+      "wikiTitle": "Aeronaut",
+      "slug": "aeronaut",
+      "keywords": "aeronaut",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/68/Aeronaut_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230812233854"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aesthetic-ace",
+      "display": "Aesthetic Ace",
+      "wikiTitle": "Aesthetic Ace",
+      "slug": "aesthetic-ace",
+      "keywords": "aesthetic ace",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d9/Aesthetic_Ace_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251022111310"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/afterburn",
+      "display": "Afterburn",
+      "wikiTitle": "Afterburn",
+      "slug": "afterburn",
+      "keywords": "afterburn",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8a/Afterburn_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250807072415"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aftermath",
+      "display": "Aftermath",
+      "wikiTitle": "Aftermath",
+      "slug": "aftermath",
+      "keywords": "aftermath",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7a/Aftermath_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220124234553"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agency-ace",
+      "display": "Agency Ace",
+      "wikiTitle": "Agency Ace",
+      "slug": "agency-ace",
+      "keywords": "agency ace",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2f/Agency_Ace_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230502092853"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-blanc",
+      "display": "Agent Blanc",
+      "wikiTitle": "Agent Blanc",
+      "slug": "agent-blanc",
+      "keywords": "agent blanc",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/54/Agent_Blanc_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250502135104"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-jones",
+      "display": "Agent Jones",
+      "wikiTitle": "Agent Jones",
+      "slug": "agent-jones",
+      "keywords": "agent jones",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/58/Agent_Jones_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210316165544"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-jonesy",
+      "display": "Agent Jonesy",
+      "wikiTitle": "Agent Jonesy",
+      "slug": "agent-jonesy",
+      "keywords": "agent jonesy",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/03/Agent_Jonesy_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220716024026"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-patch",
+      "display": "Agent Patch",
+      "wikiTitle": "Agent Patch",
+      "slug": "agent-patch",
+      "keywords": "agent patch",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/32/Agent_Patch_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250807072424"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-peely",
+      "display": "Agent Peely",
+      "wikiTitle": "Agent Peely",
+      "slug": "agent-peely",
+      "keywords": "agent peely",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/1a/Agent_Peely_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200220201237"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-weaver",
+      "display": "Agent Weaver",
+      "wikiTitle": "Agent Weaver",
+      "slug": "agent-weaver",
+      "keywords": "agent weaver",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/59/Agent_Weaver_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250729085402"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agent-webb",
+      "display": "Agent Webb",
+      "wikiTitle": "Agent Webb",
+      "slug": "agent-webb",
+      "keywords": "agent webb",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/ba/Agent_Webb_%28Featured%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250826084059"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agente-colorado",
+      "display": "Agente Colorado",
+      "wikiTitle": "Agente Colorado",
+      "slug": "agente-colorado",
+      "keywords": "agente colorado",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/10/Agente_Colorado_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220627165240"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/agony",
+      "display": "Agony",
+      "wikiTitle": "Agony",
+      "slug": "agony",
+      "keywords": "agony",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2b/Agony_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241012200532"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ahsoka-tano",
+      "display": "Ahsoka Tano",
+      "wikiTitle": "Ahsoka Tano",
+      "slug": "ahsoka-tano",
+      "keywords": "ahsoka tano",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6f/Ahsoka_Tano_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230825084120"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ahsoka-tano-clone-wars",
+      "display": "Ahsoka Tano (Clone Wars)",
+      "wikiTitle": "Ahsoka Tano (Clone Wars)",
+      "slug": "ahsoka-tano-clone-wars",
+      "keywords": "ahsoka tano clone wars",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/a9/Ahsoka_Tano_%28Clone_Wars%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260430164457"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ahsokas-clone-trooper",
+      "display": "Ahsoka's Clone Trooper",
+      "wikiTitle": "Ahsoka's Clone Trooper",
+      "slug": "ahsokas-clone-trooper",
+      "keywords": "ahsoka s clone trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2e/Ahsoka%27s_Clone_Trooper_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230502092857"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/airhead",
+      "display": "Airhead",
+      "wikiTitle": "Airhead",
+      "slug": "airhead",
+      "keywords": "airhead",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/79/Airhead_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240614173827"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/airheart",
+      "display": "Airheart",
+      "wikiTitle": "Airheart",
+      "slug": "airheart",
+      "keywords": "airheart",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/98/Airheart_%28v31.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240929094040"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/airie",
+      "display": "Airie",
+      "wikiTitle": "Airie",
+      "slug": "airie",
+      "keywords": "airie",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/bd/Airie_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230620171748"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/airphorian",
+      "display": "Airphorian",
+      "wikiTitle": "Airphorian",
+      "slug": "airphorian",
+      "keywords": "airphorian",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/3b/Airphorian_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240326092811"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/akari",
+      "display": "Akari",
+      "wikiTitle": "Akari",
+      "slug": "akari",
+      "keywords": "akari",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/05/Akari_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250131112839"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/akultura",
+      "display": "Akultura",
+      "wikiTitle": "Akultura",
+      "slug": "akultura",
+      "keywords": "akultura",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/af/Akultura_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260122105201"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alan-wake",
+      "display": "Alan Wake",
+      "wikiTitle": "Alan Wake",
+      "slug": "alan-wake",
+      "keywords": "alan wake",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2f/Alan_Wake_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231010102025"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alexandra-sharpe",
+      "display": "Alexandra Sharpe",
+      "wikiTitle": "Alexandra Sharpe",
+      "slug": "alexandra-sharpe",
+      "keywords": "alexandra sharpe",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b8/Alexandra_Sharpe_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241218201008"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ali-a",
+      "display": "Ali-A",
+      "wikiTitle": "Ali-A",
+      "slug": "ali-a",
+      "keywords": "ali a",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/95/Ali-A_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220517101920"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alias",
+      "display": "Alias",
+      "wikiTitle": "Alias",
+      "slug": "alias",
+      "keywords": "alias",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/de/Alias_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230413011316"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alistair-chews",
+      "display": "Alistair Chews",
+      "wikiTitle": "Alistair Chews",
+      "slug": "alistair-chews",
+      "keywords": "alistair chews",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/85/Alistair_Chews_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241218194948"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/all-might",
+      "display": "All Might",
+      "wikiTitle": "All Might",
+      "slug": "all-might",
+      "keywords": "all might",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9b/All_Might_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221216143149"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/all-hallows-steve",
+      "display": "All-Hallow's Steve",
+      "wikiTitle": "All-Hallow's Steve",
+      "slug": "all-hallows-steve",
+      "keywords": "all hallow s steve",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0e/All-Hallow%27s_Steve_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211012084718"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/allen-the-alien",
+      "display": "Allen the Alien",
+      "wikiTitle": "Allen the Alien",
+      "slug": "allen-the-alien",
+      "keywords": "allen the alien",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9a/Allen_the_Alien_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250311175435"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alli",
+      "display": "Alli",
+      "wikiTitle": "Alli",
+      "slug": "alli",
+      "keywords": "alli",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/01/Alli_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240422140854"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aloy",
+      "display": "Aloy",
+      "wikiTitle": "Aloy",
+      "slug": "aloy",
+      "keywords": "aloy",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/40/Aloy_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210413121233"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alphonse",
+      "display": "Alphonse",
+      "wikiTitle": "Alphonse",
+      "slug": "alphonse",
+      "keywords": "alphonse",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c9/Alphonse_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250221115437"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace",
+      "display": "Alpine Ace",
+      "wikiTitle": "Alpine Ace",
+      "slug": "alpine-ace",
+      "keywords": "alpine ace",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/73/Alpine_Ace_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250312215757"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-can",
+      "display": "Alpine Ace (CAN)",
+      "wikiTitle": "Alpine Ace (CAN)",
+      "slug": "alpine-ace-can",
+      "keywords": "alpine ace can",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/62/Alpine_Ace_CAN_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201255"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-chn",
+      "display": "Alpine Ace (CHN)",
+      "wikiTitle": "Alpine Ace (CHN)",
+      "slug": "alpine-ace-chn",
+      "keywords": "alpine ace chn",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/94/Alpine_Ace_CHN_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201352"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-fra",
+      "display": "Alpine Ace (FRA)",
+      "wikiTitle": "Alpine Ace (FRA)",
+      "slug": "alpine-ace-fra",
+      "keywords": "alpine ace fra",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/eb/Alpine_Ace_FRA_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201326"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-gbr",
+      "display": "Alpine Ace (GBR)",
+      "wikiTitle": "Alpine Ace (GBR)",
+      "slug": "alpine-ace-gbr",
+      "keywords": "alpine ace gbr",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5c/Alpine_Ace_GBR_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201312"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-ger",
+      "display": "Alpine Ace (GER)",
+      "wikiTitle": "Alpine Ace (GER)",
+      "slug": "alpine-ace-ger",
+      "keywords": "alpine ace ger",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/93/Alpine_Ace_GER_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201339"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-kor",
+      "display": "Alpine Ace (KOR)",
+      "wikiTitle": "Alpine Ace (KOR)",
+      "slug": "alpine-ace-kor",
+      "keywords": "alpine ace kor",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f3/Alpine_Ace_KOR_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201407"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-ace-usa",
+      "display": "Alpine Ace (USA)",
+      "wikiTitle": "Alpine Ace (USA)",
+      "slug": "alpine-ace-usa",
+      "keywords": "alpine ace usa",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5e/Alpine_Ace_USA_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250313201225"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alpine-lexa",
+      "display": "Alpine Lexa",
+      "wikiTitle": "Alpine Lexa",
+      "slug": "alpine-lexa",
+      "keywords": "alpine lexa",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6d/Alpine_Lexa_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251218103353"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/alto",
+      "display": "Alto",
+      "wikiTitle": "Alto",
+      "slug": "alto",
+      "keywords": "alto",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/18/Alto_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220909044624"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/amari",
+      "display": "Amari",
+      "wikiTitle": "Amari",
+      "slug": "amari",
+      "keywords": "amari",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5f/Amari_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260109102256"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/amazona-colorada",
+      "display": "Amazona Colorada",
+      "wikiTitle": "Amazona Colorada",
+      "slug": "amazona-colorada",
+      "keywords": "amazona colorada",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b0/Amazona_Colorada_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220627165201"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/amber-moxie",
+      "display": "Amber Moxie",
+      "wikiTitle": "Amber Moxie",
+      "slug": "amber-moxie",
+      "keywords": "amber moxie",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/70/Amber_Moxie_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250422100300"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/amp-kai",
+      "display": "AMP KAI",
+      "wikiTitle": "AMP KAI",
+      "slug": "amp-kai",
+      "keywords": "amp kai",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/57/AMP_KAI_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250910154940"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/amplitude",
+      "display": "Amplitude",
+      "wikiTitle": "Amplitude",
+      "slug": "amplitude",
+      "keywords": "amplitude",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/89/Amplitude_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210803080730"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anakin-skywalker",
+      "display": "Anakin Skywalker",
+      "wikiTitle": "Anakin Skywalker",
+      "slug": "anakin-skywalker",
+      "keywords": "anakin skywalker",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/49/Sith_Ascension_%28Full%29_-_Loading_Screen_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220605104413"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anakin-skywalker-clone-wars",
+      "display": "Anakin Skywalker (Clone Wars)",
+      "wikiTitle": "Anakin Skywalker (Clone Wars)",
+      "slug": "anakin-skywalker-clone-wars",
+      "keywords": "anakin skywalker clone wars",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/49/Sith_Ascension_%28Full%29_-_Loading_Screen_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220605104413"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anarchy-agent",
+      "display": "Anarchy Agent",
+      "wikiTitle": "Anarchy Agent",
+      "slug": "anarchy-agent",
+      "keywords": "anarchy agent",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/cc/Anarchy_Agent_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240613113833"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anderson-paak",
+      "display": "Anderson .Paak",
+      "wikiTitle": "Anderson .Paak",
+      "slug": "anderson-paak",
+      "keywords": "anderson paak",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/39/Anderson_.Paak_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220203201122"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/andre",
+      "display": "Andre",
+      "wikiTitle": "Andre",
+      "slug": "andre",
+      "keywords": "andre",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/ee/Andre_%28Reactive%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211119181353"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/android-17",
+      "display": "Android 17",
+      "wikiTitle": "Android 17",
+      "slug": "android-17",
+      "keywords": "android 17",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/18/Android_17_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240810001145"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/android-18",
+      "display": "Android 18",
+      "wikiTitle": "Android 18",
+      "slug": "android-18",
+      "keywords": "android 18",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7d/Android_18_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240810001207"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/andromeda",
+      "display": "Andromeda",
+      "wikiTitle": "Andromeda",
+      "slug": "andromeda",
+      "keywords": "andromeda",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/37/Andromeda_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240723092553"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/andy-fangerson",
+      "display": "Andy Fangerson",
+      "wikiTitle": "Andy Fangerson",
+      "slug": "andy-fangerson",
+      "keywords": "andy fangerson",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/66/Andy_Fangerson_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241012072055"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anglepatch-royal-npc",
+      "display": "AnglePatch Royal NPC",
+      "wikiTitle": "AnglePatch Royal NPC",
+      "slug": "anglepatch-royal-npc",
+      "keywords": "anglepatch royal npc",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8b/Doom_%28Pandora%27s_Armor_Doom%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240904100221"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ani-konda",
+      "display": "Ani Konda",
+      "wikiTitle": "Ani Konda",
+      "slug": "ani-konda",
+      "keywords": "ani konda",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c2/Ani_Konda_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230411095555"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anima",
+      "display": "Anima",
+      "wikiTitle": "Anima",
+      "slug": "anima",
+      "keywords": "anima",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8f/Anima_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251002085730"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aniyah",
+      "display": "Aniyah",
+      "wikiTitle": "Aniyah",
+      "slug": "aniyah",
+      "keywords": "aniyah",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/dd/Aniyah_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230926084125"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ant-man",
+      "display": "Ant-Man",
+      "wikiTitle": "Ant-Man",
+      "slug": "ant-man",
+      "keywords": "ant man",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/37/Ant-Man_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210307000343"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anthea",
+      "display": "Anthea",
+      "wikiTitle": "Anthea",
+      "slug": "anthea",
+      "keywords": "anthea",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0e/Anthea_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250618090924"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/antheia",
+      "display": "Antheia",
+      "wikiTitle": "Antheia",
+      "slug": "antheia",
+      "keywords": "antheia",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/55/Antheia_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200923115402"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/antonia",
+      "display": "Antonia",
+      "wikiTitle": "Antonia",
+      "slug": "antonia",
+      "keywords": "antonia",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7d/Antonia_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230825084445"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/anwar",
+      "display": "Anwar",
+      "wikiTitle": "Anwar",
+      "slug": "anwar",
+      "keywords": "anwar",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0b/Anwar_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240308163648"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aphrodite",
+      "display": "Aphrodite",
+      "wikiTitle": "Aphrodite",
+      "slug": "aphrodite",
+      "keywords": "aphrodite",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7d/Aphrodite_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240308163645"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/apollo-outfit",
+      "display": "Apollo (Outfit)",
+      "wikiTitle": "Apollo (Outfit)",
+      "slug": "apollo-outfit",
+      "keywords": "apollo outfit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/98/Apollo_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240409122607"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/apprentice-evie",
+      "display": "Apprentice Evie",
+      "wikiTitle": "Apprentice Evie",
+      "slug": "apprentice-evie",
+      "keywords": "apprentice evie",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b4/Explorer_Evie_%28Full%29_-_Loading_Screen_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250503202247"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/apprentice-rey",
+      "display": "Apprentice Rey",
+      "wikiTitle": "Apprentice Rey",
+      "slug": "apprentice-rey",
+      "keywords": "apprentice rey",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/3f/Apprentice_Rey_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250529140537"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/apprentice-rey-herotransform-akita-rs",
+      "display": "Apprentice Rey (HeroTransform Akita RS)",
+      "wikiTitle": "Apprentice Rey (HeroTransform Akita RS)",
+      "slug": "apprentice-rey-herotransform-akita-rs",
+      "keywords": "apprentice rey herotransform akita rs",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/3f/Apprentice_Rey_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250529140537"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/april-oneil",
+      "display": "April O'Neil",
+      "wikiTitle": "April O'Neil",
+      "slug": "april-oneil",
+      "keywords": "april o neil",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2c/April_O%27Neil_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231207112832"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aquaman",
+      "display": "Aquaman",
+      "wikiTitle": "Aquaman",
+      "slug": "aquaman",
+      "keywords": "aquaman",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8e/Aquaman_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200617082440"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arachne",
+      "display": "Arachne",
+      "wikiTitle": "Arachne",
+      "slug": "arachne",
+      "keywords": "arachne",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7a/Arachne_%28v31.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241005230942"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arachne-couture",
+      "display": "Arachne Couture",
+      "wikiTitle": "Arachne Couture",
+      "slug": "arachne-couture",
+      "keywords": "arachne couture",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e7/Arachne_Couture_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20201014235153"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aranza",
+      "display": "Aranza",
+      "wikiTitle": "Aranza",
+      "slug": "aranza",
+      "keywords": "aranza",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f1/Aranza_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260319100104"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arcane-jinx",
+      "display": "Arcane Jinx",
+      "wikiTitle": "Arcane Jinx",
+      "slug": "arcane-jinx",
+      "keywords": "arcane jinx",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/89/Arcane_Jinx_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211105001131"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arcane-vi",
+      "display": "Arcane Vi",
+      "wikiTitle": "Arcane Vi",
+      "slug": "arcane-vi",
+      "keywords": "arcane vi",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/58/Arcane_Vi_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220119222655"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/archetype",
+      "display": "Archetype",
+      "wikiTitle": "Archetype",
+      "slug": "archetype",
+      "keywords": "archetype",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/04/Archetype_%28v33.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241218214555"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arctic-adeline",
+      "display": "Arctic Adeline",
+      "wikiTitle": "Arctic Adeline",
+      "slug": "arctic-adeline",
+      "keywords": "arctic adeline",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c9/Arctic_Adeline_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213120500"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arctic-assassin",
+      "display": "Arctic Assassin",
+      "wikiTitle": "Arctic Assassin",
+      "slug": "arctic-assassin",
+      "keywords": "arctic assassin",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/7f/Arctic_Assassin_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20191103224617"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arctic-intel",
+      "display": "Arctic Intel",
+      "wikiTitle": "Arctic Intel",
+      "slug": "arctic-intel",
+      "keywords": "arctic intel",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/77/Arctic_Intel_%28v32.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241103124813"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arctica",
+      "display": "Arctica",
+      "wikiTitle": "Arctica",
+      "slug": "arctica",
+      "keywords": "arctica",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/36/Arctica_%28v32.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241108193841"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ares",
+      "display": "Ares",
+      "wikiTitle": "Ares",
+      "slug": "ares",
+      "keywords": "ares",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6b/Ares_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240326092029"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ares-tron",
+      "display": "Ares (TRON)",
+      "wikiTitle": "Ares (TRON)",
+      "slug": "ares-tron",
+      "keywords": "ares tron",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5d/Ares_%28TRON%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251006214817"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ariana-grande",
+      "display": "Ariana Grande",
+      "wikiTitle": "Ariana Grande",
+      "slug": "ariana-grande",
+      "keywords": "ariana grande",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/23/Ariana_Grande_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210804180451"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ark",
+      "display": "Ark",
+      "wikiTitle": "Ark",
+      "slug": "ark",
+      "keywords": "ark",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9a/Ark_%28v31.30%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241021170849"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arkana",
+      "display": "Ark'ana",
+      "wikiTitle": "Ark'ana",
+      "slug": "arkana",
+      "keywords": "ark ana",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/77/Ark%27ana_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250221115439"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/arkon",
+      "display": "Arkon",
+      "wikiTitle": "Arkon",
+      "slug": "arkon",
+      "keywords": "arkon",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/27/Arkon_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241113130901"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/armadillo",
+      "display": "Armadillo",
+      "wikiTitle": "Armadillo",
+      "slug": "armadillo",
+      "keywords": "armadillo",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5f/Armadillo_%28v33.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241205182234"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/armored-batman-zero",
+      "display": "Armored Batman Zero",
+      "wikiTitle": "Armored Batman Zero",
+      "slug": "armored-batman-zero",
+      "keywords": "armored batman zero",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/3d/Armored_Batman_Zero_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210622084139"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/art-the-clown",
+      "display": "Art the Clown",
+      "wikiTitle": "Art the Clown",
+      "slug": "art-the-clown",
+      "keywords": "art the clown",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b8/Art_the_Clown_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251009174930"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/artemis-outfit",
+      "display": "Artemis (Outfit)",
+      "wikiTitle": "Artemis (Outfit)",
+      "slug": "artemis-outfit",
+      "keywords": "artemis outfit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/fc/Artemis_%28Mask_On%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240308165056"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ascendant-midas",
+      "display": "Ascendant Midas",
+      "wikiTitle": "Ascendant Midas",
+      "slug": "ascendant-midas",
+      "keywords": "ascendant midas",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/73/Ascendant_Midas_%28Shade%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240326092707"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ascendant-midas-tbd",
+      "display": "Ascendant Midas (TBD)",
+      "wikiTitle": "Ascendant Midas (TBD)",
+      "slug": "ascendant-midas-tbd",
+      "keywords": "ascendant midas tbd",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/73/Ascendant_Midas_%28Shade%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240326092707"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ash-williams",
+      "display": "Ash Williams",
+      "wikiTitle": "Ash Williams",
+      "slug": "ash-williams",
+      "keywords": "ash williams",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6f/Ash_Williams_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221018084331"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/asmodeus",
+      "display": "Asmodeus",
+      "wikiTitle": "Asmodeus",
+      "slug": "asmodeus",
+      "keywords": "asmodeus",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f5/Asmodeus_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240615103705"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aspen",
+      "display": "Aspen",
+      "wikiTitle": "Aspen",
+      "slug": "aspen",
+      "keywords": "aspen",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/20/Aspen_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210413153059"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/assault-trooper",
+      "display": "Assault Trooper",
+      "wikiTitle": "Assault Trooper",
+      "slug": "assault-trooper",
+      "keywords": "assault trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/11/Assault_Trooper_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250311135341"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/assist-maven",
+      "display": "Assist Maven",
+      "wikiTitle": "Assist Maven",
+      "slug": "assist-maven",
+      "keywords": "assist maven",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/86/Assist_Maven_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240428205931"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/astra",
+      "display": "Astra",
+      "wikiTitle": "Astra",
+      "slug": "astra",
+      "keywords": "astra",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d4/Astra_%28v32.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241102202659"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/astrea",
+      "display": "Astrea",
+      "wikiTitle": "Astrea",
+      "slug": "astrea",
+      "keywords": "astrea",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/af/Astrea_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230828163722"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/astro-assassin",
+      "display": "Astro Assassin",
+      "wikiTitle": "Astro Assassin",
+      "slug": "astro-assassin",
+      "keywords": "astro assassin",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/13/Astro_Assassin_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240613115148"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/astro-jack",
+      "display": "Astro Jack",
+      "wikiTitle": "Astro Jack",
+      "slug": "astro-jack",
+      "keywords": "astro jack",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/72/Astro_Jack_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200421065239"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/athleisure-assassin",
+      "display": "Athleisure Assassin",
+      "wikiTitle": "Athleisure Assassin",
+      "slug": "athleisure-assassin",
+      "keywords": "athleisure assassin",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e7/Athleisure_Assassin_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200805091854"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/atlantean-fishstick",
+      "display": "Atlantean Fishstick",
+      "wikiTitle": "Atlantean Fishstick",
+      "slug": "atlantean-fishstick",
+      "keywords": "atlantean fishstick",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d1/Atlantean_Fishstick_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200723003815"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/atom-eve",
+      "display": "Atom Eve",
+      "wikiTitle": "Atom Eve",
+      "slug": "atom-eve",
+      "keywords": "atom eve",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/4e/Atom_Eve_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231116123352"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/attenuator",
+      "display": "Attenuator",
+      "wikiTitle": "Attenuator",
+      "slug": "attenuator",
+      "keywords": "attenuator",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/bd/Attenuator_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210803080440"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aubrey",
+      "display": "Aubrey",
+      "wikiTitle": "Aubrey",
+      "slug": "aubrey",
+      "keywords": "aubrey",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/37/Aubrey_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240326093208"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/audacious-adventurer",
+      "display": "Audacious Adventurer",
+      "wikiTitle": "Audacious Adventurer",
+      "slug": "audacious-adventurer",
+      "keywords": "audacious adventurer",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/dd/Audacious_Adventurer_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251218103514"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/augury",
+      "display": "Augury",
+      "wikiTitle": "Augury",
+      "slug": "augury",
+      "keywords": "augury",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c0/Augury_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250826093025"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aura-outfit",
+      "display": "Aura (Outfit)",
+      "wikiTitle": "Aura (Outfit)",
+      "slug": "aura-outfit",
+      "keywords": "aura outfit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/65/Aura_%28v19.40_-_New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220301231112"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/aura-analyzer",
+      "display": "Aura Analyzer",
+      "wikiTitle": "Aura Analyzer",
+      "slug": "aura-analyzer",
+      "keywords": "aura analyzer",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/2b/Aura_Analyzer_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20201111175331"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/autumn",
+      "display": "Autumn",
+      "wikiTitle": "Autumn",
+      "slug": "autumn",
+      "keywords": "autumn",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/1c/Autumn_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251101195110"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ava",
+      "display": "Ava",
+      "wikiTitle": "Ava",
+      "slug": "ava",
+      "keywords": "ava",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/ef/Ava_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221018084421"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/avatar-state-aang",
+      "display": "Avatar State Aang",
+      "wikiTitle": "Avatar State Aang",
+      "slug": "avatar-state-aang",
+      "keywords": "avatar state aang",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b8/Avatar_State_Aang_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240409213243"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/awr-trooper",
+      "display": "AWR Trooper",
+      "wikiTitle": "AWR Trooper",
+      "slug": "awr-trooper",
+      "keywords": "awr trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/49/AWR_Trooper_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240503094735"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/axiom",
+      "display": "Axiom",
+      "wikiTitle": "Axiom",
+      "slug": "axiom",
+      "keywords": "axiom",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/30/Axiom_%28v30.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240524203158"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/axion-sentinel",
+      "display": "Axion Sentinel",
+      "wikiTitle": "Axion Sentinel",
+      "slug": "axion-sentinel",
+      "keywords": "axion sentinel",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c2/Axion_Sentinel_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230214101438"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/axo",
+      "display": "Axo",
+      "wikiTitle": "Axo",
+      "slug": "axo",
+      "keywords": "axo",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/17/Axo_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200805092100"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ayida",
+      "display": "Ayida",
+      "wikiTitle": "Ayida",
+      "slug": "ayida",
+      "keywords": "ayida",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9e/Ayida_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221101125227"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ayla-winn",
+      "display": "Ayla Winn",
+      "wikiTitle": "Ayla Winn",
+      "slug": "ayla-winn",
+      "keywords": "ayla winn",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/ec/Ayla_Winn_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250516091818"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/azuki",
+      "display": "Azuki",
+      "wikiTitle": "Azuki",
+      "slug": "azuki",
+      "keywords": "azuki",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/82/Azuki_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220616132929"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/brite",
+      "display": "B.R.I.T.E.",
+      "wikiTitle": "B.R.I.T.E.",
+      "slug": "brite",
+      "keywords": "b r i t e",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/aa/B.R.I.T.E._-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220421151055"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/brute-gunner",
+      "display": "B.R.U.T.E. Gunner",
+      "wikiTitle": "B.R.U.T.E. Gunner",
+      "slug": "brute-gunner",
+      "keywords": "b r u t e gunner",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/91/B.R.U.T.E._Gunner_%28New_v25.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230812232759"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/brute-navigator",
+      "display": "B.R.U.T.E. Navigator",
+      "wikiTitle": "B.R.U.T.E. Navigator",
+      "slug": "brute-navigator",
+      "keywords": "b r u t e navigator",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/38/B.R.U.T.E._Navigator_%28New_v25.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230813000654"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/baba-yaga",
+      "display": "Baba Yaga",
+      "wikiTitle": "Baba Yaga",
+      "slug": "baba-yaga",
+      "keywords": "baba yaga",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/db/Baba_Yaga_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210708052916"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/babbit",
+      "display": "Babbit",
+      "wikiTitle": "Babbit",
+      "slug": "babbit",
+      "keywords": "babbit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/03/Babbit_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210330131910"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bachii",
+      "display": "Bachii",
+      "wikiTitle": "Bachii",
+      "slug": "bachii",
+      "keywords": "bachii",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b8/Bachii_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240613151628"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/backbone",
+      "display": "Backbone",
+      "wikiTitle": "Backbone",
+      "slug": "backbone",
+      "keywords": "backbone",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6c/Backbone_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210218112052"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/backlash",
+      "display": "Backlash",
+      "wikiTitle": "Backlash",
+      "slug": "backlash",
+      "keywords": "backlash",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/14/Backlash_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200910104400"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bad-kit",
+      "display": "Bad Kit",
+      "wikiTitle": "Bad Kit",
+      "slug": "bad-kit",
+      "keywords": "bad kit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c3/Bad_Kit_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250408092939"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ballerina-cappuccina",
+      "display": "Ballerina Cappuccina",
+      "wikiTitle": "Ballerina Cappuccina",
+      "slug": "ballerina-cappuccina",
+      "keywords": "ballerina cappuccina",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/5a/Ballerina_Cappuccina_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260401090421"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ballerina-s23-winterfest",
+      "display": "Ballerina S23 Winterfest",
+      "wikiTitle": "Ballerina S23 Winterfest",
+      "slug": "ballerina-s23-winterfest",
+      "keywords": "ballerina s23 winterfest",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/30/Snowdancer_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213120601"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ballistics-tech",
+      "display": "Ballistics Tech",
+      "wikiTitle": "Ballistics Tech",
+      "slug": "ballistics-tech",
+      "keywords": "ballistics tech",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/31/Ballistics_Tech_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211205211249"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ballistics-tech-placeholder",
+      "display": "Ballistics Tech (Placeholder)",
+      "wikiTitle": "Ballistics Tech (Placeholder)",
+      "slug": "ballistics-tech-placeholder",
+      "keywords": "ballistics tech placeholder",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/31/Ballistics_Tech_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211205211249"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/band-captain",
+      "display": "Band Captain",
+      "wikiTitle": "Band Captain",
+      "slug": "band-captain",
+      "keywords": "band captain",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/67/Band_Captain_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231204020209"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/band-pass",
+      "display": "Band Pass",
+      "wikiTitle": "Band Pass",
+      "slug": "band-pass",
+      "keywords": "band pass",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/89/Band_Pass_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210803080656"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bandolette",
+      "display": "Bandolette",
+      "wikiTitle": "Bandolette",
+      "slug": "bandolette",
+      "keywords": "bandolette",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/89/Bandolette_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20191114234420"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bandolier",
+      "display": "Bandolier",
+      "wikiTitle": "Bandolier",
+      "slug": "bandolier",
+      "keywords": "bandolier",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/60/Bandolier_%28Chapter_2%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200611230246"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bandwidth",
+      "display": "Bandwidth",
+      "wikiTitle": "Bandwidth",
+      "slug": "bandwidth",
+      "keywords": "bandwidth",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/a9/Bandwidth_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210212001632"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/banner-trooper",
+      "display": "Banner Trooper",
+      "wikiTitle": "Banner Trooper",
+      "slug": "banner-trooper",
+      "keywords": "banner trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/03/Banner_Trooper_%28v30.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240613114621"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bao-bros",
+      "display": "Bao Bros",
+      "wikiTitle": "Bao Bros",
+      "slug": "bao-bros",
+      "keywords": "bao bros",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/be/Bao_Bros_%28Beef%29_-_Outfit_-_Fortnite.png/revision/latest?cb=20210208130301"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/barracuda",
+      "display": "Barracuda",
+      "wikiTitle": "Barracuda",
+      "slug": "barracuda",
+      "keywords": "barracuda",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e8/Barracuda_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200721093220"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/barrett",
+      "display": "Barrett",
+      "wikiTitle": "Barrett",
+      "slug": "barrett",
+      "keywords": "barrett",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6d/Barrett_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230329091204"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/barricade",
+      "display": "Barricade",
+      "wikiTitle": "Barricade",
+      "slug": "barricade",
+      "keywords": "barricade",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/8f/Barricade_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260319100112"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bart-simpson",
+      "display": "Bart Simpson",
+      "wikiTitle": "Bart Simpson",
+      "slug": "bart-simpson",
+      "keywords": "bart simpson",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/bb/Bart_Simpson_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251101195119"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bash",
+      "display": "Bash",
+      "wikiTitle": "Bash",
+      "slug": "bash",
+      "keywords": "bash",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/a2/Bash_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240314101338"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bathany",
+      "display": "Bathany",
+      "wikiTitle": "Bathany",
+      "slug": "bathany",
+      "keywords": "bathany",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/09/Bathany_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250807072426"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/batman-pen-ink",
+      "display": "Batman (Pen & Ink)",
+      "wikiTitle": "Batman (Pen & Ink)",
+      "slug": "batman-pen-ink",
+      "keywords": "batman pen ink",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0a/Batman_%28Pen_%26_Ink%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20260520002515"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/batman-beyond",
+      "display": "Batman Beyond",
+      "wikiTitle": "Batman Beyond",
+      "slug": "batman-beyond",
+      "keywords": "batman beyond",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/ae/Batman_Beyond_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251222000443"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/batman-comic-book-outfit",
+      "display": "Batman Comic Book Outfit",
+      "wikiTitle": "Batman Comic Book Outfit",
+      "slug": "batman-comic-book-outfit",
+      "keywords": "batman comic book outfit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b4/Batman_Comic_Book_Outfit_%28Featured%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230419185634"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/batman-zero",
+      "display": "Batman Zero",
+      "wikiTitle": "Batman Zero",
+      "slug": "batman-zero",
+      "keywords": "batman zero",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/61/Batman_-_Character_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220519183102"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-3-recruit",
+      "display": "Battalion Brawler (Chapter 3 Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 3 Recruit)",
+      "slug": "battalion-brawler-chapter-3-recruit",
+      "keywords": "battalion brawler chapter 3 recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c3/Battalion_Brawler_2_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220225013927"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-4-a-recruit",
+      "display": "Battalion Brawler (Chapter 4 - A Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 4 - A Recruit)",
+      "slug": "battalion-brawler-chapter-4-a-recruit",
+      "keywords": "battalion brawler chapter 4 a recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d4/Battalion_Brawler_%28C4%29_-_Recruit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213224401"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-4-b-recruit",
+      "display": "Battalion Brawler (Chapter 4 - B Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 4 - B Recruit)",
+      "slug": "battalion-brawler-chapter-4-b-recruit",
+      "keywords": "battalion brawler chapter 4 b recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/cf/Battalion_Brawler_%28C4_-_02%29_-_Recruit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213224400"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-4-c-recruit",
+      "display": "Battalion Brawler (Chapter 4 - C Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 4 - C Recruit)",
+      "slug": "battalion-brawler-chapter-4-c-recruit",
+      "keywords": "battalion brawler chapter 4 c recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/1e/Battalion_Brawler_%28C4_-_03%29_-_Recruit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213224401"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-4-d-recruit",
+      "display": "Battalion Brawler (Chapter 4 - D Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 4 - D Recruit)",
+      "slug": "battalion-brawler-chapter-4-d-recruit",
+      "keywords": "battalion brawler chapter 4 d recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f6/Battalion_Brawler_%28C4_-_04%29_-_Recruit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213224401"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-chapter-4-e-recruit",
+      "display": "Battalion Brawler (Chapter 4 - E Recruit)",
+      "wikiTitle": "Battalion Brawler (Chapter 4 - E Recruit)",
+      "slug": "battalion-brawler-chapter-4-e-recruit",
+      "keywords": "battalion brawler chapter 4 e recruit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0f/Battalion_Brawler_%28C4_-_05%29_-_Recruit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20221213224401"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-disguise-base-male",
+      "display": "Battalion Brawler (Disguise Base Male)",
+      "wikiTitle": "Battalion Brawler (Disguise Base Male)",
+      "slug": "battalion-brawler-disguise-base-male",
+      "keywords": "battalion brawler disguise base male",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c4/Battalion_Brawler_2_-_Recruit_%28Casual%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250502162108"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-brawler-placeholder",
+      "display": "Battalion Brawler (Placeholder)",
+      "wikiTitle": "Battalion Brawler (Placeholder)",
+      "slug": "battalion-brawler-placeholder",
+      "keywords": "battalion brawler placeholder",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/62/Battalion_Brawler_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211205211508"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-leader",
+      "display": "Battalion Leader",
+      "wikiTitle": "Battalion Leader",
+      "slug": "battalion-leader",
+      "keywords": "battalion leader",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6b/Battalion_Leader_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211205211455"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battalion-leader-placeholder",
+      "display": "Battalion Leader (Placeholder)",
+      "wikiTitle": "Battalion Leader (Placeholder)",
+      "slug": "battalion-leader-placeholder",
+      "keywords": "battalion leader placeholder",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/6b/Battalion_Leader_-_Recruit_%28C3%29_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20211205211455"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battle-gamer-mae",
+      "display": "Battle Gamer Mae",
+      "wikiTitle": "Battle Gamer Mae",
+      "slug": "battle-gamer-mae",
+      "keywords": "battle gamer mae",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/be/Battle_Gamer_Mae_%28v37.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250829093001"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battle-hound",
+      "display": "Battle Hound",
+      "wikiTitle": "Battle Hound",
+      "slug": "battle-hound",
+      "keywords": "battle hound",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/6/65/Battle_Hound_%28v33.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250123205750"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battle-rocker",
+      "display": "Battle Rocker",
+      "wikiTitle": "Battle Rocker",
+      "slug": "battle-rocker",
+      "keywords": "battle rocker",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d2/Battle_Rocker_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20231211113154"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battle-tiger",
+      "display": "Battle Tiger",
+      "wikiTitle": "Battle Tiger",
+      "slug": "battle-tiger",
+      "keywords": "battle tiger",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/4c/Battle_Tiger_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250408092940"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battlebus",
+      "display": "BattleBus",
+      "wikiTitle": "BattleBus",
+      "slug": "battlebus",
+      "keywords": "battlebus",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f4/BattleBus_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230926084311"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/battlehawk",
+      "display": "Battlehawk",
+      "wikiTitle": "Battlehawk",
+      "slug": "battlehawk",
+      "keywords": "battlehawk",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/4/4e/Battlehawk_%28v33.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241210163433"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/bay",
+      "display": "Bay",
+      "wikiTitle": "Bay",
+      "slug": "bay",
+      "keywords": "bay",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/0/0a/Bay_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250618090924"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/beach-bomber",
+      "display": "Beach Bomber",
+      "wikiTitle": "Beach Bomber",
+      "slug": "beach-bomber",
+      "keywords": "beach bomber",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c8/Beach_Bomber_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20191008224810"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/beach-brutus",
+      "display": "Beach Brutus",
+      "wikiTitle": "Beach Brutus",
+      "slug": "beach-brutus",
+      "keywords": "beach brutus",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e8/Beach_Brutus_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210622085521"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/black-knight",
+      "display": "Black Knight",
+      "wikiTitle": "Black Knight",
+      "slug": "black-knight",
+      "keywords": "black knight",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/3/33/Black_Knight_%28v34.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250221120503"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/calamity",
+      "display": "Calamity",
+      "wikiTitle": "Calamity",
+      "slug": "calamity",
+      "keywords": "calamity",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/14/Calamity_%28v31.20%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240923205351"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/deadpool",
+      "display": "Deadpool",
+      "wikiTitle": "Deadpool",
+      "slug": "deadpool",
+      "keywords": "deadpool",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/e/e4/Deadpool_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200512110906"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/drift",
+      "display": "Drift",
+      "wikiTitle": "Drift",
+      "slug": "drift",
+      "keywords": "drift",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/c2/Tricksters_of_the_Fox_Clan_%28Full%29_-_Loading_Screen_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20251218113920"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/fishstick",
+      "display": "Fishstick",
+      "wikiTitle": "Fishstick",
+      "slug": "fishstick",
+      "keywords": "fishstick",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f6/Fishstick_%28Default_Featured%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210418032248"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/galaxy",
+      "display": "Galaxy",
+      "wikiTitle": "Galaxy",
+      "slug": "galaxy",
+      "keywords": "galaxy",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/d7/Galaxy_%28v33.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241205172130"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/ikonik",
+      "display": "IKONIK",
+      "wikiTitle": "IKONIK",
+      "slug": "ikonik",
+      "keywords": "ikonik",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/b/b4/IKONIK_%28v30.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240524201616"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/iron-man",
+      "display": "Iron Man",
+      "wikiTitle": "Iron Man",
+      "slug": "iron-man",
+      "keywords": "iron man",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/14/Iron_Man_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250212141352"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/jules",
+      "display": "Jules",
+      "wikiTitle": "Jules",
+      "slug": "jules",
+      "keywords": "jules",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/d/de/Jules_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200617113906"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/kit",
+      "display": "Kit",
+      "wikiTitle": "Kit",
+      "slug": "kit",
+      "keywords": "kit",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/fe/Kit_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200617085048"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/lynx",
+      "display": "Lynx",
+      "wikiTitle": "Lynx",
+      "slug": "lynx",
+      "keywords": "lynx",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/c/cc/Trailblazer_Lynx_-_Character_-_Fortnite.jpg/revision/latest/scale-to-width-down/220?cb=20240309135306"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/marshmello",
+      "display": "Marshmello",
+      "wikiTitle": "Marshmello",
+      "slug": "marshmello",
+      "keywords": "marshmello",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/8/85/Marshmello_%28v31.40%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241125065825"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/midas",
+      "display": "Midas",
+      "wikiTitle": "Midas",
+      "slug": "midas",
+      "keywords": "midas",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/a/ac/Midas_%28Shadow%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20200815181328"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/omega",
+      "display": "Omega",
+      "wikiTitle": "Omega",
+      "slug": "omega",
+      "keywords": "omega",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/2/21/Omega_%28v33.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20241210165223"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/peely",
+      "display": "Peely",
+      "wikiTitle": "Peely",
+      "slug": "peely",
+      "keywords": "peely",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/fc/Peely_%28v30.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20240524202045"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/red-knight",
+      "display": "Red Knight",
+      "wikiTitle": "Red Knight",
+      "slug": "red-knight",
+      "keywords": "red knight",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/1/19/Red_Knight_%28v34.00%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250221120508"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/renegade-raider",
+      "display": "Renegade Raider",
+      "wikiTitle": "Renegade Raider",
+      "slug": "renegade-raider",
+      "keywords": "renegade raider",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/9/9d/Renegade_Raider_-_Character_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20210715102449"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/skull-trooper",
+      "display": "Skull Trooper",
+      "wikiTitle": "Skull Trooper",
+      "slug": "skull-trooper",
+      "keywords": "skull trooper",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/7/79/Skull_Trooper_%28v34.10%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20250311123340"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/spider-man",
+      "display": "Spider-Man",
+      "wikiTitle": "Spider-Man",
+      "slug": "spider-man",
+      "keywords": "spider man",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/f/f1/Spider-Man_-_Character_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20220901182305"
+    },
+    {
+      "kind": "character",
+      "href": "/characters/travis-scott",
+      "display": "Travis Scott",
+      "wikiTitle": "Travis Scott",
+      "slug": "travis-scott",
+      "keywords": "travis scott",
+      "thumb": "https://static.wikia.nocookie.net/fortnite/images/5/58/Travis_Scott_%28New%29_-_Outfit_-_Fortnite.png/revision/latest/scale-to-width-down/220?cb=20230813154512"
+    }
+  ]
 }

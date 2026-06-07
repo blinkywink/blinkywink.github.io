@@ -1,3 +1,34 @@
 {
-  "seasons": []
+  "seasons": [
+    {
+      "id": "seasons-passes",
+      "title": "Passes",
+      "seasonHref": "",
+      "episodes": [
+        {
+          "display": "Battle Pass",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/battle-pass",
+          "slug": "battle-pass",
+          "filter": "battle pass Battle Pass",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/1f/Chapter_7_Season_2_%28Battle_Pass%29_-_Promo_-_Fortnite.jpg/revision/latest/scale-to-width-down/400?cb=20260317151331"
+        }
+      ]
+    },
+    {
+      "id": "battle-pass",
+      "title": "Battle Pass",
+      "seasonHref": "",
+      "episodes": [
+        {
+          "display": "Battle Pass",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/battle-pass",
+          "slug": "battle-pass",
+          "filter": "battle pass Battle Pass",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/1f/Chapter_7_Season_2_%28Battle_Pass%29_-_Promo_-_Fortnite.jpg/revision/latest/scale-to-width-down/400?cb=20260317151331"
+        }
+      ]
+    }
+  ]
 }

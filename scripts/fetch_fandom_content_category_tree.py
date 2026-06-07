@@ -40,6 +40,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 OUT_PATH = ROOT / "assets" / "data" / "fandom_content_category_tree.json"
+CHECKPOINT_PATH = ROOT / "assets" / "data" / ".fandom_tree_checkpoint.json"
 
 API = "https://fortnite.fandom.com/api.php"
 UA = "FortniteWikiMirror/1.0 (local mirror; contact: site maintainer)"
@@ -66,18 +67,60 @@ def slugify_category_title(title: str) -> str:
     return t or "category"
 
 
-def api_get(params: dict[str, str]) -> dict:
+def api_get(params: dict[str, str], *, retries: int = 5) -> dict:
     """HTTPS via curl (matches import_wiki_character.py; avoids macOS Python SSL issues)."""
     q = urllib.parse.urlencode(params)
     url = f"{API}?{q}"
-    proc = subprocess.run(
-        ["curl", "-sS", "-L", "-A", UA, "--max-time", "120", url],
-        capture_output=True,
-        text=True,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(proc.stderr or f"curl exit {proc.returncode}")
-    return json.loads(proc.stdout)
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        if attempt:
+            wait = min(2**attempt, 30)
+            log(f"API retry {attempt}/{retries - 1} in {wait}s… ({last_err})")
+            time.sleep(wait)
+        proc = subprocess.run(
+            ["curl", "-sS", "-L", "-A", UA, "--max-time", "90", url],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            last_err = RuntimeError(proc.stderr or f"curl exit {proc.returncode}")
+            continue
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError as e:
+            last_err = e
+            continue
+        if "error" in data:
+            last_err = RuntimeError(str(data["error"]))
+            continue
+        return data
+    raise RuntimeError(f"API failed after {retries} attempts: {last_err}")
+
+
+def save_checkpoint(
+    *,
+    subcat_cache: dict[str, list[str]],
+    page_cache: dict[str, list[str]],
+    visit_counter: list[int],
+    root: str,
+    max_depth: int,
+    include_direct_pages: bool,
+) -> None:
+    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "savedAt": datetime.now(timezone.utc).isoformat(),
+        "rootTitle": root,
+        "maxDepth": max_depth,
+        "includeDirectPages": include_direct_pages,
+        "categoriesVisited": visit_counter[0],
+        "subcatCache": subcat_cache,
+        "pageCache": page_cache,
+    }
+    tmp = CHECKPOINT_PATH.with_suffix(".json.tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+    tmp.replace(CHECKPOINT_PATH)
+    log(f"Checkpoint saved ({visit_counter[0]} API results cached).")
 
 
 def fetch_subcategories(
@@ -192,6 +235,9 @@ def build_tree_node(
     page_cache: dict[str, list[str]],
     visit_counter: list[int],
     progress_every: int,
+    checkpoint_every: int,
+    checkpoint_root: str,
+    checkpoint_max_depth: int,
 ) -> dict:
     display = title[9:] if title.startswith("Category:") else title
     slug = slugify_category_title(title)
@@ -221,6 +267,15 @@ def build_tree_node(
     log(f"Visited {n} categories so far… (current: {title})")
     if progress_every > 0 and n % progress_every == 0:
         log(f"── Progress: {n} categories visited (still walking the tree…) ──")
+    if checkpoint_every > 0 and n % checkpoint_every == 0:
+        save_checkpoint(
+            subcat_cache=subcat_cache,
+            page_cache=page_cache,
+            visit_counter=visit_counter,
+            root=checkpoint_root,
+            max_depth=checkpoint_max_depth,
+            include_direct_pages=include_direct_pages,
+        )
 
     try:
         subs = fetch_subcategories(title, sleep_s, depth=depth, cache=subcat_cache)
@@ -248,6 +303,9 @@ def build_tree_node(
                 page_cache=page_cache,
                 visit_counter=visit_counter,
                 progress_every=progress_every,
+                checkpoint_every=checkpoint_every,
+                checkpoint_root=checkpoint_root,
+                checkpoint_max_depth=checkpoint_max_depth,
             )
         )
 
@@ -290,6 +348,18 @@ def main() -> None:
         metavar="N",
         help="Print an extra milestone line every N categories (0 = off). Default: 25.",
     )
+    ap.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Save resume checkpoint every N categories (0 = off). Default: 10.",
+    )
+    ap.add_argument(
+        "--resume",
+        action="store_true",
+        help="Load API cache from last checkpoint (skips re-fetching completed categories).",
+    )
     args = ap.parse_args()
 
     sleep_s = 0.0 if args.no_sleep else args.sleep
@@ -297,6 +367,16 @@ def main() -> None:
     subcat_cache: dict[str, list[str]] = {}
     page_cache: dict[str, list[str]] = {}
     visit_counter = [0]
+
+    if args.resume and CHECKPOINT_PATH.is_file():
+        with open(CHECKPOINT_PATH, encoding="utf-8") as f:
+            ck = json.load(f)
+        subcat_cache = ck.get("subcatCache") or {}
+        page_cache = ck.get("pageCache") or {}
+        log(
+            f"Resumed checkpoint from {ck.get('savedAt', '?')} "
+            f"({len(subcat_cache)} subcat + {len(page_cache)} page caches).",
+        )
 
     log(
         f"Building tree from {args.root!r} (max_depth={args.max_depth}, sleep={sleep_s})…",
@@ -313,6 +393,9 @@ def main() -> None:
         page_cache=page_cache,
         visit_counter=visit_counter,
         progress_every=args.progress_every,
+        checkpoint_every=args.checkpoint_every,
+        checkpoint_root=args.root,
+        checkpoint_max_depth=args.max_depth,
     )
 
     total, leaves = count_nodes(tree)
@@ -334,6 +417,9 @@ def main() -> None:
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
         f.write("\n")
+
+    if CHECKPOINT_PATH.is_file():
+        CHECKPOINT_PATH.unlink()
 
     log(
         f"Wrote {args.output} ({len(visited)} categories visited, {total} nodes in tree display).",

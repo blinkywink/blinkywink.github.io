@@ -1,27 +1,35 @@
 :root{
   --header-h: 72px;
-  --bg0:#0B0C10;
-  --bg1:#10121A;
-  --card:#151720;
-  --card2:#181A24;
-  --stroke:#262938;
+  --bg0:#08050f;
+  --bg1:#0f0818;
+  --card:#161022;
+  --card2:#1a1228;
+  --stroke:#2e2044;
   --text:#F8FAFC;
-  --muted:#CBD5F5;
-  --muted2:#94A3C9;
+  --muted:#C9B8E8;
+  --muted2:#9B8BB8;
 
-  --lime:#E9B82E;   /* gold accent */
-  --cyan:#38BDF8;   /* light blue accent */
+  --lime:#2DABFF;   /* Fortnite blue */
+  --cyan:#9D4DBB;   /* Fortnite purple */
   --aqua:#22C55E;
-  --violet:#6366F1;
-  --hot:#DC2626;    /* red accent */
+  --violet:#7B2FBE;
+  --hot:#FF4655;
 
-  --shadow: 0 24px 70px rgba(0,0,0,.5);
+  --shadow: 0 24px 70px rgba(0,0,0,.55);
   --radius-xl: 26px;
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 12px;
 
   --container: 1120px;
+}
+
+@font-face{
+  font-family: "FortniteDisplay";
+  src: url("./assets/font.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 *{ box-sizing:border-box; }
@@ -110,9 +118,10 @@ body::before{
   position:sticky;
   top:0;
   z-index:200;
-  backdrop-filter: blur(10px);
-  background: rgba(11,12,16,.9);
-  border-bottom:1px solid var(--stroke);
+  backdrop-filter: blur(12px);
+  background: rgba(8,5,15,.92);
+  border-bottom:1px solid rgba(157,77,187,.22);
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
 }
 
 .header-inner{
@@ -126,7 +135,7 @@ body::before{
 .brand{
   display:flex;
   align-items:center;
-  gap:0;
+  gap:10px;
   text-decoration:none;
   color:var(--text);
 }
@@ -135,7 +144,7 @@ body::before{
   align-items:center;
   justify-content:center;
   width:auto;
-  height:42px;
+  height:38px;
   padding:0;
   border:none;
   border-radius:0;
@@ -144,12 +153,18 @@ body::before{
 .brand-img{
   width:auto;
   height:100%;
+  max-width: 140px;
   display:block;
   object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(45,171,255,.25));
 }
 .brand-text{
+  font-family: "FortniteDisplay", ui-sans-serif, system-ui, sans-serif;
   font-weight:800;
-  letter-spacing:.2px;
+  font-size: 18px;
+  letter-spacing:.04em;
+  text-transform: uppercase;
+  color: var(--lime);
 }
 
 .nav{
@@ -186,9 +201,9 @@ body::before{
   text-transform: uppercase;
   line-height: 1.1;
   white-space: nowrap;
-  color: #0b0c10;
-  background: linear-gradient(135deg, var(--lime), #f5d061);
-  box-shadow: 0 0 10px rgba(233, 184, 46, 0.3);
+  color: #08050f;
+  background: linear-gradient(135deg, var(--lime), var(--cyan));
+  box-shadow: 0 0 12px rgba(45, 171, 255, 0.35);
   transform: translateX(3px) rotate(-14deg);
   transform-origin: 100% 100%;
   animation: nav-badge-pulse 2.4s ease-in-out infinite;
@@ -325,12 +340,11 @@ body::before{
 .hero-overlay{
   position:absolute;
   inset:0;
-  /* Edge-only vignette (avoid top/bottom “bar” bands) */
   background:
-    radial-gradient(circle at 50% 45%,
-      rgba(0,0,0,0) 28%,
-      rgba(0,0,0,.14) 55%,
-      rgba(0,0,0,.62) 100%);
+    linear-gradient(180deg, rgba(8,5,15,.15) 0%, rgba(8,5,15,.55) 100%),
+    radial-gradient(circle at 70% 20%, rgba(45,171,255,.18) 0%, transparent 42%),
+    radial-gradient(circle at 20% 80%, rgba(157,77,187,.16) 0%, transparent 38%),
+    radial-gradient(circle at 50% 45%, rgba(0,0,0,0) 28%, rgba(0,0,0,.18) 55%, rgba(0,0,0,.72) 100%);
   z-index:1;
   pointer-events:none;
 }
@@ -380,13 +394,18 @@ body::before{
   width: min(560px, 100%);
 }
 .hero-tagline-line{
+  font-family: "FortniteDisplay", ui-sans-serif, system-ui, sans-serif;
   font-size: 36px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .hero-tagline-line--muted{
+  font-family: ui-sans-serif, system-ui, sans-serif;
   font-weight: 750;
-  color: rgba(255,255,255,.78);
+  color: rgba(255,255,255,.82);
   font-size: 19px;
+  text-transform: none;
+  letter-spacing: 0.01em;
   margin-top: 6px;
   text-align:right;
   width: 100%;
@@ -766,9 +785,9 @@ body::before{
   position: relative;
   z-index: 5;
   clear: both;
-  border-top: 1px solid rgba(255,255,255,.08);
+  border-top: 1px solid rgba(157,77,187,.2);
   padding: 22px 0;
-  background: var(--bg0);
+  background: linear-gradient(180deg, var(--bg0) 0%, #06030c 100%);
 }
 #daily-picks,
 .contact-section{
@@ -4407,10 +4426,11 @@ a.char-group-title-link:hover{
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(6, 7, 10, 0.15) 0%,
-    rgba(6, 7, 10, 0.55) 45%,
-    rgba(6, 7, 10, 0.92) 100%
-  );
+    rgba(8, 5, 15, 0.1) 0%,
+    rgba(8, 5, 15, 0.55) 45%,
+    rgba(8, 5, 15, 0.94) 100%
+  ),
+  radial-gradient(circle at 80% 15%, rgba(45, 171, 255, 0.2) 0%, transparent 45%);
   pointer-events: none;
 }
 .about-hero-inner{

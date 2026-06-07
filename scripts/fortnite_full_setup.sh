@@ -24,17 +24,26 @@ log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
 }
 
-log "=== Fortnite full wiki sync started ==="
+  log "=== Fortnite full wiki sync started ==="
+
+  # Keep Mac awake for the full multi-hour run.
+  caffeinate -i -w $$ >/dev/null 2>&1 &
 
 {
   python3 scripts/rebrand_fortnite_site.py
 
-  log "Step 1/6: Fetching category tree with all page titles (1–3+ hours)…"
-  python3 -u scripts/fetch_fandom_content_category_tree.py \
-    --no-sleep \
-    --include-direct-pages \
-    --max-depth 8 \
-    --progress-every 100
+  if [[ -f assets/data/fandom_content_category_tree.json ]] && [[ ! -f .force-refetch-tree ]]; then
+    log "Step 1/6: Category tree JSON exists — skipping fetch (touch .force-refetch-tree to redo)"
+  else
+    log "Step 1/6: Fetching category tree with all page titles (1–3+ hours)…"
+    python3 -u scripts/fetch_fandom_content_category_tree.py \
+      --sleep 0.05 \
+      --resume \
+      --include-direct-pages \
+      --max-depth 8 \
+      --progress-every 50 \
+      --checkpoint-every 10
+  fi
 
   log "Step 2/6: Building manifests (wiki pages + outfits)…"
   python3 scripts/merge_tree_titles_into_wiki_pages_manifest.py

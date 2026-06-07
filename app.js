@@ -407,6 +407,9 @@
       img.src = cardImageSrc(img.getAttribute("data-card-image"));
     };
 
+    const isLocalOutfit = (c) =>
+      c && typeof c.href === "string" && c.href.startsWith("/characters/");
+
     const makeCharCard = (c) => {
       const a = document.createElement("a");
       a.className = "char-card";
@@ -453,7 +456,7 @@
         searchNoteEl.textContent = "";
       }
       removeSearchCards();
-      const matches = manifest.filter((c) => nameMatchesPrefix(c, qFold));
+      const matches = manifest.filter((c) => isLocalOutfit(c) && nameMatchesPrefix(c, qFold));
       matches.sort((a, b) => {
         const ra = charDisplaySearchRank(a, qFold);
         const rb = charDisplaySearchRank(b, qFold);
@@ -492,6 +495,26 @@
       return out;
     };
 
+    const buildLetterGroupsFromManifest = () => {
+      const merged = { Featured: [] };
+      const featuredNames = new Set(
+        ["Drift", "Peely", "Fishstick", "Renegade Raider", "Skull Trooper", "Midas"].map((s) =>
+          s.toLowerCase(),
+        ),
+      );
+      for (const c of manifest) {
+        const name = c.display;
+        if (featuredNames.has(String(name).toLowerCase())) {
+          merged.Featured.push(name);
+        }
+        const m = String(name).match(/[A-Za-z0-9]/);
+        const key = m ? (m[0].toUpperCase().match(/[A-Z]/) ? m[0].toUpperCase() : "#") : "#";
+        if (!merged[key]) merged[key] = [];
+        if (!featuredNames.has(String(name).toLowerCase())) merged[key].push(name);
+      }
+      return merged;
+    };
+
     const buildMergedBrowse = (groupsData) => {
       browseRootEl.innerHTML = "";
       let merged =
@@ -500,13 +523,16 @@
           (groupsData.ninjago && groupsData.dragonsRising
             ? mergeGroupsClient(groupsData.ninjago, groupsData.dragonsRising)
             : null));
-      if (!merged || typeof merged !== "object") {
-        browseRootEl.innerHTML =
-          '<p class="characters-browse-empty">Could not load character groups. Try refreshing.</p>';
-        return;
+      if (!merged || typeof merged !== "object" || !Object.keys(merged).length) {
+        merged = buildLetterGroupsFromManifest();
       }
 
-      for (const cat of CAT_ORDER) {
+      const catOrder =
+        (groupsData && groupsData.order) ||
+        ["Featured", ...Object.keys(merged).filter((k) => k !== "Featured" && k !== "#").sort(), ...(merged["#"] ? ["#"] : [])];
+
+      let sections = 0;
+      for (const cat of catOrder) {
         const names = merged[cat];
         if (!names || !names.length) continue;
 
@@ -522,7 +548,7 @@
 
         const entries = names
           .map((wikiTitle) => ({ c: findInManifest(wikiTitle) }))
-          .filter((e) => e.c);
+          .filter((e) => isLocalOutfit(e.c));
         entries.sort((a, b) =>
           a.c.display.localeCompare(b.c.display, undefined, { sensitivity: "base" }),
         );
@@ -536,6 +562,11 @@
         section.appendChild(h2);
         section.appendChild(grid);
         browseRootEl.appendChild(section);
+        sections += 1;
+      }
+      if (!sections) {
+        browseRootEl.innerHTML =
+          '<p class="characters-browse-empty">No outfits to show yet.</p>';
       }
     };
 
@@ -577,11 +608,18 @@
             '<p class="characters-browse-empty">No character data.</p>';
           return;
         }
+        const localCount = manifest.filter(isLocalOutfit).length;
         return fetch("/assets/data/character_groups.json")
           .then((r) => (r.ok ? r.json() : null))
           .catch(() => null)
           .then((groupsData) => {
             buildMergedBrowse(groupsData);
+            if (localCount < manifest.length) {
+              const note = document.createElement("p");
+              note.className = "characters-browse-empty";
+              note.textContent = `Showing ${localCount.toLocaleString()} mirrored outfits. ${(manifest.length - localCount).toLocaleString()} more importing — run bash scripts/run_mirror_import_nohup.sh in Terminal and leave Mac awake.`;
+              browseRootEl.prepend(note);
+            }
             browseRootEl.hidden = false;
             searchPanelEl.hidden = true;
             scrollToHash();

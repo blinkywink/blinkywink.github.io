@@ -34,11 +34,14 @@ from import_wiki_character import (  # noqa: E402
     build_wiki_char_tabs_html,
     dedupe_toc_ids_in_full_page,
     extract_first_toc_block,
+    footer_html,
+    header_html,
     rewrite_wiki_html,
     split_portable_infobox,
     strip_outer_parser_div,
     wrap_overview_h2_sections,
 )
+from site_chrome import THEME_COLOR  # noqa: E402
 from wiki_tree_category_paths import (  # noqa: E402
     build_content_mirror_breadcrumb_nav_html,
     category_path_for_title,
@@ -125,16 +128,21 @@ def import_wiki_page(
     )
     extra_head = f'    <meta name="wiki-page-title" content="{html.escape(title, quote=True)}" />\n'
 
-    page = TEMPLATE.format(
-        display=title_esc,
-        extra_head=extra_head,
-        wiki_breadcrumb_block=wiki_breadcrumb_block,
-        hero_card=hero_card,
-        wiki_char_split_cls=split_cls,
-        toc_sidebar=toc_sidebar,
-        toc_bar="",
-        wiki_char_tabs=wiki_char_tabs,
-        wiki_char_panels=wiki_char_panels,
+    page = (
+        TEMPLATE.replace("__SITE_HEADER__", header_html())
+        .replace("__SITE_FOOTER__", footer_html())
+        .format(
+            display=title_esc,
+            extra_head=extra_head,
+            wiki_breadcrumb_block=wiki_breadcrumb_block,
+            hero_card=hero_card,
+            wiki_char_split_cls=split_cls,
+            toc_sidebar=toc_sidebar,
+            toc_bar="",
+            wiki_char_tabs=wiki_char_tabs,
+            wiki_char_panels=wiki_char_panels,
+            theme_color=THEME_COLOR,
+        )
     )
     page = dedupe_toc_ids_in_full_page(page)
 

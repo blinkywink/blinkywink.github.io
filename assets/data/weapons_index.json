@@ -1,5 +1,62 @@
 {
   "v": 2,
-  "source": "fandom_content_category_tree.json:Category:Weapons",
-  "groups": []
+  "source": "Category:Items",
+  "groups": [
+    {
+      "id": "items",
+      "title": "Items",
+      "groupKey": "items",
+      "groupHref": null,
+      "sets": [
+        {
+          "display": "(PH) Kang and Kodos Ray Gun",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun",
+          "slug": "ph-kang-and-kodos-ray-gun",
+          "filter": "(ph) kang and kodos ray gun (PH) Kang and Kodos Ray Gun",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/11/Deodorant_Applicator_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251105182218"
+        },
+        {
+          "display": "(PH) Kang and Kodos Ray Gun (Damage Siphon)",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-damage-siphon",
+          "slug": "ph-kang-and-kodos-ray-gun-damage-siphon",
+          "filter": "(ph) kang and kodos ray gun (damage siphon) (PH) Kang and Kodos Ray Gun (Damage Siphon)",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/11/Deodorant_Applicator_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251105182218"
+        },
+        {
+          "display": "(PH) Kang and Kodos Ray Gun (Delay)",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-delay",
+          "slug": "ph-kang-and-kodos-ray-gun-delay",
+          "filter": "(ph) kang and kodos ray gun (delay) (PH) Kang and Kodos Ray Gun (Delay)",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/11/Deodorant_Applicator_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251105182218"
+        },
+        {
+          "display": "(PH) Kang and Kodos Ray Gun (Elim Siphon)",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-elim-siphon",
+          "slug": "ph-kang-and-kodos-ray-gun-elim-siphon",
+          "filter": "(ph) kang and kodos ray gun (elim siphon) (PH) Kang and Kodos Ray Gun (Elim Siphon)",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/0/02/Placeholder_-_Banner_Icon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20240522191037"
+        },
+        {
+          "display": "(PH) Kang and Kodos Ray Gun (EMP)",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-emp",
+          "slug": "ph-kang-and-kodos-ray-gun-emp",
+          "filter": "(ph) kang and kodos ray gun (emp) (PH) Kang and Kodos Ray Gun (EMP)",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/11/Deodorant_Applicator_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251105182218"
+        },
+        {
+          "display": "(PH) Kang and Kodos Ray Gun (Exotic)",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/weapons-battle-royale/ranged-weapons-battle-royale/submachine-guns/ph-kang-and-kodos-ray-gun-exotic",
+          "slug": "ph-kang-and-kodos-ray-gun-exotic",
+          "filter": "(ph) kang and kodos ray gun (exotic) (PH) Kang and Kodos Ray Gun (Exotic)",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/1/11/Deodorant_Applicator_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251105182218"
+        }
+      ]
+    }
+  ]
 }

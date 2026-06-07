@@ -4,22 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Fortnite Wiki Project — a fan-made Fortnite wiki." />
+    <meta name="referrer" content="no-referrer" />
     <title>Fortnite Wiki Project</title>
     <link rel="stylesheet" href="./styles.css" />
-    <meta name="theme-color" content="#06070a" />
+    <meta name="theme-color" content="#12081c" />
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="site-header">
+        <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="/">
           <span class="brand-mark" aria-hidden="true">
-            <img class="brand-img" src="./assets/logo.png" alt="" loading="eager" decoding="async" />
+            <img class="brand-img" src="/assets/logo.png" alt="Fortnite Wiki Project" loading="eager" decoding="async" />
           </span>
+          <span class="brand-text">Wiki</span>
         </a>
 
-        <!-- Mobile menu (checkbox hack = no JS needed) -->
         <input class="menu-toggle" type="checkbox" id="menu-toggle" />
         <label class="menu-button" for="menu-toggle" aria-label="Open navigation" role="button">
           <span class="menu-button-lines" aria-hidden="true">
@@ -28,7 +29,8 @@
         </label>
 
         <nav class="nav" aria-label="Primary">
-          <a href="/characters">Characters</a>
+
+          <a href="/characters">Outfits</a>
           <a href="/episodes">Seasons</a>
           <a href="/weapons">Items</a>
           <a href="/sets">Cosmetics</a>
@@ -44,10 +46,10 @@
         <div class="hero-outer">
           <div class="hero-image-shell" aria-hidden="true">
             <picture>
-              <source media="(max-width: 860px)" srcset="./assets/hero-mobile.png" />
+              <source media="(max-width: 860px)" srcset="/assets/hero-mobile.png" />
               <img
                 class="hero-media"
-                src="./assets/hero.png"
+                src="/assets/hero.png"
                 alt=""
                 loading="eager"
                 decoding="async"
@@ -58,8 +60,8 @@
 
           <div class="hero-center">
             <div class="hero-tagline" aria-hidden="false">
-              <div class="hero-tagline-line">Better than fandom.</div>
-              <div class="hero-tagline-line hero-tagline-line--muted">Built by Fortnite fans, for Fortnite fans.</div>
+              <div class="hero-tagline-line">Drop in. Browse everything.</div>
+              <div class="hero-tagline-line hero-tagline-line--muted">Outfits, items, seasons, and lore — without the Fandom clutter.</div>
             </div>
             <div id="search" class="search-card" role="search" aria-label="Site search">
               <div class="search-bar">
@@ -143,15 +145,16 @@
       <div aria-hidden="true" style="display:none"></div>
     </main>
 
-    <footer class="site-footer">
+        <footer class="site-footer">
       <div class="container footer-inner footer-inner--min">
         <div class="footer-left">
           <div class="footer-meta">
-            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with Epic Games or Fortnite.</div>
+            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with Epic Games.</div>
           </div>
         </div>
         <div class="footer-links" aria-label="Footer links">
           <a class="footer-link" href="/about">About</a>
+          <a class="footer-link" href="https://www.epicgames.com/fortnite" rel="noopener noreferrer" target="_blank">Epic Games</a>
         </div>
       </div>
     </footer>

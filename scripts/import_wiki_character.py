@@ -14,6 +14,8 @@ import sys
 import urllib.parse
 from pathlib import Path
 
+from site_chrome import THEME_COLOR, footer_html, header_html
+
 BASE = "https://fortnite.fandom.com"
 API = f"{BASE}/api.php"
 UA = "Mozilla/5.0 (compatible; FortniteWikiLocalMirror/1.0)"
@@ -31,7 +33,7 @@ def api_parse(title: str) -> str:
     )
     url = f"{API}?{q}"
     proc = subprocess.run(
-        ["curl", "-sS", "-L", "-A", UA, "--max-time", "180", url],
+        ["curl", "-sS", "-L", "-A", UA, "--max-time", "45", url],
         capture_output=True,
         text=True,
     )
@@ -724,7 +726,7 @@ def import_character(
 
     wiki_breadcrumb_block = (
         '          <nav class="wiki-char-breadcrumb" aria-label="Breadcrumb">\n'
-        '            <a href="/characters">Characters</a>\n'
+        '            <a href="/characters">Outfits</a>\n'
         '            <span aria-hidden="true">/</span>\n'
         f'            <span>{display_label}</span>\n'
         '          </nav>\n'
@@ -733,7 +735,10 @@ def import_character(
 
     out_path = root / "characters" / slug / "index.html"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    body = TEMPLATE.format(
+    body = (
+        TEMPLATE.replace("__SITE_HEADER__", header_html())
+        .replace("__SITE_FOOTER__", footer_html())
+        .format(
         display=display_label,
         extra_head="",
         wiki_breadcrumb_block=wiki_breadcrumb_block,
@@ -743,6 +748,8 @@ def import_character(
         toc_bar=toc_bar,
         wiki_char_tabs=wiki_char_tabs,
         wiki_char_panels=wiki_char_panels,
+        theme_color=THEME_COLOR,
+    )
     )
     body = dedupe_toc_ids_in_full_page(body)
     out_path.write_text(body, encoding="utf-8")
@@ -761,36 +768,12 @@ TEMPLATE = """<!doctype html>
     <meta name="description" content="{display} — Fortnite Wiki Project" />
     <title>{display} • Fortnite Wiki Project</title>
     <link rel="stylesheet" href="/styles.css" />
-    <meta name="theme-color" content="#06070a" />
+    <meta name="theme-color" content="{theme_color}" />
 {extra_head}  </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
 
-    <header class="site-header">
-      <div class="container header-inner">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true">
-            <img class="brand-img" src="/assets/logo.png" alt="" loading="eager" decoding="async" />
-          </span>
-        </a>
-
-        <input class="menu-toggle" type="checkbox" id="menu-toggle" />
-        <label class="menu-button" for="menu-toggle" aria-label="Open navigation" role="button">
-          <span class="menu-button-lines" aria-hidden="true"><span></span></span>
-        </label>
-
-        <nav class="nav" aria-label="Primary">
-          <a href="/characters">Characters</a>
-          <a href="/episodes">Episodes</a>
-          <a href="/pages/content/year/2011/pilot-episodes/timeline">Timeline</a>
-          <a href="/weapons">Weapons</a>
-          <a href="/sets">Sets</a>
-          <a href="/media">Media</a>
-          <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
-          <a href="/all-pages">All Pages</a>
-        </nav>
-      </div>
-    </header>
+__SITE_HEADER__
 
     <main id="content" class="page wiki-char-page" data-wiki-char-tab="overview">
       <div class="wiki-char-hero wiki-char-hero--crumb-only">
@@ -837,18 +820,7 @@ TEMPLATE = """<!doctype html>
       </div>
     </div>
 
-    <footer class="site-footer">
-      <div class="container footer-inner footer-inner--min">
-        <div class="footer-left">
-          <div class="footer-meta">
-            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with LEGO or the official show.</div>
-          </div>
-        </div>
-        <div class="footer-links" aria-label="Footer links">
-          <a class="footer-link" href="/about">About</a>
-        </div>
-      </div>
-    </footer>
+__SITE_FOOTER__
 
     <script>
       (function () {{
