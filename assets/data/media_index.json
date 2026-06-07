@@ -7,12 +7,218 @@
       "title": "Fortnite Festival",
       "items": [
         {
+          "display": "Community Terminology",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/community-terminology",
+          "slug": "community-terminology",
+          "filter": "community terminology Community Terminology  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/5/52/Assault_Rifle_%28v11.00%29_-_Weapon_-_Fortnite.png/revision/latest/scale-to-width-down/30?cb=20210226220207"
+        },
+        {
+          "display": "Festival Battle Stage",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/festival-battle-stage",
+          "slug": "festival-battle-stage",
+          "filter": "festival battle stage Festival Battle Stage  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/a/a9/Festival_Battle_Stage_%28v35.10%29_-_Playlist_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20260327132114"
+        },
+        {
+          "display": "Festival Points",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/currency/festival-points",
+          "slug": "festival-points",
+          "filter": "festival points Festival Points  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/0/0a/Festival_Point_-_Icon_-_Fortnite_Festival.png/revision/latest?cb=20231217223554"
+        },
+        {
           "display": "Fortnite Festival",
           "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival",
           "slug": "fortnite-festival",
-          "filter": "fortnite festival Fortnite Festival",
+          "filter": "fortnite festival Fortnite Festival  gun weapon guns",
           "codes": [],
           "img": "https://static.wikia.nocookie.net/fortnite/images/2/22/Fortnite_Festival_-_Logo_-_Fortnite.png/revision/latest/scale-to-width-down/250?cb=20231221181425"
+        },
+        {
+          "display": "Fortnite Festival Season 1",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-1",
+          "slug": "fortnite-festival-season-1",
+          "filter": "fortnite festival season 1 Fortnite Festival Season 1  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/c2/Fortnite_Festival_%28The_Weekend%29_-_Promo_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20231202200118"
+        },
+        {
+          "display": "Fortnite Festival Season 2",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-2",
+          "slug": "fortnite-festival-season-2",
+          "filter": "fortnite festival season 2 Fortnite Festival Season 2  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/8/8b/Fortnite_Festival_%28Lady_Gaga%29_-_Promo_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20240221234848"
+        },
+        {
+          "display": "Fortnite Festival Season 3",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-3",
+          "slug": "fortnite-festival-season-3",
+          "filter": "fortnite festival season 3 Fortnite Festival Season 3  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/f/fa/Season_3_-_Promo_-_Fortnite_Festival.jpeg/revision/latest/scale-to-width-down/268?cb=20240423134204"
+        },
+        {
+          "display": "Fortnite Festival Season 4",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-4",
+          "slug": "fortnite-festival-season-4",
+          "filter": "fortnite festival season 4 Fortnite Festival Season 4  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/f/f2/Fortnite_Festival_%28Metallica%29_-_Promo_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20240614083528"
+        },
+        {
+          "display": "Fortnite Festival Season 5",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-5",
+          "slug": "fortnite-festival-season-5",
+          "filter": "fortnite festival season 5 Fortnite Festival Season 5  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/7/77/Season_5_-_Promo_-_Fortnite_Festival.jpg/revision/latest/scale-to-width-down/268?cb=20240815171843"
+        },
+        {
+          "display": "Fortnite Festival Season 6",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-6",
+          "slug": "fortnite-festival-season-6",
+          "filter": "fortnite festival season 6 Fortnite Festival Season 6  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/8/86/Season_6_-_Promo_-_Fortnite_Festival.jpg/revision/latest/scale-to-width-down/268?cb=20241102000732"
+        },
+        {
+          "display": "Fortnite Festival Season 7",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-7",
+          "slug": "fortnite-festival-season-7",
+          "filter": "fortnite festival season 7 Fortnite Festival Season 7  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/5/57/Season_7_-_Promo_-_Fortnite_Festival.jpg/revision/latest/scale-to-width-down/268?cb=20250113142613"
+        },
+        {
+          "display": "Fortnite Festival Season 8",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/fortnite-festival-season-8",
+          "slug": "fortnite-festival-season-8",
+          "filter": "fortnite festival season 8 Fortnite Festival Season 8  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/cc/Season_8_-_Promo_-_Fortnite_Festival.jpg/revision/latest/scale-to-width-down/268?cb=20250407160346"
+        },
+        {
+          "display": "Harmonix",
+          "href": "/pages/fortnite/fortnite-by-game-mode/fortnite-festival/harmonix",
+          "slug": "harmonix",
+          "filter": "harmonix Harmonix  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/5/5f/Harmonix_logo.png/revision/latest?cb=20231217151350"
+        },
+        {
+          "display": "Music Pass",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/music-pass",
+          "slug": "music-pass",
+          "filter": "music pass Music Pass  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/c6/Music_Pass_%28Season_7%29_-_Promo_-_Fortnite_Festival.png/revision/latest/scale-to-width-down/400?cb=20250113145729"
+        },
+        {
+          "display": "Quests",
+          "href": "/pages/fortnite/fortnite-by-game-mode/battle-royale/battle-pass/quests",
+          "slug": "quests",
+          "filter": "quests Quests  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/8/81/Quests_%28v39.00%29_-_User_Interface_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20251205213642"
+        }
+      ]
+    },
+    {
+      "id": "external-media",
+      "title": "External Media",
+      "items": [
+        {
+          "display": "2020 Panini Fortnite Series 2 Trading Cards",
+          "href": "/pages/fortnite/external-media/2020-panini-fortnite-series-2-trading-cards",
+          "slug": "2020-panini-fortnite-series-2-trading-cards",
+          "filter": "2020 panini fortnite series 2 trading cards 2020 Panini Fortnite Series 2 Trading Cards  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/a/a9/Fortnite_Panini_2020_-_Trading_Cards_-_Fortnite.jpeg/revision/latest?cb=20210106174017"
+        },
+        {
+          "display": "Batman/Fortnite: Foundation",
+          "href": "/pages/fortnite/rarity/dc-series/batmanfortnite-foundation",
+          "slug": "batmanfortnite-foundation",
+          "filter": "batman/fortnite: foundation Batman/Fortnite: Foundation  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/0/02/Batman_Fortnite_Foundation_-_Comic_-_Fortnite.jpeg/revision/latest/scale-to-width-down/268?cb=20211014093258"
+        },
+        {
+          "display": "Batman/Fortnite: Zero Point",
+          "href": "/pages/fortnite/rarity/dc-series/batmanfortnite-zero-point",
+          "slug": "batmanfortnite-zero-point",
+          "filter": "batman/fortnite: zero point Batman/Fortnite: Zero Point  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/e/e1/Batman-Fortnite_Zero_Point_Hard_Cover_-_Comic_-_Fortnite.jpg/revision/latest/scale-to-width-down/267?cb=20220612161707"
+        },
+        {
+          "display": "Fortnite X Marvel: Order Restored",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-order-restored",
+          "slug": "fortnite-x-marvel-order-restored",
+          "filter": "fortnite x marvel: order restored Fortnite X Marvel: Order Restored  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/a/a8/%3F%3F%3F_-_Mystery_Reward_-_Fortnite.png/revision/latest/scale-to-width-down/268?cb=20250424170202"
+        },
+        {
+          "display": "Fortnite X Marvel: Zero War",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-zero-war",
+          "slug": "fortnite-x-marvel-zero-war",
+          "filter": "fortnite x marvel: zero war Fortnite X Marvel: Zero War  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/ce/Marvel_Fortnite_Zero_War_-_Comic_-_Fortnite.jpeg/revision/latest/scale-to-width-down/268?cb=20220225172600"
+        },
+        {
+          "display": "Fortnite X Marvel: Zero War Issue 1",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-zero-war-issue-1",
+          "slug": "fortnite-x-marvel-zero-war-issue-1",
+          "filter": "fortnite x marvel: zero war issue 1 Fortnite X Marvel: Zero War Issue 1  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/ce/Marvel_Fortnite_Zero_War_-_Comic_-_Fortnite.jpeg/revision/latest/scale-to-width-down/268?cb=20220225172600"
+        },
+        {
+          "display": "Fortnite X Marvel: Zero War Issue 2",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-zero-war-issue-2",
+          "slug": "fortnite-x-marvel-zero-war-issue-2",
+          "filter": "fortnite x marvel: zero war issue 2 Fortnite X Marvel: Zero War Issue 2  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/c/cc/Fortnite_X_Marvel_Zero_War_2_-_Comic_-_Fortnite.jpeg/revision/latest/scale-to-width-down/268?cb=20220415182944"
+        },
+        {
+          "display": "Fortnite X Marvel: Zero War Issue 3",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-zero-war-issue-3",
+          "slug": "fortnite-x-marvel-zero-war-issue-3",
+          "filter": "fortnite x marvel: zero war issue 3 Fortnite X Marvel: Zero War Issue 3  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/8/8d/Fortnite_X_Marvel_Zero_War_3_-_Comic_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20220518183205"
+        },
+        {
+          "display": "Fortnite X Marvel: Zero War Issue 5",
+          "href": "/pages/fortnite/story-and-lore/comic/fortnite-x-marvel-zero-war-issue-5",
+          "slug": "fortnite-x-marvel-zero-war-issue-5",
+          "filter": "fortnite x marvel: zero war issue 5 Fortnite X Marvel: Zero War Issue 5  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/8/8b/Fortnite_X_Marvel_Zero_War_5_-_Comic_-_Fortnite.jpg/revision/latest/scale-to-width-down/268?cb=20220616151524"
+        },
+        {
+          "display": "Secret Lair Drop Series: Fortnite",
+          "href": "/pages/fortnite/collaborations/secret-lair-drop-series-fortnite",
+          "slug": "secret-lair-drop-series-fortnite",
+          "filter": "secret lair drop series: fortnite Secret Lair Drop Series: Fortnite  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/2/2a/Secret_Lair_x_Fortnite_-_Collaboration_-_Fortnite.webp/revision/latest/scale-to-width-down/268?cb=20220805050505"
+        },
+        {
+          "display": "Universal Monsters - We Will Be Monsters",
+          "href": "/pages/fortnite/story-and-lore/factions/the-last-reality/universal-monsters-we-will-be-monsters",
+          "slug": "universal-monsters-we-will-be-monsters",
+          "filter": "universal monsters - we will be monsters Universal Monsters - We Will Be Monsters  gun weapon guns",
+          "codes": [],
+          "img": "https://static.wikia.nocookie.net/fortnite/images/d/d8/Universal_Monsters_-_We_Will_Be_Monsters_-_Promo_-_Fortnite.jpeg/revision/latest/scale-to-width-down/268?cb=20220313103158"
         }
       ]
     }

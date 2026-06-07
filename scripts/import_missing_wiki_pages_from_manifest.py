@@ -67,17 +67,16 @@ def main() -> None:
         if not slug or not title:
             err += 1
             continue
-        print(f"[{ok + 1}/{len(missing)}] {title!r}", file=sys.stderr, flush=True)
+        print(f"[{i + 1}/{len(missing)}] {title!r}", file=sys.stderr, flush=True)
         t0 = time.time()
         try:
             cat = (row.get("categoryPath") or "").strip() or None
             import_wiki_page(title, slug=slug, category_path=cat, root=root, quiet=True)
             ok += 1
             elapsed = time.time() - t0
-            if elapsed > 8:
-                print(f"  (slow: {elapsed:.0f}s)", file=sys.stderr, flush=True)
-        except (OSError, RuntimeError, ValueError, FileNotFoundError, KeyError, TypeError) as e:
-            print(f"FAIL {slug!r} ({title!r}): {e}", file=sys.stderr, flush=True)
+            print(f"  OK ({elapsed:.1f}s)", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"[{i + 1}/{len(missing)}] FAIL {title!r}: {e}", file=sys.stderr, flush=True)
             err += 1
             continue
         if ok % 25 == 0:

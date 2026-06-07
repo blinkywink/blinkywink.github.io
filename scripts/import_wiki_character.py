@@ -787,11 +787,11 @@ __SITE_HEADER__
         <div class="container wiki-char-body">
 {toc_bar}
 {wiki_char_tabs}        <div class="wiki-char-article-rail">
-{hero_card}        <div class="wiki-char-layout wiki-char-layout--full">
+{hero_card}        </div>
+        <div class="wiki-char-layout wiki-char-layout--full">
           <article class="wiki-char-article">
 {wiki_char_panels}
           </article>
-        </div>
         </div>
         </div>
         </div>

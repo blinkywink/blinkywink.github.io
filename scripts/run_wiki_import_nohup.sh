@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Fast parallel wiki import — run from Terminal.app
+# Prefer: bash scripts/start_import_in_terminal.sh  (opens Terminal — survives Cursor closing)
+set -euo pipefail
+
 ROOT="/Users/evan/Downloads/fortnite-wiki-site"
 cd "$ROOT"
 LOG="$ROOT/fortnite-import.log"
@@ -11,35 +13,23 @@ if [[ -f "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
   exit 0
 fi
 
-echo "Starting parallel wiki import (4 workers)…"
+echo "Tip: for a long import, use: bash scripts/start_import_in_terminal.sh"
+echo "     (opens Terminal so the job is not killed when Cursor closes)"
+echo ""
+echo "Starting wiki import loop in background…"
 echo "Watch: tail -f \"$LOG\""
 echo ""
 
-(
-  echo $$ > "$PIDFILE"
-  trap 'rm -f "$PIDFILE"' EXIT
-  caffeinate -i -w $$ &
-  while true; do
-    left=$(python3 -c "
-import json
-from pathlib import Path
-def pp(r,row):
- h=(row.get('href') or '').strip()
- if h.startswith('/pages/'): return Path('.').joinpath('pages',*h[len('/pages/'):].strip('/').split('/'),'index.html')
- s=(row.get('slug') or '').strip()
- return Path('pages')/s/'index.html' if s else None
-rows=json.load(open('assets/data/wiki_pages.json')).get('pages') or []
-print(sum(1 for r in rows if (p:=pp('.',r)) and not p.is_file()))
-")
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $left pages left"
-    [[ "$left" -eq 0 ]] && break
-    python3 -u scripts/import_missing_wiki_pages_parallel.py --workers 4 --delay 0.02 || true
-    sleep 5
-  done
-  python3 scripts/build_site_routes.py --no-enrich-search
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] All wiki pages imported."
-) >> "$LOG" 2>&1 &
-
+nohup bash "$ROOT/scripts/fortnite_wiki_import_loop.sh" >> "$LOG" 2>&1 &
+echo $! > "$PIDFILE"
 disown -h $! 2>/dev/null || true
 sleep 2
-echo "Running in background. tail -f \"$LOG\""
+
+if kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+  echo "Running (PID $(cat "$PIDFILE")). tail -f \"$LOG\""
+else
+  echo "Background start failed (process died). Run:"
+  echo "  bash \"$ROOT/scripts/start_import_in_terminal.sh\""
+  rm -f "$PIDFILE"
+  exit 1
+fi

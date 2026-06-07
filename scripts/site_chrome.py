@@ -9,7 +9,7 @@ LOGO_SRC = "/assets/logo.png"
 NAV_LINKS = """
           <a href="/characters">Outfits</a>
           <a href="/episodes">Seasons</a>
-          <a href="/weapons">Items</a>
+          <a href="/weapons">Weapons</a>
           <a href="/sets">Cosmetics</a>
           <a href="/media">Media</a>
           <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>

@@ -31,7 +31,7 @@ REPLACEMENTS = [
     ("Search characters", "Search outfits"),
     ("Characters by category", "Outfits by category"),
     ('content="Characters — Fortnite Wiki Project"', 'content="Outfits — Fortnite Wiki Project"'),
-    ('<a href="/characters">Characters</a>', '<a href="/characters">Outfits</a>'),
+    ('<a href="/weapons">Items</a>', '<a href="/weapons">Weapons</a>'),
     ("Not affiliated with Epic Games or Fortnite.", "Not affiliated with Epic Games."),
     ("Not affiliated with LEGO or the official show.", "Not affiliated with Epic Games."),
     ("Fan-made Fortnite wiki. Not affiliated with Epic Games or Fortnite.", "Fan-made Fortnite wiki. Not affiliated with Epic Games."),

@@ -1607,6 +1607,28 @@ body::before{
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
+/* Desktop: two-column grid (prose | infobox) — avoids float overlap on long wiki pages */
+@media (min-width: 900px){
+  .wiki-char-body{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(320px, 36vw);
+    gap: 28px;
+    align-items: start;
+  }
+  .wiki-char-article-rail{
+    grid-column: 2;
+    grid-row: 1;
+    z-index: 2;
+    isolation: isolate;
+  }
+  .wiki-char-layout{
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+}
 /* Float card (PC): right rail, no inner scroll — moves with page scroll */
 .wiki-char-article-rail{
   display: flow-root;
@@ -1617,10 +1639,12 @@ body::before{
 }
 @media (min-width: 900px){
   .wiki-char-hero-card.wiki-import{
-    float: right;
-    width: min(320px, 36vw);
-    max-width: 100%;
-    margin: 0 0 20px 28px;
+    float: none;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    position: sticky;
+    top: calc(var(--header-h) + 12px);
   }
   .wiki-char-hero-card.wiki-import aside.portable-infobox{
     float: none !important;
@@ -2195,7 +2219,7 @@ body::before{
 @media (min-width: 900px){
   .wiki-char-overview-prose details.wiki-char-msection,
   .wiki-char-msection-prose details.wiki-char-msection{
-    display: contents;
+    display: block;
   }
   .wiki-char-overview-prose details.wiki-char-msection > summary,
   .wiki-char-msection-prose details.wiki-char-msection > summary{
@@ -2203,7 +2227,8 @@ body::before{
   }
   .wiki-char-overview-prose details.wiki-char-msection > .wiki-char-msection-body,
   .wiki-char-msection-prose details.wiki-char-msection > .wiki-char-msection-body{
-    display: contents;
+    display: block;
+    min-width: 0;
   }
 }
 @media (max-width: 899px){
@@ -3547,6 +3572,18 @@ a.char-group-title-link:hover{
 .wiki-import .mw-editsection{
   display: none !important;
 }
+.wiki-import .history-scrollbox{
+  box-sizing: border-box;
+  max-height: min(500px, 70vh) !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
 .wiki-import h2,
 .wiki-import h3,
 .wiki-import h4{
@@ -3817,6 +3854,8 @@ a.char-group-title-link:hover{
 .wiki-import .wikia-gallery:has(.wiki-video-embed) .wikia-gallery-item{
   width: 100% !important;
   max-width: none;
+  isolation: isolate;
+  contain: layout;
 }
 .wiki-import .wikia-gallery:has(a.image.video) .thumb,
 .wiki-import .wikia-gallery:has(.wiki-video-embed) .thumb{
@@ -3963,6 +4002,28 @@ a.char-group-title-link:hover{
   margin: 0;
   flex-basis: 0;
   min-height: 0;
+}
+
+/* Fandom season nav / collapsible tables at page bottom */
+.wiki-import table.inter{
+  clear: both;
+  width: 100%;
+  max-width: 100%;
+  margin: 28px 0;
+  border-collapse: collapse;
+}
+.wiki-import table.inter .wikia-gallery{
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px 8px;
+  margin: 10px 0 4px;
+}
+.wiki-import table.inter td{
+  vertical-align: top;
+  padding: 10px 6px;
+}
+.wiki-import table.inter th{
+  text-align: center;
+  padding: 12px 8px;
 }
 
 /* Fandom portable infobox — layout + dark theme (wiki CSS not loaded) */
@@ -4167,6 +4228,15 @@ a.char-group-title-link:hover{
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   color: var(--text);
   overflow: hidden;
+}
+/* In-article infoboxes on wiki/character pages: block layout (hero card is already in the rail) */
+.wiki-char-page .wiki-char-overview-prose > aside.portable-infobox,
+.wiki-char-page .wiki-char-msection-body > aside.portable-infobox{
+  float: none;
+  clear: both;
+  width: min(100%, 380px);
+  max-width: 100%;
+  margin: 16px auto 22px;
 }
 /* Horizontal infobox tables: overflow:hidden on aside clips tall / wide cells */
 .wiki-import aside.portable-infobox:has(table.pi-horizontal-group){

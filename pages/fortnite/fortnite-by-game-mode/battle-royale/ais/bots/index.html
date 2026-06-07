@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Fandom CDN returns 404 for hotlinked images when Referer is not fandom.com -->
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Bots — Fortnite Wiki Project" />
+    <title>Bots • Fortnite Wiki Project</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <meta name="theme-color" content="#12081c" />
+    <meta name="wiki-page-title" content="Bots" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+        <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">
+            <img class="brand-img" src="/assets/logo.png" alt="Fortnite Wiki Project" loading="eager" decoding="async" />
+          </span>
+          <span class="brand-text">Wiki</span>
+        </a>
+
+        <input class="menu-toggle" type="checkbox" id="menu-toggle" />
+        <label class="menu-button" for="menu-toggle" aria-label="Open navigation" role="button">
+          <span class="menu-button-lines" aria-hidden="true">
+            <span></span>
+          </span>
+        </label>
+
+        <nav class="nav" aria-label="Primary">
+
+          <a href="/characters">Outfits</a>
+          <a href="/episodes">Seasons</a>
+          <a href="/weapons">Weapons</a>
+          <a href="/sets">Cosmetics</a>
+          <a href="/media">Media</a>
+          <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
+          <a href="/all-pages">All Pages</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="page wiki-char-page" data-wiki-char-tab="overview">
+      <div class="wiki-char-hero wiki-char-hero--crumb-only">
+        <div class="container wiki-char-hero-inner">
+          <nav class="wiki-char-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span aria-hidden="true">/</span>
+            <a href="/all-pages">Fortnite</a>
+            <span aria-hidden="true">/</span>
+            <a href="/all-pages#fortnite-by-game-mode">Fortnite by Game Mode</a>
+            <span aria-hidden="true">/</span>
+            <a href="/all-pages#fortnite-by-game-mode/battle-royale">Battle Royale</a>
+            <span aria-hidden="true">/</span>
+            <a href="/all-pages#fortnite-by-game-mode/battle-royale/ais">AIs</a>
+            <span aria-hidden="true">/</span>
+            <span>Bots</span>
+          </nav>
+          <h1 class="visually-hidden">Bots</h1>
+        </div>
+      </div>
+
+      <div class="wiki-char-content-split wiki-char-content-split--with-toc">
+        <aside class="wiki-char-toc-sidebar" aria-label="Article contents">
+          <div class="wiki-char-toc-sidebar-viewport" id="wiki-char-toc-sidebar-viewport">
+            <div class="wiki-char-toc-sidebar-slide" id="wiki-char-toc-sidebar-slide">
+              <div class="wiki-char-toc-sidebar-main" id="wiki-char-toc-sidebar-main">
+                <button type="button" class="wiki-char-toc-sidebar-hide" id="wiki-char-toc-sidebar-hide" aria-expanded="true" aria-controls="wiki-char-toc-sidebar-slide" title="Hide contents column">
+                  <svg class="wiki-char-toc-chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+                </button>
+                <div class="wiki-char-toc-panels">
+                <div class="wiki-char-toc-panel" data-wiki-toc-tab="overview">
+                  <div class="wiki-char-toc-mount wiki-import mw-parser-output">
+                  <div id="toc-0" class="toc" role="navigation" aria-labelledby="mw-toc-heading-0"><input type="checkbox" role="button" id="toctogglecheckbox-0" class="toctogglecheckbox" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading-0">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox-0"></label></span></div>
+                  <ul>
+                  <li class="toclevel-1 tocsection-1"><a href="#Functionality"><span class="tocnumber">1</span> <span class="toctext">Functionality</span></a></li>
+                  <li class="toclevel-1 tocsection-2"><a href="#Cosmetics"><span class="tocnumber">2</span> <span class="toctext">Cosmetics</span></a></li>
+                  <li class="toclevel-1 tocsection-3"><a href="#Limited_Time_Offers_Cosmetics"><span class="tocnumber">3</span> <span class="toctext">Limited Time Offers Cosmetics</span></a></li>
+                  <li class="toclevel-1 tocsection-4"><a href="#Username_List"><span class="tocnumber">4</span> <span class="toctext">Username List</span></a></li>
+                  <li class="toclevel-1 tocsection-5"><a href="#Strategy_Guide"><span class="tocnumber">5</span> <span class="toctext">Strategy Guide</span></a></li>
+                  <li class="toclevel-1 tocsection-6"><a href="#Trivia"><span class="tocnumber">6</span> <span class="toctext">Trivia</span></a>
+                  <ul>
+                  <li class="toclevel-2 tocsection-7"><a href="#Username_Trivia"><span class="tocnumber">6.1</span> <span class="toctext">Username Trivia</span></a></li>
+                  </ul>
+                  </li>
+                  </ul>
+                  </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+              <button type="button" class="wiki-char-toc-sidebar-reveal" id="wiki-char-toc-sidebar-reveal" aria-expanded="false" aria-controls="wiki-char-toc-sidebar-slide" hidden title="Show contents column">
+                <svg class="wiki-char-toc-chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+        <div class="wiki-char-main-wrap">
+        <div class="container wiki-char-body">
+
+        <div class="wiki-char-article-rail">
+        </div>
+        <div class="wiki-char-layout wiki-char-layout--full">
+          <article class="wiki-char-article">
+            <section id="panel-overview" class="wiki-char-panel" role="region" aria-label="Overview">
+              <h2 class="wiki-char-h2 visually-hidden">Overview</h2>
+              <div class="wiki-char-overview-prose wiki-char-msection-prose wiki-import mw-parser-output">
+                <p><br />
+                <b>Bots</b> are <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/ais/ais" title="AIs">AIs</a> that are used in place of a human player in <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/fortnite-battle-royale" title="Fortnite: Battle Royale">Fortnite: Battle Royale</a>. Players could also spawn friendly or hostile bots in <a href="/pages/fortnite/fortnite-by-game-mode/game-modes/battle-lab" title="Battle Lab">Battle Lab</a> prior to its removal. Bots were introduced in <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-2/chapter-2-season-1" title="Chapter 2: Season 1">Chapter 2: Season 1</a> with Skill Based Matchmaking.
+                </p><p>In <a href="/pages/fortnite/fortnite-by-game-mode/creative/fortnite-creative" title="Fortnite: Creative">Fortnite: Creative</a>, Bots are known as <b>Target Bots</b>, which can be added onto a creator's custom made Battle Royale island using <a href="/pages/fortnite/fortnite-by-game-mode/creative/creative-royale" title="Creative Royale">Creative Royale</a>.
+                </p>
+
+
+                <details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Functionality</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Functionality">Functionality</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D1&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <p>Bots have abilities that are similar to a low skilled player. They will pick up weapons and items, and harvest materials.  However, their actions will make them identifiable as Bots, such as usually inaccurate aim, but immense detection range as they can start shooting at you from very far away so long as they have direct line of sight. Their usernames are fixed depending on the region, often having two words followed by a 1 or 2 digit number, such as the name "BellyFlop40". Many of their names also consist of obvious jokes or references, such as the name "AthenaOrApollo" or "90sRunner". The nature of bot names being fixed makes it possible for players to immediately discern if someone is a bot or not simply off the name alone.
+                </p><p>Bots will not perform the following actions: 
+                </p>
+                <ul><li>Interacting with <a href="https://fortnite.fandom.com/wiki/Characters" class="mw-redirect" title="Characters">Characters</a> or <a href="https://fortnite.fandom.com/wiki/Vending_Machine" class="mw-redirect" title="Vending Machine">Vending Machines</a></li>
+                <li>Use <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/items-battle-royale/item-types-battle-royale/vehicles" title="Vehicles">Vehicles</a> or ride on another player's Vehicle.</li>
+                <li>Building with Brick or Metal, unless they run out of wood.</li>
+                <li>Use a very specific list of items.</li>
+                <li><a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/fishing" title="Fishing">Fishing</a></li>
+                <li>Plant and grow Reality Saplings.</li>
+                <li>Riding <a href="https://fortnite.fandom.com/wiki/Wildlife" class="mw-redirect" title="Wildlife">Wildlife</a> (They may accidentally jump on an Animal, though will very quickly jump off if this happens).</li>
+                <li>Use <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/rebooting" title="Rebooting">Reboot Vans</a>.</li>
+                <li>Pickup or <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/shakedown" title="Shakedown">Shakedown</a> downed players.</li>
+                <li>Bots with outfits with the Golden Touch ability, such as <a href="/characters/midas" title="Midas">Midas</a> or <a href="/characters/marigold" title="Marigold">Marigold</a>, will not turn their weapons gold.<br /></li></ul>
+                <p>In standard team modes, Bots will team up only with other Bots and never team up with human players. They can however team up with real players in large team modes such as <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/limited-time-modes/og-50v50" title="OG 50v50">OG 50v50</a> and <a href="/pages/fortnite/fortnite-by-game-mode/game-modes/respawn-rumble" title="Respawn Rumble">Respawn Rumble</a>.
+                </p><p>As a result of their low skilled gameplay, It is nearly impossible for bots or bot teams to earn a <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/victory-royale" title="Victory Royale">Victory Royale</a>.
+                </p><p>Bots are most commonly found when matchmaking on or with a user who is on Mobile, Nintendo Switch or Nintendo Switch 2, as the game considers them low skilled and fills lobbies with excess Bots, to compensate the poorer performance and harder controls on those platforms. In times where a server may experience low player counts, such as the overnight hours (Midnight to 5 AM local time), can have matches filled with more Bots than usual. 
+                </p><p><a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/skill-based-matchmaking" title="Skill Based Matchmaking">Skill Based Matchmaking</a> will put new and low skilled players on lobbies filled with bots (about half or more of the lobby are bots). As players improve their skill, the following matches there will be less bots spawned. In Squads, Skill Based Matchmaking does not take effect, so players will be in lobbies with bots regardless of skill level.
+                </p><p>Bots are never found in <a href="/pages/fortnite/fortnite-by-game-mode/game-modes/team-rumble" title="Team Rumble">Team Rumble</a> or <a href="/pages/fortnite/fortnite-by-game-mode/creative/fortnite-creative" title="Fortnite: Creative">Creative</a> matches.
+                </p><p>Bots will not give WinEffects when they are the last player eliminated in the game
+                </p><p>Before <a href="/pages/fortnite/fortnite-by-game-mode/game-modes/battle-lab" title="Battle Lab">Battle Lab</a> was removed, players could spawn bots for training purposes using Friendly and Enemy <a href="https://fortnite.fandom.com/wiki/Bot_Grenades" class="mw-disambig" title="Bot Grenades">Bot Grenades</a>. These bots would act very similar to bots found in normal Battle Royale playlists, but would only use <a href="/characters/recruits" title="Recruits">Recruit Outfits</a>. They appeared to have more accurate aim than regular Bots. When playing a public Battle Lab, about 20 or more Bots could spawn. Battle Lab Bots had a different set of usernames, using the name of the Recruit Outfit and a three digit number.
+                </p><p>As of Chapter 7: Season 1 onwards, bots are slightly more aggressive, having slightly better aim, sprinting more, moving in zigzags during combat, building 2x1s, crawling backwards and rolling away from players or other bots whilst knocked, and being able to use Grenades and Shockwave Grenades, although they will throw the Shockwave Grenades as if they were a normal grenade, and not for mobility like most players.
+                </p>
+
+                </div>
+                </details><details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Cosmetics</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Cosmetics">Cosmetics</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D2&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <p>Bots will use a set number of <a href="/pages/fortnite/cosmetics/cosmetic-items" title="Cosmetic Items">cosmetics</a>, ranging from <a href="https://fortnite.fandom.com/wiki/Recruit_Outfits" class="mw-redirect" title="Recruit Outfits">Recruit Outfits</a> to even in rare occasions <a href="/pages/fortnite/availability/unreleased-content/unreleased-cosmetics/unreleased-cosmetics" title="Unreleased Cosmetics">Unreleased Cosmetics</a>. This choice of cosmetics is weighted, changing nearly every season, usually it favors new cosmetics, however it sometimes is set to favor skins relevant to the current season, such as <a href="/characters/tony-stark" title="Tony Stark">Tony Stark</a> during <a href="/pages/fortnite/cosmetics/battle-pass-cosmetics/absolute-doom" title="Absolute Doom">Absolute Doom</a>, or <a href="/characters/the-visitor-reality-unknown" title="The Visitor (Reality Unknown)">Visitor (Reality Unknown)</a> during <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-7/chapter-7-season-1" title="Chapter 7: Season 1">Pacific Break</a>. Typically, bots do not wear cosmetics released in the current season until a later update in the same season, or the next season. Bots may use the cosmetics from the same set or from a different set. 
+                </p><p>Bots do not apply <a href="/pages/fortnite/cosmetics/wraps/wraps" title="Wraps">Wraps</a> on their weapons. Bots will typically only perform <a href="/pages/fortnite/cosmetics/battle-pass-cosmetics/emotes" title="Emotes">Emotes</a> on <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/locations-battle-royale/spawn-island" title="Spawn Island">Spawn Island</a>, though they can also randomly emote when their AI is "confused", or when they get an elimination.
+                </p><p><i>As of Chapter 7: Season 2 (v40.20)</i>
+                </p>
+                <table class="fandom-table" width="100%">
+                <tbody><tr>
+                <th>Type
+                </th>
+                <th>Description
+                </th>
+                <th>Notes
+                </th></tr>
+                <tr>
+                <td><a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/battle-pass" title="Battle Pass">Battle Pass</a> Cosmetics<figure class="mw-halign-center" typeof="mw:File/Frameless"><a href="https://static.wikia.nocookie.net/fortnite/images/f/f0/Battle_Pass_-_Icon_-_Fortnite.png/revision/latest?cb=20210205172909" class="mw-file-description image"><img alt="Battle Pass - Icon - Fortnite" src="https://static.wikia.nocookie.net/fortnite/images/f/f0/Battle_Pass_-_Icon_-_Fortnite.png/revision/latest/scale-to-width-down/210?cb=20210205172909" decoding="async" loading="lazy" width="210" height="210" class="mw-file-element" data-image-name="Battle Pass - Icon - Fortnite.png" data-image-key="Battle_Pass_-_Icon_-_Fortnite.png" data-relevant="1" /></a><figcaption></figcaption></figure>
+                </td>
+                <td>Bots can use any Battle Pass cosmetics from <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-1/season-2" title="Season 2">Season 2</a> to <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-7/chapter-7-season-1" title="Chapter 7: Season 1">Chapter 7: Season 1</a>.
+                <p>These include <a href="/characters/outfits" title="Outfits">Outfits</a>, <a href="/pages/fortnite/cosmetics/back-blings/back-blings" title="Back Blings">Backblings</a>, <a href="/pages/fortnite/cosmetics/battle-pass-cosmetics/emotes" title="Emotes">Emotes</a>, and <a href="/pages/fortnite/cosmetics/gliders/gliders" title="Gliders">Gliders</a>. 
+                </p>
+                </td>
+                <td>Cosmetics from <a href="/pages/fortnite/collaborations/collaboration-cosmetics/collaborations" title="Collaborations">Collaborations</a> such as those from the <a href="https://fortnite.fandom.com/wiki/Category:Marvel_Series" title="Category:Marvel Series"><span class="rarity-text-bg marvel-series-tbg"><span class="rarity-text marvel-series-text">Marvel Series</span></span>and</a> <a href="https://fortnite.fandom.com/wiki/Category:DC_Series" title="Category:DC Series"><span class="rarity-text-bg dc-series-tbg"><span class="rarity-text dc-series-text">DC Series</span></span></a> can also be used by Bots.
+                </td></tr>
+                <tr>
+                <td><a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/gameplay-battle-royale/item-shop" title="Item Shop">Item Shop</a> Cosmetics<figure class="mw-halign-center" typeof="mw:File/Frameless"><a href="https://static.wikia.nocookie.net/fortnite/images/1/1d/Item_Shop_Mannequin_-_Device_-_Fortnite.png/revision/latest?cb=20220221200005" class="mw-file-description image"><img alt="Item Shop Mannequin - Device - Fortnite" src="https://static.wikia.nocookie.net/fortnite/images/1/1d/Item_Shop_Mannequin_-_Device_-_Fortnite.png/revision/latest/scale-to-width-down/210?cb=20220221200005" decoding="async" loading="lazy" width="210" height="210" class="mw-file-element" data-image-name="Item Shop Mannequin - Device - Fortnite.png" data-image-key="Item_Shop_Mannequin_-_Device_-_Fortnite.png" data-relevant="1" /></a><figcaption></figcaption></figure>
+                </td>
+                <td>Most items that can be purchased in the Item Shop are currently usable by Bots.
+                <p>These include <a href="/characters/outfits" title="Outfits">Outfits</a>, <a href="/pages/fortnite/cosmetics/back-blings/back-blings" title="Back Blings">Backblings</a>, <a href="/pages/fortnite/cosmetics/battle-pass-cosmetics/emotes" title="Emotes">Emotes</a>, and <a href="/pages/fortnite/cosmetics/gliders/gliders" title="Gliders">Gliders</a>.  
+                </p>
+                </td>
+                <td>Most <a href="/pages/fortnite/collaborations/collaboration-cosmetics/collaborations" title="Collaborations">Collaborations</a> cosmetics from the Item Shop can be currently used by Bots.
+                </td></tr>
+                <tr>
+                <td>
+
+                </div>
+                </details><details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Limited Time Offers Cosmetics</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Limited_Time_Offers_Cosmetics"><a href="/pages/fortnite/collaborations/limited-time-offers/limited-time-offers" title="Limited Time Offers">Limited Time Offers</a> Cosmetics</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D3&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <figure class="mw-halign-center" typeof="mw:File/Frameless"><a href="https://static.wikia.nocookie.net/fortnite/images/f/f8/Bundle_-_Icon_-_Fortnite.png/revision/latest?cb=20241126161439" class="mw-file-description image"><img alt="Bundle - Icon - Fortnite" src="https://static.wikia.nocookie.net/fortnite/images/f/f8/Bundle_-_Icon_-_Fortnite.png/revision/latest/scale-to-width-down/210?cb=20241126161439" decoding="async" loading="lazy" width="210" height="210" class="mw-file-element" data-image-name="Bundle - Icon - Fortnite.png" data-image-key="Bundle_-_Icon_-_Fortnite.png" data-relevant="0" /></a><figcaption></figcaption></figure>
+                </td>
+                <td>Most <a href="/pages/fortnite/collaborations/limited-time-offers/limited-time-offers" title="Limited Time Offers">Limited Time Offer Bundles</a> from past seasons are currently usable by Bots.
+                <p>These include <a href="/characters/outfits" title="Outfits">Outfits</a> and <a href="/pages/fortnite/cosmetics/back-blings/back-blings" title="Back Blings">Backblings</a> from their respective bundle.
+                </p>
+                </td>
+                <td>
+                </td></tr>
+                <tr>
+                <td><a href="/pages/fortnite/fortnite-crew/fortnite-crew" title="Fortnite Crew">Fortnite Crew</a> Cosmetics
+                <p><span typeof="mw:File/Frameless"><a href="https://static.wikia.nocookie.net/fortnite/images/a/a0/Fortnite_Crew_-_Icon_-_Fortnite.png/revision/latest?cb=20250810144046" class="mw-file-description image"><img alt="Fortnite Crew - Icon - Fortnite" src="https://static.wikia.nocookie.net/fortnite/images/a/a0/Fortnite_Crew_-_Icon_-_Fortnite.png/revision/latest/scale-to-width-down/210?cb=20250810144046" decoding="async" loading="lazy" width="210" height="210" class="mw-file-element " data-image-name="Fortnite Crew - Icon - Fortnite.png" data-image-key="Fortnite_Crew_-_Icon_-_Fortnite.png" data-relevant="1" /></a></span>
+                </p>
+                </td>
+                <td>Most Cosmetics from Fortnite Crew Packs can be used by bots.
+                </td></tr></tbody></table>
+
+                </div>
+                </details><details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Username List</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Username_List">Username List</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D4&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <p>The following are just some of the names usable by bots.
+                </p>
+                <table class="mw-collapsible mw-collapsed">
+                <caption><b>List of Bot Usernames</b>
+                </caption>
+                <tbody><tr>
+                <td>90cranker7
+                </td>
+                <td>ColonelChugJug
+                </td>
+                <td>Gatordile81
+                </td>
+                <td>JonseyForever35
+                </td>
+                <td>PositiveFeels
+                </td>
+                <td>TimeToGo80
+                </td>
+                <td>QueenBeet74
+                </td></tr>
+                <tr>
+                <td>AimLikeIdaho
+                </td>
+                <td>CrazyPea96
+                </td>
+                <td>GetItGotItGood
+                </td>
+                <td>JustABitEpic
+                </td>
+                <td>PrancingPwnee
+                </td>
+                <td>TooManyBeets
+                </td>
+                <td>MintElephant26
+                </td></tr>
+                <tr>
+                <td>AngryDuck51
+                </td>
+                <td>CrepeSalad
+                </td>
+                <td>GhostChicken12
+                </td>
+                <td>KittyCat80
+                </td>
+                <td>PrinceWombat
+                </td>
+                <td>WalkInThePark66
+                </td>
+                <td>BliceCake
+                </td></tr>
+                <tr>
+                <td>AthenaOrApollo
+                </td>
+                <td>DoctorLobby92
+                </td>
+                <td>Gooddoggo80
+                </td>
+                <td>Kregore73
+                </td>
+                <td>SergentSummer
+                </td>
+                <td>WildCactusBob
+                </td>
+                <td>Brauny Banana
+                </td></tr>
+                <tr>
+                <td>AtTheBeach321
+                </td>
+                <td>DoubleDaring
+                </td>
+                <td>Goosezilla13
+                </td>
+                <td>LetsBePals23
+                </td>
+                <td>ShadowArrow58
+                </td>
+                <td>Wondertail
+                </td>
+                <td>SoggyCookie26
+                </td></tr>
+                <tr>
+                <td>BagelBoy82
+                </td>
+                <td>DoubleDuel75
+                </td>
+                <td>Grandma40
+                </td>
+                <td>LewtGoblin7
+                </td>
+                <td>Shepard52
+                </td>
+                <td>Yeetman57
+                </td>
+                <td>AboveMule633
+                </td></tr>
+                <tr>
+                <td>BellyFlop40
+                </td>
+                <td>DoubleRainbow96
+                </td>
+                <td>HashtagToad57
+                </td>
+                <td>McCucumber71
+                </td>
+                <td>ShieldHorse63
+                </td>
+                <td>Beebitme
+                </td>
+                <td>PurpleCrayon85
+                </td></tr>
+                <tr>
+                <td>Blackjack31
+                </td>
+                <td>DrPlanet
+                </td>
+                <td>HeliumHog
+                </td>
+                <td>Meshuncle
+                </td>
+                <td>ShootyMcGee40
+                </td>
+                <td>SweetPenguin16
+                </td>
+                <td>SpiffyPowder6866
+                </td></tr>
+                <tr>
+                <td>BlinkImGone44
+                </td>
+                <td>DrumGunnar
+                </td>
+                <td>HeyThereFriend81
+                </td>
+                <td>Mouthful95
+                </td>
+                <td>SilverySilver
+                </td>
+                <td>PortableOx
+                </td>
+                <td>LootTrooper51
+                </td></tr>
+                <tr>
+                <td>BoatingIsLife
+                </td>
+                <td>ElPollo85
+                </td>
+                <td>Hoodwinked12
+                </td>
+                <td>N0nDa1ry
+                </td>
+                <td>SirTricksALot21
+                </td>
+                <td>A Sweaty Dog
+                </td>
+                <td>LousyCentaur
+                </td></tr>
+                <tr>
+                <td>BoldPrediction
+                </td>
+                <td>FlavorCaptain
+                </td>
+                <td>HotelBlankets
+                </td>
+                <td>NotAPalidome
+                </td>
+                <td>SteelGoose18
+                </td>
+                <td>&amp;darkBeast&amp;
+                </td>
+                <td>
+                </td></tr>
+                <tr>
+                <td>BrainInvader
+                </td>
+                <td>FlimsyGoat
+                </td>
+                <td>HowAreMy90s
+                </td>
+                <td>Number141
+                </td>
+                <td>TAgYOuRIt9
+                </td>
+                <td>BobDobaleena
+                </td>
+                <td>
+                </td></tr>
+                <tr>
+                <td>CactusDad80
+                </td>
+                <td>FlossPatrol82
+                </td>
+                <td>iHazHighGround
+                </td>
+                <td>ParanoidCactus
+                </td>
+                <td>ThermalDragon39
+                </td>
+                <td>OldWaterBottle28
+                </td>
+                <td>
+                </td></tr></tbody></table>
+
+                </div>
+                </details><details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Strategy Guide</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Strategy_Guide">Strategy Guide</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D5&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <div class="">
+                <table class="noticebox" style="background: #6764d7; width: 95%; ;">
+                <tbody><tr>
+                <td rowspan="2" class="noticebox-left-img no-drag mobile-icon"><span typeof="mw:File"><span><img alt="Calculated - Emote - Fortnite" src="https://static.wikia.nocookie.net/fortnite/images/8/8c/Calculated_-_Emote_-_Fortnite.png/revision/latest/scale-to-width-down/50?cb=20180713163852" decoding="async" loading="lazy" width="50" height="50" class="mw-file-element " data-image-name="Calculated - Emote - Fortnite.png" data-image-key="Calculated_-_Emote_-_Fortnite.png" data-relevant="1" /></span></span>
+                </td>
+                <td class="noticebox-header" style="text-shadow: 1px 1px 0 #575e75; color:#f0f1f4;">This section outlines a strategy.
+                </td></tr>
+                <tr>
+                <td class="noticebox-bottom" style="background: #afadd9;"><span style="color:#6764d7;">Feel free to add tips, tricks and general advice about the topic.</span>
+                </td></tr></tbody></table></div>
+                <ul><li>It's very easy to eliminate bots. However you should avoid trying to eliminate them using a <a href="/pages/fortnite/cosmetics/pickaxes/pickaxes" title="Pickaxes">Pickaxe</a> if they have a weapon, as their accuracy greatly increases the closer you are to them.</li>
+                <li>You may not get good loot from eliminated Bots, though they usually have plenty of <a href="/pages/fortnite/fortnite-by-game-mode/save-the-world/gameplay-save-the-world/items-save-the-world/resources-save-the-world/materials" class="mw-disambig" title="Materials">Materials</a> and <a href="/pages/fortnite/game-mechanics/items/available-items-battle-royale/ammunition" title="Ammunition">Ammunition</a>.</li>
+                <li>In Chapter 3, Season 2, a change was made that makes it impossible to obtain a Victory Crown from winning a game in a <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/community-terminology" title="Community Terminology">Bot Lobby</a>, and if you already have a crown, winning a game will not count towards your Crowned Victory Royale.</li>
+                <li>Bots can shoot at you from long range (50m+). Even if they miss their shots, they can distract you and your team.</li>
+                <li>From Chapter 7: Season 1 onwards, bots are more aggressive, so it is recommended you shoot them far away with a long range weapon like the Deadeye Assault Rifle, Enforcer AR, Holo Rush SMG or Vengeful Sniper Rifle.</li></ul>
+
+                </div>
+                </details><details class="wiki-char-msection">
+                <summary class="wiki-char-msection-sum">Trivia</summary>
+                <div class="wiki-char-msection-body">
+                <h2><span class="mw-headline" id="Trivia">Trivia</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D6&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h2>
+                <ul><li>Abandoned <a href="/pages/fortnite/game-mechanics/items/removed-items/tent" title="Tent">Tents</a> use the same set of usernames as Bots.</li>
+                <li>Bot players have a <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/seasons/passes/battle-pass" title="Battle Pass">Battle Pass</a> level, which is visible in the Elimination Feed and <a href="/pages/fortnite/gameplay/replay-client" title="Replay Client">Replay Client</a>.</li>
+                <li>Unlike other multiplayer games with computer players/bots, players cannot configure the amount of bots or their difficulty for a match.</li>
+                <li>Whilst bots do use the ammo in their inventories, when they run out they will continue reloading their gun as if they still had ammo.</li></ul>
+                <h3><span class="mw-headline" id="Username_Trivia">Username Trivia</span><span class="mw-editsection"><span class="mw-editsection-bracket">[</span><a title="Sign in to edit" class="mw-editsection-visualeditor" data-tracking-label="log-in-edit-section" data-action="edit-section" href="https://auth.fandom.com/signin?redirect=https%3A%2F%2Ffortnite.fandom.com%2Fwiki%2FBots%3Fveaction%3Dedit%26section%3D7&amp;uselang=en&amp;metadata=article-registration-edit-article-section" data-testid="log-in-edit-section" aria-label="Sign in to edit"><svg class="wds-icon wds-icon-tiny" aria-hidden="true" focusable="false"><use xlink:href="#wds-icons-pencil-tiny"></use></svg></a><span class="mw-editsection-bracket">]</span></span></h3>
+                <p>Some Bot usernames are a reference to <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/community-terminology" title="Community Terminology">popular terms by the community</a>. 
+                </p>
+                <ul><li>'AthenaOrApollo' is a reference to the <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-1/athena/athena" title="Athena">Athena</a> and <a href="/pages/fortnite/fortnite-by-game-mode/battle-royale/chapters/chapter-2/apollo/apollo" title="Apollo">Apollo</a> islands, the setting of Battle Royale Chapter 1 and Chapter 2, respectively.</li>
+                <li>'90cranker' and 'HowAreMy90s' are a reference to a popular building technique where a player gains quick vertical height, and offer substantial protection.</li>
+                <li>Bots have different names depending on the region the player is playing on, some have more names than others, North America has 987, Oceania has 910, Middle East has 922, Europe has 1444, South America has 988, Asia has 910, and the former China version of the game has 5100.</li>
+                <li>Fortnite China used to have 102,478 different bot names, it is unknown when this was reduced however.</li></ul>
+                </div>
+                </details>
+              </div>
+            </section>
+          </article>
+        </div>
+        </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="wiki-lightbox" class="wiki-lightbox" hidden>
+      <div class="wiki-lightbox-backdrop" tabindex="-1" aria-hidden="true"></div>
+      <div class="wiki-lightbox-layout" role="dialog" aria-modal="true" aria-label="Media viewer">
+        <header class="wiki-lightbox-top">
+          <button type="button" class="wiki-lightbox-close" aria-label="Close">&times;</button>
+        </header>
+        <div class="wiki-lightbox-main">
+          <button type="button" class="wiki-lightbox-nav wiki-lightbox-prev" aria-label="Previous">&#8249;</button>
+          <div class="wiki-lightbox-viewport">
+            <img class="wiki-lightbox-img" alt="" decoding="async" />
+            <div class="wiki-lightbox-video" hidden>
+              <iframe class="wiki-lightbox-iframe" title="YouTube video" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+            </div>
+          </div>
+          <button type="button" class="wiki-lightbox-nav wiki-lightbox-next" aria-label="Next">&#8250;</button>
+        </div>
+        <footer class="wiki-lightbox-bottom">
+          <div class="wiki-lightbox-thumbs" role="tablist" aria-label="All images in this article"></div>
+        </footer>
+      </div>
+    </div>
+
+        <footer class="site-footer">
+      <div class="container footer-inner footer-inner--min">
+        <div class="footer-left">
+          <div class="footer-meta">
+            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with Epic Games.</div>
+          </div>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a class="footer-link" href="/about">About</a>
+          <a class="footer-link" href="https://www.epicgames.com/fortnite" rel="noopener noreferrer" target="_blank">Epic Games</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        function syncWikiCharTocPanels(tabId) {
+          document.querySelectorAll(".wiki-char-toc-panel[data-wiki-toc-tab]").forEach(function (el) {
+            var match = el.getAttribute("data-wiki-toc-tab") === tabId;
+            var empty = el.getAttribute("data-wiki-toc-empty") === "1";
+            el.hidden = !(match && !empty);
+          });
+        }
+        function setWikiCharTabData(tabId) {
+          var root = document.querySelector("main.wiki-char-page");
+          if (root) root.setAttribute("data-wiki-char-tab", tabId || "overview");
+        }
+        function wikiCharTabIds() {
+          var out = [];
+          document.querySelectorAll(".wiki-char-tab[data-tab]").forEach(function (b) {
+            out.push(b.getAttribute("data-tab"));
+          });
+          return out;
+        }
+        function saveWikiCharTab(tabId) {
+          var ids = wikiCharTabIds();
+          var id = tabId || "overview";
+          if (ids.length === 0) id = "overview";
+          else if (ids.indexOf(id) === -1) id = ids[0] || "overview";
+          try {
+            var base = location.pathname + location.search;
+            var useHash = ids.length > 1 && id !== "overview";
+            history.replaceState(null, "", useHash ? base + "#tab-" + id : base);
+          } catch (e2) {}
+        }
+        function applyWikiCharTab(tabId) {
+          var id = tabId || "overview";
+          var tabs = document.querySelectorAll(".wiki-char-tab");
+          var panels = document.querySelectorAll(".wiki-char-panel");
+          tabs.forEach(function (b) {
+            var on = b.getAttribute("data-tab") === id;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          panels.forEach(function (p) {
+            var show = p.id === "panel-" + id;
+            p.hidden = !show;
+            p.classList.toggle("is-hidden", !show);
+          });
+          syncWikiCharTocPanels(id);
+          setWikiCharTabData(id);
+        }
+        function resolveInitialWikiCharTab() {
+          var ids = wikiCharTabIds();
+          var hm = /^#tab-([a-z]+(?:-[a-z]+)*)$/.exec(location.hash || "");
+          if (hm && ids.indexOf(hm[1]) !== -1) return hm[1];
+          return "overview";
+        }
+        var initialWikiTab = resolveInitialWikiCharTab();
+        applyWikiCharTab(initialWikiTab);
+        saveWikiCharTab(initialWikiTab);
+        document.querySelectorAll(".wiki-char-tab").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var id = btn.getAttribute("data-tab");
+            applyWikiCharTab(id);
+            saveWikiCharTab(id);
+          });
+        });
+        /* TOC: hash links activate the tab that owns this Contents block, then navigate */
+        (function () {
+          document.querySelectorAll(".wiki-char-toc-mount").forEach(function (mount) {
+            mount.addEventListener("click", function (e) {
+              var a = e.target.closest("a[href^='#']");
+              if (!a) return;
+              var href = a.getAttribute("href") || "";
+              if (href.length < 2) return;
+              var panel = a.closest(".wiki-char-toc-panel[data-wiki-toc-tab]");
+              var tabId = panel ? panel.getAttribute("data-wiki-toc-tab") : "overview";
+              var tabBtn = document.querySelector('.wiki-char-tab[data-tab="' + tabId + '"]');
+              if (tabBtn && !tabBtn.classList.contains("is-active")) {
+                tabBtn.click();
+              }
+            });
+          });
+        })();
+        /* Desktop: collapse Contents column to a slim strip (sessionStorage) */
+        (function () {
+          var split = document.querySelector(".wiki-char-content-split--with-toc");
+          if (!split) return;
+          var deskHide = document.getElementById("wiki-char-toc-sidebar-hide");
+          var deskReveal = document.getElementById("wiki-char-toc-sidebar-reveal");
+          var mqDesk = window.matchMedia("(min-width: 900px)");
+          var storageKeyDesk = "wikiCharTocDesk:" + location.pathname;
+          function setDeskCollapsed(collapsed) {
+            split.classList.toggle("is-toc-desktop-collapsed", collapsed);
+            if (deskHide) {
+              deskHide.hidden = !!collapsed;
+              deskHide.setAttribute("aria-expanded", collapsed ? "false" : "true");
+            }
+            if (deskReveal) {
+              deskReveal.hidden = !collapsed;
+              deskReveal.setAttribute("aria-expanded", collapsed ? "true" : "false");
+            }
+            try {
+              sessionStorage.setItem(storageKeyDesk, collapsed ? "1" : "0");
+            } catch (err) {}
+          }
+          function resetDeskChromeForMobile() {
+            split.classList.remove("is-toc-desktop-collapsed");
+            if (deskHide) {
+              deskHide.hidden = false;
+              deskHide.setAttribute("aria-expanded", "true");
+            }
+            if (deskReveal) {
+              deskReveal.hidden = true;
+              deskReveal.setAttribute("aria-expanded", "false");
+            }
+          }
+          if (deskHide) deskHide.addEventListener("click", function () { if (mqDesk.matches) setDeskCollapsed(true); });
+          if (deskReveal) deskReveal.addEventListener("click", function () { if (mqDesk.matches) setDeskCollapsed(false); });
+          try {
+            if (sessionStorage.getItem(storageKeyDesk) === "1" && mqDesk.matches) setDeskCollapsed(true);
+          } catch (err) {}
+          if (mqDesk.addEventListener) {
+            mqDesk.addEventListener("change", function () {
+              if (!mqDesk.matches) resetDeskChromeForMobile();
+              else try {
+                if (sessionStorage.getItem(storageKeyDesk) === "1") setDeskCollapsed(true);
+              } catch (e2) {}
+            });
+          }
+        })();
+        /* TOC: root list collapsed by default (checkbox + CSS); nested branches toggle per row (skip horizontal bar) */
+        (function () {
+          var mqRoot = window.matchMedia("(min-width: 720px)");
+          document.querySelectorAll(".wiki-import div.toc").forEach(function (toc) {
+            if (toc.closest(".wiki-char-toc-shell--mobile")) return;
+            if (toc.closest(".wiki-char-toc-sidebar")) return;
+            var cb = toc.querySelector(":scope > input.toctogglecheckbox");
+            var title = toc.querySelector(":scope > .toctitle");
+            if (!cb || !title) return;
+            var h2 = title.querySelector("h2");
+            if (mqRoot.matches && h2) {
+              h2.setAttribute("tabindex", "0");
+              h2.style.cursor = "pointer";
+              h2.addEventListener("click", function (e) {
+                if (e.target.closest("label, a")) return;
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+              h2.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  cb.checked = !cb.checked;
+                  cb.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+              });
+            }
+            var label = title.querySelector("label.toctogglelabel");
+            if (label && !label.getAttribute("aria-label")) {
+              label.setAttribute("aria-label", "Show or hide contents list");
+            }
+            function syncRoot() {
+              if (!mqRoot.matches) {
+                title.setAttribute("aria-expanded", "true");
+                return;
+              }
+              title.setAttribute("aria-expanded", cb.checked ? "true" : "false");
+            }
+            cb.addEventListener("change", syncRoot);
+            if (mqRoot.addEventListener) {
+              mqRoot.addEventListener("change", syncRoot);
+            } else if (mqRoot.addListener) {
+              mqRoot.addListener(syncRoot);
+            }
+            syncRoot();
+          });
+          document.querySelectorAll(".wiki-import div.toc li").forEach(function (li) {
+            if (li.closest(".wiki-char-toc-shell--mobile")) return;
+            var nested = li.querySelector(":scope > ul");
+            var directA = li.querySelector(":scope > a");
+            if (!nested || !directA) return;
+            li.classList.add("toc-branch");
+            nested.classList.add("toc-branch-children");
+            nested.hidden = true;
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "toc-collapse-btn";
+            btn.setAttribute("aria-expanded", "false");
+            btn.setAttribute("aria-label", "Toggle subsections");
+            var row = document.createElement("span");
+            row.className = "toc-branch-row";
+            li.insertBefore(row, directA);
+            row.appendChild(directA);
+            row.appendChild(btn);
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              var open = nested.hidden;
+              nested.hidden = !open;
+              btn.setAttribute("aria-expanded", open ? "true" : "false");
+              btn.classList.toggle("is-open", open);
+            });
+          });
+        })();
+        /* Portable infobox image tabs (Current / Pre–S8) — Fandom JS not loaded */
+        (function () {
+          document.querySelectorAll(".wiki-import .pi-image-collection.wds-tabber").forEach(function (tabber) {
+            var tabLis = tabber.querySelectorAll(".wds-tabs .wds-tabs__tab");
+            var panels = Array.prototype.filter.call(tabber.children, function (el) {
+              return el.classList && el.classList.contains("wds-tab__content");
+            });
+            if (!tabLis.length || !panels.length) return;
+            var n = Math.min(tabLis.length, panels.length);
+            tabLis.forEach(function (tab, idx) {
+              if (idx >= n) return;
+              tab.setAttribute("role", "tab");
+              tab.setAttribute("aria-selected", tab.classList.contains("wds-is-current") ? "true" : "false");
+              tab.setAttribute("tabindex", tab.classList.contains("wds-is-current") ? "0" : "-1");
+              tab.addEventListener("click", function () {
+                tabLis.forEach(function (t, j) {
+                  var on = j === idx;
+                  t.classList.toggle("wds-is-current", on);
+                  t.setAttribute("tabindex", on ? "0" : "-1");
+                  t.setAttribute("aria-selected", on ? "true" : "false");
+                });
+                panels.forEach(function (panel, j) {
+                  if (j < n) panel.classList.toggle("wds-is-current", j === idx);
+                });
+              });
+            });
+          });
+        })();
+        /* Wikia video gallery: real YouTube iframes (thumbnails are tiny; play icon clicks missed <img>) */
+        (function () {
+          document.querySelectorAll(".wiki-import .wikia-gallery a.image.video[data-youtube-id]").forEach(function (anchor) {
+            var id = anchor.getAttribute("data-youtube-id");
+            if (!id) return;
+            var rawTitle = anchor.getAttribute("title") || "YouTube video";
+            var title = rawTitle.indexOf("(") > 0 ? rawTitle.split("(")[0].trim() : rawTitle;
+            var wrap = document.createElement("div");
+            wrap.className = "wiki-video-embed";
+            var ifr = document.createElement("iframe");
+            ifr.setAttribute("src", "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0");
+            ifr.setAttribute("title", title);
+            ifr.setAttribute("allowfullscreen", "");
+            ifr.setAttribute("loading", "lazy");
+            ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+            ifr.setAttribute(
+              "allow",
+              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            );
+            wrap.appendChild(ifr);
+            anchor.replaceWith(wrap);
+          });
+        })();
+        /* Full-screen media viewer: images + YouTube embeds, scrollable thumbnails */
+        (function () {
+          var root = document.getElementById("wiki-lightbox");
+          var pageRoot = document.querySelector("main.wiki-char-page");
+          if (!root || !pageRoot) return;
+          var backdrop = root.querySelector(".wiki-lightbox-backdrop");
+          var btnClose = root.querySelector(".wiki-lightbox-close");
+          var btnPrev = root.querySelector(".wiki-lightbox-prev");
+          var btnNext = root.querySelector(".wiki-lightbox-next");
+          var lbImg = root.querySelector(".wiki-lightbox-img");
+          var lbVideo = root.querySelector(".wiki-lightbox-video");
+          var lbIframe = root.querySelector(".wiki-lightbox-iframe");
+          var thumbsEl = root.querySelector(".wiki-lightbox-thumbs");
+          if (!lbImg || !lbVideo || !lbIframe || !thumbsEl) return;
+
+          var list = [];
+          var idx = 0;
+          var lbScrollY = 0;
+          var lbHtmlOverflow = "";
+          var lbHtmlMaxWidth = "";
+
+          function largerUrl(url) {
+            if (!url) return url;
+            return url.replace(/\/scale-to-width-down\/\d+/gi, "");
+          }
+
+          function thumbUrl(url) {
+            if (!url) return url;
+            if ((/\/scale-to-width-down\/\d+/i).test(url)) {
+              return url.replace(/\/scale-to-width-down\/\d+/gi, "/scale-to-width-down/96");
+            }
+            var q = url.indexOf("?");
+            if (q === -1) return url + "/scale-to-width-down/96";
+            return url.slice(0, q) + "/scale-to-width-down/96" + url.slice(q);
+          }
+
+          function gather() {
+            return Array.prototype.slice
+              .call(pageRoot.querySelectorAll("img[src]"))
+              .filter(function (im) {
+                var s = im.getAttribute("src") || "";
+                if (!s || s.indexOf("data:") === 0) return false;
+                if (im.closest(".wiki-lightbox")) return false;
+                if (im.closest(".wiki-lightbox-thumbs")) return false;
+                if (im.closest("noscript")) return false;
+                return true;
+              })
+              .map(function (im) {
+                var a = im.closest("a");
+                var yt = (a && a.getAttribute("data-youtube-id")) || "";
+                return { img: im, yt: yt || null };
+              });
+          }
+
+          function rebuildThumbs() {
+            thumbsEl.innerHTML = "";
+            if (!list.length) return;
+            list.forEach(function (item, i) {
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "wiki-lightbox-thumb";
+              if (item.yt) b.classList.add("wiki-lightbox-thumb--video");
+              b.setAttribute(
+                "aria-label",
+                (item.yt ? "Play video " : "Show image ") + (i + 1) + " of " + list.length
+              );
+              var ti = document.createElement("img");
+              ti.alt = "";
+              ti.decoding = "async";
+              ti.loading = "lazy";
+              var u = (item.img.currentSrc || item.img.src || "").trim();
+              ti.src = thumbUrl(u);
+              b.appendChild(ti);
+              b.addEventListener("click", function () {
+                idx = i;
+                render();
+              });
+              thumbsEl.appendChild(b);
+            });
+          }
+
+          function syncThumbStrip() {
+            var btns = thumbsEl.querySelectorAll(".wiki-lightbox-thumb");
+            for (var i = 0; i < btns.length; i++) {
+              var on = i === idx;
+              btns[i].classList.toggle("is-selected", on);
+              btns[i].setAttribute("aria-current", on ? "true" : "false");
+              if (on) {
+                try {
+                  btns[i].scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+                } catch (err) {
+                  btns[i].scrollIntoView();
+                }
+              }
+            }
+          }
+
+          function render() {
+            if (!list.length) return;
+            idx = (idx + list.length) % list.length;
+            var item = list[idx];
+            var el = item.img;
+            var url = (el.currentSrc || el.src || "").trim();
+            if (item.yt) {
+              lbImg.removeAttribute("src");
+              lbImg.style.display = "none";
+              lbImg.alt = "";
+              lbVideo.hidden = false;
+              lbIframe.src =
+                "https://www.youtube-nocookie.com/embed/" +
+                encodeURIComponent(item.yt) +
+                "?autoplay=1&rel=0";
+            } else {
+              lbIframe.removeAttribute("src");
+              lbVideo.hidden = true;
+              lbImg.style.display = "";
+              lbImg.src = largerUrl(url);
+              lbImg.alt = el.getAttribute("alt") || "";
+            }
+            var multi = list.length > 1;
+            btnPrev.disabled = !multi;
+            btnNext.disabled = !multi;
+            btnPrev.style.visibility = multi ? "visible" : "hidden";
+            btnNext.style.visibility = multi ? "visible" : "hidden";
+            btnPrev.setAttribute("aria-hidden", multi ? "false" : "true");
+            btnNext.setAttribute("aria-hidden", multi ? "false" : "true");
+            syncThumbStrip();
+          }
+
+          function openAt(img) {
+            list = gather();
+            idx = -1;
+            for (var j = 0; j < list.length; j++) {
+              if (list[j].img === img) {
+                idx = j;
+                break;
+              }
+            }
+            if (idx < 0) idx = 0;
+            rebuildThumbs();
+            render();
+            root.hidden = false;
+            lbScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+            lbHtmlOverflow = document.documentElement.style.overflow;
+            lbHtmlMaxWidth = document.documentElement.style.maxWidth;
+            document.documentElement.style.overflow = "hidden";
+            document.documentElement.style.maxWidth = "100%";
+            document.documentElement.classList.add("wiki-lightbox-open");
+            document.body.style.top = -lbScrollY + "px";
+            document.body.style.width = "100%";
+            document.body.style.maxWidth = "100%";
+            document.body.classList.add("wiki-lightbox-open");
+            btnClose.focus();
+          }
+
+          function closeLb() {
+            root.hidden = true;
+            lbImg.removeAttribute("src");
+            lbImg.alt = "";
+            lbImg.style.display = "";
+            lbIframe.removeAttribute("src");
+            lbVideo.hidden = true;
+            thumbsEl.innerHTML = "";
+            document.body.style.top = "";
+            document.body.style.width = "";
+            document.body.style.maxWidth = "";
+            document.body.classList.remove("wiki-lightbox-open");
+            document.documentElement.style.overflow = lbHtmlOverflow;
+            document.documentElement.style.maxWidth = lbHtmlMaxWidth;
+            document.documentElement.classList.remove("wiki-lightbox-open");
+            window.scrollTo(0, lbScrollY);
+          }
+
+          function resolveLightboxImage(e) {
+            if (e.target.closest("a.info-icon")) return null;
+            var t = e.target;
+            var a = t.closest("a.image.lightbox");
+            if (!a && t.closest("aside.portable-infobox")) {
+              a = t.closest("aside.portable-infobox figure.pi-image a.image");
+            }
+            if (!a) a = t.closest(".wiki-import a.image");
+            if (!a) a = t.closest(".wiki-import a.mw-file-description");
+            var im = null;
+            if (a && pageRoot.contains(a)) {
+              im = a.querySelector("img[src]");
+            } else {
+              im = t.closest(".wiki-import img[src]");
+            }
+            if (!im || !pageRoot.contains(im)) return null;
+            if (im.closest(".wiki-lightbox") || im.closest(".wiki-lightbox-thumbs") || im.closest("noscript")) {
+              return null;
+            }
+            var s = im.getAttribute("src") || "";
+            if (!s || s.indexOf("data:") === 0) return null;
+            return im;
+          }
+
+          pageRoot.addEventListener("click", function (e) {
+            var im = resolveLightboxImage(e);
+            if (!im) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openAt(im);
+          });
+
+          btnClose.addEventListener("click", closeLb);
+          backdrop.addEventListener("click", closeLb);
+          btnPrev.addEventListener("click", function () {
+            idx--;
+            render();
+          });
+          btnNext.addEventListener("click", function () {
+            idx++;
+            render();
+          });
+
+          document.addEventListener("keydown", function (e) {
+            if (root.hidden) return;
+            if (e.key === "Escape") {
+              e.preventDefault();
+              closeLb();
+            } else if (e.key === "ArrowLeft" && list.length > 1) {
+              e.preventDefault();
+              idx--;
+              render();
+            } else if (e.key === "ArrowRight" && list.length > 1) {
+              e.preventDefault();
+              idx++;
+              render();
+            }
+          });
+        })();
+      })();
+    </script>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
