@@ -1,167 +1,239 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Fortnite Wiki Project — a fan-made Fortnite wiki." />
-    <meta name="referrer" content="no-referrer" />
-    <title>Fortnite Wiki Project</title>
-    <link rel="stylesheet" href="/styles.css" />
-    <meta name="theme-color" content="#12081c" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>blinkywink — BTD6 YouTube</title>
+    <meta
+      name="description"
+      content="blinkywink — Bloons TD 6 videos, chaos, and creator code blinky."
+    />
+    <link rel="icon" href="public/avatar.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Luckiest+Guy&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#content">Skip to content</a>
+    <div class="bloons" aria-hidden="true">
+      <span class="bloon bloon--red" style="--x: 8%; --d: 18s; --s: 1.1"></span>
+      <span class="bloon bloon--blue" style="--x: 22%; --d: 22s; --s: 0.8"></span>
+      <span class="bloon bloon--yellow" style="--x: 71%; --d: 16s; --s: 1"></span>
+      <span class="bloon bloon--green" style="--x: 86%; --d: 24s; --s: 0.9"></span>
+      <span class="bloon bloon--pink" style="--x: 48%; --d: 20s; --s: 0.7"></span>
+    </div>
 
-                                <header class="site-header">
-      <div class="container header-inner">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true">
-            <img class="brand-img" src="/assets/logo.png" alt="Fortnite Wiki Project" loading="eager" decoding="async" />
-          </span>
-        </a>
-
-        <input class="menu-toggle" type="checkbox" id="menu-toggle" />
-        <label class="menu-button" for="menu-toggle" aria-label="Open navigation" role="button">
-          <span class="menu-button-lines" aria-hidden="true">
-            <span></span>
-          </span>
-        </label>
-
-        <nav class="nav" aria-label="Primary">
-
-          <a href="/characters">Outfits</a>
-          <a href="/episodes">Seasons</a>
-          <a href="/weapons">Weapons</a>
-          <a href="/sets">Cosmetics</a>
-          <a href="/items">Items</a>
-          <a href="/maps">Maps</a>
-          <a href="/trivia" class="nav-link--featured">Trivia <span class="nav-badge">New</span></a>
-          <a href="/all-pages">All Pages</a>
-        </nav>
-      </div>
+    <header class="top">
+      <a class="brand-mark" href="#top" aria-label="blinkywink home">
+        <img src="public/avatar.jpg" alt="" width="40" height="40" />
+        <span>blinkywink</span>
+      </a>
+      <nav class="nav">
+        <a href="#videos">Videos</a>
+        <a href="#code">Creator code</a>
+        <a
+          class="nav-cta"
+          href="https://www.youtube.com/@blinkywink?sub_confirmation=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Subscribe</a
+        >
+      </nav>
     </header>
 
-    <main id="content" class="page">
-      <section class="hero" aria-label="Fortnite Wiki Project hero">
-        <div class="hero-outer">
-          <div class="hero-image-shell" aria-hidden="true">
-            <picture>
-              <source media="(max-width: 860px)" srcset="/assets/hero-mobile.png" />
-              <img
-                class="hero-media"
-                src="/assets/hero.png"
-                alt=""
-                loading="eager"
-                decoding="async"
-              />
-            </picture>
-            <div class="hero-overlay"></div>
-          </div>
-
-          <div class="hero-center">
-            <div class="hero-tagline" aria-hidden="false">
-              <div class="hero-tagline-line">Drop in. Browse everything.</div>
-              <div class="hero-tagline-line hero-tagline-line--muted">Outfits, items, seasons, and lore — without the Fandom clutter.</div>
-            </div>
-            <div id="search" class="search-card" role="search" aria-label="Site search">
-              <div class="search-bar">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
-                  <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <input
-                  id="search-input"
-                  class="search-input"
-                  type="search"
-                  autocomplete="off"
-                  spellcheck="false"
-                  placeholder="Search Fortnite..."
-                  aria-controls="search-results"
-                />
-              </div>
-              <div class="results" id="search-results" aria-live="polite"></div>
-            </div>
-          </div>
+    <main id="top">
+      <section class="hero">
+        <div class="hero-media" aria-hidden="true">
+          <img
+            class="hero-banner"
+            src="public/banner.jpg"
+            alt=""
+            width="2114"
+            height="350"
+          />
+          <div class="hero-shade"></div>
         </div>
-      </section>
 
-      <section id="daily-picks" class="section section--tight" aria-label="Daily picks">
-        <div class="container" id="daily-picks-root">
-          <p class="characters-load-status" aria-live="polite">Loading today&apos;s picks…</p>
-        </div>
-      </section>
-
-      <section id="contact" class="section section--tight contact-section" aria-label="Contact">
-        <div class="container">
-          <h2 class="contact-section-title">Contact</h2>
-          <p class="contact-section-intro">
-            Most of the content here comes from the Fortnite fan community. If you&apos;d like something removed or have anything else to say, send me a message below.
+        <div class="hero-copy">
+          <img
+            class="hero-mascot"
+            src="public/avatar.jpg"
+            alt="blinkywink mascot — a cowboy chick"
+            width="160"
+            height="160"
+          />
+          <h1 class="logo-word" aria-label="blinkywink">
+            <span class="logo-blinky">BLINKY</span><span class="logo-wink">WINK</span>
+          </h1>
+          <p class="hero-line">
+            Bloons TD 6 chaos, monkey lore, and pops — straight from the channel.
           </p>
-          <div class="contact-form-shell" id="contact-form-shell">
-            <form
-              id="contact-form"
-              class="contact-form"
-              action="https://api.web3forms.com/submit"
-              method="POST"
-              aria-label="Contact form"
+          <div class="hero-actions">
+            <a
+              class="btn btn-red"
+              href="https://www.youtube.com/@blinkywink"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <input type="hidden" name="access_key" value="b85d0fa9-867d-48e5-bc3c-2de4546d1b52" />
-              <input type="hidden" name="subject" value="Fortnite Wiki — contact form" />
-              <input type="checkbox" name="botcheck" class="contact-form-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
-
-              <div class="contact-form-row">
-                <label class="contact-form-field">
-                  <span class="contact-form-label">Name</span>
-                  <input type="text" name="name" required autocomplete="name" placeholder="Your name" />
-                </label>
-                <label class="contact-form-field">
-                  <span class="contact-form-label">Email</span>
-                  <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
-                </label>
-              </div>
-              <label class="contact-form-field">
-                <span class="contact-form-label">Message</span>
-                <textarea name="message" required rows="5" placeholder="What would you like to say?"></textarea>
-              </label>
-              <p class="contact-form-error" id="contact-form-error" role="alert" hidden></p>
-              <button type="submit" class="contact-form-submit" id="contact-form-submit">Send message</button>
-            </form>
-
-            <div class="contact-form-success" id="contact-form-success" hidden aria-live="polite">
-              <div class="contact-form-success-burst" aria-hidden="true"></div>
-              <div class="contact-form-success-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.75"/>
-                  <path d="M8 12.5 10.8 15.2 16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <p class="contact-form-success-title">Sent!</p>
-              <p class="contact-form-success-text">Thanks — I&apos;ll get back to you soon.</p>
-            </div>
+              Watch on YouTube
+            </a>
+            <a class="btn btn-blue" href="#code">Use code blinky</a>
           </div>
         </div>
       </section>
-      <!-- Hidden homepage search index (run scripts/build_characters_page.py after importing) -->
-      <div aria-hidden="true" style="display:none"></div>
+
+      <section class="section videos" id="videos">
+        <div class="section-head">
+          <h2>Latest pops</h2>
+          <p>Jump into the newest BTD6 uploads.</p>
+        </div>
+
+        <div class="video-rail" role="list">
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=vTI0urZowqs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-vTI0urZowqs.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>BTD6 on Switch is kinda cursed</span>
+          </a>
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=sAg9QY1D-pQ"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-sAg9QY1D-pQ.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>The sad backstory of the free dart monkey...</span>
+          </a>
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=hcvTttoCrjg"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-hcvTttoCrjg.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>Popping Bloons — A BTD6 Parody</span>
+          </a>
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=dQAgAgOvvxU"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-dQAgAgOvvxU.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>ITALIAN BRAINROT IN BTD6?!?</span>
+          </a>
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=b8NVSHCHOck"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-b8NVSHCHOck.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>Update 49.0 — Easter Bunny Tower</span>
+          </a>
+          <a
+            class="video"
+            role="listitem"
+            href="https://www.youtube.com/watch?v=fh1LtHndv18"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="public/thumb-fh1LtHndv18.jpg"
+              alt=""
+              width="480"
+              height="360"
+              loading="lazy"
+            />
+            <span>are you smarter than a monkey? | BTD6 TRIVIA</span>
+          </a>
+        </div>
+
+        <a
+          class="text-link"
+          href="https://www.youtube.com/@blinkywink/videos"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          See all videos →
+        </a>
+      </section>
+
+      <section class="section code" id="code">
+        <div class="code-panel">
+          <p class="code-kicker">BTD6 shop</p>
+          <h2>Support with creator code <em>blinky</em></h2>
+          <p>
+            Grabbing monkeys, heroes, or monkey money? Punch in
+            <strong>blinky</strong> in the Bloons TD 6 shop.
+          </p>
+          <button class="btn btn-red" type="button" id="copy-code">
+            Copy code blinky
+          </button>
+          <p class="copy-status" id="copy-status" aria-live="polite"></p>
+        </div>
+      </section>
     </main>
 
-                                <footer class="site-footer">
-      <div class="container footer-inner footer-inner--min">
-        <div class="footer-left">
-          <div class="footer-meta">
-            <div class="footer-line footer-line--muted">Fan-made Fortnite wiki. Not affiliated with Epic Games.</div>
-          </div>
-        </div>
-        <div class="footer-links" aria-label="Footer links">
-          <a class="footer-link" href="/about">About</a>
-          <a class="footer-link" href="https://www.epicgames.com/fortnite" rel="noopener noreferrer" target="_blank">Epic Games</a>
+    <footer class="footer">
+      <div class="footer-brand">
+        <img src="public/avatar.jpg" alt="" width="48" height="48" />
+        <div>
+          <strong>blinkywink</strong>
+          <p>i really like when the monkey pops the bloon</p>
         </div>
       </div>
+      <a
+        class="btn btn-blue"
+        href="https://www.youtube.com/@blinkywink?sub_confirmation=1"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Subscribe on YouTube
+      </a>
     </footer>
 
-    <script src="/app.js?v=20260620" defer></script>
-    <script src="./homepage-daily.js" defer></script>
-    <script src="./contact-form.js" defer></script>
+    <script src="script.js"></script>
   </body>
 </html>
-
