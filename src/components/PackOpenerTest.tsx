@@ -637,7 +637,7 @@ export function PackOpenerTest({
 
           {phase === "shop" ? (
             <div className="pack-opener__buy">
-              <CurrencyChip kind="bloonjamins" amount={price} />
+              <CurrencyChip amount={price} />
               <button
                 type="button"
                 className="btn btn--primary btn--lg"

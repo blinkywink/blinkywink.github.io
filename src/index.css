@@ -377,10 +377,6 @@ body:has(.zoomed-page) {
   background: transparent;
 }
 
-.coin-chip--mm {
-  background: transparent;
-}
-
 .auth-modal {
   position: fixed;
   inset: 0;

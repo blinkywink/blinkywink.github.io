@@ -2,7 +2,6 @@
 
 export type GuestWallet = {
   coins: number;
-  monkey_money: number;
 };
 
 const COOKIE_KEY = "ba_guest";
@@ -21,7 +20,6 @@ function parseWallet(raw: string | null | undefined): GuestWallet | null {
     const data = JSON.parse(raw) as Partial<GuestWallet>;
     return {
       coins: clampNonNeg(data.coins),
-      monkey_money: clampNonNeg(data.monkey_money),
     };
   } catch {
     return null;
@@ -48,7 +46,7 @@ function writeCookie(name: string, value: string) {
 }
 
 export function emptyGuestWallet(): GuestWallet {
-  return { coins: 0, monkey_money: 0 };
+  return { coins: 0 };
 }
 
 export function loadGuestWallet(): GuestWallet {
@@ -57,7 +55,6 @@ export function loadGuestWallet(): GuestWallet {
   if (fromLs) return fromLs;
   const fromCookie = parseWallet(readCookie(COOKIE_KEY));
   if (fromCookie) {
-    // Rehydrate localStorage from cookie
     saveGuestWallet(fromCookie);
     return fromCookie;
   }
@@ -67,7 +64,6 @@ export function loadGuestWallet(): GuestWallet {
 export function saveGuestWallet(wallet: GuestWallet): GuestWallet {
   const next: GuestWallet = {
     coins: clampNonNeg(wallet.coins),
-    monkey_money: clampNonNeg(wallet.monkey_money),
   };
   if (typeof window !== "undefined") {
     const raw = JSON.stringify(next);
@@ -87,7 +83,7 @@ export function awardGuestCoins(amount: number): number {
     return loadGuestWallet().coins;
   }
   const cur = loadGuestWallet();
-  return saveGuestWallet({ ...cur, coins: cur.coins + n }).coins;
+  return saveGuestWallet({ coins: cur.coins + n }).coins;
 }
 
 /** Returns new balance, or null if not enough coins. */
@@ -96,5 +92,5 @@ export function spendGuestCoins(amount: number): number | null {
   if (!Number.isFinite(n) || n < 1) return null;
   const cur = loadGuestWallet();
   if (cur.coins < n) return null;
-  return saveGuestWallet({ ...cur, coins: cur.coins - n }).coins;
+  return saveGuestWallet({ coins: cur.coins - n }).coins;
 }

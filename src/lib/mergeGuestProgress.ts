@@ -26,11 +26,7 @@ async function mergeOnce(): Promise<void> {
 
   const guestCards = loadGuestCardIds();
   const guestWallet = loadGuestWallet();
-  if (
-    guestCards.length === 0 &&
-    guestWallet.coins <= 0 &&
-    guestWallet.monkey_money <= 0
-  ) {
+  if (guestCards.length === 0 && guestWallet.coins <= 0) {
     return;
   }
 
@@ -54,16 +50,8 @@ async function mergeOnce(): Promise<void> {
       remaining -= amount;
     }
     if (ok) {
-      saveGuestWallet({
-        coins: 0,
-        monkey_money: guestWallet.monkey_money,
-      });
+      saveGuestWallet({ coins: 0 });
     }
-  }
-
-  const leftover = loadGuestWallet();
-  if (leftover.coins <= 0) {
-    saveGuestWallet({ coins: 0, monkey_money: 0 });
   }
 }
 

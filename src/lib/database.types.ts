@@ -5,7 +5,7 @@ export type Profile = {
   coins: number;
   /** Lifetime Cash earned (never decreases on spend). */
   coins_earned: number;
-  /** Monkey Money — premium currency (uses TBD). */
+  /** Unused premium currency column (kept in DB; not shown in UI). */
   monkey_money: number;
   /** UTC date (YYYY-MM-DD) of last daily claim, or null. */
   last_daily_claim: string | null;

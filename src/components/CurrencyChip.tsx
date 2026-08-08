@@ -1,30 +1,14 @@
 type CurrencyChipProps = {
-  kind: "bloonjamins" | "monkey-money";
   amount: number;
   className?: string;
 };
 
-const CURRENCY = {
-  bloonjamins: {
-    src: "/images/ui/money-icon.webp",
-    title: "Cash",
-  },
-  "monkey-money": {
-    src: "/images/ui/monkey-money-icon.webp",
-    title: "Monkey Money",
-  },
-} as const;
-
-/** Shared wallet chip for account currencies. */
-export function CurrencyChip({ kind, amount, className = "" }: CurrencyChipProps) {
-  const meta = CURRENCY[kind];
+/** Cash balance chip. */
+export function CurrencyChip({ amount, className = "" }: CurrencyChipProps) {
   return (
-    <div
-      className={`coin-chip ${kind === "monkey-money" ? "coin-chip--mm" : ""} ${className}`.trim()}
-      title={meta.title}
-    >
+    <div className={`coin-chip ${className}`.trim()} title="Cash">
       <img
-        src={meta.src}
+        src="/images/ui/money-icon.webp"
         alt=""
         className="coin-chip__icon"
         width={34}

@@ -4,7 +4,7 @@ type Props = {
   score: number;
 };
 
-/** Always-visible score chip (Monkey Money icon). */
+/** Always-visible score chip (Cash icon). */
 export function ScoreDisplay({ score }: Props) {
   return (
     <div className="stat-chip stat-chip--coins">

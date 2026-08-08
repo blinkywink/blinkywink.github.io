@@ -182,11 +182,7 @@ export function AccountBar() {
   if (user) {
     return (
       <div className="account-bar">
-        <CurrencyChip kind="bloonjamins" amount={profile?.coins ?? 0} />
-        <CurrencyChip
-          kind="monkey-money"
-          amount={profile?.monkey_money ?? 0}
-        />
+        <CurrencyChip amount={profile?.coins ?? 0} />
         <div className="account-menu" ref={menuRef}>
           <button
             type="button"
@@ -240,11 +236,7 @@ export function AccountBar() {
 
   return (
     <div className="account-bar">
-      <CurrencyChip kind="bloonjamins" amount={profile?.coins ?? 0} />
-      <CurrencyChip
-        kind="monkey-money"
-        amount={profile?.monkey_money ?? 0}
-      />
+      <CurrencyChip amount={profile?.coins ?? 0} />
       <button
         type="button"
         className="btn btn--secondary btn--sm"

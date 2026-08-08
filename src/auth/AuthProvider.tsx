@@ -10,7 +10,6 @@ import {
 import type { Profile } from "../lib/database.types";
 import { setAccessToken, supabase } from "../lib/supabase";
 import {
-  emptyGuestWallet,
   loadGuestWallet,
   saveGuestWallet,
 } from "../lib/guestWallet";
@@ -25,14 +24,14 @@ import {
 
 const GUEST_ID = "guest";
 
-function profileFromGuest(coins: number, monkeyMoney = 0): Profile {
+function profileFromGuest(coins: number): Profile {
   const now = new Date().toISOString();
   return {
     id: GUEST_ID,
     username: "Guest",
     coins,
     coins_earned: coins,
-    monkey_money: monkeyMoney,
+    monkey_money: 0,
     last_daily_claim: null,
     created_at: now,
     updated_at: now,
@@ -41,7 +40,7 @@ function profileFromGuest(coins: number, monkeyMoney = 0): Profile {
 
 function loadGuestProfile(): Profile {
   const w = loadGuestWallet();
-  return profileFromGuest(w.coins, w.monkey_money);
+  return profileFromGuest(w.coins);
 }
 
 type AuthUser = { id: string; username: string };
@@ -259,9 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile((prev) => {
         const signedIn = Boolean(session?.userId);
         if (!signedIn) {
-          const mm = prev?.monkey_money ?? emptyGuestWallet().monkey_money;
-          saveGuestWallet({ coins: nextCoins, monkey_money: mm });
-          return profileFromGuest(nextCoins, mm);
+          saveGuestWallet({ coins: nextCoins });
+          return profileFromGuest(nextCoins);
         }
         return prev ? { ...prev, coins: nextCoins } : prev;
       });
