@@ -41,12 +41,6 @@ function pickColor(palette: string[], rand: () => number) {
   return palette[Math.floor(rand() * palette.length)]!;
 }
 
-function palIndex(palette: string[], i: number) {
-  if (!palette.length) return "#2f9fe0";
-  const m = palette.length;
-  return palette[((i % m) + m) % m]!;
-}
-
 function parseHex(hex: string): [number, number, number] {
   if (!hex || typeof hex !== "string") return [47, 159, 224];
   const h = hex.replace("#", "");

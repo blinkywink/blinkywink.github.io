@@ -57,7 +57,8 @@ export default function App() {
             onOpenLeaderboard={() => setScreen("leaderboard")}
             onPackFinished={({ pack, pulls }) => {
               openCards({
-                tower: pack.kind === "tower" ? pack.tower : undefined,
+                tower:
+                  pack.kind === "tower" ? (pack.tower ?? undefined) : undefined,
                 highlightIds: pulls.map((c) => c.id),
               });
             }}

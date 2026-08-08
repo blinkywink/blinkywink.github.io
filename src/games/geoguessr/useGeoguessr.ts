@@ -121,7 +121,7 @@ export function useGeoguessr() {
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
 
-  const preloadChallenge = useCallback(async (c: Challenge) => {
+  const preloadChallenge = useCallback(async (c: MapChallenge) => {
     try {
       await preloadImage(c.correct.image);
     } catch {
@@ -209,7 +209,7 @@ export function useGeoguessr() {
         challenge.correct.id,
       ];
 
-      let nextChallenge: Challenge | null = null;
+      let nextChallenge: MapChallenge | null = null;
       const preloadNext =
         s.freePlay || nextRound + 1 <= GEOGUESSR_CONFIG.roundsPerRun;
       if (preloadNext) {
