@@ -45,8 +45,15 @@ body {
     radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.045), transparent 34%),
     radial-gradient(circle at 86% 100%, rgba(255, 255, 255, 0.04), transparent 38%),
     linear-gradient(180deg, #0e0e12 0%, #07070a 55%, #050507 100%);
-  background-attachment: fixed;
+  /* fixed backgrounds cause white flashes / jank on mobile Safari */
+  background-attachment: scroll;
   color: var(--ink);
+}
+
+@media (min-width: 900px) {
+  body {
+    background-attachment: fixed;
+  }
 }
 
 button,
@@ -707,6 +714,7 @@ body:has(.zoomed-page) {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 .game-preview--price {
@@ -991,46 +999,33 @@ body:has(.zoomed-page) {
 
 
 .game-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.45rem;
-}
-
-.game-header__left {
-  justify-self: start;
-}
-
-.game-header__center {
-  text-align: center;
-}
-
-.game-header__right {
-  justify-self: end;
   display: flex;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
 }
 
 .game-header__title {
-  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 3.5vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-align: center;
   color: var(--paper);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .game-header__round {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   color: rgba(255, 248, 232, 0.92);
-  font-weight: 800;
-  font-size: 0.92rem;
-  margin-top: 0.1rem;
-}
-
-.game-header__brand {
-  color: var(--paper);
-  font-weight: 800;
-  font-size: 0.9rem;
 }
 
 .stat-chip {
@@ -1117,15 +1112,17 @@ body:has(.zoomed-page) {
 }
 
 .answer-reveal__frame {
+  --challenge-size: min(92vw, 300px, 34dvh);
   position: relative;
   border-radius: 20px;
   overflow: hidden;
   border: 4px solid #2e2e38;
   box-shadow: var(--shadow);
   background: radial-gradient(circle at 50% 40%, #2a2a34 0%, #0c0c12 75%);
-  width: min(100%, 300px, 34dvh);
-  max-height: 34dvh;
-  aspect-ratio: 1;
+  width: var(--challenge-size);
+  height: var(--challenge-size);
+  aspect-ratio: 1 / 1;
+  max-height: none;
   display: grid;
   place-items: center;
 }
@@ -1160,22 +1157,28 @@ body:has(.zoomed-page) {
 }
 
 .challenge-frame {
+  /* Same value for width + height keeps a true square (max-height alone squashed it). */
+  --challenge-size: min(92vw, 300px, 34dvh);
   position: relative;
-  width: min(100%, 300px, 34dvh);
-  max-height: 34dvh;
-  aspect-ratio: 1;
+  width: var(--challenge-size);
+  height: var(--challenge-size);
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
+  max-height: none;
   margin: 0;
   border-radius: 20px;
   overflow: hidden;
   border: 4px solid #2e2e38;
   box-shadow: var(--shadow);
   background: #0c0c12;
+  flex-shrink: 0;
 }
 
 .challenge-canvas {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -2290,24 +2293,9 @@ body:has(.zoomed-page) {
     grid-template-columns: 1fr;
   }
 
-  .game-header {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 0.65rem;
-  }
-
-  .game-header__left,
-  .game-header__right {
-    justify-self: center;
-  }
-
-  .game-header__right {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .challenge-frame {
-    width: min(100%, 360px);
+  .challenge-frame,
+  .answer-reveal__frame {
+    --challenge-size: min(92vw, 360px, 42dvh);
   }
 
   .answer-btn {
@@ -4192,9 +4180,19 @@ body:has(.zoomed-page) {
 
 /* BTD6 cover can overflow its frame and glitch under hover — clip cleanly */
 .pack-shelf__booster .booster__art img {
+  width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center top;
+  /* Keep shelf art decoded while scrolling (iOS likes to dump these). */
+  content-visibility: visible;
+  transform: translateZ(0);
+}
+
+.arcade img,
+.game-preview,
+.game-preview__canvas {
+  content-visibility: visible;
 }
 
 .pack-shelf__label {
