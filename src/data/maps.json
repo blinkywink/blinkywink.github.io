@@ -1,0 +1,625 @@
+[
+  {
+    "id": "alpine-run",
+    "name": "Alpine Run",
+    "difficulty": "Beginner",
+    "image": "/images/maps/alpine-run.webp",
+    "sourceFile": "BTD6 MapSelectAlpineRunButton.png"
+  },
+  {
+    "id": "candy-falls",
+    "name": "Candy Falls",
+    "difficulty": "Beginner",
+    "image": "/images/maps/candy-falls.webp",
+    "sourceFile": "BTD6 MapSelectCandyfallsButton.png"
+  },
+  {
+    "id": "carved",
+    "name": "Carved",
+    "difficulty": "Beginner",
+    "image": "/images/maps/carved.webp",
+    "sourceFile": "BTD6 MapSelectCarvedButton.png"
+  },
+  {
+    "id": "cubism",
+    "name": "Cubism",
+    "difficulty": "Beginner",
+    "image": "/images/maps/cubism.webp",
+    "sourceFile": "BTD6 MapSelectCubismButton.png"
+  },
+  {
+    "id": "end-of-the-road",
+    "name": "End Of The Road",
+    "difficulty": "Beginner",
+    "image": "/images/maps/end-of-the-road.webp",
+    "sourceFile": "BTD6 MapSelectEndOfTheRoadButton.png"
+  },
+  {
+    "id": "four-circles",
+    "name": "Four Circles",
+    "difficulty": "Beginner",
+    "image": "/images/maps/four-circles.webp",
+    "sourceFile": "BTD6 MapSelectFourCirclesButton.png"
+  },
+  {
+    "id": "frozen-over",
+    "name": "Frozen Over",
+    "difficulty": "Beginner",
+    "image": "/images/maps/frozen-over.webp",
+    "sourceFile": "BTD6 MapSelectFrozenOverButton.png"
+  },
+  {
+    "id": "hedge",
+    "name": "Hedge",
+    "difficulty": "Beginner",
+    "image": "/images/maps/hedge.webp",
+    "sourceFile": "BTD6 MapSelectHedgeButton.png"
+  },
+  {
+    "id": "in-the-loop",
+    "name": "In The Loop",
+    "difficulty": "Beginner",
+    "image": "/images/maps/in-the-loop.webp",
+    "sourceFile": "BTD6 MapSelectInTheLoopButton.png"
+  },
+  {
+    "id": "logs",
+    "name": "Logs",
+    "difficulty": "Beginner",
+    "image": "/images/maps/logs.webp",
+    "sourceFile": "BTD6 MapSelectLogsButton.png"
+  },
+  {
+    "id": "lotus-island",
+    "name": "Lotus Island",
+    "difficulty": "Beginner",
+    "image": "/images/maps/lotus-island.webp",
+    "sourceFile": "BTD6 MapSelectLotusIslandButton.png"
+  },
+  {
+    "id": "middle-of-the-road",
+    "name": "Middle of the Road",
+    "difficulty": "Beginner",
+    "image": "/images/maps/middle-of-the-road.webp",
+    "sourceFile": "BTD6 MapSelectMiddleOfTheRoadMapButton.png"
+  },
+  {
+    "id": "monkey-meadow",
+    "name": "Monkey Meadow",
+    "difficulty": "Beginner",
+    "image": "/images/maps/monkey-meadow.webp",
+    "sourceFile": "BTD6 MapSelectMonkeyMeadowButton.png"
+  },
+  {
+    "id": "one-two-tree",
+    "name": "One Two Tree",
+    "difficulty": "Beginner",
+    "image": "/images/maps/one-two-tree.webp",
+    "sourceFile": "BTD6 MapSelectOneTwoTreeButton.png"
+  },
+  {
+    "id": "park-path",
+    "name": "Park Path",
+    "difficulty": "Beginner",
+    "image": "/images/maps/park-path.webp",
+    "sourceFile": "BTD6 MapSelectParkPathButton.png"
+  },
+  {
+    "id": "resort",
+    "name": "Resort",
+    "difficulty": "Beginner",
+    "image": "/images/maps/resort.webp",
+    "sourceFile": "BTD6 MapSelectResortMapButton.png"
+  },
+  {
+    "id": "scrapyard",
+    "name": "Scrapyard",
+    "difficulty": "Beginner",
+    "image": "/images/maps/scrapyard.webp",
+    "sourceFile": "BTD6 MapSelectScrapyardMapButton.png"
+  },
+  {
+    "id": "skates",
+    "name": "Skates",
+    "difficulty": "Beginner",
+    "image": "/images/maps/skates.webp",
+    "sourceFile": "BTD6 MapSelectSkatesButton.png"
+  },
+  {
+    "id": "skull-tweak",
+    "name": "Skull Tweak",
+    "difficulty": "Beginner",
+    "image": "/images/maps/skull-tweak.webp",
+    "sourceFile": "BTD6 MapSelectSkullPeakButton.png"
+  },
+  {
+    "id": "spa-pits",
+    "name": "Spa Pits",
+    "difficulty": "Beginner",
+    "image": "/images/maps/spa-pits.webp",
+    "sourceFile": "BTD6 MapSelectSpaPitsButton.png"
+  },
+  {
+    "id": "the-cabin",
+    "name": "The Cabin",
+    "difficulty": "Beginner",
+    "image": "/images/maps/the-cabin.webp",
+    "sourceFile": "BTD6 MapSelectTheCabinMapButton.png"
+  },
+  {
+    "id": "three-mines-round",
+    "name": "Three Mines 'Round",
+    "difficulty": "Beginner",
+    "image": "/images/maps/three-mines-round.webp",
+    "sourceFile": "BTD6 MapSelectThreeMinesAroundMapButton.png"
+  },
+  {
+    "id": "tinkerton",
+    "name": "Tinkerton",
+    "difficulty": "Beginner",
+    "image": "/images/maps/tinkerton.webp",
+    "sourceFile": "BTD6 MapSelectTinkertonMapButton.png"
+  },
+  {
+    "id": "town-center",
+    "name": "Town Center",
+    "difficulty": "Beginner",
+    "image": "/images/maps/town-center.webp",
+    "sourceFile": "BTD6 MapSelectTownCentreButton.png"
+  },
+  {
+    "id": "tree-stump",
+    "name": "Tree Stump",
+    "difficulty": "Beginner",
+    "image": "/images/maps/tree-stump.webp",
+    "sourceFile": "BTD6 MapSelectTreeStumpButton.png"
+  },
+  {
+    "id": "winter-park",
+    "name": "Winter Park",
+    "difficulty": "Beginner",
+    "image": "/images/maps/winter-park.webp",
+    "sourceFile": "BTD6 MapSelectWinterPark.png"
+  },
+  {
+    "id": "adoras-temple",
+    "name": "Adora's Temple",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/adoras-temple.webp",
+    "sourceFile": "BTD6 MapSelectAdorasTemple.png"
+  },
+  {
+    "id": "ancient-portal",
+    "name": "Ancient Portal",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/ancient-portal.webp",
+    "sourceFile": "BTD6 MapSelectAncientPortalMapButton.png"
+  },
+  {
+    "id": "balance",
+    "name": "Balance",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/balance.webp",
+    "sourceFile": "BTD6 MapSelectBalanceMapButton.png"
+  },
+  {
+    "id": "bazaar",
+    "name": "Bazaar",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/bazaar.webp",
+    "sourceFile": "BTD6 MapSelectBazaarButton.png"
+  },
+  {
+    "id": "bloonarius-prime",
+    "name": "Bloonarius Prime",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/bloonarius-prime.webp",
+    "sourceFile": "BTD6 MapSelectBloonariusPrimeButton.png"
+  },
+  {
+    "id": "chutes",
+    "name": "Chutes",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/chutes.webp",
+    "sourceFile": "BTD6 MapSelectChutesButton.png"
+  },
+  {
+    "id": "covered-garden",
+    "name": "Covered Garden",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/covered-garden.webp",
+    "sourceFile": "BTD6 MapSelectCoveredGardenMapButton.png"
+  },
+  {
+    "id": "cracked",
+    "name": "Cracked",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/cracked.webp",
+    "sourceFile": "BTD6 MapSelectCrackedButton.png"
+  },
+  {
+    "id": "downstream",
+    "name": "Downstream",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/downstream.webp",
+    "sourceFile": "BTD6 MapSelectDownstreamButton.png"
+  },
+  {
+    "id": "encrypted",
+    "name": "Encrypted",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/encrypted.webp",
+    "sourceFile": "BTD6 MapSelectEncryptedButton.png"
+  },
+  {
+    "id": "firing-range",
+    "name": "Firing Range",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/firing-range.webp",
+    "sourceFile": "BTD6 MapSelectFiringRangeButton.png"
+  },
+  {
+    "id": "haunted",
+    "name": "Haunted",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/haunted.webp",
+    "sourceFile": "BTD6 MapSelectHauntedButton.png"
+  },
+  {
+    "id": "kartsndarts",
+    "name": "KartsNDarts",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/kartsndarts.webp",
+    "sourceFile": "BTD6 MapSelectKartsNDarts.png"
+  },
+  {
+    "id": "lost-crevasse",
+    "name": "Lost Crevasse",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/lost-crevasse.webp",
+    "sourceFile": "BTD6 MapSelectLostCrevasseMapButton.png"
+  },
+  {
+    "id": "luminous-cove",
+    "name": "Luminous Cove",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/luminous-cove.webp",
+    "sourceFile": "BTD6 MapSelectLuminousCoveMapButton.png"
+  },
+  {
+    "id": "moon-landing",
+    "name": "Moon Landing",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/moon-landing.webp",
+    "sourceFile": "BTD6 MapSelectMoonLandingButton.png"
+  },
+  {
+    "id": "polyphemus",
+    "name": "Polyphemus",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/polyphemus.webp",
+    "sourceFile": "BTD6 MapSelectPolyphemusMapButton.png"
+  },
+  {
+    "id": "protect-the-yacht",
+    "name": "Protect The Yacht",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/protect-the-yacht.webp",
+    "sourceFile": "BTD6 MapSelectProtectTheYachtMapButton.png"
+  },
+  {
+    "id": "quarry",
+    "name": "Quarry",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/quarry.webp",
+    "sourceFile": "BTD6 MapSelectQuarryMapButton.png"
+  },
+  {
+    "id": "quiet-street",
+    "name": "Quiet Street",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/quiet-street.webp",
+    "sourceFile": "BTD6 MapSelectQuietSteetMapButton.png"
+  },
+  {
+    "id": "rake",
+    "name": "Rake",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/rake.webp",
+    "sourceFile": "BTD6 MapSelectRakeButton.png"
+  },
+  {
+    "id": "spice-islands",
+    "name": "Spice Islands",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/spice-islands.webp",
+    "sourceFile": "BTD6 MapSelectSpiceIslandsButton.png"
+  },
+  {
+    "id": "spring-spring",
+    "name": "Spring Spring",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/spring-spring.webp",
+    "sourceFile": "BTD6 MapSelectSpringSpringButton.png"
+  },
+  {
+    "id": "streambed",
+    "name": "Streambed",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/streambed.webp",
+    "sourceFile": "BTD6 MapSelectStreambedButton.png"
+  },
+  {
+    "id": "sulfur-springs",
+    "name": "Sulfur Springs",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/sulfur-springs.webp",
+    "sourceFile": "BTD6 MapSelectSulfurSpringsButton.png"
+  },
+  {
+    "id": "water-park",
+    "name": "Water Park",
+    "difficulty": "Intermediate",
+    "image": "/images/maps/water-park.webp",
+    "sourceFile": "BTD6 MapSelectWaterparkMapButton.png"
+  },
+  {
+    "id": "another-brick",
+    "name": "Another Brick",
+    "difficulty": "Advanced",
+    "image": "/images/maps/another-brick.webp",
+    "sourceFile": "BTD6 MapSelectAnotherBrickButton.png"
+  },
+  {
+    "id": "ascent",
+    "name": "Ascent",
+    "difficulty": "Advanced",
+    "image": "/images/maps/ascent.webp",
+    "sourceFile": "BTD6 MapSelectAscentButton.png"
+  },
+  {
+    "id": "cargo",
+    "name": "Cargo",
+    "difficulty": "Advanced",
+    "image": "/images/maps/cargo.webp",
+    "sourceFile": "BTD6 MapSelectCargoButton.png"
+  },
+  {
+    "id": "castle-revenge",
+    "name": "Castle Revenge",
+    "difficulty": "Advanced",
+    "image": "/images/maps/castle-revenge.webp",
+    "sourceFile": "BTD6 MapSelectCastleRevengeMapButton.png"
+  },
+  {
+    "id": "cornfield",
+    "name": "Cornfield",
+    "difficulty": "Advanced",
+    "image": "/images/maps/cornfield.webp",
+    "sourceFile": "BTD6 MapSelectCornfieldsButton.png"
+  },
+  {
+    "id": "dark-path",
+    "name": "Dark Path",
+    "difficulty": "Advanced",
+    "image": "/images/maps/dark-path.webp",
+    "sourceFile": "BTD6 MapSelectDarkPathButton.png"
+  },
+  {
+    "id": "enchanted-glade",
+    "name": "Enchanted Glade",
+    "difficulty": "Advanced",
+    "image": "/images/maps/enchanted-glade.webp",
+    "sourceFile": "BTD6 MapSelectEnchantedGladeMapButton.png"
+  },
+  {
+    "id": "erosion",
+    "name": "Erosion",
+    "difficulty": "Advanced",
+    "image": "/images/maps/erosion.webp",
+    "sourceFile": "BTD6 MapSelectErosionButton.png"
+  },
+  {
+    "id": "geared",
+    "name": "Geared",
+    "difficulty": "Advanced",
+    "image": "/images/maps/geared.webp",
+    "sourceFile": "BTD6 MapSelectGearedButton.png"
+  },
+  {
+    "id": "high-finance",
+    "name": "High Finance",
+    "difficulty": "Advanced",
+    "image": "/images/maps/high-finance.webp",
+    "sourceFile": "BTD6 MapSelectHighFinanceButton.png"
+  },
+  {
+    "id": "last-resort",
+    "name": "Last Resort",
+    "difficulty": "Advanced",
+    "image": "/images/maps/last-resort.webp",
+    "sourceFile": "BTD6 MapSelectLastResortMapButton.png"
+  },
+  {
+    "id": "mesa",
+    "name": "Mesa",
+    "difficulty": "Advanced",
+    "image": "/images/maps/mesa.webp",
+    "sourceFile": "BTD6 MapSelectMesaButton.png"
+  },
+  {
+    "id": "midnight-mansion",
+    "name": "Midnight Mansion",
+    "difficulty": "Advanced",
+    "image": "/images/maps/midnight-mansion.webp",
+    "sourceFile": "BTD6 MapSelectMidnightMansionMapButton.png"
+  },
+  {
+    "id": "mushroom-grotto",
+    "name": "Mushroom Grotto",
+    "difficulty": "Advanced",
+    "image": "/images/maps/mushroom-grotto.webp",
+    "sourceFile": "BTD6 MapSelectMushroomGrottoButton.png"
+  },
+  {
+    "id": "off-the-coast",
+    "name": "Off The Coast",
+    "difficulty": "Advanced",
+    "image": "/images/maps/off-the-coast.webp",
+    "sourceFile": "BTD6 MapSelectOffTheCoastButton.png"
+  },
+  {
+    "id": "party-parade",
+    "name": "Party Parade",
+    "difficulty": "Advanced",
+    "image": "/images/maps/party-parade.webp",
+    "sourceFile": "BTD6 MapSelectPartyParadeButton.png"
+  },
+  {
+    "id": "pats-pond",
+    "name": "Pat's Pond",
+    "difficulty": "Advanced",
+    "image": "/images/maps/pats-pond.webp",
+    "sourceFile": "BTD6 MapSelectPatsPondButton.png"
+  },
+  {
+    "id": "peninsula",
+    "name": "Peninsula",
+    "difficulty": "Advanced",
+    "image": "/images/maps/peninsula.webp",
+    "sourceFile": "BTD6 MapSelectPeninsulaButton.png"
+  },
+  {
+    "id": "spillway",
+    "name": "Spillway",
+    "difficulty": "Advanced",
+    "image": "/images/maps/spillway.webp",
+    "sourceFile": "BTD6 MapSelectSpillwayButton.png"
+  },
+  {
+    "id": "sunken-columns",
+    "name": "Sunken Columns",
+    "difficulty": "Advanced",
+    "image": "/images/maps/sunken-columns.webp",
+    "sourceFile": "BTD6 MapSelectSunkenColumnsMapButton.png"
+  },
+  {
+    "id": "sunset-gulch",
+    "name": "Sunset Gulch",
+    "difficulty": "Advanced",
+    "image": "/images/maps/sunset-gulch.webp",
+    "sourceFile": "BTD6 MapSelectSunsetGulchMapButton.png"
+  },
+  {
+    "id": "underground",
+    "name": "Underground",
+    "difficulty": "Advanced",
+    "image": "/images/maps/underground.webp",
+    "sourceFile": "BTD6 MapSelectUndergroundButton.png"
+  },
+  {
+    "id": "x-factor",
+    "name": "X Factor",
+    "difficulty": "Advanced",
+    "image": "/images/maps/x-factor.webp",
+    "sourceFile": "BTD6 MapSelectXFactorButton.png"
+  },
+  {
+    "id": "ouch",
+    "name": "#Ouch",
+    "difficulty": "Expert",
+    "image": "/images/maps/ouch.webp",
+    "sourceFile": "BTD6 MapSelectouchButton.png"
+  },
+  {
+    "id": "blons",
+    "name": "Blons",
+    "difficulty": "Expert",
+    "image": "/images/maps/blons.webp",
+    "sourceFile": "BTD6 MapSelectBlonsMapButton.png"
+  },
+  {
+    "id": "bloody-puddles",
+    "name": "Bloody Puddles",
+    "difficulty": "Expert",
+    "image": "/images/maps/bloody-puddles.webp",
+    "sourceFile": "BTD6 MapSelectBloodyPuddlesButton.png"
+  },
+  {
+    "id": "dark-castle",
+    "name": "Dark Castle",
+    "difficulty": "Expert",
+    "image": "/images/maps/dark-castle.webp",
+    "sourceFile": "BTD6 MapSelectDarkCastleButton.png"
+  },
+  {
+    "id": "dark-dungeons",
+    "name": "Dark Dungeons",
+    "difficulty": "Expert",
+    "image": "/images/maps/dark-dungeons.webp",
+    "sourceFile": "BTD6 MapSelectDarkDungeonsButton.png"
+  },
+  {
+    "id": "flooded-valley",
+    "name": "Flooded Valley",
+    "difficulty": "Expert",
+    "image": "/images/maps/flooded-valley.webp",
+    "sourceFile": "BTD6 MapSelectFloodedValleyButton.png"
+  },
+  {
+    "id": "glacial-trail",
+    "name": "Glacial Trail",
+    "difficulty": "Expert",
+    "image": "/images/maps/glacial-trail.webp",
+    "sourceFile": "BTD6 MapSelectGlacialTrailButton.png"
+  },
+  {
+    "id": "infernal",
+    "name": "Infernal",
+    "difficulty": "Expert",
+    "image": "/images/maps/infernal.webp",
+    "sourceFile": "BTD6 MapSelectInfernal.png"
+  },
+  {
+    "id": "muddy-puddles",
+    "name": "Muddy Puddles",
+    "difficulty": "Expert",
+    "image": "/images/maps/muddy-puddles.webp",
+    "sourceFile": "BTD6 MapSelectMuddyPuddlesButton.png"
+  },
+  {
+    "id": "quad",
+    "name": "Quad",
+    "difficulty": "Expert",
+    "image": "/images/maps/quad.webp",
+    "sourceFile": "BTD6 MapSelectQuadButton.png"
+  },
+  {
+    "id": "ravine",
+    "name": "Ravine",
+    "difficulty": "Expert",
+    "image": "/images/maps/ravine.webp",
+    "sourceFile": "BTD6 MapSelectRavineButton.png"
+  },
+  {
+    "id": "sanctuary",
+    "name": "Sanctuary",
+    "difficulty": "Expert",
+    "image": "/images/maps/sanctuary.webp",
+    "sourceFile": "BTD6 MapSelectSanctuaryMapButton.png"
+  },
+  {
+    "id": "tricky-tracks",
+    "name": "Tricky Tracks",
+    "difficulty": "Expert",
+    "image": "/images/maps/tricky-tracks.webp",
+    "sourceFile": "BTD6 MapSelectTrickyTracksButton.png"
+  },
+  {
+    "id": "workshop",
+    "name": "Workshop",
+    "difficulty": "Expert",
+    "image": "/images/maps/workshop.webp",
+    "sourceFile": "BTD6 MapSelectWorkshopButton.png"
+  }
+]

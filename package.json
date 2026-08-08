@@ -1,0 +1,36 @@
+{
+  "name": "bloon-arcade",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "download-assets": "tsx scripts/download-btd6-assets.ts",
+    "download-assets:force": "tsx scripts/download-btd6-assets.ts --force",
+    "download-maps": "tsx scripts/download-btd6-maps.ts",
+    "download-maps:force": "tsx scripts/download-btd6-maps.ts --force",
+    "fetch-tower-costs": "tsx scripts/fetch-tower-costs.ts",
+    "prepare-card-assets": "tsx scripts/prepare-card-assets.ts",
+    "prepare-card-assets:all": "tsx scripts/prepare-card-assets.ts all"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/sharp": "^0.31.1",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "tsx": "^4.23.11",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
+  }
+}
