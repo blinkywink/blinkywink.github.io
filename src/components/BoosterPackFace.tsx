@@ -16,7 +16,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
     return (
       <div className={`pack-face pack-face--btd6 ${className}`.trim()}>
         <div className="booster__art">
-          <img src={pack.coverArt} alt="" draggable={false} />
+          <img src={pack.coverArt} alt="" draggable={false} decoding="async" />
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
               key={`${src}-${i}`}
               className={`pack-face__category-slot pack-face__category-slot--${i}`}
             >
-              <img src={src} alt="" draggable={false} />
+              <img src={src} alt="" draggable={false} decoding="async" />
             </div>
           ))}
         </div>
@@ -81,7 +81,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
       <div className="pack-face__grid" aria-hidden />
 
       <div className="pack-face__hero">
-        <img src={theme.image} alt="" draggable={false} />
+        <img src={theme.image} alt="" draggable={false} decoding="async" />
       </div>
 
       <div className="pack-face__copy">

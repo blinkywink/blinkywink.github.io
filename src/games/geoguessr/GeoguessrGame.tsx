@@ -94,7 +94,6 @@ export function GeoguessrGame({ onBack }: Props) {
         round={challenge.round}
         roundsPerRun={roundsPerRun}
         freePlay={state.freePlay}
-        onBack={onBack}
       />
 
       <main className="zoomed-main">

@@ -65,7 +65,7 @@ function baseEntity(tower: string): TowerEntity | null {
 }
 
 /** Player collection — owned cards in color, missing ones greyed out. */
-export function CardLab({ onBack, initial }: Props) {
+export function CardLab({ onBack: _onBack, initial }: Props) {
   const { owned } = useCardCollection();
   const [query, setQuery] = useState("");
   const [selectedTower, setSelectedTower] = useState<string | null>(
@@ -141,9 +141,6 @@ export function CardLab({ onBack, initial }: Props) {
       <div className="card-lab">
         <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
-          <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>
-            ← Home
-          </button>
           <div className="card-lab__titles">
             <p className="eyebrow">Collection</p>
             <h1>Card Collection</h1>

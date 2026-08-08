@@ -13,7 +13,7 @@ type Row = {
   coins_earned: number;
 };
 
-export function Leaderboard({ onBack }: Props) {
+export function Leaderboard({ onBack: _onBack }: Props) {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ export function Leaderboard({ onBack }: Props) {
 
   return (
     <div className="board-page">
-      <GameHeader title="LEADERBOARD" icon="" onBack={onBack} />
+      <GameHeader title="LEADERBOARD" icon="" />
       <main className="board-main">
         <p className="board-sub">Lifetime Cash earned</p>
 

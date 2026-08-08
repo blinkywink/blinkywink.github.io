@@ -47,7 +47,7 @@ function Tile({
   );
 }
 
-export function BloonleGame({ onBack }: Props) {
+export function BloonleGame({ onBack: _onBack }: Props) {
   const {
     state,
     typeLetter,
@@ -88,7 +88,7 @@ export function BloonleGame({ onBack }: Props) {
 
   return (
     <div className={`bloonle-page ${done ? "is-done" : ""}`}>
-      <GameHeader title="BLOONLE" icon="" onBack={onBack} />
+      <GameHeader title="BLOONLE" icon="" />
 
       <main className="bloonle-main">
         <div className="bloonle-prompt">

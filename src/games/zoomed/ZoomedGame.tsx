@@ -89,10 +89,11 @@ export function ZoomedGame({ onBack }: Props) {
   return (
     <div className={`zoomed-page ${revealing ? "zoomed-page--reveal" : ""}`}>
       <GameHeader
+        title="ZOOMED"
+        icon=""
         round={challenge.round}
         roundsPerRun={roundsPerRun}
         freePlay={state.freePlay}
-        onBack={onBack}
       />
 
       <main className="zoomed-main">

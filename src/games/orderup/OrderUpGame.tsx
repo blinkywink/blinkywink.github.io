@@ -225,7 +225,6 @@ export function OrderUpGame({ onBack }: Props) {
         round={state.round.round}
         roundsPerRun={roundsPerRun}
         freePlay={state.freePlay}
-        onBack={onBack}
       />
 
       <main className="orderup-main">
