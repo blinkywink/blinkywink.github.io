@@ -123,14 +123,6 @@ export function BloonsSweeperGame({ onBack }: Props) {
                     toggleFlag(r, c);
                   }}
                 >
-                  {cell.flagged && !cell.revealed ? (
-                    <img
-                      className="sweeper-cell__flag"
-                      src={RED_BLOON_IMAGE}
-                      alt=""
-                      draggable={false}
-                    />
-                  ) : null}
                   {showMine ? (
                     <img
                       className="sweeper-cell__mine"
