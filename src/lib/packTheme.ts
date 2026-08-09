@@ -87,7 +87,7 @@ export function btd6Pack(): PackDef {
     subtitle: "ALL TOWERS",
     tower: null,
     category: null,
-    cardCount: PACK_SIZE,
+    cardCount: 12,
     coverArt: BTD6_PACK_ART,
   };
 }
