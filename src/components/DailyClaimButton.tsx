@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
+import { awardCoins } from "../lib/awardCoins";
 import {
   DAILY_CASH_AMOUNT,
   formatDailyCountdown,
   msUntilDailyRefresh,
   todaysDailyCard,
 } from "../lib/dailyReward";
-import { formatPathLevels } from "../lib/pathCombos";
+import { duplicateCashForCard } from "../lib/packPull";
 import { MonkeyCard } from "./MonkeyCard";
 
 type Props = {
@@ -49,10 +50,8 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
 
   const daily = todaysDailyCard();
   const reward = daily.dayKey === dayKey ? daily : todaysDailyCard();
-  const alreadyOwnCard = owned.has(reward.card.id);
   const cashClaimed = !dailyClaimAvailable;
   const cardClaimed = !dailyCardClaimAvailable;
-  const cardLocked = alreadyOwnCard || cardClaimed;
 
   async function onClaimCash() {
     setCashBusy(true);
@@ -68,7 +67,6 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
   }
 
   async function onClaimCard() {
-    if (alreadyOwnCard) return;
     setCardBusy(true);
     setCardNote(null);
     const result = await claimDailyCard();
@@ -77,9 +75,17 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
       setCardNote(result.error);
       return;
     }
-    await awardCards([reward.card.id]);
+
+    if (owned.has(reward.card.id)) {
+      const dup = duplicateCashForCard(reward.card);
+      const bal = await awardCoins(dup);
+      if (bal != null) setCoinBalance(bal);
+      setCardNote(`+${dup.toLocaleString()} Cash`);
+    } else {
+      await awardCards([reward.card.id]);
+      setCardNote(`${reward.card.entity.name} unlocked`);
+    }
     setCardBusy(false);
-    setCardNote(`${reward.card.entity.name} unlocked`);
   }
 
   return (
@@ -106,9 +112,8 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
               height={72}
             />
           </div>
-          <p className="daily-rewards__slot-label">Cash</p>
           <p className="daily-rewards__slot-value">
-            +{DAILY_CASH_AMOUNT.toLocaleString()}
+            +{DAILY_CASH_AMOUNT.toLocaleString()} Cash
           </p>
           <button
             type="button"
@@ -122,38 +127,26 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
         </article>
 
         <article
-          className={`daily-rewards__slot${cardLocked ? " is-claimed" : ""}`}
+          className={`daily-rewards__slot${cardClaimed ? " is-claimed" : ""}`}
         >
           <div className="daily-rewards__card-wrap">
             <MonkeyCard
               entity={reward.card.entity}
               pathLevels={reward.card.pathLevels}
               mode="preview"
-              owned={!cardLocked}
+              owned
             />
           </div>
-          <p className="daily-rewards__slot-label">
-            Daily card · T{reward.tier}
-          </p>
           <p className="daily-rewards__slot-value">
             {reward.card.entity.name}
-          </p>
-          <p className="daily-rewards__slot-sub">
-            {formatPathLevels(reward.card.pathLevels)} · {reward.card.tower}
           </p>
           <button
             type="button"
             className="btn btn--primary btn--sm"
-            disabled={cardBusy || cardLocked}
+            disabled={cardBusy || cardClaimed}
             onClick={() => void onClaimCard()}
           >
-            {cardBusy
-              ? "Claiming…"
-              : alreadyOwnCard
-                ? "Owned"
-                : cardClaimed
-                  ? "Claimed"
-                  : "Claim"}
+            {cardBusy ? "Claiming…" : cardClaimed ? "Claimed" : "Claim"}
           </button>
           {cardNote ? <p className="daily-rewards__note">{cardNote}</p> : null}
         </article>

@@ -1298,7 +1298,7 @@ body:has(.zoomed-page) {
 .daily-rewards {
   display: grid;
   gap: 0.65rem;
-  width: min(100%, 34rem);
+  width: min(100%, 36rem);
 }
 
 .daily-rewards__row {
@@ -1315,7 +1315,7 @@ body:has(.zoomed-page) {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 0.35rem;
+  gap: 0.4rem;
   text-align: center;
 }
 
@@ -1344,22 +1344,20 @@ body:has(.zoomed-page) {
 .daily-rewards__card-wrap {
   width: var(--card-preview-w);
   height: var(--card-preview-h);
-  border-radius: calc(22px * var(--card-preview-scale));
-  overflow: hidden;
 }
 
-.daily-rewards__card-wrap .monkey-card-scene.monkey-card-scene--preview {
+.daily-rewards__card-wrap .monkey-card-scene--preview {
   width: var(--card-preview-w);
   height: var(--card-preview-h);
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
 }
 
-.daily-rewards__slot-label {
-  margin: 0.2rem 0 0;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(240, 240, 244, 0.55);
+.daily-rewards__card-wrap .monkey-card-scene--preview > .monkey-card {
+  width: var(--card-face-w, 400px);
+  height: calc(var(--card-face-w, 400px) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
 }
 
 .daily-rewards__slot-value {
@@ -1368,13 +1366,6 @@ body:has(.zoomed-page) {
   font-size: 1.05rem;
   color: #f0f0f4;
   line-height: 1.2;
-}
-
-.daily-rewards__slot-sub {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: rgba(240, 240, 244, 0.48);
 }
 
 .daily-rewards__note {
@@ -1386,7 +1377,7 @@ body:has(.zoomed-page) {
 }
 
 .daily-rewards--hero {
-  width: min(100%, 36rem);
+  width: min(100%, 38rem);
   margin: 0 auto;
 }
 
