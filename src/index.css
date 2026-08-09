@@ -10093,59 +10093,36 @@ button.trade-offer-card:hover:not(:disabled) {
   }
 }
 
-.shop-heroes { margin-top: 1.75rem; }
+.shop-heroes { margin-top: 0.35rem; }
 
 .shop-heroes__note {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: rgba(240, 240, 244, 0.62);
 }
 
-.shop-heroes__grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.1rem 1rem;
-  justify-items: center;
-  max-width: 44rem;
-  margin-inline: auto;
-}
-
-.shop-heroes__tile {
-  display: grid;
-  gap: 0.45rem;
-  justify-items: center;
-  width: 100%;
-  max-width: 9.75rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.shop-heroes__tile:hover .hero-card__plate,
-.shop-heroes__tile:focus-visible .hero-card__plate {
-  border-color: rgba(240, 200, 74, 0.55);
-}
-
-.shop-heroes__tile .hero-card,
-.shop-heroes__tile .hero-card--md {
-  width: 100%;
-  max-width: 9.75rem;
+.shop-heroes__row .hero-card {
+  --hero-shop-w: min(22vw, 150px);
+  width: var(--hero-shop-w);
   pointer-events: none;
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.35));
+  transform: translateY(0);
+  transition: transform 0.18s ease;
 }
 
-.shop-heroes__price {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: rgba(240, 200, 74, 0.95);
+.shop-heroes__row .pack-shelf__item:hover .hero-card,
+.shop-heroes__row .pack-shelf__item:focus-visible .hero-card {
+  transform: translateY(-10px);
 }
 
-.shop-heroes__tile.is-owned .shop-heroes__price {
-  color: rgba(240, 240, 244, 0.55);
+.shop-heroes__row .pack-shelf__item:active .hero-card {
+  transform: translateY(-4px);
+}
+
+.shop-heroes__row .hero-card__plate {
+  aspect-ratio: 2.5 / 3.5;
+  border-radius: calc(22px * 0.39);
 }
 
 .shop-hero-focus__panel {
@@ -10158,6 +10135,13 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .shop-hero-focus__panel .hero-card {
   width: 10.5rem;
+}
+
+.shop-hero-focus__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.03em;
 }
 
 .shop-hero-focus__blurb {
@@ -10177,6 +10161,14 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .hero-card--md { width: 9.5rem; }
+
+.hero-card--plate-only {
+  gap: 0;
+}
+
+.hero-card--plate-only .hero-card__body {
+  display: none;
+}
 
 .hero-card__plate {
   position: relative;
@@ -10208,8 +10200,7 @@ button.trade-offer-card:hover:not(:disabled) {
     linear-gradient(165deg, #1a1c22 0%, #101218 55%, #0a0c12 100%);
 }
 
-.hero-card.is-locked .hero-card__name,
-.hero-card.is-locked .hero-card__title {
+.hero-card.is-locked .hero-card__name {
   opacity: 0.72;
 }
 
@@ -10281,13 +10272,6 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .hero-card--md .hero-card__name { font-size: 0.95rem; }
-
-.hero-card__title {
-  font-size: 0.68rem;
-  font-weight: 650;
-  color: rgba(240, 240, 244, 0.55);
-  line-height: 1.2;
-}
 
 .hero-card__footer {
   display: grid;
@@ -10392,30 +10376,15 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 @media (max-width: 900px) {
-  .shop-heroes__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.85rem 0.65rem;
-    max-width: 36rem;
-  }
-
-  .shop-heroes__tile,
-  .shop-heroes__tile .hero-card {
-    max-width: 8.25rem;
+  .shop-heroes__row .hero-card {
+    --hero-shop-w: min(28vw, 140px);
   }
 }
 
 @media (max-width: 520px) {
-  .shop-heroes__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem 0.75rem;
-    max-width: 22rem;
-  }
-
-  .shop-heroes__tile,
-  .shop-heroes__tile .hero-card {
-    max-width: 9.5rem;
-  }
-
   .hero-card { width: 6.5rem; }
   .hero-card--md { width: 100%; max-width: 10rem; }
+  .shop-heroes__row .hero-card {
+    --hero-shop-w: min(38vw, 150px);
+  }
 }

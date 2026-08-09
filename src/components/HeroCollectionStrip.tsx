@@ -103,6 +103,8 @@ type FaceProps = {
   equipped?: boolean;
   locked?: boolean;
   hideLevel?: boolean;
+  /** Hide name + flavor title under the plate (shop shelf uses pack labels). */
+  hideCaption?: boolean;
   size?: "sm" | "md";
   footer?: ReactNode;
 };
@@ -114,12 +116,13 @@ export function HeroCardFace({
   equipped = false,
   locked = false,
   hideLevel = false,
+  hideCaption = false,
   size = "sm",
   footer,
 }: FaceProps) {
   return (
     <article
-      className={`hero-card hero-card--${size}${equipped ? " is-equipped" : ""}${locked ? " is-locked" : ""}`}
+      className={`hero-card hero-card--${size}${equipped ? " is-equipped" : ""}${locked ? " is-locked" : ""}${hideCaption ? " hero-card--plate-only" : ""}`}
     >
       <div className="hero-card__plate" aria-hidden>
         <span className="hero-card__shine" />
@@ -133,10 +136,11 @@ export function HeroCardFace({
         ) : null}
         {equipped ? <span className="hero-card__badge">Equipped</span> : null}
       </div>
-      <div className="hero-card__body">
-        <strong className="hero-card__name">{hero.name}</strong>
-        <span className="hero-card__title">{hero.title}</span>
-      </div>
+      {!hideCaption ? (
+        <div className="hero-card__body">
+          <strong className="hero-card__name">{hero.name}</strong>
+        </div>
+      ) : null}
       {footer}
     </article>
   );

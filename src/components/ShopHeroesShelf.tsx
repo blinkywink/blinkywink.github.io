@@ -118,7 +118,9 @@ export function ShopHeroesShelf() {
               size="md"
               locked={!focusMine}
               hideLevel={!focusMine}
+              hideCaption
             />
+            <h2 className="shop-hero-focus__name">{focused.name}</h2>
             <p className="shop-hero-focus__blurb">{heroBlurb(focused.id)}</p>
             <div className="pack-opener__buy shop-hero-focus__buy">
               {!focusMine ? <CurrencyChip amount={HERO_UNLOCK_COST} /> : null}
@@ -163,7 +165,7 @@ export function ShopHeroesShelf() {
       {status ? (
         <p className="shop-direct__banner shop-direct__banner--ok">{status}</p>
       ) : null}
-      <div className="shop-heroes__grid">
+      <div className="pack-shelf__row shop-heroes__row">
         {heroes.map((hero) => {
           const mine = owned.has(hero.id);
           const level = heroLevelFromProfile(levels, hero.id);
@@ -171,7 +173,7 @@ export function ShopHeroesShelf() {
             <button
               key={hero.id}
               type="button"
-              className={`shop-heroes__tile${mine ? " is-owned" : " is-locked"}`}
+              className={`pack-shelf__item${mine ? " is-owned" : ""}`}
               onClick={() => {
                 setBuyError(null);
                 setFocused(hero);
@@ -182,22 +184,26 @@ export function ShopHeroesShelf() {
                 level={mine ? level : 1}
                 locked={!mine}
                 hideLevel={!mine}
+                hideCaption
                 size="md"
               />
-              <span className="shop-heroes__price">
-                {mine ? (
-                  "Owned"
-                ) : (
-                  <>
-                    <img
-                      src="/images/ui/money-icon.webp"
-                      alt=""
-                      width={16}
-                      height={16}
-                    />
-                    {HERO_UNLOCK_COST.toLocaleString()}
-                  </>
-                )}
+              <span className="pack-shelf__label">
+                <strong>{hero.name}</strong>
+                <span className="pack-shelf__price">
+                  {mine ? (
+                    "Owned"
+                  ) : (
+                    <>
+                      <img
+                        src="/images/ui/money-icon.webp"
+                        alt=""
+                        width={22}
+                        height={22}
+                      />
+                      {HERO_UNLOCK_COST.toLocaleString()}
+                    </>
+                  )}
+                </span>
               </span>
             </button>
           );
