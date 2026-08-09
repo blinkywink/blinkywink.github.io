@@ -31,6 +31,10 @@ export function userCollectionPath(username: string): string {
   return `/user/${encodeURIComponent(username)}`;
 }
 
+export function shopPath(): string {
+  return "/shop";
+}
+
 export function marketplacePath(): string {
   return "/marketplace";
 }

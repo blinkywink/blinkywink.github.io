@@ -251,6 +251,34 @@ export function dayStamp(d = new Date()): string {
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
+/** Next UTC midnight (ms since epoch) — when featured tower packs rotate. */
+export function nextUtcMidnightMs(now = new Date()): number {
+  return Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+}
+
+export function msUntilShopRotation(now = new Date()): number {
+  return Math.max(0, nextUtcMidnightMs(now) - now.getTime());
+}
+
+/** e.g. "4h 12m" / "12m 05s" / "45s" */
+export function formatShopCountdown(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2, "0")}s`;
+  return `${s}s`;
+}
+
 function hashString(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {

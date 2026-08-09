@@ -17,6 +17,7 @@ import { ListingPage } from "./components/ListingPage";
 import { Marketplace } from "./components/Marketplace";
 import { PackOpenerTest } from "./components/PackOpenerTest";
 import { ProfilePage } from "./components/ProfilePage";
+import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { BloonleGame } from "./games/bloonle";
@@ -55,7 +56,14 @@ function HomePage() {
   return (
     <ArcadeHome
       onPlay={(game: GameId) => navigate(gamePath(game as GamePath))}
-      onOpenCards={() => navigate(collectionPath())}
+    />
+  );
+}
+
+function ShopRoute() {
+  const navigate = useNavigate();
+  return (
+    <ShopPage
       onPackFinished={({ pack, unlocked }) => {
         navigate(collectionPath(), {
           state: {
@@ -274,6 +282,7 @@ function AppShell() {
       <div className="site-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<ShopRoute />} />
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route

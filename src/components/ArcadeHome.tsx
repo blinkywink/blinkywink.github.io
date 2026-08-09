@@ -1,15 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "../auth/AuthProvider";
-import {
-  allCategoryPacks,
-  featuredShopPacks,
-  packPrice,
-  type PackDef,
-} from "../lib/packTheme";
-import type { MonkeyCardSpec } from "../lib/pathCombos";
+import { useEffect, useRef } from "react";
 import { preloadImage } from "../utils/imageProcessing";
-import { BoosterPack } from "./BoosterPack";
-import { PackOpenerTest } from "./PackOpenerTest";
+import { DailyClaimButton } from "./DailyClaimButton";
 
 export type GameId =
   | "zoomed"
@@ -20,13 +11,6 @@ export type GameId =
 
 type Props = {
   onPlay: (game: GameId) => void;
-  onOpenCards: () => void;
-  onPackFinished?: (result: {
-    pack: PackDef;
-    pulls: MonkeyCardSpec[];
-    unlocked: MonkeyCardSpec[];
-    duplicateCash: number;
-  }) => void;
 };
 
 /** Bright mid-tier art so the home crop isn't near-black silhouette. */
@@ -263,119 +247,13 @@ function MapPreview() {
   );
 }
 
-function CardsPreview() {
-  const faces = [
-    {
-      src: "/images/towers/ninja-monkey/grandmaster-ninja.webp",
-      tint: "#1a3a28",
-    },
-    {
-      src: "/images/towers/super-monkey/dark-champion.webp",
-      tint: "#2a1840",
-    },
-    {
-      src: "/images/towers/druid/avatar-of-wrath.webp",
-      tint: "#3a2010",
-    },
-  ] as const;
-
-  return (
-    <div className="game-preview game-preview--cards" aria-hidden>
-      <div className="game-preview__fan">
-        {faces.map((face, i) => (
-          <div
-            key={face.src}
-            className={`game-preview__mini-card game-preview__mini-card--${i}`}
-            style={{ background: face.tint }}
-          >
-            <img src={face.src} alt="" draggable={false} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DailyClaimButton() {
-  const { isGuest, dailyClaimAvailable, claimDailyCash, ready } = useAuth();
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-
-  if (!ready || isGuest) return null;
-
-  async function onClaim() {
-    setBusy(true);
-    setNote(null);
-    const result = await claimDailyCash();
-    setBusy(false);
-    if (result.error) {
-      setNote(result.error);
-      return;
-    }
-    setNote(`+${(result.amount ?? 500).toLocaleString()} Cash`);
-  }
-
-  return (
-    <div className="daily-claim">
-      <button
-        type="button"
-        className={`arcade-link-btn arcade-link-btn--daily${dailyClaimAvailable ? " is-ready" : ""}`}
-        onClick={() => void onClaim()}
-        disabled={busy || !dailyClaimAvailable}
-      >
-        {busy
-          ? "Claiming…"
-          : dailyClaimAvailable
-            ? "Claim 500 Cash"
-            : "Claimed today"}
-      </button>
-      {note ? <p className="daily-claim__note">{note}</p> : null}
-    </div>
-  );
-}
-
-export function ArcadeHome({
-  onPlay,
-  onOpenCards,
-  onPackFinished,
-}: Props) {
-  const [activePack, setActivePack] = useState<PackDef | null>(null);
-  const featured = useMemo(() => featuredShopPacks(), []);
-  const categories = useMemo(() => allCategoryPacks(), []);
-
-  const renderPackButton = (pack: PackDef) => {
-    const price = packPrice(pack);
-    return (
-      <button
-        key={pack.id}
-        type="button"
-        className="pack-shelf__item"
-        onClick={() => setActivePack(pack)}
-      >
-        <BoosterPack
-          pack={pack}
-          effects={false}
-          className="pack-shelf__booster"
-        />
-        <span className="pack-shelf__label">
-          <strong>{pack.title}</strong>
-          <span className="pack-shelf__price">
-            <img
-              src="/images/ui/money-icon.webp"
-              alt=""
-              width={22}
-              height={22}
-            />
-            {price.toLocaleString()}
-          </span>
-        </span>
-      </button>
-    );
-  };
-
+/** Games hub — playable titles only. */
+export function ArcadeHome({ onPlay }: Props) {
   return (
     <div className="arcade">
       <div className="arcade__atmosphere" aria-hidden="true" />
+
+      <DailyClaimButton variant="hero" />
 
       <section className="arcade__featured" aria-label="Available games">
         <button
@@ -450,40 +328,6 @@ export function ArcadeHome({
             </span>
           </div>
         </button>
-
-        <button
-          type="button"
-          className="game-card game-card--lab"
-          aria-label="Card Collection — Browse and unlock monkey cards"
-          onClick={onOpenCards}
-        >
-          <CardsPreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">CARD COLLECTION</span>
-            <span className="game-card__blurb">
-              Browse and unlock monkey cards.
-            </span>
-          </div>
-        </button>
-      </section>
-
-      <section className="arcade__utility" aria-label="Daily reward">
-        <DailyClaimButton />
-      </section>
-
-      <section className="pack-shelf" aria-label="Shop">
-        <div className="pack-shelf__head">
-          <h3 className="section-label">Shop</h3>
-          <p className="pack-shelf__note">Tower packs rotate daily.</p>
-        </div>
-        <div className="pack-shelf__row">{featured.map(renderPackButton)}</div>
-
-        <div className="pack-shelf__head pack-shelf__head--sub">
-          <h3 className="section-label">Categories</h3>
-        </div>
-        <div className="pack-shelf__row">
-          {categories.map(renderPackButton)}
-        </div>
       </section>
 
       <footer className="arcade__footer">
@@ -499,13 +343,6 @@ export function ArcadeHome({
         </p>
         <p>BTD6 Creator code: blinky</p>
       </footer>
-
-      <PackOpenerTest
-        open={activePack != null}
-        pack={activePack ?? undefined}
-        onClose={() => setActivePack(null)}
-        onFinished={onPackFinished}
-      />
     </div>
   );
 }

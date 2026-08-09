@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 import type { AvatarCrop } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
-import { MonkeyCard } from "./MonkeyCard";
 
 type Props = {
   crop: AvatarCrop | null | undefined;
@@ -10,7 +9,10 @@ type Props = {
   alt?: string;
 };
 
-/** Circular PFP cropping a real MonkeyCard (not just the tower portrait). */
+/**
+ * Circular PFP — image fills the circle (object-fit + focal zoom).
+ * Same math at any resolution / DPR (no nested card scales).
+ */
 export function UserAvatar({
   crop,
   size = 36,
@@ -23,13 +25,7 @@ export function UserAvatar({
     return (
       <span
         className={`user-avatar user-avatar--fallback ${className}`.trim()}
-        style={
-          {
-            width: size,
-            height: size,
-            ["--avatar-size" as string]: `${size}px`,
-          } as CSSProperties
-        }
+        style={{ width: size, height: size }}
         aria-hidden={alt ? undefined : true}
         role={alt ? "img" : undefined}
         aria-label={alt || undefined}
@@ -53,13 +49,11 @@ export function UserAvatar({
     );
   }
 
-  // Keep card slightly larger than the circle so zoom/pan has room.
-  const previewW = Math.max(Math.round(size * 1.45), 52);
-  const previewH = Math.round((previewW * 3.5) / 2.5);
-  const previewScale = previewW / 400;
-  const zoom = Number.isFinite(crop.zoom) ? crop.zoom : 1.25;
-  const x = Number.isFinite(crop.x) ? crop.x : 0.5;
-  const y = Number.isFinite(crop.y) ? crop.y : 0.38;
+  const zoom = Number.isFinite(crop.zoom)
+    ? Math.min(4, Math.max(1, crop.zoom))
+    : 1.25;
+  const x = Number.isFinite(crop.x) ? Math.min(1, Math.max(0, crop.x)) : 0.5;
+  const y = Number.isFinite(crop.y) ? Math.min(1, Math.max(0, crop.y)) : 0.38;
 
   return (
     <span
@@ -68,35 +62,21 @@ export function UserAvatar({
         {
           width: size,
           height: size,
-          ["--avatar-size" as string]: `${size}px`,
-          ["--card-face-w" as string]: "400px",
-          ["--card-preview-w" as string]: `${previewW}px`,
-          ["--card-preview-scale" as string]: String(previewScale),
-          ["--card-preview-h" as string]: `${previewH}px`,
+          ["--ax" as string]: `${x * 100}%`,
+          ["--ay" as string]: `${y * 100}%`,
+          ["--az" as string]: String(zoom),
         } as CSSProperties
       }
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
     >
-      <span
-        className="user-avatar__card"
-        style={{
-          width: previewW,
-          height: previewH,
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
-          transform: `translate3d(-50%, -50%, 0) scale(${zoom})`,
-        }}
-      >
-        {/* Always static — animated foil/visualizer glitches inside circular clips in Chrome. */}
-        <MonkeyCard
-          entity={card.entity}
-          pathLevels={card.pathLevels}
-          mode="preview"
-          owned
-          staticArt
-        />
-      </span>
+      <img
+        className="user-avatar__media"
+        src={card.entity.image}
+        alt=""
+        draggable={false}
+        decoding="async"
+      />
     </span>
   );
 }
