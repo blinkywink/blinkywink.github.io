@@ -157,7 +157,7 @@ export function heroBlurb(heroId: string, level = 1): string {
     case "psi":
       return `+${pctLabel(e.paragonWeightBonus)} absolute Paragon pack weight`;
     case "silas":
-      return `${pctLabel(e.featuredFreezeChance)} chance to freeze featured clear for one more`;
+      return `${pctLabel(e.featuredFreezeChance)} chance featured game doesn't change`;
     default:
       return "Hero passive";
   }

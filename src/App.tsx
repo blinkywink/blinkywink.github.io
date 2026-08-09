@@ -235,15 +235,15 @@ function AppShell() {
   const settleFeaturedBonus = useCallback(
     async (game: FeaturedBonusGame, cleared: boolean) => {
       const result = resolveFeaturedBonusGame(game, cleared, {
-        silasFreezeChance:
+        silasHoldChance:
           equipped?.heroId === "silas"
             ? heroEffectsAtLevel("silas", equipped.level).featuredFreezeChance
             : 0,
       });
-      if (result.silasFroze) {
+      if (result.silasHeld || result.silasFroze) {
         notifyHeroProc({
           heroId: "silas",
-          message: "Silas: featured clear frozen",
+          message: "Silas: featured game held",
         });
       }
       if (!result.awarded || result.amount <= 0) return;

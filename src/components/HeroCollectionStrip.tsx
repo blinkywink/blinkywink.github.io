@@ -13,6 +13,7 @@ import {
   type HeroEntity,
 } from "../data/heroes";
 import { heroLevelT } from "../lib/heroEffects";
+import { heroAccent } from "../lib/heroAccents";
 import {
   heroLevelFromProfile,
   normalizeHeroLevels,
@@ -133,6 +134,7 @@ export function HeroCardFace({
   onSelect,
 }: FaceProps) {
   const power = heroLevelT(level);
+  const accent = heroAccent(hero.id);
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -141,6 +143,11 @@ export function HeroCardFace({
 
   const style = {
     ["--hero-power" as string]: String(power),
+    ["--hero-primary" as string]: accent.primary,
+    ["--hero-secondary" as string]: accent.secondary,
+    ["--hero-r" as string]: String(accent.rgb[0]),
+    ["--hero-g" as string]: String(accent.rgb[1]),
+    ["--hero-b" as string]: String(accent.rgb[2]),
     ["--rx" as string]: "0deg",
     ["--ry" as string]: "0deg",
     ["--tx" as string]: "0px",
@@ -203,7 +210,6 @@ export function HeroCardFace({
         equipped ? "is-equipped" : "",
         hideCaption ? "hero-card--plate-only" : "",
         active ? "is-tilting" : "",
-        power < 0.05 ? "is-base" : "",
       ]
         .filter(Boolean)
         .join(" ")}
