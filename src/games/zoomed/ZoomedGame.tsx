@@ -159,6 +159,11 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
             <>
               <h2>What is this?</h2>
               <LivesMeter maxAttempts={maxLives} attemptsUsed={livesLost} />
+              {state.attemptsUsed >= 2 ? (
+                <p className="guess-hint" role="status">
+                  Hint: {challenge.correct.tower}
+                </p>
+              ) : null}
             </>
           )}
         </div>

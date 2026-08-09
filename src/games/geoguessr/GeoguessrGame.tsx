@@ -152,6 +152,11 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
             <>
               <h2>Which map is this?</h2>
               <LivesMeter maxAttempts={maxLives} attemptsUsed={livesLost} />
+              {state.attemptsUsed >= 2 ? (
+                <p className="guess-hint" role="status">
+                  Hint: {challenge.correct.difficulty}
+                </p>
+              ) : null}
             </>
           )}
         </div>

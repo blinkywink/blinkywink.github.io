@@ -1596,6 +1596,15 @@ body:has(.zoomed-page) {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
+.guess-hint {
+  margin: 0.45rem 0 0;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  color: #9fd6ff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
 .zoomed-feedback-slot {
   min-height: 3.6rem;
   margin-top: 0.45rem;
