@@ -133,6 +133,28 @@ export type Database = {
         Args: { p_amount: number };
         Returns: number;
       };
+      get_shop_direct_listings: {
+        Args: Record<string, never>;
+        Returns: {
+          slot: number;
+          cardId: string;
+          tier: number;
+          price: number;
+          version: number;
+          updatedAt: string;
+        }[];
+      };
+      buy_shop_direct_card: {
+        Args: { p_slot: number; p_version: number };
+        Returns: {
+          ok: boolean;
+          boughtCardId: string;
+          boughtTier: number;
+          price: number;
+          coins: number;
+          listings: unknown;
+        };
+      };
       award_cards: {
         Args: { p_card_ids: string[] };
         Returns: string[];

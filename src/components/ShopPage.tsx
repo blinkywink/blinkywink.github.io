@@ -13,6 +13,7 @@ import { BoosterPack } from "./BoosterPack";
 import { DailyClaimButton } from "./DailyClaimButton";
 import { PackOpenerTest } from "./PackOpenerTest";
 import { PageHeader } from "./PageHeader";
+import { ShopDirectShelf } from "./ShopDirectShelf";
 
 type Props = {
   onPackFinished?: (result: {
@@ -105,6 +106,8 @@ export function ShopPage({ onPackFinished }: Props) {
         <div className="pack-shelf__row">
           {categories.map(renderPackButton)}
         </div>
+
+        <ShopDirectShelf />
       </section>
 
       <PackOpenerTest
