@@ -3,12 +3,13 @@ import { useAuth } from "../../auth/AuthProvider";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
+import { earnsQuizBonusPack } from "../rewards";
 import { CAMO_IMAGE } from "./config";
 import { useCamoDetection } from "./useCamoDetection";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
 };
 
 export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
@@ -32,11 +33,11 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
       runEndNotified.current = true;
       onRunEnd?.({
         cleared: state.clearedRun,
-        bestStreak: state.bestStreak,
+        correctCount: state.correct,
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correct, onRunEnd]);
 
   useEffect(() => {
     if (state.phase !== "recalling") return;
@@ -69,7 +70,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
           coinsEarned={state.lastRun.score * (state.perfectRun ? 2 : 1)}
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={state.bestStreak >= 4}
+          bonusPack={earnsQuizBonusPack(state.correct)}
           continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}

@@ -28,6 +28,7 @@ import { CamoDetectionGame } from "./games/camodetection";
 import { GeoguessrGame } from "./games/geoguessr";
 import { OrderUpGame } from "./games/orderup";
 import { PriceCheckGame } from "./games/pricecheck";
+import { earnsQuizBonusPack } from "./games/rewards";
 import { ZoomedGame } from "./games/zoomed";
 import { awardCoins } from "./lib/awardCoins";
 import {
@@ -58,7 +59,6 @@ type RewardPackState = {
 
 type CollectionLocationState = CardsOpenOpts | null;
 
-const QUIZ_BONUS_STREAK = 4;
 const BLOONLE_BONUS_MAX_TRIES = 3;
 
 function HomePage() {
@@ -251,9 +251,9 @@ function AppShell() {
 
   const offerQuizRewards = useCallback(
     (game: FeaturedBonusGame) =>
-      (info: { cleared: boolean; bestStreak: number }) => {
+      (info: { cleared: boolean; correctCount: number }) => {
         void settleFeaturedBonus(game, info.cleared);
-        const wantBonus = info.bestStreak >= QUIZ_BONUS_STREAK;
+        const wantBonus = earnsQuizBonusPack(info.correctCount);
         const free = info.cleared ? pickRewardTowerPack(owned) : null;
         const exclude = new Set(free?.tower ? [free.tower] : []);
         const choices = wantBonus

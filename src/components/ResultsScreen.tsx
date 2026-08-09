@@ -4,7 +4,7 @@ type Props = {
   cleared?: boolean;
   /** Flawless clear — Cash was doubled. */
   perfect?: boolean;
-  /** bestStreak ≥ 4 — bonus pick incoming. */
+  /** ≥7 correct in the 10-round quiz — bonus pick incoming. */
   bonusPack?: boolean;
   /** False after the one allowed continue was already used. */
   continueAvailable?: boolean;
@@ -70,8 +70,8 @@ export function ResultsScreen({
         {bonusPack ? (
           <p className="results__pack-note results__pack-note--bonus">
             {cleared
-              ? "Nice streak! Bonus pack coming up."
-              : "Nice streak! Pick a bonus pack."}
+              ? "7+ correct — bonus pack coming up."
+              : "7+ correct — pick a bonus pack."}
           </p>
         ) : null}
 

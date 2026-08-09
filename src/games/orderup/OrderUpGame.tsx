@@ -11,11 +11,12 @@ import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import { formatCash, type PricedCombo } from "../pricecheck/costs";
+import { earnsQuizBonusPack } from "../rewards";
 import { useOrderUp } from "./useOrderUp";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
 };
 
 function reorder(
@@ -110,11 +111,11 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
       runEndNotified.current = true;
       onRunEnd?.({
         cleared: state.clearedRun,
-        bestStreak: state.bestStreak,
+        correctCount: state.correct,
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correct, onRunEnd]);
 
   const indexFromClientX = useCallback((clientX: number) => {
     const track = trackRef.current;
@@ -201,7 +202,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={state.bestStreak >= 4}
+          bonusPack={earnsQuizBonusPack(state.correct)}
           continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}

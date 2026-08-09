@@ -4,12 +4,13 @@ import { formatPathLevels } from "../../lib/pathCombos";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
+import { earnsQuizBonusPack } from "../rewards";
 import { formatCash, type PricedCombo } from "./costs";
 import { usePriceCheck, type Guess } from "./usePriceCheck";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
 };
 
 function ComboTile({
@@ -112,11 +113,11 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
       runEndNotified.current = true;
       onRunEnd?.({
         cleared: state.clearedRun,
-        bestStreak: state.bestStreak,
+        correctCount: state.correct,
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correct, onRunEnd]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
@@ -154,7 +155,7 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={state.bestStreak >= 4}
+          bonusPack={earnsQuizBonusPack(state.correct)}
           continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}

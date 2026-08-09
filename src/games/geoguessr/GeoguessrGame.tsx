@@ -7,11 +7,12 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { MapAnswerSearch } from "../../components/MapAnswerSearch";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import type { TransformParams } from "../../utils/imageProcessing";
+import { earnsQuizBonusPack } from "../rewards";
 import { useGeoguessr } from "./useGeoguessr";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
 };
 
 export function GeoguessrGame({ onBack, onRunEnd }: Props) {
@@ -54,11 +55,11 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
       runEndNotified.current = true;
       onRunEnd?.({
         cleared: state.clearedRun,
-        bestStreak: state.bestStreak,
+        correctCount: state.correctCount,
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correctCount, onRunEnd]);
 
   if (state.phase === "results" && state.lastRun) {
     return (
@@ -69,7 +70,7 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={state.bestStreak >= 4}
+          bonusPack={earnsQuizBonusPack(state.correctCount)}
           continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}

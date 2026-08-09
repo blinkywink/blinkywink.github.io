@@ -6,6 +6,13 @@ export const SHARED_RUN = {
   continueCost: 100,
 } as const;
 
+/** Bonus tower-pack pick when you get this many right in a 10-round quiz. */
+export const QUIZ_BONUS_MIN_CORRECT = 7;
+
+export function earnsQuizBonusPack(correctCount: number): boolean {
+  return correctCount >= QUIZ_BONUS_MIN_CORRECT;
+}
+
 /**
  * Cash curve for timed / quiz games.
  * Round 1 pays `base`; each later question multiplies by `progressMult`
