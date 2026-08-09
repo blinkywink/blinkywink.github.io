@@ -122,7 +122,7 @@ export function OwnedCardPicker({
   const blocked = unavailableIds ?? EMPTY_SET;
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>({ kind: "towers" });
-  const [tierHighFirst, setTierHighFirst] = useState(false);
+  const [tierHighFirst, setTierHighFirst] = useState(true);
   const [draft, setDraft] = useState<Set<string>>(() => new Set(selectedIds));
 
   // Only reset draft when the committed selection *contents* change.
@@ -291,6 +291,7 @@ export function OwnedCardPicker({
               className="card-lab__all-btn"
               onClick={() => {
                 setQuery("");
+                setTierHighFirst(true);
                 setView({ kind: "all" });
               }}
             >
@@ -327,6 +328,7 @@ export function OwnedCardPicker({
                     disabled={ownedN === 0}
                     onClick={() => {
                       setQuery("");
+                      setTierHighFirst(true);
                       setView({ kind: "tower", name: tower.name });
                     }}
                   >

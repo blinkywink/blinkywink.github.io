@@ -124,8 +124,13 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
     () => new Set(initial?.highlightIds ?? []),
   );
-  /** false = low tier first (default), true = high tier / paragon first */
-  const [tierHighFirst, setTierHighFirst] = useState(false);
+  /**
+   * Owned-only grids (All Cards) default high→low.
+   * Full tower ladders with locked greys default low→high.
+   */
+  const [tierHighFirst, setTierHighFirst] = useState(
+    () => !initial?.tower,
+  );
 
   useEffect(() => {
     if (!viewer) {
@@ -139,6 +144,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     setRemoteError(null);
     setRemoteOwned(null);
     setView({ kind: "towers" });
+    setTierHighFirst(true);
     setQuery("");
     setFocused(null);
     void fetchPlayerCardIds(viewer.userId)
@@ -185,7 +191,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
 
   useEffect(() => {
     if (!initial || isRemote) return;
-    if (initial.tower) setView({ kind: "tower", name: initial.tower });
+    if (initial.tower) {
+      setView({ kind: "tower", name: initial.tower });
+      setTierHighFirst(false);
+    }
     if (initial.highlightIds?.length) {
       setHighlightIds(new Set(initial.highlightIds));
     }
@@ -424,6 +433,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
             className="card-lab__all-btn"
             onClick={() => {
               setQuery("");
+              setTierHighFirst(true);
               setView({ kind: "all" });
             }}
           >
@@ -460,6 +470,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   className="card-lab__tower-btn"
                   onClick={() => {
                     setQuery("");
+                    setTierHighFirst(false);
                     setView({ kind: "tower", name: tower.name });
                   }}
                 >
