@@ -392,6 +392,7 @@ p {
 .site-main:has(.bloonle-page),
 .site-main:has(.camo-page),
 .site-main:has(.sweeper-page),
+.site-main:has(.mixup-page),
 .site-main:has(.zoomed-page) {
   height: 100dvh;
   max-height: 100dvh;
@@ -403,6 +404,7 @@ body:has(.orderup-page),
 body:has(.bloonle-page),
 body:has(.camo-page),
 body:has(.sweeper-page),
+body:has(.mixup-page),
 body:has(.zoomed-page) {
   overflow: hidden;
   height: 100dvh;
@@ -1481,6 +1483,34 @@ body:has(.zoomed-page) {
   place-items: center;
   background:
     radial-gradient(circle at 40% 35%, #2a3a28 0%, #121812 65%);
+}
+
+.game-preview--mixup {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(240, 200, 74, 0.18), transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(110, 180, 255, 0.14), transparent 42%),
+    #121218;
+}
+
+.game-preview__mixup-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  width: 86%;
+}
+
+.game-preview__mixup-chip {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(240, 240, 244, 0.88);
 }
 
 .game-preview__camo-grid {
@@ -6938,6 +6968,105 @@ body:has(.zoomed-page) {
   .camo-page.is-watching .camo-cell.has-camo .camo-cell__img {
     animation: none;
   }
+}
+
+/* ——— Mix Up ——— */
+.mixup-page {
+  width: min(var(--content-max), calc(100% - 1.25rem));
+  margin: 0 auto;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.35rem 0 0.75rem;
+  overflow: hidden;
+}
+
+.mixup-page > .game-header {
+  flex: 0 0 auto;
+}
+
+.mixup-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: auto;
+  padding-bottom: 0.5rem;
+}
+
+.mixup-banner {
+  width: min(100%, 40rem);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.mixup-banner__kind {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f0c84a;
+}
+
+.mixup-banner h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.45rem);
+}
+
+.mixup-banner h2.is-win {
+  color: #8dffb0;
+}
+
+.mixup-banner h2.is-miss {
+  color: #ff9b8d;
+}
+
+.mixup-banner__note {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.62);
+}
+
+.mixup-embed {
+  width: min(100%, 40rem);
+}
+
+.mixup-camo-hint {
+  margin: 0 0 0.45rem;
+  text-align: center;
+  font-weight: 800;
+  color: rgba(240, 240, 244, 0.8);
+}
+
+.mixup-next {
+  margin-top: 0.25rem;
+}
+
+.mixup-results__scoreline {
+  margin: 0.35rem 0 0;
+  font-weight: 800;
+  color: rgba(240, 240, 244, 0.75);
+}
+
+.mixup-results__breakdown {
+  margin: 0.35rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: rgba(240, 200, 74, 0.9);
+}
+
+.mixup-results__note {
+  margin: 0.45rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.58);
 }
 
 /* ——— Bloons Sweeper ——— */
