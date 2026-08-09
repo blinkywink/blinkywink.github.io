@@ -1,4 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { useCardCollection } from "./auth/CardCollectionProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
@@ -16,53 +25,183 @@ import {
   pickRewardTowerPackChoices,
   type PackDef,
 } from "./lib/packTheme";
+import { fetchProfileByUsername } from "./lib/profiles";
+import {
+  collectionPath,
+  gamePath,
+  leaderboardPath,
+  userCollectionPath,
+  type GamePath,
+} from "./lib/routes";
 import "./index.css";
-
-type Screen = "arcade" | "cards" | "leaderboard" | GameId;
 
 type RewardPackState = {
   pack: PackDef;
   reason: "clear" | "bonus";
 };
 
+type CollectionLocationState = CardsOpenOpts | null;
+
 const QUIZ_BONUS_STREAK = 4;
 const BLOONLE_BONUS_MAX_TRIES = 3;
 
-export default function App() {
-  const { owned } = useCardCollection();
-  const [screen, setScreen] = useState<Screen>("arcade");
-  const [cardsOpen, setCardsOpen] = useState<CardsOpenOpts | null>(null);
-  const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
-  const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
-  const [bonusBlurb, setBonusBlurb] = useState("");
-  const [pendingHighlights, setPendingHighlights] = useState<string[]>([]);
-  const [pendingTower, setPendingTower] = useState<string | undefined>();
-  const [viewingPlayer, setViewingPlayer] = useState<{
+function HomePage() {
+  const navigate = useNavigate();
+  return (
+    <ArcadeHome
+      onPlay={(game: GameId) => navigate(gamePath(game as GamePath))}
+      onOpenCards={() => navigate(collectionPath())}
+      onOpenLeaderboard={() => navigate(leaderboardPath())}
+      onPackFinished={({ pack, unlocked }) => {
+        navigate(collectionPath(), {
+          state: {
+            tower:
+              pack.kind === "tower" ? (pack.tower ?? undefined) : undefined,
+            highlightIds: unlocked.map((c) => c.id),
+          } satisfies CardsOpenOpts,
+        });
+      }}
+    />
+  );
+}
+
+function CollectionPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initial = (location.state as CollectionLocationState) ?? null;
+
+  return (
+    <CardLab
+      initial={initial}
+      onBack={() => navigate("/")}
+    />
+  );
+}
+
+function UserCollectionPage() {
+  const { username = "" } = useParams();
+  const navigate = useNavigate();
+  const [viewer, setViewer] = useState<{
     userId: string;
     username: string;
   } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const openCards = (opts?: CardsOpenOpts) => {
-    setCardsOpen(opts ?? null);
-    setViewingPlayer(null);
-    setScreen("cards");
-  };
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setViewer(null);
+    void fetchProfileByUsername(username)
+      .then((profile) => {
+        if (cancelled) return;
+        if (!profile) {
+          setError("Player not found.");
+          setLoading(false);
+          return;
+        }
+        setViewer(profile);
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Could not load player.");
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
+
+  if (loading) {
+    return (
+      <div className="card-lab">
+        <div className="card-lab__atmosphere" aria-hidden="true" />
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => navigate(leaderboardPath())}
+          >
+            ← Leaderboard
+          </button>
+          <div className="card-lab__titles">
+            <p className="eyebrow">Collection</p>
+            <h1>{username || "Player"}</h1>
+            <p className="card-lab__blurb">Loading…</p>
+          </div>
+        </header>
+      </div>
+    );
+  }
+
+  if (error || !viewer) {
+    return (
+      <div className="card-lab">
+        <div className="card-lab__atmosphere" aria-hidden="true" />
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => navigate(leaderboardPath())}
+          >
+            ← Leaderboard
+          </button>
+          <div className="card-lab__titles">
+            <p className="eyebrow">Collection</p>
+            <h1>{username || "Player"}</h1>
+            <p className="card-lab__blurb">{error ?? "Player not found."}</p>
+          </div>
+        </header>
+      </div>
+    );
+  }
+
+  return (
+    <CardLab
+      viewer={viewer}
+      onBack={() => navigate(leaderboardPath())}
+    />
+  );
+}
+
+function LeaderboardPage() {
+  const navigate = useNavigate();
+  return (
+    <Leaderboard
+      onBack={() => navigate("/")}
+      onOpenCollection={(player) => {
+        navigate(userCollectionPath(player.username));
+      }}
+    />
+  );
+}
+
+function AppShell() {
+  const { owned } = useCardCollection();
+  const navigate = useNavigate();
+  const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
+  const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
+  const [pendingHighlights, setPendingHighlights] = useState<string[]>([]);
+  const [pendingTower, setPendingTower] = useState<string | undefined>();
 
   const finishRewards = useCallback(
     (highlightIds: string[], tower?: string) => {
       setRewardPack(null);
       setBonusChoices(null);
-      setBonusBlurb("");
       setPendingHighlights([]);
       setPendingTower(undefined);
-      if (highlightIds.length) {
-        openCards({ tower, highlightIds });
-      }
+      navigate(collectionPath(), {
+        state:
+          highlightIds.length > 0
+            ? ({ tower, highlightIds } satisfies CardsOpenOpts)
+            : null,
+      });
     },
-    [],
+    [navigate],
   );
 
-  /** Clear run → free random pack; streak ≥4 → pick 1 of 3 after. */
   const offerQuizRewards = useCallback(
     (info: { cleared: boolean; bestStreak: number }) => {
       const wantBonus = info.bestStreak >= QUIZ_BONUS_STREAK;
@@ -77,28 +216,12 @@ export default function App() {
 
       if (free) {
         setRewardPack({ pack: free, reason: "clear" });
-        if (choices.length) {
-          setBonusChoices(choices);
-          setBonusBlurb(
-            `${info.bestStreak}-streak — you earned an extra pack. Pick one!`,
-          );
-        } else {
-          setBonusChoices(null);
-          setBonusBlurb("");
-        }
+        setBonusChoices(choices.length ? choices : null);
         return;
       }
 
       setRewardPack(null);
-      if (choices.length) {
-        setBonusChoices(choices);
-        setBonusBlurb(
-          `${info.bestStreak}-streak — you earned a bonus pack. Pick one!`,
-        );
-      } else {
-        setBonusChoices(null);
-        setBonusBlurb("");
-      }
+      setBonusChoices(choices.length ? choices : null);
     },
     [owned],
   );
@@ -112,9 +235,6 @@ export default function App() {
       setPendingTower(undefined);
       setRewardPack(null);
       setBonusChoices(choices);
-      setBonusBlurb(
-        `Solved in ${guesses} ${guesses === 1 ? "try" : "tries"} — pick a bonus pack!`,
-      );
     },
     [owned],
   );
@@ -125,7 +245,6 @@ export default function App() {
       const tower =
         pack.kind === "tower" ? (pack.tower ?? undefined) : pendingTower;
 
-      // Free clear pack finished; bonus picker still waiting.
       if (bonusChoices?.length) {
         setRewardPack(null);
         setPendingHighlights(highlights);
@@ -138,62 +257,49 @@ export default function App() {
     [bonusChoices, finishRewards, pendingHighlights, pendingTower],
   );
 
-  const goArcade = () => {
-    setCardsOpen(null);
-    setViewingPlayer(null);
-    setScreen("arcade");
-  };
+  const goHome = () => navigate("/");
 
   return (
     <>
-      <SiteHeader onHome={goArcade} />
+      <SiteHeader />
       <div className="site-main">
-        {screen === "zoomed" ? (
-          <ZoomedGame onBack={goArcade} onRunEnd={offerQuizRewards} />
-        ) : screen === "geoguessr" ? (
-          <GeoguessrGame onBack={goArcade} onRunEnd={offerQuizRewards} />
-        ) : screen === "pricecheck" ? (
-          <PriceCheckGame onBack={goArcade} onRunEnd={offerQuizRewards} />
-        ) : screen === "orderup" ? (
-          <OrderUpGame onBack={goArcade} onRunEnd={offerQuizRewards} />
-        ) : screen === "bloonle" ? (
-          <BloonleGame onBack={goArcade} onFastSolve={offerBloonleBonus} />
-        ) : screen === "leaderboard" ? (
-          <Leaderboard
-            onBack={goArcade}
-            onOpenCollection={(player) => {
-              setCardsOpen(null);
-              setViewingPlayer(player);
-              setScreen("cards");
-            }}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/user/:username" element={<UserCollectionPage />} />
+          <Route
+            path="/zoomed"
+            element={
+              <ZoomedGame onBack={goHome} onRunEnd={offerQuizRewards} />
+            }
           />
-        ) : screen === "cards" ? (
-          <CardLab
-            initial={cardsOpen}
-            viewer={viewingPlayer}
-            onBack={() => {
-              if (viewingPlayer) {
-                setViewingPlayer(null);
-                setScreen("leaderboard");
-                return;
-              }
-              goArcade();
-            }}
+          <Route
+            path="/geoguessr"
+            element={
+              <GeoguessrGame onBack={goHome} onRunEnd={offerQuizRewards} />
+            }
           />
-        ) : (
-          <ArcadeHome
-            onPlay={(game) => setScreen(game)}
-            onOpenCards={() => openCards()}
-            onOpenLeaderboard={() => setScreen("leaderboard")}
-            onPackFinished={({ pack, pulls }) => {
-              openCards({
-                tower:
-                  pack.kind === "tower" ? (pack.tower ?? undefined) : undefined,
-                highlightIds: pulls.map((c) => c.id),
-              });
-            }}
+          <Route
+            path="/pricecheck"
+            element={
+              <PriceCheckGame onBack={goHome} onRunEnd={offerQuizRewards} />
+            }
           />
-        )}
+          <Route
+            path="/orderup"
+            element={
+              <OrderUpGame onBack={goHome} onRunEnd={offerQuizRewards} />
+            }
+          />
+          <Route
+            path="/bloonle"
+            element={
+              <BloonleGame onBack={goHome} onFastSolve={offerBloonleBonus} />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
 
       {rewardPack ? (
@@ -202,7 +308,6 @@ export default function App() {
           mode="reward"
           pack={rewardPack.pack}
           onClose={() => {
-            // X out of opener — still offer bonus pick if queued.
             setRewardPack(null);
             if (!bonusChoices?.length) {
               if (pendingHighlights.length) {
@@ -210,8 +315,8 @@ export default function App() {
               }
             }
           }}
-          onFinished={({ pack, pulls }) => {
-            afterPackDone(pulls, pack);
+          onFinished={({ pack, unlocked }) => {
+            afterPackDone(unlocked, pack);
           }}
         />
       ) : null}
@@ -220,16 +325,29 @@ export default function App() {
         <BonusPackPicker
           open
           options={bonusChoices}
-          blurb={bonusBlurb}
           onPick={(pack) => {
             setBonusChoices(null);
             setRewardPack({ pack, reason: "bonus" });
           }}
-          onSkip={() => {
-            finishRewards(pendingHighlights, pendingTower);
-          }}
         />
       ) : null}
     </>
+  );
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ScrollToTop />
+      <AppShell />
+    </BrowserRouter>
   );
 }

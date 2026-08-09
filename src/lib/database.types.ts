@@ -75,6 +75,10 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: string[];
       };
+      get_profile_by_username: {
+        Args: { p_username: string };
+        Returns: { id: string; username: string }[];
+      };
       claim_daily_cash: {
         Args: Record<string, never>;
         Returns: {

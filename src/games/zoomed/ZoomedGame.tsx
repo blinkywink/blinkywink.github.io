@@ -164,6 +164,14 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
                   Hint: {challenge.correct.tower}
                 </p>
               ) : null}
+              <button
+                type="button"
+                className="guess-skip"
+                onClick={skip}
+                disabled={searchLocked}
+              >
+                Skip (costs a life)
+              </button>
             </>
           )}
         </div>
@@ -181,23 +189,13 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
               </button>
             </div>
           ) : (
-            <>
-              <AnswerSearch
-                roundKey={`${challenge.round}-${challenge.correct.id}`}
-                disabled={searchLocked}
-                status="idle"
-                eliminatedIds={state.eliminatedIds}
-                onSelect={answer}
-              />
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm guess-skip"
-                onClick={skip}
-                disabled={searchLocked}
-              >
-                Skip · lose a life
-              </button>
-            </>
+            <AnswerSearch
+              roundKey={`${challenge.round}-${challenge.correct.id}`}
+              disabled={searchLocked}
+              status="idle"
+              eliminatedIds={state.eliminatedIds}
+              onSelect={answer}
+            />
           )}
         </div>
       </main>

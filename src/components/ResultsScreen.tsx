@@ -48,14 +48,14 @@ export function ResultsScreen({
 
         {cleared ? (
           <p className="results__pack-note">
-            Free tower pack unlocked — slash to open!
+            Free tower pack unlocked. Slash to open!
           </p>
         ) : null}
         {bonusPack ? (
           <p className="results__pack-note results__pack-note--bonus">
             {cleared
-              ? "4+ streak — bonus pack next (pick 1 of 3)!"
-              : "4+ streak — pick a bonus pack!"}
+              ? "Nice streak! Bonus pack coming up."
+              : "Nice streak! Pick a bonus pack."}
           </p>
         ) : null}
 

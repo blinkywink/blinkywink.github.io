@@ -1,18 +1,14 @@
+import { Link } from "react-router-dom";
 import { AccountBar } from "./AccountBar";
 
-type Props = {
-  onHome?: () => void;
-};
-
 /** Fixed top bar — brand + account, stays on every screen. */
-export function SiteHeader({ onHome }: Props) {
+export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <button
-          type="button"
+        <Link
+          to="/"
           className="site-header__brand"
-          onClick={onHome}
           aria-label="blinkywink.co home"
         >
           <img
@@ -24,7 +20,7 @@ export function SiteHeader({ onHome }: Props) {
             draggable={false}
           />
           <span>blinkywink.co</span>
-        </button>
+        </Link>
         <AccountBar />
       </div>
     </header>

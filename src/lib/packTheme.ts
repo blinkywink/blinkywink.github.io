@@ -1,7 +1,7 @@
 import cardAccents from "../data/cardAccents.json";
 import { towers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
-import { buildTowerCardSpecs, towerIdSlug } from "./pathCombos";
+import { towerIdSlug } from "./pathCombos";
 
 export const PACK_SIZE = 10;
 export const BTD6_PACK_ART = "/images/ui/monkey-pack.jpg";
@@ -111,20 +111,12 @@ export function towerPack(towerName: string): PackDef {
   };
 }
 
-/** Tower packs with at least one unowned card remaining. */
-export function incompleteTowerPacks(
-  owned: ReadonlySet<string>,
+function allTowerPacks(
   excludeTowers: ReadonlySet<string> = new Set(),
 ): PackDef[] {
-  const out: PackDef[] = [];
-  for (const t of towers) {
-    if (excludeTowers.has(t.name)) continue;
-    const specs = buildTowerCardSpecs(t.name);
-    if (specs.some((c) => !owned.has(c.id))) {
-      out.push(towerPack(t.name));
-    }
-  }
-  return out;
+  return towers
+    .filter((t) => !excludeTowers.has(t.name))
+    .map((t) => towerPack(t.name));
 }
 
 function shuffleInPlace<T>(arr: T[]): T[] {
@@ -137,25 +129,22 @@ function shuffleInPlace<T>(arr: T[]): T[] {
   return arr;
 }
 
-/** Random tower pack the player still has cards to collect in. */
+/** Random tower pack (duplicates convert to Cash if already owned). */
 export function pickRewardTowerPack(
-  owned: ReadonlySet<string>,
+  _owned?: ReadonlySet<string>,
   excludeTowers?: ReadonlySet<string>,
 ): PackDef | null {
-  const bag = shuffleInPlace(incompleteTowerPacks(owned, excludeTowers));
+  const bag = shuffleInPlace(allTowerPacks(excludeTowers));
   return bag[0] ?? null;
 }
 
-/** Up to `count` random incomplete tower packs (for bonus pick-one). */
+/** Up to `count` random tower packs (for bonus pick-one). */
 export function pickRewardTowerPackChoices(
-  owned: ReadonlySet<string>,
+  _owned?: ReadonlySet<string>,
   count = 3,
   excludeTowers?: ReadonlySet<string>,
 ): PackDef[] {
-  return shuffleInPlace(incompleteTowerPacks(owned, excludeTowers)).slice(
-    0,
-    count,
-  );
+  return shuffleInPlace(allTowerPacks(excludeTowers)).slice(0, count);
 }
 
 export function categoryPack(category: TowerCategory): PackDef {

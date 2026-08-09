@@ -8,12 +8,13 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
-import { pullPackCards } from "../lib/packPull";
+import { pullPackCards, PACK_DUPLICATE_CASH } from "../lib/packPull";
 import {
   btd6Pack,
   packPrice,
   type PackDef,
 } from "../lib/packTheme";
+import { awardCoins } from "../lib/awardCoins";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -159,6 +160,9 @@ type Props = {
   onFinished?: (result: {
     pack: PackDef;
     pulls: MonkeyCardSpec[];
+    /** Newly unlocked cards only (duplicates excluded). */
+    unlocked: MonkeyCardSpec[];
+    duplicateCash: number;
   }) => void;
   /** Defaults to the all-towers BTD6 pack. Pass a tower pack to preview the template. */
   pack?: PackDef;
@@ -182,13 +186,12 @@ export function PackOpenerTest({
   const { profile, setCoinBalance } = useAuth();
   const { awardCards, owned } = useCardCollection();
   const pool = useMemo(() => buildPackPool(pack), [pack]);
-  const unownedInPack = useMemo(
-    () => pool.reduce((n, c) => n + (owned.has(c.id) ? 0 : 1), 0),
-    [pool, owned],
-  );
 
   const [phase, setPhase] = useState<Phase>("shop");
   const [pulls, setPulls] = useState<MonkeyCardSpec[]>([]);
+  const [duplicates, setDuplicates] = useState<ReadonlySet<string>>(new Set());
+  const [duplicateCash, setDuplicateCash] = useState(0);
+  const [godPack, setGodPack] = useState(false);
   const [index, setIndex] = useState(0);
   const [slash, setSlash] = useState<Pt[]>([]);
   const [clips, setClips] = useState<[string, string] | null>(null);
@@ -204,6 +207,8 @@ export function PackOpenerTest({
   const dragRef = useRef({ x: 0, y: 0 });
   const indexRef = useRef(0);
   const pullsRef = useRef<MonkeyCardSpec[]>([]);
+  const unlockedRef = useRef<MonkeyCardSpec[]>([]);
+  const duplicateCashRef = useRef(0);
   const packRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
@@ -228,6 +233,11 @@ export function PackOpenerTest({
     setPhase("shop");
     setPulls([]);
     pullsRef.current = [];
+    unlockedRef.current = [];
+    duplicateCashRef.current = 0;
+    setDuplicates(new Set());
+    setDuplicateCash(0);
+    setGodPack(false);
     setIndex(0);
     indexRef.current = 0;
     setSlash([]);
@@ -258,7 +268,12 @@ export function PackOpenerTest({
   };
 
   const handleDone = () => {
-    const result = { pack, pulls: pullsRef.current };
+    const result = {
+      pack,
+      pulls: pullsRef.current,
+      unlocked: unlockedRef.current,
+      duplicateCash: duplicateCashRef.current,
+    };
     reset();
     onClose();
     onFinished?.(result);
@@ -267,10 +282,6 @@ export function PackOpenerTest({
   const purchase = async () => {
     if (buyBusy || phaseRef.current !== "shop") return;
     setBuyError(null);
-    if (unownedInPack < 1) {
-      setBuyError("You already own every card in this pack.");
-      return;
-    }
     if ((profile?.coins ?? 0) < price) {
       setBuyError("Not enough Cash.");
       return;
@@ -298,13 +309,39 @@ export function PackOpenerTest({
   }, []);
 
   const beginDraw = useCallback(
-    (cards: MonkeyCardSpec[]) => {
+    (cards: MonkeyCardSpec[], isGod: boolean) => {
+      const ownedAtOpen = owned;
+      const dupIds = new Set<string>();
+      const unlocked: MonkeyCardSpec[] = [];
+      let cash = 0;
+      for (const card of cards) {
+        if (ownedAtOpen.has(card.id)) {
+          dupIds.add(card.id);
+          cash += PACK_DUPLICATE_CASH;
+        } else {
+          unlocked.push(card);
+        }
+      }
+
       pullsRef.current = cards;
+      unlockedRef.current = unlocked;
+      duplicateCashRef.current = cash;
       setPulls(cards);
-      void awardCards(cards.map((c) => c.id));
+      setDuplicates(dupIds);
+      setDuplicateCash(cash);
+      setGodPack(isGod);
+
+      if (unlocked.length) {
+        void awardCards(unlocked.map((c) => c.id));
+      }
+      if (cash > 0) {
+        void awardCoins(cash).then((balance) => {
+          if (balance != null) setCoinBalance(balance);
+        });
+      }
       showCardAt(0);
     },
-    [awardCards, showCardAt],
+    [awardCards, owned, setCoinBalance, showCardAt],
   );
 
   const completeCut = useCallback(
@@ -314,8 +351,9 @@ export function PackOpenerTest({
       const b = pts[pts.length - 1]!;
       setClips(splitClips(a, b));
       setPhaseBoth("sliced");
-      const cards = pullPackCards(pool, pack.cardCount, owned);
-      later(() => beginDraw(cards), 700);
+      const result = pullPackCards(pool, pack.cardCount, owned);
+      setGodPack(result.godPack);
+      later(() => beginDraw(result.cards, result.godPack), 700);
     },
     [beginDraw, pool, pack.cardCount, owned],
   );
@@ -470,6 +508,7 @@ export function PackOpenerTest({
   if (!open) return null;
 
   const current = pulls[index] ?? null;
+  const currentIsDup = current ? duplicates.has(current.id) : false;
   const showPack =
     phase === "shop" || phase === "sealed" || phase === "sliced";
   const showCard =
@@ -502,10 +541,10 @@ export function PackOpenerTest({
 
   return createPortal(
     <div
-      className="pack-opener"
+      className={`pack-opener${godPack ? " pack-opener--god" : ""}`}
       role="dialog"
       aria-modal="true"
-      aria-label="Pack opener"
+      aria-label={godPack ? "God pack" : "Pack opener"}
     >
       <button
         type="button"
@@ -522,9 +561,17 @@ export function PackOpenerTest({
         ✕
       </button>
 
+      {godPack && phase !== "shop" && phase !== "sealed" ? (
+        <div className="pack-opener__god-burst" aria-hidden>
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : null}
+
       {phase !== "done" ? (
         <div
-          className={`pack-opener__arena ${phase === "sealed" ? "is-slashing" : ""} ${phase === "shop" ? "is-shop" : ""}`}
+          className={`pack-opener__arena ${phase === "sealed" ? "is-slashing" : ""} ${phase === "shop" ? "is-shop" : ""}${godPack ? " is-god" : ""}`}
           onPointerDown={phase === "sealed" ? onSlashDown : undefined}
           onPointerMove={phase === "sealed" ? onSlashMove : undefined}
           onPointerUp={phase === "sealed" ? onSlashUp : undefined}
@@ -536,10 +583,19 @@ export function PackOpenerTest({
               (mode === "reward"
                 ? `Clear reward · ${pack.title} · slash to open`
                 : "slash through the pack · space")}
-            {phase === "sliced" && "…"}
+            {phase === "sliced" && (godPack ? "GOD PACK!" : "…")}
             {(phase === "enter" || phase === "ready" || phase === "exit") &&
-              `${index + 1}/${pack.cardCount}, swipe for next`}
+              (godPack
+                ? `GOD PACK · ${index + 1}/${pack.cardCount}`
+                : `${index + 1}/${pack.cardCount}, swipe for next`)}
           </p>
+
+          {godPack &&
+          (phase === "enter" || phase === "ready" || phase === "exit") ? (
+            <p className="pack-opener__god-title" role="status">
+              GOD PACK
+            </p>
+          ) : null}
 
           <div className="pack-opener__stage">
             {showPack ? (
@@ -632,7 +688,7 @@ export function PackOpenerTest({
             {showCard ? (
               <div
                 key={`${current.id}-${index}`}
-                className={`pack-opener__card pack-opener__card--${phase}`}
+                className={`pack-opener__card pack-opener__card--${phase}${currentIsDup ? " is-duplicate" : ""}`}
                 style={cardStyle}
                 onPointerDownCapture={onCardPointerDown}
                 onPointerMoveCapture={onCardPointerMove}
@@ -644,6 +700,11 @@ export function PackOpenerTest({
                   pathLevels={current.pathLevels}
                   mode="focus"
                 />
+                {currentIsDup ? (
+                  <p className="pack-opener__dup-banner" role="status">
+                    Duplicate · +{PACK_DUPLICATE_CASH} Cash
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -663,7 +724,8 @@ export function PackOpenerTest({
                 <p className="pack-opener__buy-error">{buyError}</p>
               ) : (
                 <p className="pack-opener__buy-note">
-                  Balance {(profile?.coins ?? 0).toLocaleString()}
+                  Balance {(profile?.coins ?? 0).toLocaleString()} · dupes +
+                  {PACK_DUPLICATE_CASH} Cash
                 </p>
               )}
             </div>
@@ -671,9 +733,14 @@ export function PackOpenerTest({
         </div>
       ) : (
         <div className="pack-opener__done">
-          <h2>Pack opened</h2>
+          <h2>{godPack ? "GOD PACK!" : "Pack opened"}</h2>
           <p>
-            {pack.cardCount} cards ·{" "}
+            {pack.cardCount} cards
+            {godPack ? " · all T4+" : ""}
+            {duplicateCash > 0
+              ? ` · ${duplicates.size} duplicate${duplicates.size === 1 ? "" : "s"} → +${duplicateCash} Cash`
+              : ""}
+            {" · "}
             {pack.kind === "btd6"
               ? "all towers"
               : pack.kind === "category"
@@ -681,20 +748,28 @@ export function PackOpenerTest({
                 : pack.tower}
           </p>
           <div className="pack-opener__summary-grid">
-            {pulls.map((card, i) => (
-              <div key={`${card.id}-${i}`} className="pack-opener__summary-card">
-                <MonkeyCard
-                  entity={card.entity}
-                  pathLevels={card.pathLevels}
-                  mode="preview"
-                />
-                <span>
-                  {card.isParagon
-                    ? `${card.tower} · Paragon`
-                    : `${card.tower} · ${card.pathLevels.join("-")}`}
-                </span>
-              </div>
-            ))}
+            {pulls.map((card, i) => {
+              const isDup = duplicates.has(card.id);
+              return (
+                <div
+                  key={`${card.id}-${i}`}
+                  className={`pack-opener__summary-card${isDup ? " is-duplicate" : ""}`}
+                >
+                  <MonkeyCard
+                    entity={card.entity}
+                    pathLevels={card.pathLevels}
+                    mode="preview"
+                  />
+                  <span>
+                    {isDup
+                      ? `Duplicate · +${PACK_DUPLICATE_CASH}`
+                      : card.isParagon
+                        ? `${card.tower} · Paragon`
+                        : `${card.tower} · ${card.pathLevels.join("-")}`}
+                  </span>
+                </div>
+              );
+            })}
           </div>
           <div className="pack-opener__actions">
             <button type="button" className="btn btn--secondary" onClick={reset}>

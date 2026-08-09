@@ -7,7 +7,6 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import type { MonkeyCardSpec } from "../lib/pathCombos";
-import { perfectRunCash } from "../games/rewards";
 import { preloadImage } from "../utils/imageProcessing";
 import { BoosterPack } from "./BoosterPack";
 import { PackOpenerTest } from "./PackOpenerTest";
@@ -26,6 +25,8 @@ type Props = {
   onPackFinished?: (result: {
     pack: PackDef;
     pulls: MonkeyCardSpec[];
+    unlocked: MonkeyCardSpec[];
+    duplicateCash: number;
   }) => void;
 };
 
@@ -343,8 +344,6 @@ export function ArcadeHome({
   const [activePack, setActivePack] = useState<PackDef | null>(null);
   const featured = useMemo(() => featuredShopPacks(), []);
   const categories = useMemo(() => allCategoryPacks(), []);
-  const perfectCash = useMemo(() => perfectRunCash(), []);
-  const perfectLabel = `Perfect: ${perfectCash.toLocaleString()} Cash`;
 
   const renderPackButton = (pack: PackDef) => {
     const price = packPrice(pack);
@@ -393,7 +392,6 @@ export function ArcadeHome({
             <span className="game-card__blurb">
               Guess the tower from the image.
             </span>
-            <span className="game-card__payout">{perfectLabel}</span>
           </div>
         </button>
 
@@ -409,7 +407,6 @@ export function ArcadeHome({
             <span className="game-card__blurb">
               Guess the map from a zoomed crop.
             </span>
-            <span className="game-card__payout">{perfectLabel}</span>
           </div>
         </button>
 
@@ -423,7 +420,6 @@ export function ArcadeHome({
           <div className="game-card__foot">
             <span className="game-card__title">PRICE CHECK</span>
             <span className="game-card__blurb">Which tower costs more?</span>
-            <span className="game-card__payout">{perfectLabel}</span>
           </div>
         </button>
 
@@ -439,7 +435,6 @@ export function ArcadeHome({
             <span className="game-card__blurb">
               Drag towers cheap to pricey before time runs out.
             </span>
-            <span className="game-card__payout">{perfectLabel}</span>
           </div>
         </button>
 
@@ -455,7 +450,6 @@ export function ArcadeHome({
             <span className="game-card__blurb">
               Bloons worldle including all base towers and 5th tiers.
             </span>
-            <span className="game-card__payout">{perfectLabel}</span>
           </div>
         </button>
 

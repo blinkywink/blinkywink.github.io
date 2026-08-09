@@ -114,6 +114,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
     () => new Set(initial?.highlightIds ?? []),
   );
+  /** false = low tier first (default), true = high tier / paragon first */
+  const [tierHighFirst, setTierHighFirst] = useState(false);
 
   useEffect(() => {
     if (!viewer) {
@@ -179,16 +181,32 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   }, [query]);
 
   const ownedAllCards = useMemo(() => {
-    const list = ALL_SPECS.filter((c) => owned.has(c.id));
+    let list = ALL_SPECS.filter((c) => owned.has(c.id));
     const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((c) => matchesCardQuery(c, q));
-  }, [owned, query]);
+    if (q) list = list.filter((c) => matchesCardQuery(c, q));
+    if (tierHighFirst) {
+      list = list.slice().sort((a, b) => sortCardSpecs(b, a));
+    }
+    return list;
+  }, [owned, query, tierHighFirst]);
 
   const towerCards = useMemo(() => {
     if (view.kind !== "tower") return [];
-    return TOWER_SPECS[view.name] ?? [];
-  }, [view]);
+    const base = TOWER_SPECS[view.name] ?? [];
+    if (!tierHighFirst) return base;
+    return base.slice().sort((a, b) => sortCardSpecs(b, a));
+  }, [view, tierHighFirst]);
+
+  const sortToggle = (
+    <button
+      type="button"
+      className="btn btn--ghost btn--sm card-lab__sort"
+      onClick={() => setTierHighFirst((v) => !v)}
+      aria-pressed={tierHighFirst}
+    >
+      {tierHighFirst ? "Tier · high → low" : "Tier · low → high"}
+    </button>
+  );
 
   const ownedInTower = useMemo(
     () => towerCards.reduce((n, c) => n + (owned.has(c.id) ? 1 : 0), 0),
@@ -406,19 +424,22 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           </div>
         </header>
 
-        <label className="card-lab__search card-lab__search--inline">
-          <span className="card-lab__search-label">
-            {isRemote ? "Search cards" : "Search your cards"}
-          </span>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tower, upgrade name, 0-2-5…"
-            autoComplete="off"
-            autoFocus
-          />
-        </label>
+        <div className="card-lab__toolbar">
+          <label className="card-lab__search card-lab__search--inline">
+            <span className="card-lab__search-label">
+              {isRemote ? "Search cards" : "Search your cards"}
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tower, upgrade name, 0-2-5…"
+              autoComplete="off"
+              autoFocus
+            />
+          </label>
+          {sortToggle}
+        </div>
 
         {ownedAllCards.length === 0 ? (
           <p className="card-lab__hint">
@@ -478,6 +499,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           </p>
         </div>
       </header>
+
+      <div className="card-lab__toolbar card-lab__toolbar--end">
+        {sortToggle}
+      </div>
 
       <div className="card-lab__grid">
         {towerCards.map((card) => {
