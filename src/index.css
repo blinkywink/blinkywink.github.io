@@ -51,8 +51,39 @@ body {
   color: var(--ink);
 }
 
+/* Whole viewport tint while viewing a chromed profile / collection */
+body.has-player-page-accent {
+  background:
+    radial-gradient(
+      circle at 50% -8%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.55),
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 8% 90%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.28),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 94% 70%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--player-accent) 32%, #0c0c12) 0%,
+      color-mix(in srgb, var(--player-accent) 16%, #07070c) 48%,
+      color-mix(in srgb, var(--player-accent) 10%, #050508) 100%
+    );
+  background-attachment: scroll;
+}
+
 @media (min-width: 900px) {
   body {
+    background-attachment: fixed;
+  }
+
+  body.has-player-page-accent {
     background-attachment: fixed;
   }
 }
@@ -9319,24 +9350,18 @@ button.trade-offer-card:hover:not(:disabled) {
   background:
     radial-gradient(
       circle at 50% 0%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.34),
-      transparent 42%
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.42),
+      transparent 46%
     ),
     radial-gradient(
       circle at 12% 78%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.18),
-      transparent 32%
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
+      transparent 36%
     ),
     radial-gradient(
       circle at 90% 64%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.14),
-      transparent 30%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--player-accent) 10%, #08080c) 0%,
-      #08080c 55%,
-      #08080c 100%
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.18),
+      transparent 34%
     );
 }
 
@@ -9373,25 +9398,19 @@ button.trade-offer-card:hover:not(:disabled) {
 .card-lab.has-player-chrome .card-lab__atmosphere {
   background:
     radial-gradient(
-      circle at 50% 12%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.38),
-      transparent 40%
+      circle at 50% 8%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.48),
+      transparent 46%
     ),
     radial-gradient(
       circle at 14% 82%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
-      transparent 34%
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.26),
+      transparent 38%
     ),
     radial-gradient(
       circle at 88% 68%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.16),
-      transparent 28%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--player-accent) 12%, #08080c) 0%,
-      #08080c 52%,
-      #08080c 100%
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
+      transparent 34%
     );
 }
 

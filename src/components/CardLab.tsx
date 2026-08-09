@@ -18,6 +18,7 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { usePlayerPageAccent } from "../lib/usePlayerPageAccent";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
@@ -190,6 +191,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     [isRemote, viewer?.accentColor, profile?.accent_color],
   );
   const chromeOn = hasPlayerChrome(chromeStyle);
+  usePlayerPageAccent(chromeOn ? chromeStyle : null);
 
   async function onRequestTrade() {
     if (!viewer || tradeBusy) return;

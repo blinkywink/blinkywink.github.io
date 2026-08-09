@@ -27,6 +27,7 @@ import {
   PROFILE_ACCENT_COST,
   setProfileAccent,
 } from "../lib/profileCosmetics";
+import { usePlayerPageAccent } from "../lib/usePlayerPageAccent";
 import {
   SHOWCASE_CHANGE_COST,
   SHOWCASE_MAX,
@@ -531,6 +532,7 @@ export function ProfilePage() {
         accentColor: cosmetics.accentColor ?? colorDraft,
       })
     : undefined;
+  usePlayerPageAccent(pageChromeStyle ?? null);
 
   return (
     <div
