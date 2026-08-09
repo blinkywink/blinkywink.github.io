@@ -4,7 +4,6 @@ import {
   heroPortraitForLevel,
   type HeroEntity,
 } from "../data/heroes";
-import { heroBlurb } from "../lib/heroEffects";
 import {
   heroLevelFromProfile,
   normalizeHeroLevels,
@@ -14,7 +13,7 @@ import {
 
 type Levels = Record<string, number> | null | undefined;
 
-/** Single equipped hero for public player pages. */
+/** Compact equipped-hero chip for public player pages. */
 export function EquippedHeroPanel({
   equippedHeroId,
   heroLevels,
@@ -27,27 +26,20 @@ export function EquippedHeroPanel({
   const levels = useMemo(() => normalizeHeroLevels(heroLevels), [heroLevels]);
   const id = equippedHeroId?.trim().toLowerCase() || null;
   const hero = id ? heroById(id) : null;
-  if (!hero) {
-    return (
-      <div className={`equipped-hero ${className}`.trim()}>
-        <p className="equipped-hero__label">Equipped hero</p>
-        <p className="equipped-hero__empty">No hero equipped</p>
-      </div>
-    );
-  }
+  if (!hero) return null;
   const level = heroLevelFromProfile(levels, hero.id);
   return (
-    <div className={`equipped-hero ${className}`.trim()}>
-      <p className="equipped-hero__label">Equipped hero</p>
-      <div className="equipped-hero__face">
-        <HeroCardFace hero={hero} level={level} equipped />
-        <div className="equipped-hero__meta">
-          <strong>{hero.name}</strong>
-          <span>Level {level}</span>
-          <em>{heroBlurb(hero.id)}</em>
-        </div>
-      </div>
-    </div>
+    <p className={`equipped-hero ${className}`.trim()}>
+      <img
+        src={heroPortraitForLevel(hero, level)}
+        alt=""
+        className="equipped-hero__img"
+      />
+      <span>
+        Equipped <strong>{hero.name}</strong>
+        <span className="equipped-hero__lvl">Lv {level}</span>
+      </span>
+    </p>
   );
 }
 
