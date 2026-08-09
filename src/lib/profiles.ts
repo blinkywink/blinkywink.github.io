@@ -14,6 +14,18 @@ export type PublicProfile = {
   showcaseCardIds: string[];
 };
 
+export type ProfileSearchHit = {
+  userId: string;
+  username: string;
+  coinsEarned: number;
+  avatar: AvatarCrop;
+};
+
+function escapeIlike(raw: string): string {
+  // Strip LIKE wildcards from user input (PostgREST has no ESCAPE clause).
+  return raw.replace(/[%_]/g, "");
+}
+
 /** Look up a profile by username (case-insensitive). */
 export async function fetchProfileByUsername(
   username: string,
@@ -47,4 +59,40 @@ export async function fetchProfileByUsername(
       showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
     };
   });
+}
+
+/** Partial username search (case-insensitive), richest players first. */
+export async function searchProfilesByUsername(
+  query: string,
+  limit = 40,
+): Promise<ProfileSearchHit[]> {
+  const raw = String(query ?? "").trim();
+  if (raw.length < 2) return [];
+
+  const pattern = `%${escapeIlike(raw)}%`;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+    )
+    .ilike("username", pattern)
+    .order("coins_earned", { ascending: false })
+    .limit(Math.min(100, Math.max(1, limit)));
+
+  if (error) {
+    console.warn("profile search failed", error.message);
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    userId: String(row.id),
+    username: String(row.username ?? "Player"),
+    coinsEarned: Number(row.coins_earned) || 0,
+    avatar: normalizeAvatarCrop({
+      cardId: row.avatar_card_id ?? null,
+      zoom: row.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+      x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+      y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+    }),
+  }));
 }

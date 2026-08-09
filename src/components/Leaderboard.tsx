@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import {
   DEFAULT_AVATAR_CROP,
@@ -7,6 +7,7 @@ import {
 } from "../lib/avatar";
 import { supabase } from "../lib/supabase";
 import { cached, CacheTtl } from "../lib/cache";
+import { searchProfilesByUsername } from "../lib/profiles";
 import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
 
@@ -25,20 +26,49 @@ type Row = {
   username: string;
   coins_earned: number;
   avatar: AvatarCrop;
+  /** Global rank among top board, when known. */
+  rank: number | null;
 };
+
+function mapProfileRow(r: {
+  id: string;
+  username: string;
+  coins_earned: number;
+  avatar_card_id: string | null;
+  avatar_zoom: number | null;
+  avatar_x: number | null;
+  avatar_y: number | null;
+}, rank: number | null): Row {
+  return {
+    id: String(r.id),
+    username: String(r.username ?? "Player"),
+    coins_earned: Number(r.coins_earned) || 0,
+    avatar: normalizeAvatarCrop({
+      cardId: r.avatar_card_id ?? null,
+      zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+      x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+      y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+    }),
+    rank,
+  };
+}
 
 export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [searchRows, setSearchRows] = useState<Row[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const load = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
     try {
-      const rows = await cached(
-        "leaderboard:top",
+      const next = await cached(
+        "leaderboard:top100",
         CacheTtl.leaderboard,
         async () => {
           const { data, error: err } = await supabase
@@ -50,21 +80,11 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
             .limit(100);
 
           if (err) throw new Error(err.message);
-          return (data ?? []).map((r) => ({
-            id: String(r.id),
-            username: String(r.username ?? "Player"),
-            coins_earned: Number(r.coins_earned) || 0,
-            avatar: normalizeAvatarCrop({
-              cardId: r.avatar_card_id ?? null,
-              zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
-              x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
-              y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
-            }),
-          }));
+          return (data ?? []).map((r, i) => mapProfileRow(r, i + 1));
         },
         { force },
       );
-      setRows(rows);
+      setRows(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
       setRows([]);
@@ -76,6 +96,81 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
     void load();
   }, [load]);
 
+  const trimmed = query.trim();
+
+  useEffect(() => {
+    if (trimmed.length < 2) {
+      setSearchRows([]);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    setSearchError(null);
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const hits = await searchProfilesByUsername(trimmed);
+          if (cancelled) return;
+          setSearchRows(
+            hits.map((h) => ({
+              id: h.userId,
+              username: h.username,
+              coins_earned: h.coinsEarned,
+              avatar: h.avatar,
+              rank: null,
+            })),
+          );
+        } catch (err) {
+          if (cancelled) return;
+          setSearchRows([]);
+          setSearchError(
+            err instanceof Error ? err.message : "Search failed.",
+          );
+        } finally {
+          if (!cancelled) setSearchLoading(false);
+        }
+      })();
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [trimmed]);
+
+  const displayRows = useMemo(() => {
+    if (!trimmed) return rows;
+
+    const q = trimmed.toLowerCase();
+    const rankById = new Map(rows.map((r) => [r.id, r.rank]));
+    const local = rows.filter((r) => r.username.toLowerCase().includes(q));
+    const byId = new Map(local.map((r) => [r.id, r]));
+
+    for (const hit of searchRows) {
+      const existing = byId.get(hit.id);
+      if (existing) continue;
+      byId.set(hit.id, {
+        ...hit,
+        rank: rankById.get(hit.id) ?? null,
+      });
+    }
+
+    return [...byId.values()].sort(
+      (a, b) => b.coins_earned - a.coins_earned || a.username.localeCompare(b.username),
+    );
+  }, [trimmed, rows, searchRows]);
+
+  const showEmptySearch =
+    Boolean(trimmed) &&
+    !loading &&
+    !searchLoading &&
+    displayRows.length === 0 &&
+    !error &&
+    !searchError;
+
   return (
     <div className="board-page">
       <PageHeader
@@ -85,6 +180,17 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
       />
       <main className="board-main">
         <div className="board-toolbar">
+          <label className="board-search">
+            <span className="board-search__label">Search players</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Username…"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </label>
           <button
             type="button"
             className="btn btn--ghost btn--sm"
@@ -101,50 +207,61 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
           <p className="board-status board-status--err" role="alert">
             {error}
           </p>
-        ) : rows.length === 0 ? (
+        ) : searchError ? (
+          <p className="board-status board-status--err" role="alert">
+            {searchError}
+          </p>
+        ) : showEmptySearch ? (
+          <p className="board-status">No players match “{trimmed}”.</p>
+        ) : rows.length === 0 && !trimmed ? (
           <p className="board-status">No accounts yet.</p>
         ) : (
-          <table className="board-table">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Player</th>
-                <th scope="col">Earned</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const mine = user?.id === row.id;
-                return (
-                  <tr
-                    key={row.id}
-                    className={`board-table__row${mine ? " is-you" : ""}`}
-                  >
-                    <td>{i + 1}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="board-table__player"
-                        onClick={() =>
-                          onOpenCollection({
-                            userId: row.id,
-                            username: row.username,
-                          })
-                        }
-                      >
-                        <UserAvatar crop={row.avatar} size={56} />
-                        <span>
-                          {row.username}
-                          {mine ? " (you)" : ""}
-                        </span>
-                      </button>
-                    </td>
-                    <td>{row.coins_earned.toLocaleString("en-US")}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <>
+            {trimmed && searchLoading ? (
+              <p className="board-status">Searching…</p>
+            ) : null}
+            <table className="board-table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Player</th>
+                  <th scope="col">Earned</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayRows.map((row) => {
+                  const mine = user?.id === row.id;
+                  return (
+                    <tr
+                      key={row.id}
+                      className={`board-table__row${mine ? " is-you" : ""}`}
+                    >
+                      <td>{row.rank ?? "—"}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="board-table__player"
+                          onClick={() =>
+                            onOpenCollection({
+                              userId: row.id,
+                              username: row.username,
+                            })
+                          }
+                        >
+                          <UserAvatar crop={row.avatar} size={56} />
+                          <span>
+                            {row.username}
+                            {mine ? " (you)" : ""}
+                          </span>
+                        </button>
+                      </td>
+                      <td>{row.coins_earned.toLocaleString("en-US")}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
         )}
       </main>
     </div>
