@@ -125,8 +125,11 @@ begin
       owned_hero_ids = array_append(coalesce(owned_hero_ids, '{}'), hid),
       hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, 1),
       hero_clear_progress = coalesce(hero_clear_progress, '{}'::jsonb) || jsonb_build_object(hid, 0),
-      -- Unlocking always equips that hero (free, even if swapping).
-      equipped_hero_id = hid,
+      -- Equip only if this is the player's first hero.
+      equipped_hero_id = case
+        when coalesce(cardinality(owned), 0) = 0 then hid
+        else equipped_hero_id
+      end,
       updated_at = now()
     where id = uid
     returning coins, owned_hero_ids, hero_levels, hero_clear_progress

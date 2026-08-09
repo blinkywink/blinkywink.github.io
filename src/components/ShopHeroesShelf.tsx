@@ -87,7 +87,9 @@ export function ShopHeroesShelf() {
       setStatus(
         mine
           ? `${focused.name} leveled to ${nextLevel}!`
-          : `Unlocked & equipped ${focused.name}!`,
+          : owned.size === 0
+            ? `Unlocked & equipped ${focused.name}!`
+            : `Unlocked ${focused.name}!`,
       );
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : "Purchase failed.");
@@ -212,7 +214,6 @@ export function ShopHeroesShelf() {
             <HeroCardFace
               hero={focused}
               level={focusLevel}
-              equipped={focusEquipped}
               size="lg"
               mode="focus"
               hideCaption
@@ -308,8 +309,8 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
         <p className="shop-heroes__note">
-          <CashAmount amount={HERO_UNLOCK_COST} /> unlock (auto-equips) · equip
-          here · clear games to unlock level-ups
+          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · first unlock
+          auto-equips · equip here · clear games to level up
         </p>
       </div>
       {status ? (

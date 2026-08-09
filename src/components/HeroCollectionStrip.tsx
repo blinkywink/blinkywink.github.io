@@ -330,7 +330,9 @@ export function HeroCardFace({
             <p className="hero-card__lvl">Lv {level}</p>
           ) : null}
         </header>
-        {equipped ? <span className="hero-card__badge">Equipped</span> : null}
+        {equipped && mode === "preview" ? (
+          <span className="hero-card__badge">Equipped</span>
+        ) : null}
       </div>
       {footer}
     </article>
