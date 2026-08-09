@@ -9,7 +9,7 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
-import { pullPackCards, PACK_DUPLICATE_CASH } from "../lib/packPull";
+import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
 import {
   btd6Pack,
   packPrice,
@@ -391,7 +391,7 @@ export function PackOpenerTest({
       for (const card of cards) {
         if (ownedAtOpen.has(card.id)) {
           dupIds.add(card.id);
-          cash += PACK_DUPLICATE_CASH;
+          cash += duplicateCashForCard(card);
         } else {
           unlocked.push(card);
         }
@@ -881,7 +881,7 @@ export function PackOpenerTest({
                 />
                 {currentIsDup ? (
                   <p className="pack-opener__dup-banner" role="status">
-                    Duplicate · +{PACK_DUPLICATE_CASH} Cash
+                    Duplicate · +{duplicateCashForCard(current)} Cash
                   </p>
                 ) : null}
               </div>
@@ -903,8 +903,8 @@ export function PackOpenerTest({
                 <p className="pack-opener__buy-error">{buyError}</p>
               ) : (
                 <p className="pack-opener__buy-note">
-                  Balance {(profile?.coins ?? 0).toLocaleString()} · dupes +
-                  {PACK_DUPLICATE_CASH} Cash
+                  Balance {(profile?.coins ?? 0).toLocaleString()} · dupes scale
+                  by tier
                 </p>
               )}
             </div>
@@ -941,7 +941,7 @@ export function PackOpenerTest({
                   />
                   <span>
                     {isDup
-                      ? `Duplicate · +${PACK_DUPLICATE_CASH}`
+                      ? `Duplicate · +${duplicateCashForCard(card)}`
                       : card.isParagon
                         ? `${card.tower} · Paragon`
                         : `${card.tower} · ${card.pathLevels.join("-")}`}

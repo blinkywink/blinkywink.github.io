@@ -9,8 +9,38 @@ export const PACK_T5_CHANCE = 1 / 40;
 export const PACK_PARAGON_CHANCE = 1 / 80;
 /** Ultra-rare all-highs pack. */
 export const PACK_GOD_CHANCE = 1 / 400;
-/** Cash paid when a pulled card is already owned. */
-export const PACK_DUPLICATE_CASH = 70;
+/** Cash paid when a pulled card is already owned (by max path tier). */
+export const PACK_DUPLICATE_CASH_BY_TIER = [
+  20, // T0
+  30, // T1
+  40, // T2
+  50, // T3
+  100, // T4
+  500, // T5
+] as const;
+
+export const PACK_DUPLICATE_PARAGON_CASH = 5000;
+
+/** +5 Cash per level on crosspaths (e.g. 2-1-0 → T2 base + 5). */
+const CROSSPATH_DUP_BONUS_PER_LEVEL = 5;
+
+/** Cash refund for pulling a card you already own. */
+export function duplicateCashForCard(card: MonkeyCardSpec): number {
+  if (card.isParagon) return PACK_DUPLICATE_PARAGON_CASH;
+  const levels = card.pathLevels;
+  const max = Math.max(levels[0], levels[1], levels[2]);
+  const base = PACK_DUPLICATE_CASH_BY_TIER[max] ?? PACK_DUPLICATE_CASH_BY_TIER[0];
+  let primaryUsed = false;
+  let bonus = 0;
+  for (const n of levels) {
+    if (n === max && !primaryUsed) {
+      primaryUsed = true;
+      continue;
+    }
+    if (n > 0) bonus += CROSSPATH_DUP_BONUS_PER_LEVEL * n;
+  }
+  return base + bonus;
+}
 
 export type PackPullResult = {
   cards: MonkeyCardSpec[];
