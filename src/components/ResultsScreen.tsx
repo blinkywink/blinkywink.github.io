@@ -1,7 +1,9 @@
 type Props = {
-  /** Cash banked during this run. */
+  /** Cash banked during this run (includes perfect-run double if any). */
   coinsEarned: number;
   cleared?: boolean;
+  /** Flawless clear — Cash was doubled. */
+  perfect?: boolean;
   /** bestStreak ≥ 4 — bonus pick incoming. */
   bonusPack?: boolean;
   /** False after the one allowed continue was already used. */
@@ -23,6 +25,7 @@ function formatCoins(n: number): string {
 export function ResultsScreen({
   coinsEarned,
   cleared = false,
+  perfect = false,
   bonusPack = false,
   continueAvailable = true,
   continueCost,
@@ -36,8 +39,16 @@ export function ResultsScreen({
   return (
     <div className="results">
       <div className="results__card">
-        <p className="eyebrow">{cleared ? "Run cleared" : "Out of lives"}</p>
-        <h2 className="results__title">{cleared ? "NICE RUN" : "GAME OVER"}</h2>
+        <p className="eyebrow">
+          {perfect
+            ? "Perfect run"
+            : cleared
+              ? "Run cleared"
+              : "Out of lives"}
+        </p>
+        <h2 className="results__title">
+          {perfect ? "PERFECT" : cleared ? "NICE RUN" : "GAME OVER"}
+        </h2>
 
         <div className="results__hero-score">
           <span className="results__hero-value">
@@ -46,6 +57,11 @@ export function ResultsScreen({
           <span className="results__hero-label">Cash earned</span>
         </div>
 
+        {perfect ? (
+          <p className="results__pack-note results__pack-note--perfect">
+            All correct — Cash doubled!
+          </p>
+        ) : null}
         {cleared ? (
           <p className="results__pack-note">
             Free tower pack unlocked. Slash to open!

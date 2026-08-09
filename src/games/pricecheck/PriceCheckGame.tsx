@@ -149,8 +149,11 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
     return (
       <div className="price-page">
         <ResultsScreen
-          coinsEarned={state.lastRun.score}
+          coinsEarned={
+            state.lastRun.score * (state.perfectRun ? 2 : 1)
+          }
           cleared={state.clearedRun}
+          perfect={state.perfectRun}
           bonusPack={state.bestStreak >= 4}
           continueAvailable={!state.freePlay}
           continueCost={continueCost}

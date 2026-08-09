@@ -168,6 +168,11 @@ export function BloonleGame({ onBack: _onBack, onFastSolve }: Props) {
               </p>
               <h3>{state.puzzle.displayName}</h3>
               <p className="bloonle-result__slug">{state.puzzle.slug}</p>
+              {state.status === "won" && state.guesses.length === 1 ? (
+                <p className="bloonle-result__pack">
+                  First try — Cash doubled!
+                </p>
+              ) : null}
               {state.status === "won" && state.guesses.length <= 3 ? (
                 <p className="bloonle-result__pack">
                   Fast solve — pick a bonus pack!

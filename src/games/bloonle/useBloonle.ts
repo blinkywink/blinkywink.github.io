@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { bloonleSolveReward } from "../rewards";
 import {
   BLOONLE_CONFIG,
   evaluateGuess,
@@ -184,10 +185,7 @@ export function useBloonle() {
       already: boolean,
     ) => {
       if (already) return { awarded: true, reward: 0 };
-      const reward =
-        mode === "daily"
-          ? BLOONLE_CONFIG.dailySolveReward
-          : BLOONLE_CONFIG.practiceSolveReward;
+      const reward = bloonleSolveReward(mode, _guessCount);
       if (reward <= 0) return { awarded: true, reward: 0 };
       const balance = await awardCoins(reward);
       if (balance != null) setCoinBalanceRef.current(balance);

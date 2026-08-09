@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { spendCoins } from "../../lib/spendCoins";
-import { SHARED_RUN } from "../rewards";
+import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import { PRICE_CHECK_CONFIG, pointsForCorrect } from "./config";
 import { createPriceRound, type PriceRound } from "./generateRound";
 import {
@@ -41,6 +41,7 @@ type State = {
   bests: BestScores;
   resumeRound: number | null;
   clearedRun: boolean;
+  perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
   timeLeftMs: number;
@@ -70,6 +71,7 @@ function initialState(): State {
     bests: loadBestScores(),
     resumeRound: null,
     clearedRun: false,
+    perfectRun: false,
     continueError: null,
     continueBusy: false,
     timeLeftMs: timerMs(),
@@ -90,7 +92,17 @@ function toRunStats(s: State): RunStats {
 function finishRun(
   s: State,
   opts: { resumeRound: number; cleared: boolean },
+  onPerfectBonus?: (bonus: number) => void,
 ): State {
+  const perfect = isFlawlessClear({
+    cleared: opts.cleared,
+    freePlay: s.freePlay,
+    lives: s.lives,
+    maxLives: PRICE_CHECK_CONFIG.maxLives,
+  });
+  const bonus = perfect ? perfectRunBonus(s.score) : 0;
+  if (bonus > 0) onPerfectBonus?.(bonus);
+
   const run = toRunStats(s);
   const bests = mergeBests(run, s.bests);
   saveBestScores(bests);
@@ -102,6 +114,7 @@ function finishRun(
     feedback: null,
     resumeRound: opts.resumeRound,
     clearedRun: opts.cleared,
+    perfectRun: perfect,
     continueError: null,
     continueBusy: false,
     timeLeftMs: 0,
@@ -191,18 +204,25 @@ export function usePriceCheck() {
   const goNext = useCallback(() => {
     setState((s) => {
       if (s.phase !== "reveal") return s;
-      if (s.lives <= 0) {
-        return finishRun(s, {
-          resumeRound: s.round.round + 1,
-          cleared: false,
+      const awardBonus = (bonus: number) => {
+        void awardCoins(bonus).then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
         });
+      };
+      if (s.lives <= 0) {
+        return finishRun(
+          s,
+          { resumeRound: s.round.round + 1, cleared: false },
+          awardBonus,
+        );
       }
 
       if (!s.freePlay && s.round.round >= PRICE_CHECK_CONFIG.roundsPerRun) {
-        return finishRun(s, {
-          resumeRound: s.round.round + 1,
-          cleared: true,
-        });
+        return finishRun(
+          s,
+          { resumeRound: s.round.round + 1, cleared: true },
+          awardBonus,
+        );
       }
 
       settling.current = false;
@@ -258,6 +278,7 @@ export function usePriceCheck() {
         feedback: null,
         resumeRound: null,
         clearedRun: false,
+        perfectRun: false,
         continueBusy: false,
         continueError: null,
         lastRun: null,

@@ -11,6 +11,8 @@ export type GameId =
 
 type Props = {
   onPlay: (game: GameId) => void;
+  /** Embed on home hub — games grid only, full width. */
+  embed?: boolean;
 };
 
 /** Bright mid-tier art so the home crop isn't near-black silhouette. */
@@ -248,12 +250,11 @@ function MapPreview() {
 }
 
 /** Games hub — playable titles only. */
-export function ArcadeHome({ onPlay }: Props) {
+export function ArcadeHome({ onPlay, embed = false }: Props) {
   return (
-    <div className="arcade">
-      <div className="arcade__atmosphere" aria-hidden="true" />
-
-      <DailyClaimButton variant="hero" />
+    <div className={`arcade${embed ? " arcade--embed" : ""}`}>
+      {!embed ? <div className="arcade__atmosphere" aria-hidden="true" /> : null}
+      {!embed ? <DailyClaimButton variant="hero" /> : null}
 
       <section className="arcade__featured" aria-label="Available games">
         <button
@@ -330,19 +331,21 @@ export function ArcadeHome({ onPlay }: Props) {
         </button>
       </section>
 
-      <footer className="arcade__footer">
-        <p>
-          made by:{" "}
-          <a
-            href="https://youtube.com/@blinkywink"
-            target="_blank"
-            rel="noreferrer"
-          >
-            blinkywink
-          </a>
-        </p>
-        <p>BTD6 Creator code: blinky</p>
-      </footer>
+      {!embed ? (
+        <footer className="arcade__footer">
+          <p>
+            made by:{" "}
+            <a
+              href="https://youtube.com/@blinkywink"
+              target="_blank"
+              rel="noreferrer"
+            >
+              blinkywink
+            </a>
+          </p>
+          <p>BTD6 Creator code: blinky</p>
+        </footer>
+      ) : null}
     </div>
   );
 }

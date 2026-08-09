@@ -51,6 +51,29 @@ export function perfectRunCash(
   return total;
 }
 
+/**
+ * Flawless quiz clear: finished the run without spending a life
+ * (and without using the paid continue).
+ */
+export function isFlawlessClear(input: {
+  cleared: boolean;
+  freePlay: boolean;
+  lives: number;
+  maxLives: number;
+}): boolean {
+  return (
+    input.cleared &&
+    !input.freePlay &&
+    input.lives >= input.maxLives
+  );
+}
+
+/** Extra Cash on a flawless clear — doubles what you banked that run. */
+export function perfectRunBonus(runCash: number): number {
+  if (!Number.isFinite(runCash) || runCash <= 0) return 0;
+  return Math.round(runCash);
+}
+
 /** Bloonle daily solve = one full perfect quiz run. */
 export function bloonleDailyReward(): number {
   return perfectRunCash();
@@ -59,4 +82,14 @@ export function bloonleDailyReward(): number {
 /** Practice puzzles pay a slice of the daily clear. */
 export function bloonlePracticeReward(): number {
   return Math.max(50, Math.round(perfectRunCash() * 0.3));
+}
+
+/** First-try Bloonle solve pays double. */
+export function bloonleSolveReward(
+  mode: "daily" | "practice",
+  guessCount: number,
+): number {
+  const base =
+    mode === "daily" ? bloonleDailyReward() : bloonlePracticeReward();
+  return guessCount <= 1 ? base * 2 : base;
 }

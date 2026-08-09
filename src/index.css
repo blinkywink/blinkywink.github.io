@@ -416,10 +416,15 @@ body:has(.zoomed-page) {
 .home-hub {
   width: min(var(--content-max), calc(100% - 2rem));
   margin: 0 auto;
-  padding: 1.5rem 0 3rem;
+  padding: 1.1rem 0 3rem;
   position: relative;
   display: grid;
-  gap: 1.75rem;
+  gap: 2.35rem;
+  /* Real card preview sizing (same as market / collection). */
+  --card-face-w: 400px;
+  --card-preview-w: 200px;
+  --card-preview-scale: calc(var(--card-preview-w) / var(--card-face-w));
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
 }
 
 .home-hub__atmosphere {
@@ -437,31 +442,9 @@ body:has(.zoomed-page) {
   z-index: 1;
 }
 
-.home-hub__hero {
-  padding: 0.35rem 0 0.15rem;
-}
-
-.home-hub__word {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 12vw, 5.5rem);
-  line-height: 0.95;
-  color: #fff;
-  letter-spacing: 0.01em;
-  text-shadow: 0 3px 0 #000;
-}
-
-.home-hub__line {
-  margin: 0.85rem 0 0;
-  max-width: 28rem;
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: rgba(240, 240, 244, 0.72);
-}
-
 .home-hub__section {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .home-hub__head {
@@ -474,14 +457,14 @@ body:has(.zoomed-page) {
 .home-hub__head h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 3vw, 1.55rem);
+  font-size: clamp(1.35rem, 3.2vw, 1.75rem);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #f0f0f4;
 }
 
 .home-hub__head a {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: #f0c84a;
   text-decoration: none;
@@ -499,182 +482,55 @@ body:has(.zoomed-page) {
   color: rgba(240, 240, 244, 0.62);
 }
 
-.home-hub__games {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.home-hub__game {
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.85rem 0.75rem;
-  border-radius: 12px;
-  border: 2px solid #2a2a34;
-  background: #121218;
-  text-decoration: none;
-  color: inherit;
-  min-width: 0;
-  transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.home-hub__game:hover {
-  border-color: #4a4a58;
-  transform: translateY(-2px);
-}
-
-.home-hub__game strong {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-.home-hub__game span {
+.home-hub__listing-sub {
+  margin: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  color: rgba(240, 240, 244, 0.55);
+  color: rgba(240, 240, 244, 0.5);
 }
 
-.home-hub__packs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-  align-items: end;
-}
-
-.home-hub__pack {
-  display: grid;
-  gap: 0.45rem;
-  justify-items: center;
-  text-decoration: none;
-  color: inherit;
-  min-width: 0;
-}
-
-.home-hub__booster {
-  width: min(100%, 9.5rem);
-}
-
-.home-hub__pack-label {
-  display: grid;
-  justify-items: center;
-  gap: 0.15rem;
-  text-align: center;
-}
-
-.home-hub__pack-label strong {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-}
-
-.home-hub__market {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.home-hub__listing {
-  display: grid;
-  grid-template-columns: 3rem 1fr;
-  gap: 0.55rem;
-  align-items: center;
-  padding: 0.55rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  text-decoration: none;
-  color: inherit;
-  min-width: 0;
-}
-
-.home-hub__listing:hover {
-  border-color: rgba(240, 200, 74, 0.35);
-}
-
-.home-hub__listing img,
-.home-hub__listing-ph {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 8px;
-  object-fit: cover;
-  background: #1a1a22;
-}
-
-.home-hub__listing-meta {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.home-hub__listing-meta strong {
-  font-size: 0.88rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.home-hub__board {
-  list-style: none;
+/* Embed /games tiles full-width on hub */
+.arcade--embed {
+  width: 100%;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.4rem;
 }
 
-.home-hub__player {
-  display: grid;
-  grid-template-columns: 1.5rem auto 1fr auto;
-  gap: 0.65rem;
-  align-items: center;
-  padding: 0.45rem 0.55rem;
-  border-radius: 10px;
+.arcade--embed .arcade__featured {
+  width: 100%;
+  margin-top: 0;
+}
+
+.pack-shelf--hub {
+  margin: 0;
+}
+
+.home-hub__card-grid {
+  justify-content: start;
+}
+
+.home-hub__market-grid {
+  justify-content: start;
+}
+
+.home-hub__board-table {
+  width: 100%;
+}
+
+.home-hub .board-table__player {
   text-decoration: none;
-  color: inherit;
 }
 
-.home-hub__player:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.home-hub__rank {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  color: rgba(240, 240, 244, 0.45);
-}
-
-.home-hub__player strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 900px) {
-  .home-hub__games {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .home-hub__packs,
-  .home-hub__market {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 720px) {
+  .home-hub {
+    --card-preview-w: 156px;
+    gap: 1.75rem;
   }
 }
 
-@media (max-width: 560px) {
-  .home-hub__games {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .home-hub__packs {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .home-hub__market {
-    grid-template-columns: 1fr;
+@media (min-width: 1100px) {
+  .home-hub {
+    --card-preview-w: 220px;
   }
 }
 
@@ -2824,6 +2680,10 @@ body:has(.zoomed-page) {
   font-size: 0.92rem;
   letter-spacing: 0.03em;
   color: #f0c84a;
+}
+
+.results__pack-note--perfect {
+  color: #ffe08a;
 }
 
 .results__pack-note--bonus {

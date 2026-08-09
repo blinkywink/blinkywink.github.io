@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { spendCoins } from "../../lib/spendCoins";
-import { SHARED_RUN } from "../rewards";
+import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import type { PricedCombo } from "../pricecheck/costs";
 import { ORDER_UP_CONFIG, pointsForCorrect } from "./config";
 import {
@@ -51,6 +51,7 @@ type State = {
   bests: BestScores;
   resumeRound: number | null;
   clearedRun: boolean;
+  perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
   /** Milliseconds left on the clock. */
@@ -119,6 +120,7 @@ function initialState(): State {
     bests: loadBestScores(),
     resumeRound: null,
     clearedRun: false,
+    perfectRun: false,
     continueError: null,
     continueBusy: false,
     timeLeftMs: ORDER_UP_CONFIG.timerSeconds * 1000,
@@ -210,6 +212,11 @@ export function useOrderUp() {
   const goNext = useCallback(() => {
     setState((s) => {
       if (s.phase !== "reveal") return s;
+      const awardBonus = (bonus: number) => {
+        void awardCoins(bonus).then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
+        });
+      };
       if (s.lives <= 0) {
         const run = toRunStats(s);
         const bests = mergeBests(run, s.bests);
@@ -222,11 +229,20 @@ export function useOrderUp() {
           feedback: null,
           resumeRound: s.round.round + 1,
           clearedRun: false,
+          perfectRun: false,
           continueError: null,
           continueBusy: false,
         };
       }
       if (!s.freePlay && s.round.round >= ORDER_UP_CONFIG.roundsPerRun) {
+        const perfect = isFlawlessClear({
+          cleared: true,
+          freePlay: s.freePlay,
+          lives: s.lives,
+          maxLives: ORDER_UP_CONFIG.maxLives,
+        });
+        const bonus = perfect ? perfectRunBonus(s.score) : 0;
+        if (bonus > 0) awardBonus(bonus);
         const run = toRunStats(s);
         const bests = mergeBests(run, s.bests);
         saveBestScores(bests);
@@ -238,6 +254,7 @@ export function useOrderUp() {
           feedback: null,
           resumeRound: s.round.round + 1,
           clearedRun: true,
+          perfectRun: perfect,
           continueError: null,
           continueBusy: false,
         };
@@ -294,6 +311,7 @@ export function useOrderUp() {
       feedback: null,
       resumeRound: null,
       clearedRun: false,
+      perfectRun: false,
       continueBusy: false,
       continueError: null,
       lastRun: null,

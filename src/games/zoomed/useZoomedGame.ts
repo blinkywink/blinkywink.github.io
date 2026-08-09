@@ -5,7 +5,7 @@ import type { TowerEntity } from "../../data/types";
 import { awardCoins } from "../../lib/awardCoins";
 import { spendCoins } from "../../lib/spendCoins";
 import { preloadImage } from "../../utils/imageProcessing";
-import { SHARED_RUN } from "../rewards";
+import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import { ZOOMED_CONFIG } from "./config";
 import { createChallenge, type Challenge } from "./questionGenerator";
 import {
@@ -60,6 +60,8 @@ export type ZoomedState = {
   resumeRound: number | null;
   /** True when the main 10 finished with lives left. */
   clearedRun: boolean;
+  /** Flawless clear — Cash was doubled. */
+  perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
 };
@@ -104,6 +106,7 @@ function blankBoard(overrides: Partial<ZoomedState> = {}): ZoomedState {
     lastRun: null,
     resumeRound: null,
     clearedRun: false,
+    perfectRun: false,
     continueError: null,
     continueBusy: false,
     ...overrides,
@@ -176,10 +179,24 @@ export function useZoomedGame() {
       resumeRound: number;
       cleared: boolean;
     }) => {
+      const s = stateRef.current;
+      const perfect = isFlawlessClear({
+        cleared: partial.cleared,
+        freePlay: s.freePlay,
+        lives: s.lives,
+        maxLives: ZOOMED_CONFIG.maxLives,
+      });
+      const bonus = perfect ? perfectRunBonus(partial.score) : 0;
+      if (bonus > 0) {
+        void awardCoins(bonus).then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
+        });
+      }
+
       const lastRun = buildRunStats(partial);
       const bests = saveBestScores(lastRun);
-      setState((s) => ({
-        ...s,
+      setState((prev) => ({
+        ...prev,
         phase: "results",
         challenge: null,
         nextChallenge: null,
@@ -191,6 +208,7 @@ export function useZoomedGame() {
         bests,
         resumeRound: partial.resumeRound,
         clearedRun: partial.cleared,
+        perfectRun: perfect,
         continueError: null,
         continueBusy: false,
       }));
@@ -328,6 +346,7 @@ export function useZoomedGame() {
       eliminatedIds: [],
       resumeRound: null,
       clearedRun: false,
+      perfectRun: false,
       continueBusy: false,
       continueError: null,
       lastRun: null,
