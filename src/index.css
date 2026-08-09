@@ -689,6 +689,8 @@ body:has(.zoomed-page) {
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .home-hub__player-chip strong {
@@ -9389,6 +9391,8 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .card-lab.has-player-chrome .card-lab__header--remote,
 .card-lab.has-player-chrome .card-lab__header {
+  position: relative;
+  overflow: hidden;
   border-radius: 16px;
   padding: 0.85rem 1rem;
   border: 1px solid color-mix(in srgb, var(--player-accent) 45%, transparent);
@@ -9481,6 +9485,91 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .home-hub__player-chip.has-player-chrome .user-avatar {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--player-accent) 65%, transparent);
+}
+
+/* Real card holo stack on profile / board chrome */
+.player-aura-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.player-aura-fx__foil,
+.player-aura-fx__glare,
+.player-aura-fx__spark,
+.player-aura-fx__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.player-aura-fx__foil {
+  opacity: calc(var(--opacity, 0.9) * 0.7 * var(--holo-mul, 0.8));
+  background: linear-gradient(
+    125deg,
+    rgba(255, 90, 160, 0.5) 0%,
+    rgba(255, 190, 70, 0.45) 18%,
+    rgba(90, 230, 160, 0.42) 36%,
+    rgba(70, 170, 255, 0.48) 54%,
+    rgba(170, 110, 255, 0.45) 72%,
+    rgba(255, 90, 160, 0.5) 100%
+  );
+  background-size: 240% 240%;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.25) brightness(1.08);
+  animation: monkey-holo-rainbow 7s ease-in-out infinite;
+}
+
+.player-aura-fx__glare {
+  opacity: calc(var(--opacity, 0.9) * 0.6 * var(--holo-mul, 0.8));
+  background: radial-gradient(
+    130% 90% at var(--px, 42%) var(--py, 38%),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.12) 30%,
+    transparent 58%
+  );
+  mix-blend-mode: soft-light;
+}
+
+.player-aura-fx__spark {
+  opacity: calc(var(--opacity, 0.9) * 0.7 * var(--holo-mul, 0.8));
+  background: linear-gradient(
+    125deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 42%,
+    rgba(190, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.18) 58%,
+    transparent 70%
+  );
+  background-size: 200% 200%;
+  mix-blend-mode: overlay;
+  animation: monkey-holo-sweep 4.5s ease-in-out infinite;
+}
+
+.player-aura-fx__sheen {
+  opacity: calc(var(--opacity, 0.9) * 0.45 * var(--holo-mul, 0.8));
+  background: linear-gradient(
+    125deg,
+    transparent 28%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 72%
+  );
+  background-size: 220% 220%;
+  background-position: var(--px, 42%) var(--py, 38%);
+  mix-blend-mode: soft-light;
+  animation: monkey-holo-sweep 5.5s ease-in-out infinite reverse;
+}
+
+.board-card > :not(.player-aura-fx),
+.profile-home > :not(.player-aura-fx),
+.home-hub__player-chip > :not(.player-aura-fx),
+.card-lab__header > :not(.player-aura-fx) {
+  position: relative;
+  z-index: 1;
 }
 
 .profile-home__avatar-wrap {

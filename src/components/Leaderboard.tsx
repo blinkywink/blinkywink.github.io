@@ -15,6 +15,7 @@ import {
 } from "../lib/profileCosmetics";
 import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
+import { PlayerAuraFx } from "./PlayerAuraFx";
 
 export type LeaderboardPlayer = {
   userId: string;
@@ -254,6 +255,10 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                         })
                       }
                     >
+                      <PlayerAuraFx
+                        accentColor={row.accentColor}
+                        auraCardId={row.auraCardId}
+                      />
                       <span className="board-card__rank">
                         {row.rank ?? "—"}
                       </span>

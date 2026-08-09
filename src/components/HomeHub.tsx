@@ -31,6 +31,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
 import { UserAvatar } from "./UserAvatar";
+import { PlayerAuraFx } from "./PlayerAuraFx";
 import {
   hasPlayerChrome,
   normalizeAccentColor,
@@ -247,6 +248,10 @@ export function HomeHub() {
                   style={chromeOn ? chrome : undefined}
                   to={userCollectionPath(row.username)}
                 >
+                  <PlayerAuraFx
+                    accentColor={row.accentColor}
+                    auraCardId={row.auraCardId}
+                  />
                   <span className="home-hub__rank">{i + 1}</span>
                   <UserAvatar crop={row.avatar} size={36} />
                   <strong>{row.username}</strong>

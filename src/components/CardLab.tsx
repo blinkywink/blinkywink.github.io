@@ -19,6 +19,7 @@ import {
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { MonkeyCard } from "./MonkeyCard";
+import { PlayerAuraFx } from "./PlayerAuraFx";
 import { UserAvatar } from "./UserAvatar";
 
 export type CardsOpenOpts = {
@@ -377,6 +378,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         <header
           className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
         >
+          <PlayerAuraFx
+            accentColor={viewer?.accentColor}
+            auraCardId={viewer?.auraCardId}
+          />
           {isRemote ? (
             <button
               type="button"

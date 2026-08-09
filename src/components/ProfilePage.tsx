@@ -39,6 +39,7 @@ import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { MonkeyCard } from "./MonkeyCard";
+import { PlayerAuraFx } from "./PlayerAuraFx";
 import { UserAvatar } from "./UserAvatar";
 
 type EditorStep = "pick" | "crop";
@@ -655,6 +656,10 @@ export function ProfilePage() {
               : undefined
           }
         >
+          <PlayerAuraFx
+            accentColor={cosmetics.accentColor ?? colorDraft}
+            auraCardId={cosmetics.auraCardId}
+          />
           <div className="profile-home__avatar-wrap">
             <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
           </div>

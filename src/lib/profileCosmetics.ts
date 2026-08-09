@@ -100,9 +100,14 @@ function auraPalette(cardId: string | null): {
   const rgb = isParagon
     ? PARAGON_ACCENT.rgb
     : (accent?.rgb ?? ([47, 159, 224] as [number, number, number]));
-  const holoMul = tier >= 3 ? Math.min(1, (tier - 2) / 4) : 0;
+  const holoMul = tier >= 3 ? Math.min(1, (tier - 2) / 4) : tier >= 1 ? 0.35 : 0.2;
 
   return { primary, secondary, rgb, holoMul, tier };
+}
+
+/** True when an aura card is equipped (shows foil FX layers). */
+export function hasPlayerAura(auraCardId?: string | null): boolean {
+  return Boolean(auraCardId && cardSpecById(auraCardId));
 }
 
 /** CSS vars for profile chrome / leaderboard chips / public pages. */
