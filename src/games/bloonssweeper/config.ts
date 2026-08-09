@@ -1,4 +1,6 @@
 export const RED_BLOON_IMAGE = "/images/bloons/red-bloon.png";
+/** BTD6 strikethrough button — used as the Sweeper “flag” marker. */
+export const FLAG_IMAGE = "/images/ui/strikethrough-round.png";
 
 export type SweeperDifficulty = "easy" | "medium";
 

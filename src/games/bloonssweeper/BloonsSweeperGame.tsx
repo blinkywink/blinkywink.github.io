@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { CashAmount } from "../../components/CurrencyChip";
 import {
+  FLAG_IMAGE,
   RED_BLOON_IMAGE,
   SWEEPER_DIFFICULTIES,
   type SweeperDifficulty,
@@ -118,6 +119,14 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
                     <img
                       className="sweeper-cell__mine"
                       src={RED_BLOON_IMAGE}
+                      alt=""
+                      draggable={false}
+                    />
+                  ) : null}
+                  {!cell.revealed && cell.flagged ? (
+                    <img
+                      className="sweeper-cell__flag"
+                      src={FLAG_IMAGE}
                       alt=""
                       draggable={false}
                     />

@@ -235,7 +235,8 @@ function CamoPreview() {
 }
 
 function SweeperPreview() {
-  const mines = new Set([2, 7, 11]);
+  const mines = new Set([2, 7]);
+  const flags = new Set([11]);
   const opens = new Set([0, 1, 4, 5, 8]);
   return (
     <div className="game-preview game-preview--sweeper" aria-hidden>
@@ -247,12 +248,19 @@ function SweeperPreview() {
               "game-preview__sweeper-cell",
               opens.has(i) ? "is-open" : "",
               mines.has(i) ? "is-mine" : "",
+              flags.has(i) ? "is-flagged" : "",
             ]
               .filter(Boolean)
               .join(" ")}
           >
             {mines.has(i) ? (
               <img src="/images/bloons/red-bloon.png" alt="" draggable={false} />
+            ) : flags.has(i) ? (
+              <img
+                src="/images/ui/strikethrough-round.png"
+                alt=""
+                draggable={false}
+              />
             ) : opens.has(i) ? (
               <span>{(i % 3) + 1}</span>
             ) : null}
