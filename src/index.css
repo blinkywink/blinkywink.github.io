@@ -4655,10 +4655,22 @@ body:has(.zoomed-page) {
 }
 
 .pack-opener__close {
-  position: absolute;
-  top: calc(var(--site-header-h, 3.75rem) + 0.45rem);
-  right: 0.85rem;
+  justify-self: end;
   z-index: 5;
+}
+
+.pack-opener__panel {
+  --pack-card-h: min(59vh, 640px);
+  --pack-card-w: min(70vw, calc(var(--pack-card-h) * 2.5 / 3.5));
+  --booster-w: min(46vw, 320px);
+  --booster-h: min(74vh, calc(var(--booster-w) * 1.62));
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.65rem;
+  width: max(var(--pack-card-w), var(--booster-w));
 }
 
 .pack-opener__arena {
@@ -4815,7 +4827,7 @@ body:has(.zoomed-page) {
   --booster-w: min(46vw, 320px);
   --booster-h: min(74vh, calc(var(--booster-w) * 1.62));
   position: relative;
-  width: max(var(--pack-card-w), var(--booster-w));
+  width: 100%;
   height: max(var(--pack-card-h), var(--booster-h));
   display: grid;
   place-items: center;

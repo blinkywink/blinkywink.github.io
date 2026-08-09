@@ -758,14 +758,6 @@ export function PackOpenerTest({
         onClick={handleClose}
       />
 
-      <button
-        type="button"
-        className="pack-opener__close btn btn--ghost btn--sm"
-        onClick={handleClose}
-      >
-        ✕ Close
-      </button>
-
       {godPack && phase !== "shop" && phase !== "sealed" ? (
         <div className="pack-opener__god-burst" aria-hidden>
           <span />
@@ -782,31 +774,40 @@ export function PackOpenerTest({
           onPointerUp={phase === "sealed" ? onSlashUp : undefined}
           onPointerCancel={phase === "sealed" ? onSlashUp : undefined}
         >
-          <p className="pack-opener__hint">
-            {phase === "shop" && `${pack.title} pack · Space to buy`}
-            {phase === "sealed" &&
-              (mode === "reward"
-                ? `Clear reward · ${pack.title} · slash / Space`
-                : "slash through the pack · Space")}
-            {phase === "sliced" && (godPack ? "GOD PACK!" : "…")}
-            {(phase === "enter" || phase === "ready" || phase === "exit") &&
-              (godPack
-                ? `GOD PACK · ${index + 1}/${pack.cardCount}`
-                : currentTier === "paragon" || currentTier === "t5"
-                  ? `${index + 1}/${pack.cardCount} · tap Space / swipe`
-                  : spaceHoldGate(current) === "t4"
-                    ? `${index + 1}/${pack.cardCount} · hold pauses · Space / swipe`
-                    : `${index + 1}/${pack.cardCount} · swipe / Space`)}
-          </p>
+          <div className="pack-opener__panel">
+            <button
+              type="button"
+              className="pack-opener__close btn btn--ghost btn--sm"
+              onClick={handleClose}
+            >
+              ✕ Close
+            </button>
 
-          {godPack &&
-          (phase === "enter" || phase === "ready" || phase === "exit") ? (
-            <p className="pack-opener__god-title" role="status">
-              GOD PACK
+            <p className="pack-opener__hint">
+              {phase === "shop" && `${pack.title} pack · Space to buy`}
+              {phase === "sealed" &&
+                (mode === "reward"
+                  ? `Clear reward · ${pack.title} · slash / Space`
+                  : "slash through the pack · Space")}
+              {phase === "sliced" && (godPack ? "GOD PACK!" : "…")}
+              {(phase === "enter" || phase === "ready" || phase === "exit") &&
+                (godPack
+                  ? `GOD PACK · ${index + 1}/${pack.cardCount}`
+                  : currentTier === "paragon" || currentTier === "t5"
+                    ? `${index + 1}/${pack.cardCount} · tap Space / swipe`
+                    : spaceHoldGate(current) === "t4"
+                      ? `${index + 1}/${pack.cardCount} · hold pauses · Space / swipe`
+                      : `${index + 1}/${pack.cardCount} · swipe / Space`)}
             </p>
-          ) : null}
 
-          <div className="pack-opener__stage">
+            {godPack &&
+            (phase === "enter" || phase === "ready" || phase === "exit") ? (
+              <p className="pack-opener__god-title" role="status">
+                GOD PACK
+              </p>
+            ) : null}
+
+            <div className="pack-opener__stage">
             {showPack ? (
               <div
                 className="booster-wrap"
@@ -952,9 +953,17 @@ export function PackOpenerTest({
               )}
             </div>
           ) : null}
+          </div>
         </div>
       ) : (
         <div className="pack-opener__done">
+          <button
+            type="button"
+            className="pack-opener__close btn btn--ghost btn--sm"
+            onClick={handleClose}
+          >
+            ✕ Close
+          </button>
           <h2>{godPack ? "GOD PACK!" : "Pack opened"}</h2>
           <p>
             {pack.cardCount} cards
