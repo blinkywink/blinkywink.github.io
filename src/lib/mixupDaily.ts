@@ -2,7 +2,7 @@ import {
   dayStamp,
   formatShopCountdown,
   nextUtcMidnightMs,
-} from "../packTheme";
+} from "./packTheme";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 
