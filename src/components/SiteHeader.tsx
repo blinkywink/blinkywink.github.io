@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { AccountBar } from "./AccountBar";
+import { TradeInbox } from "./TradeInbox";
 
 /** Fixed top bar — brand + account, stays on every screen. */
 export function SiteHeader() {
@@ -21,7 +22,10 @@ export function SiteHeader() {
           />
           <span>blinkywink.co</span>
         </Link>
-        <AccountBar />
+        <div className="site-header__actions">
+          <TradeInbox />
+          <AccountBar />
+        </div>
       </div>
     </header>
   );

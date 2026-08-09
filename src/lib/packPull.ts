@@ -37,6 +37,25 @@ function godTierWeight(card: MonkeyCardSpec): number {
   return 0;
 }
 
+/**
+ * Owned cards start nearly banned, then ramp in as the pool fills.
+ * Early: ~0–1 dup/pack. Near-complete: dups feel normal again.
+ */
+function ownedPullMult(ownedRatio: number): number {
+  if (ownedRatio <= 0) return 0;
+  return Math.min(1, Math.pow(ownedRatio, 2.15) * 1.2 + 0.02);
+}
+
+function ownershipRatio(
+  pool: MonkeyCardSpec[],
+  owned: ReadonlySet<string>,
+): number {
+  if (!pool.length) return 0;
+  let n = 0;
+  for (const c of pool) if (owned.has(c.id)) n += 1;
+  return n / pool.length;
+}
+
 function takeWeighted(bag: { c: MonkeyCardSpec; weight: number }[]): MonkeyCardSpec {
   const total = bag.reduce((n, x) => n + x.weight, 0);
   let roll = Math.random() * total;
@@ -63,10 +82,14 @@ function shuffle<T>(items: T[]): T[] {
 function injectRare(
   pulls: MonkeyCardSpec[],
   rares: MonkeyCardSpec[],
+  owned: ReadonlySet<string>,
 ): void {
   if (!pulls.length || !rares.length) return;
   const already = new Set(pulls.map((c) => c.id));
-  const options = rares.filter((c) => !already.has(c.id));
+  const fresh = rares.filter((c) => !already.has(c.id) && !owned.has(c.id));
+  const dups = rares.filter((c) => !already.has(c.id) && owned.has(c.id));
+  // Prefer a new rare; only fall back to a duplicate rare if none remain.
+  const options = fresh.length ? fresh : dups;
   if (!options.length) return;
 
   const rare = options[Math.floor(Math.random() * options.length)]!;
@@ -92,8 +115,16 @@ function fillFrom(
   pulls: MonkeyCardSpec[],
   source: MonkeyCardSpec[],
   count: number,
+  owned: ReadonlySet<string>,
+  preferFresh: boolean,
 ): void {
-  for (const card of shuffle(source)) {
+  const ordered = preferFresh
+    ? [
+        ...shuffle(source.filter((c) => !owned.has(c.id))),
+        ...shuffle(source.filter((c) => owned.has(c.id))),
+      ]
+    : shuffle(source);
+  for (const card of ordered) {
     if (pulls.length >= count) break;
     if (pulls.some((p) => p.id === card.id)) continue;
     pulls.push(card);
@@ -104,6 +135,7 @@ function fillFrom(
 function pullGodPackCards(
   pool: MonkeyCardSpec[],
   count: number,
+  owned: ReadonlySet<string>,
 ): MonkeyCardSpec[] {
   const t4Pool = pool.filter(
     (c) => !c.isParagon && maxPathTier(c.pathLevels) === 4,
@@ -113,16 +145,22 @@ function pullGodPackCards(
   );
   const paragonPool = pool.filter((c) => c.isParagon);
   const highPool = [...t4Pool, ...t5Pool];
+  const ratio = ownershipRatio(highPool.length ? highPool : pool, owned);
+  const dupMult = ownedPullMult(ratio);
 
   const pulls: MonkeyCardSpec[] = [];
 
-  // Guaranteed Paragon when the pack pool includes any.
+  // Prefer an unowned Paragon when possible.
   if (paragonPool.length) {
-    pulls.push(paragonPool[Math.floor(Math.random() * paragonPool.length)]!);
+    const fresh = paragonPool.filter((c) => !owned.has(c.id));
+    const bag = fresh.length ? fresh : paragonPool;
+    pulls.push(bag[Math.floor(Math.random() * bag.length)]!);
   }
 
-  // Prefer several T5s when available.
-  const t5Bag = t5Pool.map((c) => ({ c, weight: 1 }));
+  const t5Bag = t5Pool.map((c) => ({
+    c,
+    weight: owned.has(c.id) ? Math.max(0.001, dupMult) : 1,
+  }));
   const t5Target = Math.min(
     t5Pool.length,
     Math.max(3, Math.ceil(count * 0.4)),
@@ -139,15 +177,19 @@ function pullGodPackCards(
 
   const bag = highPool
     .filter((c) => !pulls.some((p) => p.id === c.id))
-    .map((c) => ({ c, weight: godTierWeight(c) }));
+    .map((c) => ({
+      c,
+      weight:
+        godTierWeight(c) * (owned.has(c.id) ? Math.max(0.001, dupMult) : 1),
+    }))
+    .filter((x) => x.weight > 0);
 
   while (pulls.length < count && bag.length) {
     pulls.push(takeWeighted(bag));
   }
 
-  // Tiny pools: fall back to any T4+ then anything.
-  if (pulls.length < count) fillFrom(pulls, highPool, count);
-  if (pulls.length < count) fillFrom(pulls, pool, count);
+  if (pulls.length < count) fillFrom(pulls, highPool, count, owned, true);
+  if (pulls.length < count) fillFrom(pulls, pool, count, owned, true);
 
   return shuffle(pulls);
 }
@@ -155,6 +197,7 @@ function pullGodPackCards(
 function pullNormalPackCards(
   pool: MonkeyCardSpec[],
   count: number,
+  owned: ReadonlySet<string>,
 ): MonkeyCardSpec[] {
   const lowPool = pool.filter(
     (c) => !c.isParagon && maxPathTier(c.pathLevels) <= 4,
@@ -163,22 +206,30 @@ function pullNormalPackCards(
     (c) => !c.isParagon && maxPathTier(c.pathLevels) === 5,
   );
   const paragonPool = pool.filter((c) => c.isParagon);
+  const ratio = ownershipRatio(pool, owned);
+  const dupMult = ownedPullMult(ratio);
 
   const pulls: MonkeyCardSpec[] = [];
-  const bag = lowPool.map((c) => ({ c, weight: tierWeight(c) }));
+  const bag = lowPool
+    .map((c) => ({
+      c,
+      weight:
+        tierWeight(c) * (owned.has(c.id) ? Math.max(0.001, dupMult) : 1),
+    }))
+    .filter((x) => x.weight > 0);
 
   while (pulls.length < count && bag.length) {
     pulls.push(takeWeighted(bag));
   }
 
-  if (pulls.length < count) fillFrom(pulls, t5Pool, count);
-  if (pulls.length < count) fillFrom(pulls, paragonPool, count);
+  if (pulls.length < count) fillFrom(pulls, t5Pool, count, owned, true);
+  if (pulls.length < count) fillFrom(pulls, paragonPool, count, owned, true);
 
   if (Math.random() < PACK_T5_CHANCE) {
-    injectRare(pulls, t5Pool);
+    injectRare(pulls, t5Pool, owned);
   }
   if (Math.random() < PACK_PARAGON_CHANCE) {
-    injectRare(pulls, paragonPool);
+    injectRare(pulls, paragonPool, owned);
   }
 
   return shuffle(pulls);
@@ -188,12 +239,13 @@ function pullNormalPackCards(
  * Open a pack:
  * - 1% god pack (all T4+, usually with a Paragon)
  * - otherwise weighted commons + rare injects
+ * - early collections heavily prefer new cards; dups ramp as you complete the pool
  * - duplicates convert to Cash in the opener
  */
 export function pullPackCards(
   pool: MonkeyCardSpec[],
   count: number,
-  _owned?: ReadonlySet<string>,
+  owned: ReadonlySet<string> = new Set(),
 ): PackPullResult {
   if (count < 1 || !pool.length) {
     return { cards: [], godPack: false };
@@ -207,7 +259,7 @@ export function pullPackCards(
   return {
     godPack,
     cards: godPack
-      ? pullGodPackCards(pool, count)
-      : pullNormalPackCards(pool, count),
+      ? pullGodPackCards(pool, count, owned)
+      : pullNormalPackCards(pool, count, owned),
   };
 }

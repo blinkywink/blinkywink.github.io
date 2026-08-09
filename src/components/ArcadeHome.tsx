@@ -22,6 +22,7 @@ type Props = {
   onPlay: (game: GameId) => void;
   onOpenCards: () => void;
   onOpenLeaderboard: () => void;
+  onOpenMarketplace: () => void;
   onPackFinished?: (result: {
     pack: PackDef;
     pulls: MonkeyCardSpec[];
@@ -339,6 +340,7 @@ export function ArcadeHome({
   onPlay,
   onOpenCards,
   onOpenLeaderboard,
+  onOpenMarketplace,
   onPackFinished,
 }: Props) {
   const [activePack, setActivePack] = useState<PackDef | null>(null);
@@ -477,6 +479,13 @@ export function ArcadeHome({
           onClick={onOpenLeaderboard}
         >
           Leaderboard
+        </button>
+        <button
+          type="button"
+          className="arcade-link-btn"
+          onClick={onOpenMarketplace}
+        >
+          Marketplace
         </button>
       </section>
 

@@ -31,6 +31,14 @@ export function userCollectionPath(username: string): string {
   return `/user/${encodeURIComponent(username)}`;
 }
 
+export function marketplacePath(): string {
+  return "/marketplace";
+}
+
+export function tradePath(tradeId: string): string {
+  return `/trade/${encodeURIComponent(tradeId)}`;
+}
+
 export function isGamePath(value: string): value is GamePath {
   return (GAME_PATHS as readonly string[]).includes(value);
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
@@ -10,6 +11,7 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
+import { pingInbox, requestTrade } from "../lib/trades";
 import { MonkeyCard } from "./MonkeyCard";
 
 export type CardsOpenOpts = {
@@ -100,6 +102,9 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 /** Player collection — owned cards in color, missing ones greyed out. */
 export function CardLab({ onBack, initial, viewer = null }: Props) {
+  const { user, isGuest } = useAuth();
+  const [tradeBusy, setTradeBusy] = useState(false);
+  const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const { owned: myOwned } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
     null,
@@ -153,6 +158,25 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const owned = viewer ? (remoteOwned ?? new Set<string>()) : myOwned;
   const isRemote = Boolean(viewer);
   const ownerLabel = viewer?.username ?? "You";
+  const canRequestTrade =
+    Boolean(viewer) &&
+    !isGuest &&
+    Boolean(user) &&
+    user?.id !== viewer?.userId;
+
+  async function onRequestTrade() {
+    if (!viewer || tradeBusy) return;
+    setTradeBusy(true);
+    setTradeMsg(null);
+    try {
+      await requestTrade(viewer.username);
+      await pingInbox(viewer.userId).catch(() => undefined);
+      setTradeMsg(`Trade request sent to ${viewer.username}.`);
+    } catch (err) {
+      setTradeMsg(err instanceof Error ? err.message : "Could not send request.");
+    }
+    setTradeBusy(false);
+  }
 
   useEffect(() => {
     if (!initial || isRemote) return;
@@ -322,6 +346,21 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   ? `${totalOwned} owned · browse by tower or open All Cards.`
                   : "Browse by tower, or open All Cards for everything you own."}
             </p>
+            {canRequestTrade ? (
+              <div className="card-lab__trade">
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
+                  disabled={tradeBusy}
+                  onClick={() => void onRequestTrade()}
+                >
+                  {tradeBusy ? "Sending…" : "Request trade"}
+                </button>
+                {tradeMsg ? (
+                  <p className="card-lab__trade-msg">{tradeMsg}</p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </header>
 

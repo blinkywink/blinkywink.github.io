@@ -13,8 +13,10 @@ import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { Leaderboard } from "./components/Leaderboard";
+import { Marketplace } from "./components/Marketplace";
 import { PackOpenerTest } from "./components/PackOpenerTest";
 import { SiteHeader } from "./components/SiteHeader";
+import { TradeRoom } from "./components/TradeRoom";
 import { BloonleGame } from "./games/bloonle";
 import { GeoguessrGame } from "./games/geoguessr";
 import { OrderUpGame } from "./games/orderup";
@@ -30,6 +32,7 @@ import {
   collectionPath,
   gamePath,
   leaderboardPath,
+  marketplacePath,
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
@@ -52,6 +55,7 @@ function HomePage() {
       onPlay={(game: GameId) => navigate(gamePath(game as GamePath))}
       onOpenCards={() => navigate(collectionPath())}
       onOpenLeaderboard={() => navigate(leaderboardPath())}
+      onOpenMarketplace={() => navigate(marketplacePath())}
       onPackFinished={({ pack, unlocked }) => {
         navigate(collectionPath(), {
           state: {
@@ -267,6 +271,11 @@ function AppShell() {
           <Route path="/" element={<HomePage />} />
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route
+            path="/marketplace"
+            element={<Marketplace onBack={goHome} />}
+          />
+          <Route path="/trade/:tradeId" element={<TradeRoom />} />
           <Route path="/user/:username" element={<UserCollectionPage />} />
           <Route
             path="/zoomed"
