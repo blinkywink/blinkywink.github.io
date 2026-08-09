@@ -9998,41 +9998,56 @@ button.trade-offer-card:hover:not(:disabled) {
 /* —— Heroes (shop / profile / collection / procs) —— */
 .hero-proc-stack {
   position: fixed;
-  right: 1rem;
-  bottom: 1.25rem;
-  z-index: 1400;
+  top: calc(var(--site-header-h, 3.75rem) + 0.35rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1990;
   display: grid;
-  gap: 0.55rem;
+  justify-items: center;
+  gap: 0.45rem;
+  width: min(22rem, calc(100vw - 1.5rem));
+  padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
   pointer-events: none;
-  max-width: min(22rem, calc(100vw - 2rem));
 }
 
 .hero-proc {
   display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 0.65rem;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 0.6rem;
   align-items: center;
-  padding: 0.55rem 0.75rem;
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(12, 12, 16, 0.94);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-  animation: hero-proc-in 0.28s ease both;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(10, 10, 14, 0.94);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.25);
+  animation: hero-proc-drop 0.42s cubic-bezier(0.2, 1.05, 0.3, 1) both;
 }
 
 .hero-proc--ice {
-  border-color: rgba(120, 200, 255, 0.45);
-  background: rgba(10, 24, 36, 0.95);
+  border-color: rgba(120, 200, 255, 0.5);
+  background: rgba(8, 20, 32, 0.95);
 }
-.hero-proc--fire { border-color: rgba(255, 140, 70, 0.45); }
-.hero-proc--nature { border-color: rgba(110, 200, 120, 0.45); }
-.hero-proc--gold { border-color: rgba(240, 200, 74, 0.5); }
+.hero-proc--fire {
+  border-color: rgba(255, 140, 70, 0.5);
+}
+.hero-proc--nature {
+  border-color: rgba(110, 200, 120, 0.5);
+}
+.hero-proc--gold {
+  border-color: rgba(240, 200, 74, 0.55);
+}
 
 .hero-proc__img {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .hero-proc__msg {
@@ -10041,11 +10056,41 @@ button.trade-offer-card:hover:not(:disabled) {
   font-weight: 750;
   line-height: 1.25;
   color: #f0f0f4;
+  text-wrap: balance;
 }
 
-@keyframes hero-proc-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+@keyframes hero-proc-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-100% - 0.75rem));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-proc-stack {
+    top: calc(var(--site-header-h, 3.75rem) + 0.25rem);
+    width: min(20.5rem, calc(100vw - 1rem));
+  }
+
+  .hero-proc {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.45rem 0.65rem 0.45rem 0.45rem;
+    border-radius: 12px;
+  }
+
+  .hero-proc__img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hero-proc__msg {
+    font-size: 0.82rem;
+  }
 }
 
 .shop-heroes { margin-top: 1.75rem; }
