@@ -46,8 +46,8 @@ import {
   shoppableHeroes,
 } from "../lib/profileHeroes";
 import { heroBlurb } from "../lib/heroEffects";
-import { heroPortraitForLevel } from "../data/heroes";
 import { collectionPath, userCollectionPath } from "../lib/routes";
+import { HeroCardFace } from "./HeroCollectionStrip";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
@@ -700,8 +700,8 @@ export function ProfilePage() {
             <div>
               <h3>Hero</h3>
               <p>
-                Unlock heroes in the Shop. First equip is free; swapping costs{" "}
-                <CashAmount amount={HERO_EQUIP_SWAP_COST} size={13} />.
+                Equip one hero for passive bonuses. First equip is free; swapping
+                costs <CashAmount amount={HERO_EQUIP_SWAP_COST} size={13} />.
                 Unequip is free.
               </p>
             </div>
@@ -711,7 +711,7 @@ export function ProfilePage() {
               No heroes unlocked yet. Visit the Shop Heroes shelf.
             </p>
           ) : (
-            <div className="profile-heroes__grid">
+            <div className="profile-heroes__grid profile-heroes__grid--cards">
               {ownedHeroes.map((hero) => {
                 const level = heroLevelFromProfile(heroLevels, hero.id);
                 const isEq = equippedHeroId === hero.id;
@@ -720,39 +720,37 @@ export function ProfilePage() {
                     ? HERO_EQUIP_SWAP_COST
                     : 0;
                 return (
-                  <div
+                  <HeroCardFace
                     key={hero.id}
-                    className={`profile-heroes__card${isEq ? " is-equipped" : ""}`}
-                  >
-                    <img
-                      src={heroPortraitForLevel(hero, level)}
-                      alt=""
-                      className="profile-heroes__art"
-                    />
-                    <div className="profile-heroes__meta">
-                      <strong>{hero.name}</strong>
-                      <span>{heroBlurb(hero.id)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      className={`btn btn--sm ${isEq ? "btn--ghost" : "btn--secondary"}`}
-                      disabled={busy}
-                      onClick={() =>
-                        void onEquipHero(isEq ? null : hero.id)
-                      }
-                    >
-                      {isEq ? (
-                        "Unequip"
-                      ) : swapCost > 0 ? (
-                        <>
-                          Equip
-                          <CashAmount amount={swapCost} size={14} />
-                        </>
-                      ) : (
-                        "Equip"
-                      )}
-                    </button>
-                  </div>
+                    hero={hero}
+                    level={level}
+                    equipped={isEq}
+                    size="md"
+                    footer={
+                      <div className="hero-card__footer">
+                        <p className="hero-card__blurb">{heroBlurb(hero.id)}</p>
+                        <button
+                          type="button"
+                          className={`btn btn--sm ${isEq ? "btn--ghost" : "btn--secondary"}`}
+                          disabled={busy}
+                          onClick={() =>
+                            void onEquipHero(isEq ? null : hero.id)
+                          }
+                        >
+                          {isEq ? (
+                            "Unequip"
+                          ) : swapCost > 0 ? (
+                            <>
+                              Equip
+                              <CashAmount amount={swapCost} size={14} />
+                            </>
+                          ) : (
+                            "Equip"
+                          )}
+                        </button>
+                      </div>
+                    }
+                  />
                 );
               })}
             </div>

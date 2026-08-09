@@ -18,7 +18,10 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
-import { HeroCollectionStrip } from "./HeroCollectionStrip";
+import {
+  EquippedHeroPanel,
+  HeroCollectionShelf,
+} from "./HeroCollectionStrip";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 import {
@@ -408,45 +411,41 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               {isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}
             </h1>
             {isRemote && !remoteError ? (
-              <div className="player-showcase">
-                <p className="player-showcase__label">Showcase cards</p>
-                {showcaseCards.length > 0 ? (
-                  <div className="player-showcase__row">
-                    {showcaseCards.map((card) => (
-                      <MonkeyCard
-                        key={card.id}
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                        onSelect={() => setFocused(card)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="player-showcase__empty">
-                    No showcase cards yet.
-                  </p>
-                )}
-              </div>
+              <>
+                <div className="player-showcase">
+                  <p className="player-showcase__label">Showcase cards</p>
+                  {showcaseCards.length > 0 ? (
+                    <div className="player-showcase__row">
+                      {showcaseCards.map((card) => (
+                        <MonkeyCard
+                          key={card.id}
+                          entity={card.entity}
+                          pathLevels={card.pathLevels}
+                          mode="preview"
+                          owned
+                          onSelect={() => setFocused(card)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="player-showcase__empty">
+                      No showcase cards yet.
+                    </p>
+                  )}
+                </div>
+                <EquippedHeroPanel
+                  equippedHeroId={viewer?.equippedHeroId}
+                  heroLevels={viewer?.heroLevels}
+                />
+              </>
             ) : null}
-            <HeroCollectionStrip
-              ownedHeroIds={
-                isRemote
-                  ? viewer?.ownedHeroIds
-                  : normalizeOwnedHeroIds(profile?.owned_hero_ids)
-              }
-              equippedHeroId={
-                isRemote
-                  ? viewer?.equippedHeroId
-                  : profile?.equipped_hero_id ?? null
-              }
-              heroLevels={
-                isRemote
-                  ? viewer?.heroLevels
-                  : normalizeHeroLevels(profile?.hero_levels)
-              }
-            />
+            {!isRemote ? (
+              <HeroCollectionShelf
+                ownedHeroIds={normalizeOwnedHeroIds(profile?.owned_hero_ids)}
+                equippedHeroId={profile?.equipped_hero_id ?? null}
+                heroLevels={normalizeHeroLevels(profile?.hero_levels)}
+              />
+            ) : null}
             {remoteError ? (
               <p className="card-lab__blurb">{remoteError}</p>
             ) : !isRemote ? (
