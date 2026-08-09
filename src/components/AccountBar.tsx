@@ -188,7 +188,10 @@ export function AccountBar() {
     const avatar = profile ? avatarFromProfile(profile) : null;
     return (
       <div className="account-bar">
-        <CurrencyChip amount={profile?.coins ?? 0} />
+        <CurrencyChip
+          amount={profile?.coins ?? 0}
+          resetKey={user?.id ?? "guest"}
+        />
         <div className="account-menu" ref={menuRef}>
           <button
             type="button"
@@ -234,7 +237,10 @@ export function AccountBar() {
 
   return (
     <div className="account-bar">
-      <CurrencyChip amount={profile?.coins ?? 0} />
+      <CurrencyChip
+        amount={profile?.coins ?? 0}
+        resetKey={user?.id ?? "guest"}
+      />
       <button
         type="button"
         className="btn btn--secondary btn--sm"

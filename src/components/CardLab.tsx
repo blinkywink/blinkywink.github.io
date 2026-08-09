@@ -18,7 +18,6 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
-import { usePlayerPageAccent } from "../lib/usePlayerPageAccent";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
@@ -113,7 +112,7 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 /** Player collection — owned cards in color, missing ones greyed out. */
 export function CardLab({ onBack, initial, viewer = null }: Props) {
-  const { user, isGuest, profile } = useAuth();
+  const { user, isGuest } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const { owned: myOwned } = useCardCollection();
@@ -184,14 +183,11 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const chromeStyle = useMemo(
     () =>
       playerChromeStyle({
-        accentColor: isRemote
-          ? viewer?.accentColor
-          : profile?.accent_color,
+        accentColor: viewer?.accentColor,
       }),
-    [isRemote, viewer?.accentColor, profile?.accent_color],
+    [viewer?.accentColor],
   );
-  const chromeOn = hasPlayerChrome(chromeStyle);
-  usePlayerPageAccent(chromeOn ? chromeStyle : null);
+  const chromeOn = isRemote && hasPlayerChrome(chromeStyle);
 
   async function onRequestTrade() {
     if (!viewer || tradeBusy) return;

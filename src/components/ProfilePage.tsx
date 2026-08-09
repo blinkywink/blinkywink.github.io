@@ -20,14 +20,14 @@ import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import {
-  cosmeticsFromProfile,
-  normalizeAccentColor,
-  playerChromeStyle,
   PROFILE_ACCENT_CHANGE_COST,
   PROFILE_ACCENT_COST,
+  cosmeticsFromProfile,
+  hasPlayerChrome,
+  normalizeAccentColor,
+  playerChromeStyle,
   setProfileAccent,
 } from "../lib/profileCosmetics";
-import { usePlayerPageAccent } from "../lib/usePlayerPageAccent";
 import {
   SHOWCASE_CHANGE_COST,
   SHOWCASE_MAX,
@@ -78,6 +78,12 @@ export function ProfilePage() {
   const cosmetics = useMemo(
     () => (profile ? cosmeticsFromProfile(profile) : cosmeticsFromProfile({})),
     [profile],
+  );
+
+  const chromeOn = hasPlayerChrome(
+    playerChromeStyle({
+      accentColor: cosmetics.accentColor,
+    }),
   );
 
   const showcaseSpecs = useMemo(
@@ -526,22 +532,8 @@ export function ProfilePage() {
       )
     : null;
 
-  const pageChromeOn = Boolean(cosmetics.accentColor || cosmetics.accentUnlocked);
-  const pageChromeStyle = pageChromeOn
-    ? playerChromeStyle({
-        accentColor: cosmetics.accentColor ?? colorDraft,
-      })
-    : undefined;
-  usePlayerPageAccent(pageChromeStyle ?? null);
-
   return (
-    <div
-      className={`profile-page${pageChromeOn ? " has-player-chrome" : ""}`}
-      style={pageChromeStyle}
-    >
-      {pageChromeOn ? (
-        <div className="profile-page__atmosphere" aria-hidden />
-      ) : null}
+    <div className="profile-page">
       <PageHeader
         eyebrow="Account"
         title="Profile"
@@ -556,8 +548,14 @@ export function ProfilePage() {
         ) : null}
 
         <section
-          className={`profile-home${pageChromeOn ? " has-player-chrome" : ""}`}
-          style={pageChromeStyle}
+          className={`profile-home${chromeOn || cosmetics.accentUnlocked ? " has-player-chrome" : ""}`}
+          style={
+            chromeOn || cosmetics.accentUnlocked
+              ? playerChromeStyle({
+                  accentColor: cosmetics.accentColor ?? colorDraft,
+                })
+              : undefined
+          }
         >
           <div className="profile-home__avatar-wrap">
             <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
@@ -606,15 +604,9 @@ export function ProfilePage() {
               <div className="profile-cosmetics__card-head">
                 <h4>Color</h4>
                 <span className="profile-cosmetics__price">
-                  {cosmetics.accentUnlocked ? (
-                    <>
-                      Change <CashAmount amount={PROFILE_ACCENT_CHANGE_COST} size={14} />
-                    </>
-                  ) : (
-                    <>
-                      Unlock <CashAmount amount={PROFILE_ACCENT_COST} size={14} />
-                    </>
-                  )}
+                  {cosmetics.accentUnlocked
+                    ? "Applies to your page & leaderboard"
+                    : "One-time unlock"}
                 </span>
               </div>
               <label className="profile-cosmetics__color">
@@ -629,7 +621,7 @@ export function ProfilePage() {
               </label>
               <button
                 type="button"
-                className="btn btn--secondary"
+                className="btn btn--secondary profile-cosmetics__buy"
                 disabled={
                   busy ||
                   (cosmetics.accentUnlocked
@@ -639,9 +631,15 @@ export function ProfilePage() {
                 }
                 onClick={() => void onSaveAccent()}
               >
-                {cosmetics.accentUnlocked
-                  ? "Save color"
-                  : "Buy & save color"}
+                {cosmetics.accentUnlocked ? "Save" : "Unlock"}
+                <CashAmount
+                  amount={
+                    cosmetics.accentUnlocked
+                      ? PROFILE_ACCENT_CHANGE_COST
+                      : PROFILE_ACCENT_COST
+                  }
+                  size={16}
+                />
               </button>
             </div>
           </div>

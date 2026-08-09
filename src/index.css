@@ -51,39 +51,8 @@ body {
   color: var(--ink);
 }
 
-/* Whole viewport tint while viewing a chromed profile / collection */
-body.has-player-page-accent {
-  background:
-    radial-gradient(
-      circle at 50% -8%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.55),
-      transparent 48%
-    ),
-    radial-gradient(
-      circle at 8% 90%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.28),
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 94% 70%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
-      transparent 36%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--player-accent) 32%, #0c0c12) 0%,
-      color-mix(in srgb, var(--player-accent) 16%, #07070c) 48%,
-      color-mix(in srgb, var(--player-accent) 10%, #050508) 100%
-    );
-  background-attachment: scroll;
-}
-
 @media (min-width: 900px) {
   body {
-    background-attachment: fixed;
-  }
-
-  body.has-player-page-accent {
     background-attachment: fixed;
   }
 }
@@ -950,6 +919,7 @@ body:has(.zoomed-page) {
 }
 
 .coin-chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -958,6 +928,7 @@ body:has(.zoomed-page) {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  overflow: visible;
 }
 
 .coin-chip__icon {
@@ -1009,6 +980,56 @@ body:has(.zoomed-page) {
   -webkit-text-stroke: 3.5px #000;
   paint-order: stroke fill;
   text-shadow: none;
+}
+
+.coin-chip__pops {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 0.15rem);
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.coin-chip__pop {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  animation: coin-chip-pop 1.45s ease-out forwards;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.coin-chip__pop.is-gain {
+  color: #7ddea0;
+}
+
+.coin-chip__pop.is-loss {
+  color: #ff8b82;
+}
+
+@keyframes coin-chip-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-12px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.98);
+  }
 }
 
 .coin-chip--banked {
@@ -9190,7 +9211,6 @@ button.trade-offer-card:hover:not(:disabled) {
 
 /* Profile page */
 .profile-page {
-  position: relative;
   width: min(var(--content-max), calc(100% - 2rem));
   margin: 0 auto;
   padding: 0.75rem 0 3rem;
@@ -9320,11 +9340,12 @@ button.trade-offer-card:hover:not(:disabled) {
   cursor: pointer;
 }
 
-.profile-cosmetics__color code {
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #f0f0f4;
+.profile-cosmetics__buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: fit-content;
 }
 
 .profile-cosmetics__empty {
@@ -9340,34 +9361,6 @@ button.trade-offer-card:hover:not(:disabled) {
   --player-accent-r: 240;
   --player-accent-g: 200;
   --player-accent-b: 74;
-}
-
-.profile-page__atmosphere {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.42),
-      transparent 46%
-    ),
-    radial-gradient(
-      circle at 12% 78%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
-      transparent 36%
-    ),
-    radial-gradient(
-      circle at 90% 64%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.18),
-      transparent 34%
-    );
-}
-
-.profile-page.has-player-chrome > :not(.profile-page__atmosphere) {
-  position: relative;
-  z-index: 1;
 }
 
 .profile-home.has-player-chrome {
@@ -9393,25 +9386,6 @@ button.trade-offer-card:hover:not(:disabled) {
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--player-accent) 65%, transparent),
     0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35);
-}
-
-.card-lab.has-player-chrome .card-lab__atmosphere {
-  background:
-    radial-gradient(
-      circle at 50% 8%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.48),
-      transparent 46%
-    ),
-    radial-gradient(
-      circle at 14% 82%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.26),
-      transparent 38%
-    ),
-    radial-gradient(
-      circle at 88% 68%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
-      transparent 34%
-    );
 }
 
 .card-lab.has-player-chrome .card-lab__header--remote,
