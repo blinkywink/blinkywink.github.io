@@ -109,6 +109,8 @@ type FaceProps = {
   hero: HeroEntity;
   level: number;
   equipped?: boolean;
+  locked?: boolean;
+  hideLevel?: boolean;
   size?: "sm" | "md";
   footer?: ReactNode;
 };
@@ -118,12 +120,14 @@ export function HeroCardFace({
   hero,
   level,
   equipped = false,
+  locked = false,
+  hideLevel = false,
   size = "sm",
   footer,
 }: FaceProps) {
   return (
     <article
-      className={`hero-card hero-card--${size}${equipped ? " is-equipped" : ""}`}
+      className={`hero-card hero-card--${size}${equipped ? " is-equipped" : ""}${locked ? " is-locked" : ""}`}
     >
       <div className="hero-card__plate" aria-hidden>
         <span className="hero-card__shine" />
@@ -132,7 +136,9 @@ export function HeroCardFace({
           alt=""
           className="hero-card__art"
         />
-        <span className="hero-card__lvl">Lv {level}</span>
+        {!hideLevel ? (
+          <span className="hero-card__lvl">Lv {level}</span>
+        ) : null}
         {equipped ? <span className="hero-card__badge">Equipped</span> : null}
       </div>
       <div className="hero-card__body">

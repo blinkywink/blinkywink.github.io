@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { heroPortraitForLevel, type HeroEntity } from "../data/heroes";
+import type { HeroEntity } from "../data/heroes";
 import { heroBlurb } from "../lib/heroEffects";
 import {
   HERO_UNLOCK_COST,
@@ -12,6 +12,7 @@ import {
   shoppableHeroes,
 } from "../lib/profileHeroes";
 import { CashAmount, CurrencyChip } from "./CurrencyChip";
+import { HeroCardFace } from "./HeroCollectionStrip";
 
 export function ShopHeroesShelf() {
   const { isGuest, profile, setCoinBalance, refreshProfile } = useAuth();
@@ -82,6 +83,11 @@ export function ShopHeroesShelf() {
     };
   });
 
+  const focusMine = focused ? owned.has(focused.id) : false;
+  const focusLevel = focused
+    ? heroLevelFromProfile(levels, focused.id)
+    : 1;
+
   const focusPortal = focused
     ? createPortal(
         <div
@@ -106,23 +112,20 @@ export function ShopHeroesShelf() {
             >
               ✕ Close
             </button>
-            <img
-              src={heroPortraitForLevel(focused, 1)}
-              alt=""
-              className="shop-hero-focus__art"
+            <HeroCardFace
+              hero={focused}
+              level={focusMine ? focusLevel : 1}
+              size="md"
+              locked={!focusMine}
+              hideLevel={!focusMine}
             />
-            <h2 className="shop-hero-focus__name">{focused.name}</h2>
-            <p className="shop-hero-focus__title">{focused.title}</p>
             <p className="shop-hero-focus__blurb">{heroBlurb(focused.id)}</p>
-            <p className="shop-hero-focus__cost-note">
-              Medium cost <CashAmount amount={focused.cost} /> (flavor)
-            </p>
             <div className="pack-opener__buy shop-hero-focus__buy">
-              <CurrencyChip amount={HERO_UNLOCK_COST} />
+              {!focusMine ? <CurrencyChip amount={HERO_UNLOCK_COST} /> : null}
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to unlock.</p>
-              ) : owned.has(focused.id) ? (
-                <p className="pack-opener__buy-note">Already owned.</p>
+              ) : focusMine ? (
+                <p className="pack-opener__buy-note">Already owned · equip on Profile</p>
               ) : (
                 <>
                   <button
@@ -157,7 +160,9 @@ export function ShopHeroesShelf() {
           Unlock <CashAmount amount={HERO_UNLOCK_COST} /> · equip on Profile
         </p>
       </div>
-      {status ? <p className="shop-direct__banner shop-direct__banner--ok">{status}</p> : null}
+      {status ? (
+        <p className="shop-direct__banner shop-direct__banner--ok">{status}</p>
+      ) : null}
       <div className="shop-heroes__grid">
         {heroes.map((hero) => {
           const mine = owned.has(hero.id);
@@ -166,18 +171,18 @@ export function ShopHeroesShelf() {
             <button
               key={hero.id}
               type="button"
-              className={`shop-heroes__card${mine ? " is-owned" : ""}`}
+              className={`shop-heroes__tile${mine ? " is-owned" : " is-locked"}`}
               onClick={() => {
                 setBuyError(null);
                 setFocused(hero);
               }}
             >
-              <img
-                src={heroPortraitForLevel(hero, mine ? level : 1)}
-                alt=""
-                className="shop-heroes__art"
+              <HeroCardFace
+                hero={hero}
+                level={mine ? level : 1}
+                locked={!mine}
+                hideLevel={!mine}
               />
-              <span className="shop-heroes__name">{hero.name}</span>
               <span className="shop-heroes__price">
                 {mine ? (
                   "Owned"

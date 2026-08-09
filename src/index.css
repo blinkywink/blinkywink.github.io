@@ -4826,6 +4826,19 @@ body:has(.zoomed-page) {
   z-index: 2;
 }
 
+.pack-opener__progress {
+  margin: 0;
+  z-index: 3;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 3.2vw, 1.35rem);
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  color: rgba(240, 240, 244, 0.9);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .pack-opener__god-burst {
   position: absolute;
   inset: 0;
@@ -10045,79 +10058,63 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .shop-heroes__grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.9rem 0.75rem;
+  justify-items: center;
 }
 
-.shop-heroes__card {
+.shop-heroes__tile {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
   justify-items: center;
-  padding: 0.55rem 0.4rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: inherit;
   cursor: pointer;
 }
 
-.shop-heroes__card:hover,
-.shop-heroes__card:focus-visible {
-  border-color: rgba(240, 200, 74, 0.4);
-  background: rgba(255, 255, 255, 0.06);
+.shop-heroes__tile:hover .hero-card__plate,
+.shop-heroes__tile:focus-visible .hero-card__plate {
+  border-color: rgba(240, 200, 74, 0.55);
 }
 
-.shop-heroes__art {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  filter: grayscale(1) brightness(0.7);
-}
-
-.shop-heroes__card.is-owned .shop-heroes__art { filter: none; }
-
-.shop-heroes__name {
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-align: center;
-  line-height: 1.15;
+.shop-heroes__tile .hero-card {
+  pointer-events: none;
 }
 
 .shop-heroes__price {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: rgba(240, 200, 74, 0.95);
+}
+
+.shop-heroes__tile.is-owned .shop-heroes__price {
+  color: rgba(240, 240, 244, 0.55);
 }
 
 .shop-hero-focus__panel {
   display: grid;
   justify-items: center;
-  gap: 0.45rem;
+  gap: 0.65rem;
   max-width: 22rem;
   text-align: center;
 }
 
-.shop-hero-focus__art {
-  width: min(200px, 50vw);
-  height: auto;
-  object-fit: contain;
+.shop-hero-focus__panel .hero-card {
+  width: 10.5rem;
 }
 
-.shop-hero-focus__name {
-  margin: 0.25rem 0 0;
-  font-size: 1.35rem;
-}
-
-.shop-hero-focus__title,
-.shop-hero-focus__blurb,
-.shop-hero-focus__cost-note {
+.shop-hero-focus__blurb {
   margin: 0;
-  color: rgba(240, 240, 244, 0.72);
-  font-size: 0.92rem;
-  line-height: 1.35;
+  max-width: 18rem;
+  color: rgba(240, 240, 244, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  font-weight: 650;
 }
 
 .shop-geraldo-reroll { margin: 0 0 0.65rem; }
@@ -10148,6 +10145,22 @@ button.trade-offer-card:hover:not(:disabled) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 0 0 2px rgba(240, 200, 74, 0.22);
+}
+
+.hero-card.is-locked .hero-card__art {
+  filter: grayscale(1) brightness(0.55) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45));
+}
+
+.hero-card.is-locked .hero-card__plate {
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(160, 160, 180, 0.12), transparent 55%),
+    linear-gradient(165deg, #1a1c22 0%, #101218 55%, #0a0c12 100%);
+}
+
+.hero-card.is-locked .hero-card__name,
+.hero-card.is-locked .hero-card__title {
+  opacity: 0.72;
 }
 
 .hero-card__shine {
@@ -10342,14 +10355,11 @@ button.trade-offer-card:hover:not(:disabled) {
 
 @media (max-width: 900px) {
   .shop-heroes__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(6.75rem, 1fr));
   }
 }
 
 @media (max-width: 520px) {
-  .shop-heroes__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .hero-card { width: 6.5rem; }
   .hero-card--md { width: 100%; max-width: 10rem; }
 }

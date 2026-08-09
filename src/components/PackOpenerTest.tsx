@@ -813,6 +813,15 @@ export function PackOpenerTest({
               </p>
             ) : null}
 
+            {showCard ? (
+              <p
+                className="pack-opener__progress"
+                aria-live="polite"
+              >
+                {index + 1} / {pulls.length}
+              </p>
+            ) : null}
+
             <div className="pack-opener__stage">
             {showPack ? (
               <div
@@ -972,7 +981,7 @@ export function PackOpenerTest({
           </button>
           <h2>{godPack ? "GOD PACK!" : "Pack opened"}</h2>
           <p>
-            {pack.cardCount} cards
+            {pulls.length} card{pulls.length === 1 ? "" : "s"}
             {godPack ? " · all T4+" : ""}
             {duplicateCash > 0
               ? ` · ${duplicates.size} duplicate${duplicates.size === 1 ? "" : "s"} → +${duplicateCash} Cash`

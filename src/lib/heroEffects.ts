@@ -56,38 +56,46 @@ export function rollChance(p: number): boolean {
   return Math.random() < p;
 }
 
+export function pctLabel(fraction: number): string {
+  const n = fraction * 100;
+  if (Number.isInteger(n)) return `${n}%`;
+  const rounded = Math.round(n * 100) / 100;
+  return `${rounded}%`;
+}
+
 export function heroBlurb(heroId: string): string {
+  const e = HERO_EFFECTS_L1;
   switch (heroId) {
     case "quincy":
-      return "+10 Cash on quiz corrects";
+      return `+${e.quincy.bonusCashPerCorrect} Cash on each quiz correct`;
     case "gwendolin":
-      return "+3% Cash from streaks";
+      return `+${pctLabel(e.gwendolin.streakBonusPct)} Cash on streak corrects (2+)`;
     case "striker-jones":
-      return "10% chance of a free skip per quiz";
+      return `${pctLabel(e["striker-jones"].freeSkipChance)} chance of one free skip per quiz run`;
     case "obyn-greenfoot":
-      return "4% chance of +1 pack card";
+      return `${pctLabel(e["obyn-greenfoot"].extraCardChance)} chance of +1 pack card`;
     case "captain-churchill":
-      return "Chance to auto-clear a quiz round";
+      return `${pctLabel(e["captain-churchill"].autoClearChance)} chance to auto-clear a quiz round`;
     case "benjamin":
-      return "+15% Cash from pack duplicates";
+      return `+${pctLabel(e.benjamin.dupCashBonusPct)} Cash from pack duplicates`;
     case "ezili":
-      return "Tiny boost to T5 pack luck";
+      return `+${pctLabel(e.ezili.t5WeightBonus)} absolute T5 pack weight`;
     case "pat-fusty":
-      return "Chance of a bonus daily card";
+      return `${pctLabel(e["pat-fusty"].bonusDailyCardChance)} chance of a bonus daily card`;
     case "adora":
-      return "Chance hard quiz crops become medium";
+      return `${pctLabel(e.adora.hardToMediumChance)} chance hard/extreme crops become medium`;
     case "admiral-brickell":
-      return "Chance easy rounds pay like medium";
+      return `${pctLabel(e["admiral-brickell"].easyToMediumChance)} chance easy rounds pay as medium`;
     case "etienne":
-      return "Chance of earlier quiz hints";
+      return `${pctLabel(e.etienne.earlierHintChance)} chance per miss for an earlier hint`;
     case "sauda":
-      return "Chance BTD6 packs cost less";
+      return `${pctLabel(e.sauda.btd6DiscountChance)} chance BTD6 packs cost ${pctLabel(e.sauda.btd6DiscountPct)} less`;
     case "psi":
-      return "Tiny boost to Paragon luck";
+      return `+${pctLabel(e.psi.paragonWeightBonus)} absolute Paragon pack weight`;
     case "geraldo":
-      return "Chance to reroll featured tower packs";
+      return `${pctLabel(e.geraldo.shopRerollChance)} chance once/day to reroll featured towers`;
     case "silas":
-      return "Chance to freeze the featured clear bonus";
+      return `${pctLabel(e.silas.featuredFreezeChance)} chance to freeze featured clear for one more`;
     default:
       return "Hero passive";
   }
