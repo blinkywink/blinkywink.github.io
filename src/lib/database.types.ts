@@ -34,6 +34,8 @@ export type Profile = {
   equipped_hero_id?: string | null;
   /** Per-hero levels, e.g. `{ "quincy": 1 }`. */
   hero_levels?: Record<string, number> | null;
+  /** Clears toward next paid level-up while that hero is equipped. */
+  hero_clear_progress?: Record<string, number> | null;
   created_at: string;
   updated_at: string;
 };
@@ -70,6 +72,7 @@ export type Database = {
           owned_hero_ids?: string[] | null;
           equipped_hero_id?: string | null;
           hero_levels?: Record<string, number> | null;
+          hero_clear_progress?: Record<string, number> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -93,6 +96,7 @@ export type Database = {
           owned_hero_ids?: string[] | null;
           equipped_hero_id?: string | null;
           hero_levels?: Record<string, number> | null;
+          hero_clear_progress?: Record<string, number> | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -222,7 +226,18 @@ export type Database = {
           coins: number;
           owned_hero_ids: string[];
           hero_levels: Record<string, number>;
+          hero_clear_progress: Record<string, number>;
           equipped_hero_id: string | null;
+        };
+      };
+      record_hero_clear: {
+        Args: Record<string, never>;
+        Returns: {
+          hero_id: string | null;
+          progress: number;
+          required: number;
+          ready: boolean;
+          hero_clear_progress: Record<string, number>;
         };
       };
       equip_hero: {

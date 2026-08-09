@@ -1,4 +1,4 @@
--- Heroes: ownership, equip, levels. Safe to re-run.
+-- Heroes: ownership, equip, levels, clear progress. Safe to re-run.
 
 alter table public.profiles
   add column if not exists owned_hero_ids text[] not null default '{}';
@@ -9,20 +9,36 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists hero_levels jsonb not null default '{}'::jsonb;
 
--- Unlock / level-up costs scale with target level (never below 5,000).
--- Client: heroUpgradeCost(toLevel) in profileHeroes.ts — keep in sync.
+alter table public.profiles
+  add column if not exists hero_clear_progress jsonb not null default '{}'::jsonb;
+
+-- Unlock = 5000; level-ups ~30% cheaper. Keep in sync with heroUpgradeCost().
 create or replace function public.hero_upgrade_cost(p_to_level integer)
 returns integer
 language sql
 immutable
 as $$
-  select greatest(
-    5000,
-    (
-      round((5000 * power(1.118::numeric, greatest(1, least(20, p_to_level)) - 1)) / 250.0)
-      * 250
-    )::integer
-  );
+  select case
+    when greatest(1, least(20, coalesce(p_to_level, 1))) <= 1 then 5000
+    else greatest(
+      2500,
+      (
+        round(
+          (5000 * power(1.118::numeric, greatest(1, least(20, p_to_level)) - 1) * 0.7)
+          / 250.0
+        ) * 250
+      )::integer
+    )
+  end;
+$$;
+
+-- Clears needed at current level before buying +1. Keep in sync with client.
+create or replace function public.hero_clears_required(p_cur_level integer)
+returns integer
+language sql
+immutable
+as $$
+  select 10 + 2 * (greatest(1, least(19, coalesce(p_cur_level, 1))) - 1);
 $$;
 
 create or replace function public.buy_hero(p_hero_id text)
@@ -36,10 +52,13 @@ declare
   hid text := lower(trim(coalesce(p_hero_id, '')));
   owned text[];
   levels jsonb;
+  clears jsonb;
   new_balance integer;
   cur_level integer;
   next_level integer;
   price integer;
+  progress integer;
+  needed integer;
   allowed text[] := array[
     'quincy','gwendolin','obyn-greenfoot',
     'benjamin','ezili','sauda','psi','silas'
@@ -52,8 +71,8 @@ begin
     raise exception 'Invalid hero';
   end if;
 
-  select owned_hero_ids, hero_levels, coins
-    into owned, levels, new_balance
+  select owned_hero_ids, hero_levels, hero_clear_progress, coins
+    into owned, levels, clears, new_balance
   from public.profiles
   where id = uid
   for update;
@@ -71,6 +90,11 @@ begin
       raise exception 'Hero max level';
     end if;
     next_level := cur_level + 1;
+    needed := public.hero_clears_required(cur_level);
+    progress := greatest(0, coalesce((clears ->> hid)::integer, 0));
+    if progress < needed then
+      raise exception 'Not enough clears';
+    end if;
     price := public.hero_upgrade_cost(next_level);
 
     if new_balance < price then
@@ -82,10 +106,11 @@ begin
     set
       coins = coins - price,
       hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, next_level),
+      hero_clear_progress = coalesce(hero_clear_progress, '{}'::jsonb) || jsonb_build_object(hid, 0),
       updated_at = now()
     where id = uid
-    returning coins, owned_hero_ids, hero_levels
-      into new_balance, owned, levels;
+    returning coins, owned_hero_ids, hero_levels, hero_clear_progress
+      into new_balance, owned, levels, clears;
   else
     price := public.hero_upgrade_cost(1);
 
@@ -99,16 +124,18 @@ begin
       coins = coins - price,
       owned_hero_ids = array_append(coalesce(owned_hero_ids, '{}'), hid),
       hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, 1),
+      hero_clear_progress = coalesce(hero_clear_progress, '{}'::jsonb) || jsonb_build_object(hid, 0),
       updated_at = now()
     where id = uid
-    returning coins, owned_hero_ids, hero_levels
-      into new_balance, owned, levels;
+    returning coins, owned_hero_ids, hero_levels, hero_clear_progress
+      into new_balance, owned, levels, clears;
   end if;
 
   return json_build_object(
     'coins', new_balance,
     'owned_hero_ids', owned,
     'hero_levels', levels,
+    'hero_clear_progress', clears,
     'equipped_hero_id', (
       select equipped_hero_id from public.profiles where id = uid
     )
@@ -116,11 +143,95 @@ begin
 end;
 $$;
 
+-- Credit one clear toward equipped hero's next level unlock.
+create or replace function public.record_hero_clear()
+returns json
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  uid uuid := public.current_account_id();
+  hid text;
+  owned text[];
+  levels jsonb;
+  clears jsonb;
+  cur_level integer;
+  needed integer;
+  progress integer;
+  next_progress integer;
+begin
+  if uid is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select equipped_hero_id, owned_hero_ids, hero_levels, hero_clear_progress
+    into hid, owned, levels, clears
+  from public.profiles
+  where id = uid
+  for update;
+
+  if not found then
+    raise exception 'Profile not found';
+  end if;
+
+  if hid is null or hid = '' or not (hid = any(coalesce(owned, '{}'))) then
+    return json_build_object(
+      'hero_id', null,
+      'progress', 0,
+      'required', 0,
+      'ready', false,
+      'hero_clear_progress', coalesce(clears, '{}'::jsonb)
+    );
+  end if;
+
+  cur_level := greatest(
+    1,
+    least(20, coalesce((levels ->> hid)::integer, 1))
+  );
+  if cur_level >= 20 then
+    return json_build_object(
+      'hero_id', hid,
+      'progress', 0,
+      'required', 0,
+      'ready', false,
+      'hero_clear_progress', coalesce(clears, '{}'::jsonb)
+    );
+  end if;
+
+  needed := public.hero_clears_required(cur_level);
+  progress := greatest(0, coalesce((clears ->> hid)::integer, 0));
+  next_progress := least(needed, progress + 1);
+
+  update public.profiles
+  set
+    hero_clear_progress = coalesce(hero_clear_progress, '{}'::jsonb)
+      || jsonb_build_object(hid, next_progress),
+    updated_at = now()
+  where id = uid
+  returning hero_clear_progress into clears;
+
+  return json_build_object(
+    'hero_id', hid,
+    'progress', next_progress,
+    'required', needed,
+    'ready', next_progress >= needed,
+    'hero_clear_progress', clears
+  );
+end;
+$$;
+
 revoke all on function public.hero_upgrade_cost(integer) from public;
 grant execute on function public.hero_upgrade_cost(integer) to anon, authenticated;
 
+revoke all on function public.hero_clears_required(integer) from public;
+grant execute on function public.hero_clears_required(integer) to anon, authenticated;
+
 revoke all on function public.buy_hero(text) from public;
 grant execute on function public.buy_hero(text) to anon, authenticated;
+
+revoke all on function public.record_hero_clear() from public;
+grant execute on function public.record_hero_clear() to anon, authenticated;
 
 -- Equip owned hero. Unequip (null) free. Swap costs 1,000 Cash.
 create or replace function public.equip_hero(p_hero_id text)
@@ -277,10 +388,16 @@ begin
       from jsonb_each(coalesce(hero_levels, '{}'::jsonb))
       where not (key = any(retired))
     ), '{}'::jsonb),
+    hero_clear_progress = coalesce((
+      select jsonb_object_agg(key, value)
+      from jsonb_each(coalesce(hero_clear_progress, '{}'::jsonb))
+      where not (key = any(retired))
+    ), '{}'::jsonb),
     updated_at = now()
   where
     equipped_hero_id = any(retired)
     or owned_hero_ids && retired
-    or hero_levels ?| retired;
+    or hero_levels ?| retired
+    or hero_clear_progress ?| retired;
 end;
 $$;

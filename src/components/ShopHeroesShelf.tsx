@@ -7,8 +7,12 @@ import {
   HERO_MAX_LEVEL,
   HERO_UNLOCK_COST,
   buyHero,
+  heroClearProgressFromProfile,
+  heroClearsRequiredForNextLevel,
   heroLevelFromProfile,
+  heroLevelUpReady,
   heroUpgradeCost,
+  normalizeHeroClearProgress,
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
   shoppableHeroes,
@@ -31,6 +35,10 @@ export function ShopHeroesShelf() {
     () => normalizeHeroLevels(profile?.hero_levels),
     [profile?.hero_levels],
   );
+  const clears = useMemo(
+    () => normalizeHeroClearProgress(profile?.hero_clear_progress),
+    [profile?.hero_clear_progress],
+  );
   const heroes = useMemo(() => shoppableHeroes(), []);
 
   function closeFocus() {
@@ -51,6 +59,14 @@ export function ShopHeroesShelf() {
       setBuyError("Already max level.");
       return;
     }
+    const progress = heroClearProgressFromProfile(clears, focused.id);
+    if (mine && !heroLevelUpReady(level, progress)) {
+      const need = heroClearsRequiredForNextLevel(level);
+      setBuyError(
+        `Clear ${need - progress} more game${need - progress === 1 ? "" : "s"} with ${focused.name} equipped.`,
+      );
+      return;
+    }
     const price = mine ? heroUpgradeCost(level + 1) : heroUpgradeCost(1);
     if ((profile?.coins ?? 0) < price) {
       setBuyError("Not enough Cash.");
@@ -68,7 +84,6 @@ export function ShopHeroesShelf() {
           ? `${focused.name} leveled to ${nextLevel}!`
           : `Unlocked ${focused.name}!`,
       );
-      // Keep focus open so they can preview the new level / buy again.
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : "Purchase failed.");
     }
@@ -107,6 +122,14 @@ export function ShopHeroesShelf() {
       : 1
     : 1;
   const focusMaxed = focusMine && focusLevel >= HERO_MAX_LEVEL;
+  const focusProgress = focused
+    ? heroClearProgressFromProfile(clears, focused.id)
+    : 0;
+  const focusNeed = focusMine && !focusMaxed
+    ? heroClearsRequiredForNextLevel(focusLevel)
+    : 0;
+  const focusReady =
+    !focusMine || focusMaxed || heroLevelUpReady(focusLevel, focusProgress);
   const focusPrice = focused
     ? focusMine
       ? focusMaxed
@@ -115,7 +138,7 @@ export function ShopHeroesShelf() {
       : heroUpgradeCost(1)
     : 0;
   const canBuy =
-    !isGuest && focused && (!focusMine || !focusMaxed);
+    !isGuest && focused && (!focusMine || (!focusMaxed && focusReady));
 
   const focusPortal = focused
     ? createPortal(
@@ -153,7 +176,7 @@ export function ShopHeroesShelf() {
               {heroBlurb(focused.id, focusLevel)}
             </p>
             <div className="pack-opener__buy shop-hero-focus__buy">
-              {!focusMaxed ? (
+              {!focusMaxed && focusReady ? (
                 <CurrencyChip amount={focusPrice} />
               ) : null}
               {isGuest ? (
@@ -161,6 +184,12 @@ export function ShopHeroesShelf() {
               ) : focusMaxed ? (
                 <p className="pack-opener__buy-note">
                   Max level · equip on Profile
+                </p>
+              ) : focusMine && !focusReady ? (
+                <p className="pack-opener__buy-note">
+                  Clear games with {focused.name} equipped · {focusProgress}/
+                  {focusNeed} to unlock level-up (
+                  <CashAmount amount={focusPrice} size={13} />)
                 </p>
               ) : (
                 <>
@@ -190,6 +219,9 @@ export function ShopHeroesShelf() {
                   )}
                 </>
               )}
+              {buyError && focusMine && !focusReady ? (
+                <p className="pack-opener__buy-error">{buyError}</p>
+              ) : null}
             </div>
           </div>
         </div>,
@@ -202,8 +234,8 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
         <p className="shop-heroes__note">
-          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · each level costs
-          more · equip on Profile
+          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · clear games with
+          them equipped to unlock each paid level-up
         </p>
       </div>
       {status ? (
@@ -214,6 +246,11 @@ export function ShopHeroesShelf() {
           const mine = owned.has(hero.id);
           const level = mine ? heroLevelFromProfile(levels, hero.id) : 1;
           const maxed = mine && level >= HERO_MAX_LEVEL;
+          const progress = heroClearProgressFromProfile(clears, hero.id);
+          const need = mine && !maxed
+            ? heroClearsRequiredForNextLevel(level)
+            : 0;
+          const ready = !mine || maxed || heroLevelUpReady(level, progress);
           const price = mine
             ? maxed
               ? 0
@@ -241,6 +278,8 @@ export function ShopHeroesShelf() {
                 <span className="pack-shelf__price">
                   {maxed ? (
                     `Lv ${level} · Max`
+                  ) : mine && !ready ? (
+                    `${progress}/${need} clears · Lv ${level}`
                   ) : (
                     <>
                       <img

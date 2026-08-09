@@ -47,6 +47,7 @@ function profileFromGuest(coins: number): Profile {
     owned_hero_ids: [],
     equipped_hero_id: null,
     hero_levels: {},
+    hero_clear_progress: {},
     created_at: now,
     updated_at: now,
   };
@@ -133,6 +134,12 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
       typeof data.hero_levels === "object" &&
       !Array.isArray(data.hero_levels)
         ? (data.hero_levels as Record<string, number>)
+        : {},
+    hero_clear_progress:
+      data.hero_clear_progress &&
+      typeof data.hero_clear_progress === "object" &&
+      !Array.isArray(data.hero_clear_progress)
+        ? (data.hero_clear_progress as Record<string, number>)
         : {},
   };
 }

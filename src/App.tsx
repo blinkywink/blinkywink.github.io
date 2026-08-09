@@ -43,6 +43,8 @@ import {
   type PackDef,
 } from "./lib/packTheme";
 import { fetchProfileByUsername } from "./lib/profiles";
+import { recordHeroClear } from "./lib/profileHeroes";
+import { heroById } from "./data/heroes";
 import {
   collectionPath,
   gamePath,
@@ -223,7 +225,7 @@ function LeaderboardPage() {
 
 function AppShell() {
   const { owned } = useCardCollection();
-  const { setCoinBalance } = useAuth();
+  const { setCoinBalance, refreshProfile } = useAuth();
   const { equipped, notifyHeroProc } = useHeroFx();
   const navigate = useNavigate();
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
@@ -231,6 +233,31 @@ function AppShell() {
   const [pendingHighlights, setPendingHighlights] = useState<string[]>([]);
   const [pendingTower, setPendingTower] = useState<string | undefined>();
   const [bonusToast, setBonusToast] = useState<string | null>(null);
+
+  const creditHeroClear = useCallback(
+    async (cleared: boolean) => {
+      if (!cleared || !equipped) return;
+      const result = await recordHeroClear();
+      if (!result?.heroId) return;
+      await refreshProfile();
+      const name = heroById(result.heroId)?.name ?? "Hero";
+      if (result.ready) {
+        notifyHeroProc({
+          heroId: result.heroId,
+          message: `${name}: level-up unlocked!`,
+        });
+      } else if (
+        result.required > 0 &&
+        (result.progress === 1 || result.progress % 5 === 0)
+      ) {
+        notifyHeroProc({
+          heroId: result.heroId,
+          message: `${name}: ${result.progress}/${result.required} clears`,
+        });
+      }
+    },
+    [equipped, notifyHeroProc, refreshProfile],
+  );
 
   const settleFeaturedBonus = useCallback(
     async (game: FeaturedBonusGame, cleared: boolean) => {
@@ -275,6 +302,7 @@ function AppShell() {
     (game: FeaturedBonusGame) =>
       (info: { cleared: boolean; correctCount: number }) => {
         void settleFeaturedBonus(game, info.cleared);
+        void creditHeroClear(info.cleared);
         const wantBonus = earnsQuizBonusPack(info.correctCount);
         const free = info.cleared ? pickRewardTowerPack(owned) : null;
         const exclude = new Set(free?.tower ? [free.tower] : []);
@@ -294,7 +322,7 @@ function AppShell() {
         setRewardPack(null);
         setBonusChoices(choices.length ? choices : null);
       },
-    [owned, settleFeaturedBonus],
+    [owned, settleFeaturedBonus, creditHeroClear],
   );
 
   const offerBloonleBonus = useCallback(
@@ -313,15 +341,17 @@ function AppShell() {
   const onBloonleRunEnd = useCallback(
     (info: { cleared: boolean }) => {
       void settleFeaturedBonus("bloonle", info.cleared);
+      void creditHeroClear(info.cleared);
     },
-    [settleFeaturedBonus],
+    [settleFeaturedBonus, creditHeroClear],
   );
 
   const onSweeperRunEnd = useCallback(
     (info: { cleared: boolean }) => {
       void settleFeaturedBonus("bloonssweeper", info.cleared);
+      void creditHeroClear(info.cleared);
     },
-    [settleFeaturedBonus],
+    [settleFeaturedBonus, creditHeroClear],
   );
 
   const afterPackDone = useCallback(
