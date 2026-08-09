@@ -7,12 +7,15 @@ export type GameId =
   | "geoguessr"
   | "pricecheck"
   | "orderup"
-  | "bloonle";
+  | "bloonle"
+  | "camodetection";
 
 type Props = {
   onPlay: (game: GameId) => void;
   /** Embed on home hub — games grid only, full width. */
   embed?: boolean;
+  /** Cap how many tiles render (home hub uses 3). */
+  limit?: number;
 };
 
 /** Bright mid-tier art so the home crop isn't near-black silhouette. */
@@ -199,6 +202,30 @@ function BloonlePreview() {
   );
 }
 
+function CamoPreview() {
+  const camo = new Set([0, 4, 7]);
+  return (
+    <div className="game-preview game-preview--camo" aria-hidden>
+      <div className="game-preview__camo-grid">
+        {Array.from({ length: 9 }, (_, i) => (
+          <span
+            key={i}
+            className={`game-preview__camo-cell${camo.has(i) ? " has-camo" : ""}`}
+          >
+            {camo.has(i) ? (
+              <img
+                src="/images/bloons/camo-bloon.webp"
+                alt=""
+                draggable={false}
+              />
+            ) : null}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MapPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -250,85 +277,78 @@ function MapPreview() {
 }
 
 /** Games hub — playable titles only. */
-export function ArcadeHome({ onPlay, embed = false }: Props) {
+export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
+  const games = [
+    {
+      id: "zoomed" as const,
+      title: "ZOOMED",
+      blurb: "Guess the tower from the image.",
+      label: "Zoomed — Guess the tower from the image",
+      preview: <ZoomedPreview />,
+    },
+    {
+      id: "geoguessr" as const,
+      title: "GEOGUESSR",
+      blurb: "Guess the map from a zoomed crop.",
+      label: "Geoguessr — Guess the map from a zoomed crop",
+      preview: <MapPreview />,
+    },
+    {
+      id: "pricecheck" as const,
+      title: "PRICE CHECK",
+      blurb: "Which tower costs more?",
+      label: "Price Check — Which tower costs more?",
+      preview: <PricePreview />,
+    },
+    {
+      id: "orderup" as const,
+      title: "ORDER UP",
+      blurb: "Drag towers cheap to pricey before time runs out.",
+      label: "Order Up — Drag towers by price before time runs out",
+      preview: <OrderPreview />,
+    },
+    {
+      id: "bloonle" as const,
+      title: "BLOONLE",
+      blurb: "Bloons worldle including all base towers and 5th tiers.",
+      label: "Bloonle — Daily Wordle with tower names",
+      preview: <BloonlePreview />,
+    },
+    {
+      id: "camodetection" as const,
+      title: "CAMO DETECTION",
+      blurb: "Remember where the camo bloons flashed.",
+      label: "Camo Detection — Remember where the camo bloons flashed",
+      preview: <CamoPreview />,
+    },
+  ];
+  const shown =
+    limit != null && limit > 0 ? games.slice(0, limit) : games;
+
   return (
     <div className={`arcade${embed ? " arcade--embed" : ""}`}>
       {!embed ? <div className="arcade__atmosphere" aria-hidden="true" /> : null}
       {!embed ? <DailyClaimButton variant="hero" /> : null}
 
-      <section className="arcade__featured" aria-label="Available games">
-        <button
-          type="button"
-          className="game-card game-card--live"
-          aria-label="Zoomed — Guess the tower from the image"
-          onClick={() => onPlay("zoomed")}
-        >
-          <ZoomedPreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">ZOOMED</span>
-            <span className="game-card__blurb">
-              Guess the tower from the image.
-            </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="game-card game-card--live"
-          aria-label="Geoguessr — Guess the map from a zoomed crop"
-          onClick={() => onPlay("geoguessr")}
-        >
-          <MapPreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">GEOGUESSR</span>
-            <span className="game-card__blurb">
-              Guess the map from a zoomed crop.
-            </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="game-card game-card--live"
-          aria-label="Price Check — Which tower costs more?"
-          onClick={() => onPlay("pricecheck")}
-        >
-          <PricePreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">PRICE CHECK</span>
-            <span className="game-card__blurb">Which tower costs more?</span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="game-card game-card--live"
-          aria-label="Order Up — Drag towers by price before time runs out"
-          onClick={() => onPlay("orderup")}
-        >
-          <OrderPreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">ORDER UP</span>
-            <span className="game-card__blurb">
-              Drag towers cheap to pricey before time runs out.
-            </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="game-card game-card--live"
-          aria-label="Bloonle — Daily Wordle with tower names"
-          onClick={() => onPlay("bloonle")}
-        >
-          <BloonlePreview />
-          <div className="game-card__foot">
-            <span className="game-card__title">BLOONLE</span>
-            <span className="game-card__blurb">
-              Bloons worldle including all base towers and 5th tiers.
-            </span>
-          </div>
-        </button>
+      <section
+        className={`arcade__featured${embed ? " arcade__featured--hub" : ""}`}
+        aria-label="Available games"
+      >
+        {shown.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            className="game-card game-card--live"
+            aria-label={g.label}
+            onClick={() => onPlay(g.id)}
+          >
+            {g.preview}
+            <div className="game-card__foot">
+              <span className="game-card__title">{g.title}</span>
+              <span className="game-card__blurb">{g.blurb}</span>
+            </div>
+          </button>
+        ))}
       </section>
 
       {!embed ? (

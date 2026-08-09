@@ -22,6 +22,7 @@ import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { BloonleGame } from "./games/bloonle";
+import { CamoDetectionGame } from "./games/camodetection";
 import { GeoguessrGame } from "./games/geoguessr";
 import { OrderUpGame } from "./games/orderup";
 import { PriceCheckGame } from "./games/pricecheck";
@@ -329,6 +330,15 @@ function AppShell() {
             path="/bloonle"
             element={
               <BloonleGame onBack={goGames} onFastSolve={offerBloonleBonus} />
+            }
+          />
+          <Route
+            path="/camodetection"
+            element={
+              <CamoDetectionGame
+                onBack={goGames}
+                onRunEnd={offerQuizRewards}
+              />
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
