@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DEFAULT_AVATAR_CROP,
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "../lib/avatar";
+import { cardSpecById } from "../lib/cardCatalog";
 import { cached, CacheTtl } from "../lib/cache";
 import {
   collectionPath,
@@ -16,6 +17,11 @@ import {
   userCollectionPath,
   type GamePath,
 } from "../lib/routes";
+import {
+  featuredShopPacks,
+  resolveTowerPackTheme,
+  type PackDef,
+} from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
 import { CashAmount } from "./CurrencyChip";
@@ -28,31 +34,33 @@ type BoardRow = {
   avatar: AvatarCrop;
 };
 
-const DESTINATIONS = [
-  {
-    to: shopPath(),
-    title: "Shop",
-    blurb: "Buy packs with Cash",
-    tone: "shop",
-  },
-  {
-    to: collectionPath(),
-    title: "Cards",
-    blurb: "Browse your collection",
-    tone: "cards",
-  },
-  {
-    to: marketplacePath(),
-    title: "Market",
-    blurb: "Trade with players",
-    tone: "market",
-  },
+const CARD_PEEK_IDS = [
+  "dart-monkey-0-0-0",
+  "ninja-monkey-5-0-0",
+  "super-monkey-0-5-0",
 ] as const;
 
-/** Site hub — games up top, simple links below. */
+function packPeekImage(pack: PackDef): string {
+  if (pack.coverArt) return pack.coverArt;
+  if (pack.tower) {
+    const theme = resolveTowerPackTheme(pack.tower);
+    if (theme?.image) return theme.image;
+  }
+  return "/images/ui/monkey-pack.jpg";
+}
+
+/** Site hub — games up top, feature tiles below. */
 export function HomeHub() {
   const navigate = useNavigate();
   const [topPlayers, setTopPlayers] = useState<BoardRow[]>([]);
+  const shopPeeks = useMemo(() => featuredShopPacks().slice(0, 3), []);
+  const cardPeeks = useMemo(
+    () =>
+      CARD_PEEK_IDS.map((id) => cardSpecById(id)).filter(
+        (c): c is NonNullable<typeof c> => Boolean(c),
+      ),
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -109,16 +117,62 @@ export function HomeHub() {
         />
 
         <div className="home-hub__destinations" aria-label="Explore">
-          {DESTINATIONS.map((d) => (
-            <Link
-              key={d.to}
-              to={d.to}
-              className={`home-hub__dest home-hub__dest--${d.tone}`}
-            >
-              <strong>{d.title}</strong>
-              <span>{d.blurb}</span>
-            </Link>
-          ))}
+          <Link to={shopPath()} className="home-hub__dest home-hub__dest--shop">
+            <div className="home-hub__dest-visual" aria-hidden>
+              <div className="home-hub__pack-spread">
+                {shopPeeks.map((pack, i) => (
+                  <span
+                    key={pack.id}
+                    className={`home-hub__pack-peek is-${i}`}
+                    style={
+                      {
+                        "--peek-img": `url(${packPeekImage(pack)})`,
+                      } as CSSProperties
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="home-hub__dest-copy">
+              <strong>Shop</strong>
+              <span>Open packs with Cash — new cards every pull.</span>
+            </div>
+          </Link>
+
+          <Link
+            to={collectionPath()}
+            className="home-hub__dest home-hub__dest--cards"
+          >
+            <div className="home-hub__dest-visual" aria-hidden>
+              <div className="home-hub__card-spread">
+                {cardPeeks.map((card, i) => (
+                  <span key={card.id} className={`home-hub__card-peek is-${i}`}>
+                    <img src={card.entity.image} alt="" draggable={false} />
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="home-hub__dest-copy">
+              <strong>Cards</strong>
+              <span>Your collection — every tower, path, and paragon.</span>
+            </div>
+          </Link>
+
+          <Link
+            to={marketplacePath()}
+            className="home-hub__dest home-hub__dest--market"
+          >
+            <div className="home-hub__dest-visual" aria-hidden>
+              <div className="home-hub__market-actions">
+                <span className="home-hub__market-btn is-buy">Buy</span>
+                <span className="home-hub__market-btn is-sell">Sell</span>
+              </div>
+            </div>
+            <div className="home-hub__dest-copy">
+              <strong>Market</strong>
+              <span>List extras for Cash or snag cards from other players.</span>
+            </div>
+          </Link>
         </div>
       </section>
 

@@ -491,13 +491,15 @@ body:has(.zoomed-page) {
 
 .home-hub__dest {
   display: grid;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
+  grid-template-rows: auto 1fr;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem 1rem;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   text-decoration: none;
   color: inherit;
   background: rgba(255, 255, 255, 0.03);
+  min-height: 11.5rem;
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
@@ -511,6 +513,19 @@ body:has(.zoomed-page) {
   transform: translateY(-2px);
 }
 
+.home-hub__dest-visual {
+  display: grid;
+  place-items: center;
+  min-height: 5.75rem;
+  pointer-events: none;
+}
+
+.home-hub__dest-copy {
+  display: grid;
+  gap: 0.28rem;
+  align-content: start;
+}
+
 .home-hub__dest strong {
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -519,28 +534,145 @@ body:has(.zoomed-page) {
   color: #f0f0f4;
 }
 
-.home-hub__dest span {
-  font-size: 0.88rem;
+.home-hub__dest-copy span {
+  font-size: 0.86rem;
   font-weight: 700;
+  line-height: 1.35;
   color: rgba(240, 240, 244, 0.62);
 }
 
 .home-hub__dest--shop {
   background:
-    linear-gradient(135deg, rgba(240, 200, 74, 0.1), transparent 55%),
+    linear-gradient(165deg, rgba(240, 200, 74, 0.12), transparent 58%),
     rgba(255, 255, 255, 0.03);
 }
 
 .home-hub__dest--cards {
   background:
-    linear-gradient(135deg, rgba(110, 200, 255, 0.1), transparent 55%),
+    linear-gradient(165deg, rgba(110, 200, 255, 0.12), transparent 58%),
     rgba(255, 255, 255, 0.03);
 }
 
 .home-hub__dest--market {
   background:
-    linear-gradient(135deg, rgba(180, 140, 255, 0.1), transparent 55%),
+    linear-gradient(165deg, rgba(180, 140, 255, 0.12), transparent 58%),
     rgba(255, 255, 255, 0.03);
+}
+
+/* Shop — mini pack fan */
+.home-hub__pack-spread {
+  position: relative;
+  width: 7.5rem;
+  height: 5.4rem;
+}
+
+.home-hub__pack-peek {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2.55rem;
+  height: 4.15rem;
+  margin-left: -1.275rem;
+  border-radius: 0.4rem;
+  border: 2px solid rgba(20, 16, 10, 0.85);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 35%),
+    var(--peek-img) center / cover no-repeat,
+    #2a2418;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  transform-origin: 50% 100%;
+}
+
+.home-hub__pack-peek.is-0 {
+  transform: translateX(-1.45rem) rotate(-14deg);
+  z-index: 1;
+}
+
+.home-hub__pack-peek.is-1 {
+  transform: translateY(-0.15rem) rotate(0deg);
+  z-index: 3;
+}
+
+.home-hub__pack-peek.is-2 {
+  transform: translateX(1.45rem) rotate(14deg);
+  z-index: 2;
+}
+
+/* Cards — mini portrait fan (not full MonkeyCards) */
+.home-hub__card-spread {
+  position: relative;
+  width: 7.8rem;
+  height: 5.4rem;
+}
+
+.home-hub__card-peek {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2.7rem;
+  height: 3.8rem;
+  margin-left: -1.35rem;
+  border-radius: 0.45rem;
+  border: 2px solid rgba(220, 210, 180, 0.55);
+  overflow: hidden;
+  background: linear-gradient(160deg, #3a3048, #1a1428);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  transform-origin: 50% 110%;
+}
+
+.home-hub__card-peek img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+
+.home-hub__card-peek.is-0 {
+  transform: translateX(-1.35rem) rotate(-12deg);
+  z-index: 1;
+}
+
+.home-hub__card-peek.is-1 {
+  transform: translateY(-0.2rem) rotate(0deg);
+  z-index: 3;
+}
+
+.home-hub__card-peek.is-2 {
+  transform: translateX(1.35rem) rotate(12deg);
+  z-index: 2;
+}
+
+/* Market — buy / sell teaser */
+.home-hub__market-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.home-hub__market-btn {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.05rem;
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+.home-hub__market-btn.is-buy {
+  color: #102018;
+  background: linear-gradient(180deg, #8dffb0, #3fcd72);
+  border-color: #2a9a52;
+  box-shadow: 0 6px 0 #236b3c;
+}
+
+.home-hub__market-btn.is-sell {
+  color: #201018;
+  background: linear-gradient(180deg, #ffb08d, #e06a4a);
+  border-color: #b04830;
+  box-shadow: 0 6px 0 #7a3020;
 }
 
 .home-hub__row {

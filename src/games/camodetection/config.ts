@@ -36,5 +36,8 @@ export function flashMsForRound(round: number): number {
 }
 
 export function pointsForCorrect(round: number, streakAfter: number): number {
-  return rewardForCorrect({ round, streakAfter });
+  return Math.max(
+    1,
+    Math.round(rewardForCorrect({ round, streakAfter }) * 0.65),
+  );
 }

@@ -30,7 +30,7 @@ export const SWEEPER_DIFFICULTIES: Record<
     rows: 16,
     cols: 16,
     mines: 40,
-    winReward: 1500,
+    winReward: 2500,
   },
 };
 
