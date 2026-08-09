@@ -9,7 +9,7 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists hero_levels jsonb not null default '{}'::jsonb;
 
--- Unlock a hero for 5,000 Cash.
+-- Unlock a hero for 5,000 Cash, or spend 5,000 again to level up (max 20).
 create or replace function public.buy_hero(p_hero_id text)
 returns json
 language plpgsql
@@ -22,6 +22,8 @@ declare
   owned text[];
   levels jsonb;
   new_balance integer;
+  cur_level integer;
+  next_level integer;
   allowed text[] := array[
     'quincy','gwendolin','obyn-greenfoot',
     'benjamin','ezili','sauda','psi','silas'
@@ -44,24 +46,41 @@ begin
     raise exception 'Profile not found';
   end if;
 
-  if hid = any(coalesce(owned, '{}')) then
-    raise exception 'Already owned';
-  end if;
-
   if new_balance < 5000 then
     raise exception 'Insufficient coins';
   end if;
 
-  perform set_config('bloon.allow_coin_update', 'on', true);
-  update public.profiles
-  set
-    coins = coins - 5000,
-    owned_hero_ids = array_append(coalesce(owned_hero_ids, '{}'), hid),
-    hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, 1),
-    updated_at = now()
-  where id = uid
-  returning coins, owned_hero_ids, hero_levels, equipped_hero_id
-    into new_balance, owned, levels;
+  if hid = any(coalesce(owned, '{}')) then
+    cur_level := greatest(
+      1,
+      least(20, coalesce((levels ->> hid)::integer, 1))
+    );
+    if cur_level >= 20 then
+      raise exception 'Hero max level';
+    end if;
+    next_level := cur_level + 1;
+
+    perform set_config('bloon.allow_coin_update', 'on', true);
+    update public.profiles
+    set
+      coins = coins - 5000,
+      hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, next_level),
+      updated_at = now()
+    where id = uid
+    returning coins, owned_hero_ids, hero_levels
+      into new_balance, owned, levels;
+  else
+    perform set_config('bloon.allow_coin_update', 'on', true);
+    update public.profiles
+    set
+      coins = coins - 5000,
+      owned_hero_ids = array_append(coalesce(owned_hero_ids, '{}'), hid),
+      hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, 1),
+      updated_at = now()
+    where id = uid
+    returning coins, owned_hero_ids, hero_levels
+      into new_balance, owned, levels;
+  end if;
 
   return json_build_object(
     'coins', new_balance,

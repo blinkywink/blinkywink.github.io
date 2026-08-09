@@ -728,7 +728,7 @@ export function ProfilePage() {
                     size="md"
                     footer={
                       <div className="hero-card__footer">
-                        <p className="hero-card__blurb">{heroBlurb(hero.id)}</p>
+                        <p className="hero-card__blurb">{heroBlurb(hero.id, level)}</p>
                         <button
                           type="button"
                           className={`btn btn--sm ${isEq ? "btn--ghost" : "btn--secondary"}`}

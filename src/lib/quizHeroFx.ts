@@ -1,33 +1,40 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useHeroFx } from "../auth/HeroFxProvider";
 import { awardCoins } from "./awardCoins";
 import {
-  HERO_EFFECTS_L1,
+  heroEffectsAtLevel,
+  pctLabel,
   rollChance,
   type EquippedHeroContext,
 } from "./heroEffects";
 import type { PackPullMods, DupCashMods } from "./packPull";
 
-/** Shared helpers for signed-in equipped hero level-1 procs. */
+/** Shared helpers for signed-in equipped hero procs (scaled by level). */
 export function useQuizHeroFx() {
   const { equipped, notifyHeroProc } = useHeroFx();
+  const fx = useMemo(
+    () =>
+      equipped
+        ? heroEffectsAtLevel(equipped.heroId, equipped.level)
+        : null,
+    [equipped],
+  );
 
   const resetRunFlags = useCallback(() => {
     // Reserved for per-run state if needed again.
   }, []);
 
   const streakBonusPct =
-    equipped?.heroId === "gwendolin"
-      ? HERO_EFFECTS_L1.gwendolin.streakBonusPct
-      : 0;
+    equipped?.heroId === "gwendolin" && fx ? fx.streakBonusPct : 0;
 
   const onCorrectCash = useCallback(
     async (
       setCoinBalance: (n: number) => void,
       opts?: { alreadyAwarded?: number },
     ) => {
-      if (equipped?.heroId !== "quincy") return;
-      const bonus = HERO_EFFECTS_L1.quincy.bonusCashPerCorrect;
+      if (equipped?.heroId !== "quincy" || !fx) return;
+      const bonus = fx.bonusCashPerCorrect;
+      if (bonus <= 0) return;
       const bal = await awardCoins(bonus);
       if (bal != null) setCoinBalance(bal);
       notifyHeroProc({
@@ -36,34 +43,34 @@ export function useQuizHeroFx() {
       });
       void opts;
     },
-    [equipped?.heroId, notifyHeroProc],
+    [equipped?.heroId, fx, notifyHeroProc],
   );
 
   const onGwenStreakProc = useCallback(
     (streakAfter: number) => {
-      if (equipped?.heroId !== "gwendolin" || streakAfter < 2) return;
+      if (equipped?.heroId !== "gwendolin" || streakAfter < 2 || !fx) return;
       notifyHeroProc({
         heroId: "gwendolin",
-        message: "Gwendolin: streak Cash boosted",
+        message: `Gwendolin: +${pctLabel(fx.streakBonusPct)} streak Cash`,
       });
     },
-    [equipped?.heroId, notifyHeroProc],
+    [equipped?.heroId, fx, notifyHeroProc],
   );
 
   const packPullMods = useCallback((): PackPullMods => {
-    if (!equipped) return {};
+    if (!equipped || !fx) return {};
     const mods: PackPullMods = {};
     if (equipped.heroId === "obyn-greenfoot") {
-      mods.extraCardChance = HERO_EFFECTS_L1["obyn-greenfoot"].extraCardChance;
+      mods.extraCardChance = fx.extraCardChance;
     }
     if (equipped.heroId === "ezili") {
-      mods.t5WeightBonus = HERO_EFFECTS_L1.ezili.t5WeightBonus;
+      mods.t5WeightBonus = fx.t5WeightBonus;
     }
     if (equipped.heroId === "psi") {
-      mods.paragonWeightBonus = HERO_EFFECTS_L1.psi.paragonWeightBonus;
+      mods.paragonWeightBonus = fx.paragonWeightBonus;
     }
     return mods;
-  }, [equipped]);
+  }, [equipped, fx]);
 
   const onObynExtra = useCallback(() => {
     notifyHeroProc({
@@ -73,29 +80,26 @@ export function useQuizHeroFx() {
   }, [notifyHeroProc]);
 
   const dupCashMods = useCallback((): DupCashMods => {
-    if (equipped?.heroId !== "benjamin") return {};
-    return {
-      dupCashBonusPct: HERO_EFFECTS_L1.benjamin.dupCashBonusPct,
-    };
-  }, [equipped?.heroId]);
+    if (equipped?.heroId !== "benjamin" || !fx) return {};
+    return { dupCashBonusPct: fx.dupCashBonusPct };
+  }, [equipped?.heroId, fx]);
 
   const trySaudaDiscount = useCallback(
     (price: number): { price: number; discounted: boolean } => {
-      if (equipped?.heroId !== "sauda") return { price, discounted: false };
-      if (!rollChance(HERO_EFFECTS_L1.sauda.btd6DiscountChance)) {
+      if (equipped?.heroId !== "sauda" || !fx) {
         return { price, discounted: false };
       }
-      const next = Math.max(
-        1,
-        Math.round(price * (1 - HERO_EFFECTS_L1.sauda.btd6DiscountPct)),
-      );
+      if (!rollChance(fx.btd6DiscountChance)) {
+        return { price, discounted: false };
+      }
+      const next = Math.max(1, Math.round(price * (1 - fx.btd6DiscountPct)));
       notifyHeroProc({
         heroId: "sauda",
-        message: `Sauda: pack −${HERO_EFFECTS_L1.sauda.btd6DiscountPct * 100}%`,
+        message: `Sauda: pack −${pctLabel(fx.btd6DiscountPct)}`,
       });
       return { price: next, discounted: true };
     },
-    [equipped?.heroId, notifyHeroProc],
+    [equipped?.heroId, fx, notifyHeroProc],
   );
 
   return {

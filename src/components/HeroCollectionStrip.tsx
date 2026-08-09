@@ -1,9 +1,18 @@
-import { useMemo, type ReactNode } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import {
   heroById,
   heroPortraitForLevel,
   type HeroEntity,
 } from "../data/heroes";
+import { heroLevelT } from "../lib/heroEffects";
 import {
   heroLevelFromProfile,
   normalizeHeroLevels,
@@ -88,6 +97,7 @@ export function HeroCollectionShelf({
                 hero={hero}
                 level={level}
                 equipped={equipped === hero.id}
+                mode="preview"
               />
             );
           })}
@@ -101,31 +111,108 @@ type FaceProps = {
   hero: HeroEntity;
   level: number;
   equipped?: boolean;
-  locked?: boolean;
   hideLevel?: boolean;
-  /** Hide name + flavor title under the plate (shop shelf uses pack labels). */
   hideCaption?: boolean;
-  size?: "sm" | "md";
+  /** preview = shelf; focus = modal with tilt + stronger FX */
+  mode?: "preview" | "focus";
+  size?: "sm" | "md" | "lg";
   footer?: ReactNode;
+  onSelect?: () => void;
 };
 
-/** Distinctive hero plate — not a monkey card. */
+/** Hero plate: desaturated at L1, gains color/FX as level rises. */
 export function HeroCardFace({
   hero,
   level,
   equipped = false,
-  locked = false,
   hideLevel = false,
   hideCaption = false,
+  mode = "preview",
   size = "sm",
   footer,
+  onSelect,
 }: FaceProps) {
-  return (
+  const power = heroLevelT(level);
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const [active, setActive] = useState(false);
+  const interactive = mode === "focus";
+
+  const style = {
+    ["--hero-power" as string]: String(power),
+    ["--rx" as string]: "0deg",
+    ["--ry" as string]: "0deg",
+    ["--tx" as string]: "0px",
+    ["--ty" as string]: "0px",
+    ["--px" as string]: "50%",
+    ["--py" as string]: "42%",
+  } as CSSProperties;
+
+  const applyPoint = useCallback((clientX: number, clientY: number) => {
+    const scene = sceneRef.current;
+    const card = cardRef.current;
+    if (!scene || !card) return;
+    const rect = scene.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+    const softX = 0.5 + (px - 0.5) * 0.92;
+    const softY = 0.5 + (py - 0.5) * 0.92;
+    card.style.setProperty("--rx", `${((0.5 - softY) * 16).toFixed(2)}deg`);
+    card.style.setProperty("--ry", `${((softX - 0.5) * 22).toFixed(2)}deg`);
+    card.style.setProperty("--px", `${(softX * 100).toFixed(1)}%`);
+    card.style.setProperty("--py", `${(softY * 100).toFixed(1)}%`);
+    card.style.setProperty("--tx", `${((softX - 0.5) * 10).toFixed(2)}px`);
+    card.style.setProperty("--ty", `${((softY - 0.5) * 8).toFixed(2)}px`);
+  }, []);
+
+  const resetTilt = useCallback(() => {
+    setActive(false);
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    const card = cardRef.current;
+    if (!card) return;
+    card.style.setProperty("--rx", "0deg");
+    card.style.setProperty("--ry", "0deg");
+    card.style.setProperty("--tx", "0px");
+    card.style.setProperty("--ty", "0px");
+    card.style.setProperty("--px", "50%");
+    card.style.setProperty("--py", "42%");
+  }, []);
+
+  function onMove(e: ReactPointerEvent) {
+    if (!interactive) return;
+    setActive(true);
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      applyPoint(e.clientX, e.clientY);
+    });
+  }
+
+  const body = (
     <article
-      className={`hero-card hero-card--${size}${equipped ? " is-equipped" : ""}${locked ? " is-locked" : ""}${hideCaption ? " hero-card--plate-only" : ""}`}
+      ref={cardRef}
+      className={[
+        "hero-card",
+        `hero-card--${size}`,
+        `hero-card--${mode}`,
+        equipped ? "is-equipped" : "",
+        hideCaption ? "hero-card--plate-only" : "",
+        active ? "is-tilting" : "",
+        power < 0.05 ? "is-base" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={style}
     >
       <div className="hero-card__plate" aria-hidden>
+        <span className="hero-card__glow" />
         <span className="hero-card__shine" />
+        <span className="hero-card__holo" />
         <img
           src={heroPortraitForLevel(hero, level)}
           alt=""
@@ -143,5 +230,31 @@ export function HeroCardFace({
       ) : null}
       {footer}
     </article>
+  );
+
+  if (!interactive && !onSelect) return body;
+
+  return (
+    <div
+      ref={sceneRef}
+      className={`hero-card-scene hero-card-scene--${mode}`}
+      onPointerMove={interactive ? onMove : undefined}
+      onPointerLeave={interactive ? resetTilt : undefined}
+      onClick={onSelect}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }
+    >
+      {body}
+    </div>
   );
 }

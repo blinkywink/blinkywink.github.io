@@ -36,7 +36,7 @@ import {
   resolveFeaturedBonusGame,
   type FeaturedBonusGame,
 } from "./lib/featuredBonus";
-import { HERO_EFFECTS_L1 } from "./lib/heroEffects";
+import { heroEffectsAtLevel } from "./lib/heroEffects";
 import {
   pickRewardTowerPack,
   pickRewardTowerPackChoices,
@@ -237,7 +237,7 @@ function AppShell() {
       const result = resolveFeaturedBonusGame(game, cleared, {
         silasFreezeChance:
           equipped?.heroId === "silas"
-            ? HERO_EFFECTS_L1.silas.featuredFreezeChance
+            ? heroEffectsAtLevel("silas", equipped.level).featuredFreezeChance
             : 0,
       });
       if (result.silasFroze) {

@@ -4,6 +4,9 @@ import { cacheInvalidate } from "./cache";
 import { heroes } from "../data/heroes";
 
 export const HERO_UNLOCK_COST = 5_000;
+/** Same Cash cost to unlock or gain +1 level (max 20). */
+export const HERO_LEVEL_COST = HERO_UNLOCK_COST;
+export const HERO_MAX_LEVEL = 20;
 export const HERO_EQUIP_SWAP_COST = 1_000;
 
 /** Heroes available for purchase in the shop. */
@@ -76,7 +79,7 @@ export type EquipHeroResult = {
   equippedHeroId: string | null;
 };
 
-/** Unlock a hero for 5k Cash. */
+/** Unlock a hero or level it up for 5k Cash (max level 20). */
 export async function buyHero(heroId: string): Promise<BuyHeroResult> {
   const app = loadAppSession();
   if (!getAccessToken() || !app) {
@@ -91,8 +94,11 @@ export async function buyHero(heroId: string): Promise<BuyHeroResult> {
   if (error) {
     if (/Insufficient coins/i.test(error.message)) {
       throw new Error(
-        `Need ${HERO_UNLOCK_COST.toLocaleString()} Cash to unlock this hero.`,
+        `Need ${HERO_LEVEL_COST.toLocaleString()} Cash for this hero.`,
       );
+    }
+    if (/Hero max level/i.test(error.message)) {
+      throw new Error("That hero is already max level.");
     }
     if (/Already owned/i.test(error.message)) {
       throw new Error("You already own that hero.");

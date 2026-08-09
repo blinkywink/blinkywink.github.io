@@ -4,7 +4,8 @@ import { useAuth } from "../auth/AuthProvider";
 import type { HeroEntity } from "../data/heroes";
 import { heroBlurb } from "../lib/heroEffects";
 import {
-  HERO_UNLOCK_COST,
+  HERO_LEVEL_COST,
+  HERO_MAX_LEVEL,
   buyHero,
   heroLevelFromProfile,
   normalizeHeroLevels,
@@ -40,14 +41,16 @@ export function ShopHeroesShelf() {
   async function onPurchase() {
     if (!focused || busy) return;
     if (isGuest) {
-      setBuyError("Sign in to unlock heroes.");
+      setBuyError("Sign in to unlock or level heroes.");
       return;
     }
-    if (owned.has(focused.id)) {
-      setBuyError("You already own that hero.");
+    const mine = owned.has(focused.id);
+    const level = heroLevelFromProfile(levels, focused.id);
+    if (mine && level >= HERO_MAX_LEVEL) {
+      setBuyError("Already max level.");
       return;
     }
-    if ((profile?.coins ?? 0) < HERO_UNLOCK_COST) {
+    if ((profile?.coins ?? 0) < HERO_LEVEL_COST) {
       setBuyError("Not enough Cash.");
       return;
     }
@@ -57,8 +60,13 @@ export function ShopHeroesShelf() {
       const result = await buyHero(focused.id);
       setCoinBalance(result.coins);
       await refreshProfile();
-      setStatus(`Unlocked ${focused.name}!`);
-      setFocused(null);
+      const nextLevel = result.heroLevels[focused.id] ?? (mine ? level + 1 : 1);
+      setStatus(
+        mine
+          ? `${focused.name} leveled to ${nextLevel}!`
+          : `Unlocked ${focused.name}!`,
+      );
+      // Keep focus open so they can preview the new level / buy again.
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : "Purchase failed.");
     }
@@ -74,7 +82,14 @@ export function ShopHeroesShelf() {
         if (busy) return;
         e.preventDefault();
         closeFocus();
+        return;
       }
+      if (e.code !== "Space" && e.key !== " ") return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if (e.repeat || busy) return;
+      void onPurchase();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -85,8 +100,13 @@ export function ShopHeroesShelf() {
 
   const focusMine = focused ? owned.has(focused.id) : false;
   const focusLevel = focused
-    ? heroLevelFromProfile(levels, focused.id)
+    ? focusMine
+      ? heroLevelFromProfile(levels, focused.id)
+      : 1
     : 1;
+  const focusMaxed = focusMine && focusLevel >= HERO_MAX_LEVEL;
+  const canBuy =
+    !isGuest && focused && (!focusMine || !focusMaxed);
 
   const focusPortal = focused
     ? createPortal(
@@ -112,37 +132,54 @@ export function ShopHeroesShelf() {
             >
               ✕ Close
             </button>
-              <HeroCardFace
-                hero={focused}
-                level={focusMine ? focusLevel : 1}
-                size="md"
-                locked={focusMine}
-                hideLevel={!focusMine}
-                hideCaption
-              />
+            <HeroCardFace
+              hero={focused}
+              level={focusLevel}
+              size="lg"
+              mode="focus"
+              hideCaption
+            />
             <h2 className="shop-hero-focus__name">{focused.name}</h2>
-            <p className="shop-hero-focus__blurb">{heroBlurb(focused.id)}</p>
+            <p className="shop-hero-focus__lvl">
+              {focusMine ? `Level ${focusLevel}` : "Not owned · Level 1 preview"}
+            </p>
+            <p className="shop-hero-focus__blurb">
+              {heroBlurb(focused.id, focusLevel)}
+            </p>
             <div className="pack-opener__buy shop-hero-focus__buy">
-              {!focusMine ? <CurrencyChip amount={HERO_UNLOCK_COST} /> : null}
+              {!focusMaxed ? (
+                <CurrencyChip amount={HERO_LEVEL_COST} />
+              ) : null}
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to unlock.</p>
-              ) : focusMine ? (
-                <p className="pack-opener__buy-note">Already owned · equip on Profile</p>
+              ) : focusMaxed ? (
+                <p className="pack-opener__buy-note">
+                  Max level · equip on Profile
+                </p>
               ) : (
                 <>
                   <button
                     type="button"
                     className="btn btn--primary btn--lg"
-                    disabled={busy}
+                    disabled={busy || !canBuy}
                     onClick={() => void onPurchase()}
                   >
-                    {busy ? "Unlocking…" : "Unlock"}
+                    {busy
+                      ? focusMine
+                        ? "Leveling…"
+                        : "Unlocking…"
+                      : focusMine
+                        ? `Level up · Space`
+                        : "Unlock · Space"}
                   </button>
                   {buyError ? (
                     <p className="pack-opener__buy-error">{buyError}</p>
                   ) : (
                     <p className="pack-opener__buy-note">
                       Balance {(profile?.coins ?? 0).toLocaleString()} Cash
+                      {focusMine
+                        ? ` · Lv ${focusLevel} → ${focusLevel + 1}`
+                        : ""}
                     </p>
                   )}
                 </>
@@ -159,7 +196,8 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
         <p className="shop-heroes__note">
-          Unlock <CashAmount amount={HERO_UNLOCK_COST} /> · equip on Profile
+          <CashAmount amount={HERO_LEVEL_COST} /> unlock / +1 level · equip on
+          Profile
         </p>
       </div>
       {status ? (
@@ -168,12 +206,13 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__row shop-heroes__row">
         {heroes.map((hero) => {
           const mine = owned.has(hero.id);
-          const level = heroLevelFromProfile(levels, hero.id);
+          const level = mine ? heroLevelFromProfile(levels, hero.id) : 1;
+          const maxed = mine && level >= HERO_MAX_LEVEL;
           return (
             <button
               key={hero.id}
               type="button"
-              className={`pack-shelf__item${mine ? " is-owned" : ""}`}
+              className="pack-shelf__item"
               onClick={() => {
                 setBuyError(null);
                 setFocused(hero);
@@ -181,17 +220,16 @@ export function ShopHeroesShelf() {
             >
               <HeroCardFace
                 hero={hero}
-                level={mine ? level : 1}
-                locked={mine}
-                hideLevel={!mine}
+                level={level}
                 hideCaption
-                size="md"
+                size="lg"
+                mode="preview"
               />
               <span className="pack-shelf__label">
                 <strong>{hero.name}</strong>
                 <span className="pack-shelf__price">
-                  {mine ? (
-                    "Owned"
+                  {maxed ? (
+                    `Lv ${level} · Max`
                   ) : (
                     <>
                       <img
@@ -200,7 +238,8 @@ export function ShopHeroesShelf() {
                         width={22}
                         height={22}
                       />
-                      {HERO_UNLOCK_COST.toLocaleString()}
+                      {HERO_LEVEL_COST.toLocaleString()}
+                      {mine ? ` · Lv ${level}` : ""}
                     </>
                   )}
                 </span>
