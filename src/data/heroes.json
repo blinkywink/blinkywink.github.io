@@ -1,0 +1,434 @@
+[
+  {
+    "id": "quincy",
+    "name": "Quincy",
+    "title": "the Archer",
+    "description": "Proud, strong and intelligent, Quincy uses his bow to perform feats of amazing skill.",
+    "costs": {
+      "easy": null,
+      "medium": 540,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 540,
+    "image": "/images/heroes/quincy/lvl1.webp",
+    "sourceFile": "QuincyPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/quincy/lvl1.webp",
+      "3": "/images/heroes/quincy/lvl3.webp",
+      "7": "/images/heroes/quincy/lvl7.webp",
+      "10": "/images/heroes/quincy/lvl10.webp",
+      "20": "/images/heroes/quincy/lvl20.webp"
+    },
+    "unlock": "During tutorial",
+    "levelSpeed": 1
+  },
+  {
+    "id": "gwendolin",
+    "name": "Gwendolin",
+    "title": "the Pyromaniac",
+    "description": "Gwendolin believes there hasn't yet been a Bloon problem that can't be solved with fire. Lots of fire.",
+    "costs": {
+      "easy": null,
+      "medium": 725,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 725,
+    "image": "/images/heroes/gwendolin/lvl1.webp",
+    "sourceFile": "GwendolinPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/gwendolin/lvl1.webp",
+      "3": "/images/heroes/gwendolin/lvl3.webp",
+      "7": "/images/heroes/gwendolin/lvl3.webp",
+      "10": "/images/heroes/gwendolin/lvl10.webp",
+      "20": "/images/heroes/gwendolin/lvl20.webp"
+    },
+    "unlock": "Level 14+",
+    "levelSpeed": 1
+  },
+  {
+    "id": "striker-jones",
+    "name": "Striker Jones",
+    "title": "the Artillery Commander",
+    "description": "Striker Jones is a strong Commander who uses his knowledge of long range combat to greatly boost the power of explosives.",
+    "costs": {
+      "easy": null,
+      "medium": 700,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 700,
+    "image": "/images/heroes/striker-jones/lvl1.webp",
+    "sourceFile": "StrikerJonesPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/striker-jones/lvl1.webp",
+      "3": "/images/heroes/striker-jones/lvl3.webp",
+      "7": "/images/heroes/striker-jones/lvl3.webp",
+      "10": "/images/heroes/striker-jones/lvl10.webp",
+      "20": "/images/heroes/striker-jones/lvl20.webp"
+    },
+    "unlock": "Level 21+",
+    "levelSpeed": 1
+  },
+  {
+    "id": "obyn-greenfoot",
+    "name": "Obyn Greenfoot",
+    "title": "the Forest Guardian",
+    "description": "Commanding powers of nature, Obyn can shoot through solid obstacles with his spirit wolf attack.",
+    "costs": {
+      "easy": null,
+      "medium": 650,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 650,
+    "image": "/images/heroes/obyn-greenfoot/lvl1.webp",
+    "sourceFile": "ObynGreenFootPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/obyn-greenfoot/lvl1.webp",
+      "3": "/images/heroes/obyn-greenfoot/lvl3.webp",
+      "7": "/images/heroes/obyn-greenfoot/lvl3.webp",
+      "10": "/images/heroes/obyn-greenfoot/lvl10.webp",
+      "20": "/images/heroes/obyn-greenfoot/lvl20.webp"
+    },
+    "unlock": "Level 28+",
+    "levelSpeed": 1
+  },
+  {
+    "id": "captain-churchill",
+    "name": "Captain Churchill",
+    "title": "the Tank",
+    "description": "In his armored tank, the Captain is a no-nonsense powerhouse on the battlefield.",
+    "costs": {
+      "easy": null,
+      "medium": 2000,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 2000,
+    "image": "/images/heroes/captain-churchill/lvl1.webp",
+    "sourceFile": "CaptainChurchillPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/captain-churchill/lvl1.webp",
+      "3": "/images/heroes/captain-churchill/lvl3.webp",
+      "7": "/images/heroes/captain-churchill/lvl3.webp",
+      "10": "/images/heroes/captain-churchill/lvl10.webp",
+      "20": "/images/heroes/captain-churchill/lvl20.webp"
+    },
+    "unlock": "Level 15+ and Monkey Money 2500",
+    "levelSpeed": 1.71
+  },
+  {
+    "id": "benjamin",
+    "name": "Benjamin",
+    "title": "the Code Monkey",
+    "description": "Using his elite hacking skills, Benjamin can create extra money for the cause.",
+    "costs": {
+      "easy": null,
+      "medium": 1200,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 1200,
+    "image": "/images/heroes/benjamin/lvl1.webp",
+    "sourceFile": "BenjaminPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/benjamin/lvl1.webp",
+      "3": "/images/heroes/benjamin/lvl3.webp",
+      "7": "/images/heroes/benjamin/lvl7.webp",
+      "10": "/images/heroes/benjamin/lvl10.webp",
+      "20": "/images/heroes/benjamin/lvl20.webp"
+    },
+    "unlock": "Level 15+ and Monkey Money 3000",
+    "levelSpeed": 1.5
+  },
+  {
+    "id": "ezili",
+    "name": "Ezili",
+    "title": "the Voodoo Monkey",
+    "description": "Ezili is a wielder of dark arts and manipulator of Bloons. Beware.",
+    "costs": {
+      "easy": null,
+      "medium": 600,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 600,
+    "image": "/images/heroes/ezili/lvl1.webp",
+    "sourceFile": "EziliPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/ezili/lvl1.webp",
+      "3": "/images/heroes/ezili/lvl3.webp",
+      "7": "/images/heroes/ezili/lvl7.webp",
+      "10": "/images/heroes/ezili/lvl10.webp",
+      "20": "/images/heroes/ezili/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 3000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "pat-fusty",
+    "name": "Pat Fusty",
+    "title": "the Giant Monkey",
+    "description": "Pat is a huge monkey of enormous strength. His unique size and power is a great asset in the war on Bloons.",
+    "costs": {
+      "easy": null,
+      "medium": 800,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 800,
+    "image": "/images/heroes/pat-fusty/lvl1.webp",
+    "sourceFile": "PatFustyPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/pat-fusty/lvl1.webp",
+      "3": "/images/heroes/pat-fusty/lvl3.webp",
+      "7": "/images/heroes/pat-fusty/lvl3.webp",
+      "10": "/images/heroes/pat-fusty/lvl10.webp",
+      "20": "/images/heroes/pat-fusty/lvl20.webp"
+    },
+    "unlock": "Level 15+ and Monkey Money 3000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "adora",
+    "name": "Adora",
+    "title": "the High Priestess",
+    "description": "Adora's devotion compels her to strike Bloons down with furious vengeance.",
+    "costs": {
+      "easy": null,
+      "medium": 1000,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 1000,
+    "image": "/images/heroes/adora/lvl1.webp",
+    "sourceFile": "AdoraPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/adora/lvl1.webp",
+      "3": "/images/heroes/adora/lvl3.webp",
+      "7": "/images/heroes/adora/lvl7.webp",
+      "10": "/images/heroes/adora/lvl10.webp",
+      "20": "/images/heroes/adora/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 5000",
+    "levelSpeed": 1.71
+  },
+  {
+    "id": "admiral-brickell",
+    "name": "Admiral Brickell",
+    "title": "the Naval Commander",
+    "description": "Command all your water-based Monkeys to decisive victory. Requires water to place.",
+    "costs": {
+      "easy": null,
+      "medium": 900,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 900,
+    "image": "/images/heroes/admiral-brickell/lvl1.webp",
+    "sourceFile": "AdmiralBrickellPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/admiral-brickell/lvl1.webp",
+      "3": "/images/heroes/admiral-brickell/lvl3.webp",
+      "7": "/images/heroes/admiral-brickell/lvl7.webp",
+      "10": "/images/heroes/admiral-brickell/lvl10.webp",
+      "20": "/images/heroes/admiral-brickell/lvl20.webp"
+    },
+    "unlock": "Level 35+ and Monkey Money 5000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "etienne",
+    "name": "Etienne",
+    "title": "the Drone Operator",
+    "description": "This high-tech hero can pursue the Bloons wherever they go with his remote-controlled drone.",
+    "costs": {
+      "easy": null,
+      "medium": 850,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 850,
+    "image": "/images/heroes/etienne/lvl1.webp",
+    "sourceFile": "EtiennePortrait.png",
+    "portraits": {
+      "1": "/images/heroes/etienne/lvl1.webp",
+      "3": "/images/heroes/etienne/lvl3.webp",
+      "7": "/images/heroes/etienne/lvl7.webp",
+      "10": "/images/heroes/etienne/lvl10.webp",
+      "20": "/images/heroes/etienne/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 5000",
+    "levelSpeed": 1
+  },
+  {
+    "id": "sauda",
+    "name": "Sauda",
+    "title": "the Swordmaster",
+    "description": "With a calm fury, Sauda can carve Bloons up with her twin razor-sharp swords.",
+    "costs": {
+      "easy": null,
+      "medium": 600,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 600,
+    "image": "/images/heroes/sauda/lvl1.webp",
+    "sourceFile": "SaudaPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/sauda/lvl1.webp",
+      "3": "/images/heroes/sauda/lvl3.webp",
+      "7": "/images/heroes/sauda/lvl3.webp",
+      "10": "/images/heroes/sauda/lvl10.webp",
+      "20": "/images/heroes/sauda/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 5000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "psi",
+    "name": "Psi",
+    "title": "the Psionic Monkey",
+    "description": "A gifted monkey child, Psi uses only the power of the mind to destroy Bloons from the inside out.",
+    "costs": {
+      "easy": null,
+      "medium": 1000,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 1000,
+    "image": "/images/heroes/psi/lvl1.webp",
+    "sourceFile": "PsiPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/psi/lvl1.webp",
+      "3": "/images/heroes/psi/lvl3.webp",
+      "7": "/images/heroes/psi/lvl3.webp",
+      "10": "/images/heroes/psi/lvl10.webp",
+      "20": "/images/heroes/psi/lvl20.webp"
+    },
+    "unlock": "Level 35+ and Monkey Money 5000",
+    "levelSpeed": 1.5
+  },
+  {
+    "id": "geraldo",
+    "name": "Geraldo",
+    "title": "the Mystic Shopkeeper",
+    "description": "Geraldo the shopkeeper sells a selection of useful items and zaps Bloons with his lightning attack.",
+    "costs": {
+      "easy": null,
+      "medium": 750,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 750,
+    "image": "/images/heroes/geraldo/lvl1.webp",
+    "sourceFile": "GeraldoPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/geraldo/lvl1.webp",
+      "3": "/images/heroes/geraldo/lvl3.webp",
+      "7": "/images/heroes/geraldo/lvl7.webp",
+      "10": "/images/heroes/geraldo/lvl10.webp",
+      "20": "/images/heroes/geraldo/lvl20.webp"
+    },
+    "unlock": "Level 35+ and Monkey Money 7000",
+    "levelSpeed": 1
+  },
+  {
+    "id": "corvus",
+    "name": "Corvus",
+    "title": "the Spirit Walker",
+    "description": "Corvus works well on the frontline, weakening nearby Bloons to harvest Mana and channel powerful energies through his Spirit companion.",
+    "costs": {
+      "easy": null,
+      "medium": 1025,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 1025,
+    "image": "/images/heroes/corvus/lvl1.webp",
+    "sourceFile": "CorvusPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/corvus/lvl1.webp",
+      "3": "/images/heroes/corvus/lvl1.webp",
+      "7": "/images/heroes/corvus/lvl1.webp",
+      "10": "/images/heroes/corvus/lvl1.webp",
+      "20": "/images/heroes/corvus/lvl1.webp"
+    },
+    "unlock": "Level 35+ and Monkey Money 7000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "rosalia",
+    "name": "Rosalia",
+    "title": "the Tinkerer",
+    "description": "Rosalia can reposition in a moment with her jetpack and brings the firepower with her laser, grenade launcher and missiles.",
+    "costs": {
+      "easy": null,
+      "medium": 875,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 875,
+    "image": "/images/heroes/rosalia/lvl1.webp",
+    "sourceFile": "RosaliaPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/rosalia/lvl1.webp",
+      "3": "/images/heroes/rosalia/lvl1.webp",
+      "7": "/images/heroes/rosalia/lvl7.webp",
+      "10": "/images/heroes/rosalia/lvl7.webp",
+      "20": "/images/heroes/rosalia/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 5000",
+    "levelSpeed": 1.425
+  },
+  {
+    "id": "silas",
+    "name": "Silas",
+    "title": "the Ice Shaper",
+    "description": "Silas developed his calm demeanor surviving alone in harsh conditions. Commands the power of ice and boosts the power of ice attacks. Can be placed on land or water.",
+    "costs": {
+      "easy": null,
+      "medium": 850,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 850,
+    "image": "/images/heroes/silas/lvl1.webp",
+    "sourceFile": "SilasPortrait.png",
+    "portraits": {
+      "1": "/images/heroes/silas/lvl1.webp",
+      "3": "/images/heroes/silas/lvl3.webp",
+      "7": "/images/heroes/silas/lvl7.webp",
+      "10": "/images/heroes/silas/lvl10.webp",
+      "20": "/images/heroes/silas/lvl20.webp"
+    },
+    "unlock": "Level 25+ and Monkey Money 5000",
+    "levelSpeed": 1.5
+  },
+  {
+    "id": "dan-dmonke",
+    "name": "Dan D'Monke",
+    "title": "the Courtly Monkey",
+    "description": "Dan D'Monke flourishes his blade with style and sophistication.",
+    "costs": {
+      "easy": null,
+      "medium": 650,
+      "hard": null,
+      "impoppable": null
+    },
+    "cost": 650,
+    "image": "/images/heroes/dan-dmonke/lvl1.webp",
+    "sourceFile": "DanDMonkePortrait.png",
+    "portraits": {
+      "1": "/images/heroes/dan-dmonke/lvl1.webp",
+      "3": "/images/heroes/dan-dmonke/lvl3.webp",
+      "7": "/images/heroes/dan-dmonke/lvl3.webp",
+      "10": "/images/heroes/dan-dmonke/lvl10.webp",
+      "20": "/images/heroes/dan-dmonke/lvl20.webp"
+    },
+    "unlock": "Monkey Money 7000",
+    "levelSpeed": 1.425
+  }
+]

@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "download-assets": "tsx scripts/download-btd6-assets.ts",
     "download-assets:force": "tsx scripts/download-btd6-assets.ts --force",
-    "download-maps": "tsx scripts/download-btd6-maps.ts",
-    "download-maps:force": "tsx scripts/download-btd6-maps.ts --force",
+  "download-heroes": "tsx scripts/download-btd6-heroes.ts",
+  "download-heroes:force": "tsx scripts/download-btd6-heroes.ts --force",
     "fetch-tower-costs": "tsx scripts/fetch-tower-costs.ts",
     "prepare-card-assets": "tsx scripts/prepare-card-assets.ts",
     "prepare-card-assets:all": "tsx scripts/prepare-card-assets.ts all"

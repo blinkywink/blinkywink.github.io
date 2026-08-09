@@ -58,27 +58,45 @@ export const PACK_DUPLICATE_PARAGON_CASH = 5000;
 /** +5 Cash per level on crosspaths (e.g. 2-1-0 → T2 base + 5). */
 const CROSSPATH_DUP_BONUS_PER_LEVEL = 5;
 
+export type DupCashMods = {
+  /** Benjamin: multiply duplicate Cash (e.g. 0.15 = +15%). */
+  dupCashBonusPct?: number;
+};
+
 /** Cash refund for pulling a card you already own. */
-export function duplicateCashForCard(card: MonkeyCardSpec): number {
-  if (card.isParagon) return PACK_DUPLICATE_PARAGON_CASH;
-  const levels = card.pathLevels;
-  const max = Math.max(levels[0], levels[1], levels[2]);
-  const base = PACK_DUPLICATE_CASH_BY_TIER[max] ?? PACK_DUPLICATE_CASH_BY_TIER[0];
-  let primaryUsed = false;
-  let bonus = 0;
-  for (const n of levels) {
-    if (n === max && !primaryUsed) {
-      primaryUsed = true;
-      continue;
+export function duplicateCashForCard(
+  card: MonkeyCardSpec,
+  mods: DupCashMods = {},
+): number {
+  let cash: number;
+  if (card.isParagon) {
+    cash = PACK_DUPLICATE_PARAGON_CASH;
+  } else {
+    const levels = card.pathLevels;
+    const max = Math.max(levels[0], levels[1], levels[2]);
+    const base =
+      PACK_DUPLICATE_CASH_BY_TIER[max] ?? PACK_DUPLICATE_CASH_BY_TIER[0];
+    let primaryUsed = false;
+    let bonus = 0;
+    for (const n of levels) {
+      if (n === max && !primaryUsed) {
+        primaryUsed = true;
+        continue;
+      }
+      if (n > 0) bonus += CROSSPATH_DUP_BONUS_PER_LEVEL * n;
     }
-    if (n > 0) bonus += CROSSPATH_DUP_BONUS_PER_LEVEL * n;
+    cash = base + bonus;
   }
-  return base + bonus;
+  const pct = mods.dupCashBonusPct ?? 0;
+  if (pct > 0) cash = Math.round(cash * (1 + pct));
+  return cash;
 }
 
 export type PackPullResult = {
   cards: MonkeyCardSpec[];
   godPack: boolean;
+  /** Obyn proc: pack opened with +1 card. */
+  extraCard?: boolean;
 };
 
 function cardPullTier(card: MonkeyCardSpec): PullTier {
@@ -194,17 +212,34 @@ function pullGodPackCards(
   return shuffle(pulls);
 }
 
-function rollCardTier(available: ReadonlySet<PullTier>): PullTier {
+export type PackTierMods = {
+  /** Ezili: absolute add to T5 weight (e.g. 0.003). */
+  t5WeightBonus?: number;
+  /** Psi: absolute add to Paragon weight (e.g. 0.0005). */
+  paragonWeightBonus?: number;
+};
+
+function tierWeight(tier: PullTier, mods: PackTierMods): number {
+  let w = CARD_TIER_ODDS[tier];
+  if (tier === 5) w += mods.t5WeightBonus ?? 0;
+  if (tier === "paragon") w += mods.paragonWeightBonus ?? 0;
+  return Math.max(0, w);
+}
+
+function rollCardTier(
+  available: ReadonlySet<PullTier>,
+  mods: PackTierMods = {},
+): PullTier {
   let total = 0;
   for (const tier of TIER_ROLL_ORDER) {
-    if (available.has(tier)) total += CARD_TIER_ODDS[tier];
+    if (available.has(tier)) total += tierWeight(tier, mods);
   }
   if (total <= 0) return 0;
 
   let roll = Math.random() * total;
   for (const tier of TIER_ROLL_ORDER) {
     if (!available.has(tier)) continue;
-    roll -= CARD_TIER_ODDS[tier];
+    roll -= tierWeight(tier, mods);
     if (roll <= 0) return tier;
   }
   return 0;
@@ -214,6 +249,7 @@ function pullNormalPackCards(
   pool: MonkeyCardSpec[],
   count: number,
   owned: ReadonlySet<string>,
+  mods: PackTierMods = {},
 ): MonkeyCardSpec[] {
   // Bags per tier — cards removed after pick so a pack has unique IDs.
   // Ownership does not affect weight; every card in a tier is equal.
@@ -233,7 +269,7 @@ function pullNormalPackCards(
     }
     if (!available.size) break;
 
-    const tier = rollCardTier(available);
+    const tier = rollCardTier(available, mods);
     const bag = bags.get(tier)!;
     // If the rolled tier somehow emptied, fall through lower tiers.
     if (!bag.length) {
@@ -256,6 +292,11 @@ function pullNormalPackCards(
   return shuffle(pulls);
 }
 
+export type PackPullMods = PackTierMods & {
+  /** Obyn: chance to append +1 card. */
+  extraCardChance?: number;
+};
+
 /**
  * Open a pack:
  * - 0.25% god pack (all T4+, usually with a Paragon) — pack-level only
@@ -266,6 +307,7 @@ export function pullPackCards(
   pool: MonkeyCardSpec[],
   count: number,
   owned: ReadonlySet<string> = new Set(),
+  mods: PackPullMods = {},
 ): PackPullResult {
   if (count < 1 || !pool.length) {
     return { cards: [], godPack: false };
@@ -275,11 +317,25 @@ export function pullPackCards(
     (c) => c.isParagon || maxPathTier(c.pathLevels) >= 4,
   );
   const godPack = highEnough && Math.random() < PACK_GOD_CHANCE;
+  let n = count;
+  let extraCard = false;
+  if (!godPack && (mods.extraCardChance ?? 0) > 0) {
+    if (Math.random() < mods.extraCardChance!) {
+      n += 1;
+      extraCard = true;
+    }
+  }
+
+  const tierMods: PackTierMods = {
+    t5WeightBonus: mods.t5WeightBonus,
+    paragonWeightBonus: mods.paragonWeightBonus,
+  };
 
   return {
     godPack,
+    extraCard,
     cards: godPack
-      ? pullGodPackCards(pool, count, owned)
-      : pullNormalPackCards(pool, count, owned),
+      ? pullGodPackCards(pool, n, owned)
+      : pullNormalPackCards(pool, n, owned, tierMods),
   };
 }

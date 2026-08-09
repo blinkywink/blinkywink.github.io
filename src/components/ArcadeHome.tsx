@@ -5,7 +5,6 @@ import {
   type FeaturedBonusGame,
 } from "../lib/featuredBonus";
 import { preloadImage } from "../utils/imageProcessing";
-import { DailyClaimButton } from "./DailyClaimButton";
 
 export type GameId =
   | "zoomed"
@@ -408,7 +407,6 @@ export function ArcadeHome({
   return (
     <div className={`arcade${embed ? " arcade--embed" : ""}`}>
       {!embed ? <div className="arcade__atmosphere" aria-hidden="true" /> : null}
-      {!embed ? <DailyClaimButton /> : null}
 
       <section
         className={`arcade__featured${embed ? " arcade__featured--hub" : ""}`}

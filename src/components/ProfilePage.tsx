@@ -37,6 +37,16 @@ import {
   showcaseFromProfile,
   showcaseSlotsFromProfile,
 } from "../lib/profileShowcase";
+import {
+  HERO_EQUIP_SWAP_COST,
+  equipHero,
+  heroLevelFromProfile,
+  normalizeHeroLevels,
+  normalizeOwnedHeroIds,
+  shoppableHeroes,
+} from "../lib/profileHeroes";
+import { heroBlurb } from "../lib/heroEffects";
+import { heroPortraitForLevel } from "../data/heroes";
 import { collectionPath, userCollectionPath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
@@ -93,6 +103,46 @@ export function ProfilePage() {
         .filter((c): c is NonNullable<typeof c> => Boolean(c)),
     [savedShowcase],
   );
+
+  const ownedHeroIds = useMemo(
+    () => normalizeOwnedHeroIds(profile?.owned_hero_ids),
+    [profile?.owned_hero_ids],
+  );
+  const heroLevels = useMemo(
+    () => normalizeHeroLevels(profile?.hero_levels),
+    [profile?.hero_levels],
+  );
+  const equippedHeroId = profile?.equipped_hero_id
+    ? String(profile.equipped_hero_id)
+    : null;
+  const ownedHeroes = useMemo(
+    () => shoppableHeroes().filter((h) => ownedHeroIds.includes(h.id)),
+    [ownedHeroIds],
+  );
+
+  async function onEquipHero(heroId: string | null) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const result = await equipHero(heroId);
+      setCoinBalance(result.coins);
+      await refreshProfile();
+      if (!heroId) {
+        setStatus("Hero unequipped.");
+      } else if (equippedHeroId && equippedHeroId !== heroId) {
+        setStatus(
+          `Equipped hero (−${HERO_EQUIP_SWAP_COST.toLocaleString()} Cash).`,
+        );
+      } else {
+        setStatus("Hero equipped.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not equip hero.");
+    }
+    setBusy(false);
+  }
 
   const pickSelected = useMemo(
     () => new Set(draft.cardId ? [draft.cardId] : []),
@@ -643,6 +693,70 @@ export function ProfilePage() {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="profile-heroes">
+          <div className="profile-heroes__head">
+            <div>
+              <h3>Hero</h3>
+              <p>
+                Unlock heroes in the Shop. First equip is free; swapping costs{" "}
+                <CashAmount amount={HERO_EQUIP_SWAP_COST} size={13} />.
+                Unequip is free.
+              </p>
+            </div>
+          </div>
+          {ownedHeroes.length === 0 ? (
+            <p className="profile-heroes__empty">
+              No heroes unlocked yet. Visit the Shop Heroes shelf.
+            </p>
+          ) : (
+            <div className="profile-heroes__grid">
+              {ownedHeroes.map((hero) => {
+                const level = heroLevelFromProfile(heroLevels, hero.id);
+                const isEq = equippedHeroId === hero.id;
+                const swapCost =
+                  equippedHeroId && equippedHeroId !== hero.id
+                    ? HERO_EQUIP_SWAP_COST
+                    : 0;
+                return (
+                  <div
+                    key={hero.id}
+                    className={`profile-heroes__card${isEq ? " is-equipped" : ""}`}
+                  >
+                    <img
+                      src={heroPortraitForLevel(hero, level)}
+                      alt=""
+                      className="profile-heroes__art"
+                    />
+                    <div className="profile-heroes__meta">
+                      <strong>{hero.name}</strong>
+                      <span>{heroBlurb(hero.id)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={`btn btn--sm ${isEq ? "btn--ghost" : "btn--secondary"}`}
+                      disabled={busy}
+                      onClick={() =>
+                        void onEquipHero(isEq ? null : hero.id)
+                      }
+                    >
+                      {isEq ? (
+                        "Unequip"
+                      ) : swapCost > 0 ? (
+                        <>
+                          Equip
+                          <CashAmount amount={swapCost} size={14} />
+                        </>
+                      ) : (
+                        "Equip"
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="profile-showcase-edit">

@@ -34,16 +34,23 @@ export const REWARD_CURVE = {
  */
 export function rewardForCorrect(input: {
   round: number;
-  /** Kept for call-site compat — progress uses round, not streak. */
+  /** Streak after this correct answer (used by Gwendolin L1). */
   streakAfter?: number;
   /** 1 = first try; &lt;1 reduces payout (Zoomed retries). */
   attemptMultiplier?: number;
+  /** Absolute streak Cash bonus (e.g. 0.03 = +3% when streak ≥ 2). */
+  streakBonusPct?: number;
 }): number {
   const round = Math.max(1, Math.floor(input.round));
   const progress = REWARD_CURVE.progressMult ** (round - 1);
   const mult = input.attemptMultiplier ?? 1;
   const raw = REWARD_CURVE.base * progress * Math.max(0, mult);
-  const capped = Math.min(REWARD_CURVE.perHitCap, Math.round(raw));
+  let capped = Math.min(REWARD_CURVE.perHitCap, Math.round(raw));
+  const streak = input.streakAfter ?? 0;
+  const bonusPct = input.streakBonusPct ?? 0;
+  if (streak >= 2 && bonusPct > 0) {
+    capped = Math.max(0, Math.round(capped * (1 + bonusPct)));
+  }
   return Math.max(0, capped);
 }
 

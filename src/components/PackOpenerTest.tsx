@@ -10,6 +10,7 @@ import {
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
+import { useQuizHeroFx } from "../lib/quizHeroFx";
 import {
   btd6Pack,
   packPrice,
@@ -200,6 +201,12 @@ export function PackOpenerTest({
   const price = packPrice(pack);
   const { profile, setCoinBalance } = useAuth();
   const { awardCards, owned } = useCardCollection();
+  const {
+    packPullMods,
+    onObynExtra,
+    dupCashMods,
+    trySaudaDiscount,
+  } = useQuizHeroFx();
   const pool = useMemo(() => buildPackPool(pack), [pack]);
 
   const [phase, setPhase] = useState<Phase>("shop");
@@ -326,13 +333,13 @@ export function PackOpenerTest({
       if (!card || !duplicatesRef.current.has(card.id)) return;
       if (paidDupIndicesRef.current.has(i)) return;
       paidDupIndicesRef.current.add(i);
-      const cash = duplicateCashForCard(card);
+      const cash = duplicateCashForCard(card, dupCashMods());
       if (cash < 1) return;
       void awardCoins(cash).then((balance) => {
         if (balance != null) setCoinBalance(balance);
       });
     },
-    [setCoinBalance],
+    [dupCashMods, setCoinBalance],
   );
 
   /** If they close mid-pack, still bank any unrevealed duplicate Cash. */
@@ -342,13 +349,13 @@ export function PackOpenerTest({
       if (!duplicatesRef.current.has(card.id)) return;
       if (paidDupIndicesRef.current.has(i)) return;
       paidDupIndicesRef.current.add(i);
-      remaining += duplicateCashForCard(card);
+      remaining += duplicateCashForCard(card, dupCashMods());
     });
     if (remaining < 1) return;
     void awardCoins(remaining).then((balance) => {
       if (balance != null) setCoinBalance(balance);
     });
-  }, [setCoinBalance]);
+  }, [dupCashMods, setCoinBalance]);
 
   const handleClose = () => {
     flushUnpaidDupCash();
@@ -372,12 +379,14 @@ export function PackOpenerTest({
   const purchase = useCallback(async () => {
     if (buyBusy || mode === "reward" || phaseRef.current !== "shop") return;
     setBuyError(null);
-    if ((profile?.coins ?? 0) < price) {
+    const charge =
+      pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
+    if ((profile?.coins ?? 0) < charge) {
       setBuyError("Not enough Cash.");
       return;
     }
     setBuyBusy(true);
-    const balance = await spendCoins(price);
+    const balance = await spendCoins(charge);
     setBuyBusy(false);
     if (balance == null) {
       setBuyError("Purchase failed — try again.");
@@ -385,7 +394,15 @@ export function PackOpenerTest({
     }
     setCoinBalance(balance);
     setPhaseBoth("sealed");
-  }, [buyBusy, mode, price, profile?.coins, setCoinBalance]);
+  }, [
+    buyBusy,
+    mode,
+    pack.kind,
+    price,
+    profile?.coins,
+    setCoinBalance,
+    trySaudaDiscount,
+  ]);
 
   const showCardAt = useCallback(
     (i: number) => {
@@ -435,7 +452,7 @@ export function PackOpenerTest({
       for (const card of cards) {
         if (ownedAtOpen.has(card.id)) {
           dupIds.add(card.id);
-          cash += duplicateCashForCard(card);
+          cash += duplicateCashForCard(card, dupCashMods());
         } else {
           unlocked.push(card);
         }
@@ -457,7 +474,7 @@ export function PackOpenerTest({
       // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
     },
-    [awardCards, owned, showCardAt],
+    [awardCards, dupCashMods, owned, showCardAt],
   );
 
   const completeCut = useCallback(
@@ -467,11 +484,13 @@ export function PackOpenerTest({
       const b = pts[pts.length - 1]!;
       setClips(splitClips(a, b));
       setPhaseBoth("sliced");
-      const result = pullPackCards(pool, pack.cardCount, owned);
+      const mods = packPullMods();
+      const result = pullPackCards(pool, pack.cardCount, owned, mods);
+      if (result.extraCard) onObynExtra();
       setGodPack(result.godPack);
       later(() => beginDraw(result.cards, result.godPack), SLICE_REVEAL_MS);
     },
-    [beginDraw, pool, pack.cardCount, owned],
+    [beginDraw, onObynExtra, packPullMods, pool, pack.cardCount, owned],
   );
 
   const autoSlashOpen = useCallback(() => {
@@ -501,13 +520,15 @@ export function PackOpenerTest({
   const buyAnother = useCallback(async () => {
     if (buyBusy || mode === "reward") return;
     setBuyError(null);
-    if ((profile?.coins ?? 0) < price) {
+    const charge =
+      pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
+    if ((profile?.coins ?? 0) < charge) {
       reset();
       setBuyError("Not enough Cash.");
       return;
     }
     setBuyBusy(true);
-    const balance = await spendCoins(price);
+    const balance = await spendCoins(charge);
     setBuyBusy(false);
     if (balance == null) {
       reset();
@@ -521,11 +542,13 @@ export function PackOpenerTest({
     autoSlashOpen,
     buyBusy,
     mode,
+    pack.kind,
     price,
     profile?.coins,
     reset,
     resetToSealed,
     setCoinBalance,
+    trySaudaDiscount,
   ]);
 
   const nextCard = useCallback(() => {
@@ -908,7 +931,7 @@ export function PackOpenerTest({
                 />
                 {currentIsDup ? (
                   <p className="pack-opener__dup-banner" role="status">
-                    Duplicate · +{duplicateCashForCard(current)} Cash
+                    Duplicate · +{duplicateCashForCard(current, dupCashMods())} Cash
                   </p>
                 ) : null}
               </div>
@@ -976,7 +999,7 @@ export function PackOpenerTest({
                   />
                   <span>
                     {isDup
-                      ? `Duplicate · +${duplicateCashForCard(card)}`
+                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}`
                       : card.isParagon
                         ? `${card.tower} · Paragon`
                         : `${card.tower} · ${card.pathLevels.join("-")}`}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import {
@@ -130,6 +131,7 @@ function finishRun(
 
 export function usePriceCheck() {
   const { profile, setCoinBalance } = useAuth();
+  const { streakBonusPct, onCorrectCash, onGwenStreakProc } = useQuizHeroFx();
   const [state, setState] = useState<State>(initialState);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
@@ -144,7 +146,13 @@ export function usePriceCheck() {
       const ok = !timedOut && side === s.round.answer;
       const streak = ok ? s.streak + 1 : 0;
       const bestStreak = Math.max(s.bestStreak, streak);
-      const points = ok ? pointsForCorrect(s.round.round, streak) : 0;
+      const points = ok
+        ? pointsForCorrect(
+            s.round.round,
+            streak,
+            streak >= 2 ? streakBonusPct : 0,
+          )
+        : 0;
       const penalty = ok ? 0 : penaltyForWrong(s.round.round);
       const lives = ok ? s.lives : s.lives - 1;
       const feedback: Feedback = {
@@ -161,6 +169,10 @@ export function usePriceCheck() {
         void awardCoins(points).then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
+        void onCorrectCash(setCoinBalanceRef.current);
+        if (streak >= 2 && streakBonusPct > 0) {
+          onGwenStreakProc(streak);
+        }
       } else if (penalty > 0) {
         const balance = profileRef.current?.coins ?? 0;
         const take = Math.min(penalty, Math.max(0, balance));
@@ -184,7 +196,7 @@ export function usePriceCheck() {
         timeLeftMs: 0,
       };
     });
-  }, []);
+  }, [onCorrectCash, onGwenStreakProc, streakBonusPct]);
 
   const guess = useCallback(
     (side: Guess) => {

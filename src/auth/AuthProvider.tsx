@@ -44,6 +44,9 @@ function profileFromGuest(coins: number): Profile {
     accent_color: null,
     aura_unlocked: false,
     aura_card_id: null,
+    owned_hero_ids: [],
+    equipped_hero_id: null,
+    hero_levels: {},
     created_at: now,
     updated_at: now,
   };
@@ -119,6 +122,18 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     showcase_card_ids: Array.isArray(data.showcase_card_ids)
       ? data.showcase_card_ids.map(String)
       : [],
+    owned_hero_ids: Array.isArray(data.owned_hero_ids)
+      ? data.owned_hero_ids.map(String)
+      : [],
+    equipped_hero_id: data.equipped_hero_id
+      ? String(data.equipped_hero_id)
+      : null,
+    hero_levels:
+      data.hero_levels &&
+      typeof data.hero_levels === "object" &&
+      !Array.isArray(data.hero_levels)
+        ? (data.hero_levels as Record<string, number>)
+        : {},
   };
 }
 

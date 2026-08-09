@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 import { useCardCollection } from "./auth/CardCollectionProvider";
 import { useAuth } from "./auth/AuthProvider";
+import { useHeroFx } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
@@ -35,6 +36,7 @@ import {
   resolveFeaturedBonusGame,
   type FeaturedBonusGame,
 } from "./lib/featuredBonus";
+import { HERO_EFFECTS_L1 } from "./lib/heroEffects";
 import {
   pickRewardTowerPack,
   pickRewardTowerPackChoices,
@@ -113,6 +115,9 @@ function UserCollectionPage() {
     avatar: AvatarCrop;
     showcaseCardIds: string[];
     accentColor: string | null;
+    ownedHeroIds: string[];
+    equippedHeroId: string | null;
+    heroLevels: Record<string, number>;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,6 +141,9 @@ function UserCollectionPage() {
           avatar: profile.avatar,
           showcaseCardIds: profile.showcaseCardIds,
           accentColor: profile.accentColor,
+          ownedHeroIds: profile.ownedHeroIds,
+          equippedHeroId: profile.equippedHeroId,
+          heroLevels: profile.heroLevels,
         });
         setLoading(false);
       })
@@ -216,6 +224,7 @@ function LeaderboardPage() {
 function AppShell() {
   const { owned } = useCardCollection();
   const { setCoinBalance } = useAuth();
+  const { equipped, notifyHeroProc } = useHeroFx();
   const navigate = useNavigate();
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
@@ -225,14 +234,25 @@ function AppShell() {
 
   const settleFeaturedBonus = useCallback(
     async (game: FeaturedBonusGame, cleared: boolean) => {
-      const result = resolveFeaturedBonusGame(game, cleared);
+      const result = resolveFeaturedBonusGame(game, cleared, {
+        silasFreezeChance:
+          equipped?.heroId === "silas"
+            ? HERO_EFFECTS_L1.silas.featuredFreezeChance
+            : 0,
+      });
+      if (result.silasFroze) {
+        notifyHeroProc({
+          heroId: "silas",
+          message: "Silas: featured clear frozen",
+        });
+      }
       if (!result.awarded || result.amount <= 0) return;
       const balance = await awardCoins(result.amount);
       if (balance != null) setCoinBalance(balance);
       setBonusToast(`+${result.amount.toLocaleString()} featured clear bonus`);
       window.setTimeout(() => setBonusToast(null), 3200);
     },
-    [setCoinBalance],
+    [equipped?.heroId, notifyHeroProc, setCoinBalance],
   );
 
   const finishRewards = useCallback(

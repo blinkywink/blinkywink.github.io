@@ -28,6 +28,12 @@ export type Profile = {
   aura_unlocked?: boolean | null;
   /** Owned card id whose FX palette is copied onto profile chrome. */
   aura_card_id?: string | null;
+  /** Unlocked shoppable hero ids. */
+  owned_hero_ids?: string[] | null;
+  /** Currently equipped hero id, or null. */
+  equipped_hero_id?: string | null;
+  /** Per-hero levels, e.g. `{ "quincy": 1 }`. */
+  hero_levels?: Record<string, number> | null;
   created_at: string;
   updated_at: string;
 };
@@ -61,6 +67,9 @@ export type Database = {
           accent_color?: string | null;
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
+          owned_hero_ids?: string[] | null;
+          equipped_hero_id?: string | null;
+          hero_levels?: Record<string, number> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -81,6 +90,9 @@ export type Database = {
           accent_color?: string | null;
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
+          owned_hero_ids?: string[] | null;
+          equipped_hero_id?: string | null;
+          hero_levels?: Record<string, number> | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -199,7 +211,26 @@ export type Database = {
           showcase_card_ids: string[] | null;
           accent_color: string | null;
           aura_card_id: string | null;
+          owned_hero_ids: string[] | null;
+          equipped_hero_id: string | null;
+          hero_levels: Record<string, number> | null;
         }[];
+      };
+      buy_hero: {
+        Args: { p_hero_id: string };
+        Returns: {
+          coins: number;
+          owned_hero_ids: string[];
+          hero_levels: Record<string, number>;
+          equipped_hero_id: string | null;
+        };
+      };
+      equip_hero: {
+        Args: { p_hero_id: string | null };
+        Returns: {
+          coins: number;
+          equipped_hero_id: string | null;
+        };
       };
       set_profile_showcase: {
         Args: { p_card_ids: string[] };

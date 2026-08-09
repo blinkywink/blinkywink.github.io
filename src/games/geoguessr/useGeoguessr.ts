@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { maps } from "../../data/maps";
 import type { MapEntity } from "../../data/types";
 import { awardCoins } from "../../lib/awardCoins";
+import { applyHeroDifficulty, useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { preloadImage } from "../../utils/imageProcessing";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -66,10 +67,6 @@ export type GeoguessrState = {
   continueBusy: boolean;
 };
 
-function makeInitialChallenge(): MapChallenge {
-  return createMapChallenge(1, maps);
-}
-
 function buildRunStats(partial: {
   score: number;
   bestStreak: number;
@@ -86,10 +83,13 @@ function buildRunStats(partial: {
   };
 }
 
-function blankBoard(overrides: Partial<GeoguessrState> = {}): GeoguessrState {
+function blankBoard(
+  challenge: MapChallenge,
+  overrides: Partial<GeoguessrState> = {},
+): GeoguessrState {
   return {
     phase: "playing",
-    challenge: makeInitialChallenge(),
+    challenge,
     nextChallenge: null,
     score: 0,
     streak: 0,
@@ -115,7 +115,40 @@ function blankBoard(overrides: Partial<GeoguessrState> = {}): GeoguessrState {
 
 export function useGeoguessr() {
   const { profile, setCoinBalance } = useAuth();
-  const [state, setState] = useState<GeoguessrState>(() => blankBoard());
+  const {
+    equipped,
+    notifyHeroProc,
+    resetRunFlags,
+    streakBonusPct,
+    onCorrectCash,
+    onGwenStreakProc,
+    tryFreeSkip,
+    shouldChurchillClear,
+    tryEtienneBoost,
+  } = useQuizHeroFx();
+
+  const equippedRef = useRef(equipped);
+  equippedRef.current = equipped;
+  const notifyHeroProcRef = useRef(notifyHeroProc);
+  notifyHeroProcRef.current = notifyHeroProc;
+
+  const makeMapChallenge = useCallback(
+    (round: number, recent: string[] = []) => {
+      const raw = createMapChallenge(round, maps, recent);
+      const difficulty = applyHeroDifficulty(
+        raw.difficulty,
+        equippedRef.current,
+        (message, heroId) =>
+          notifyHeroProcRef.current({ heroId, message }),
+      );
+      return { ...raw, difficulty };
+    },
+    [],
+  );
+
+  const [state, setState] = useState<GeoguessrState>(() =>
+    blankBoard(createMapChallenge(1, maps)),
+  );
 
   const recentIds = useRef<string[]>([]);
   const stateRef = useRef(state);
@@ -123,6 +156,14 @@ export function useGeoguessr() {
   const missClearTimer = useRef<number | null>(null);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
+  const runInitialized = useRef(false);
+
+  useEffect(() => {
+    if (runInitialized.current) return;
+    runInitialized.current = true;
+    resetRunFlags();
+    setState((s) => ({ ...s, challenge: makeMapChallenge(1) }));
+  }, [resetRunFlags, makeMapChallenge]);
 
   const preloadChallenge = useCallback(async (c: MapChallenge) => {
     try {
@@ -143,11 +184,7 @@ export function useGeoguessr() {
       const withinMain =
         !state.freePlay && nextRound <= GEOGUESSR_CONFIG.roundsPerRun;
       if (withinMain || state.freePlay) {
-        const next = createMapChallenge(
-          nextRound,
-          maps,
-          recentIds.current,
-        );
+        const next = makeMapChallenge(nextRound, recentIds.current);
         setState((s) =>
           s.nextChallenge ? s : { ...s, nextChallenge: next },
         );
@@ -160,6 +197,7 @@ export function useGeoguessr() {
     state.phase,
     state.freePlay,
     preloadChallenge,
+    makeMapChallenge,
   ]);
 
   useEffect(() => {
@@ -220,7 +258,7 @@ export function useGeoguessr() {
     (s: GeoguessrState, nextRound: number) => {
       const challenge =
         s.nextChallenge ??
-        createMapChallenge(nextRound, maps, recentIds.current);
+        makeMapChallenge(nextRound, recentIds.current);
 
       recentIds.current = [
         ...recentIds.current.slice(-6),
@@ -231,7 +269,7 @@ export function useGeoguessr() {
       const preloadNext =
         s.freePlay || nextRound + 1 <= GEOGUESSR_CONFIG.roundsPerRun;
       if (preloadNext) {
-        nextChallenge = createMapChallenge(nextRound + 1, maps, [
+        nextChallenge = makeMapChallenge(nextRound + 1, [
           ...recentIds.current,
         ]);
         void preloadChallenge(nextChallenge);
@@ -253,7 +291,7 @@ export function useGeoguessr() {
         continueBusy: false,
       }));
     },
-    [preloadChallenge],
+    [preloadChallenge, makeMapChallenge],
   );
 
   const goNext = useCallback(() => {
@@ -314,17 +352,14 @@ export function useGeoguessr() {
       return;
     }
     setCoinBalanceRef.current(balance);
+    resetRunFlags();
 
-    const challenge = createMapChallenge(
-      resumeRound,
-      maps,
-      recentIds.current,
-    );
+    const challenge = makeMapChallenge(resumeRound, recentIds.current);
     recentIds.current = [
       ...recentIds.current.slice(-6),
       challenge.correct.id,
     ];
-    const nextChallenge = createMapChallenge(resumeRound + 1, maps, [
+    const nextChallenge = makeMapChallenge(resumeRound + 1, [
       ...recentIds.current,
     ]);
     void preloadChallenge(challenge);
@@ -351,7 +386,7 @@ export function useGeoguessr() {
       continueError: null,
       lastRun: null,
     }));
-  }, [preloadChallenge, profile?.coins]);
+  }, [preloadChallenge, profile?.coins, makeMapChallenge, resetRunFlags]);
 
   const answer = useCallback((choice: MapEntity) => {
     const s = stateRef.current;
@@ -377,6 +412,7 @@ export function useGeoguessr() {
         streak,
         attemptMult,
         s.challenge.round,
+        streakBonusPct,
       );
       const score = s.score + breakdown.points;
       const correctCount = s.correctCount + 1;
@@ -397,10 +433,15 @@ export function useGeoguessr() {
       void awardCoins(breakdown.points).then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
+      void onCorrectCash(setCoinBalanceRef.current);
+      onGwenStreakProc(streak);
       return;
     }
 
-    const attemptsUsed = s.attemptsUsed + 1;
+    let attemptsUsed = s.attemptsUsed + 1;
+    if (tryEtienneBoost()) {
+      attemptsUsed += 1;
+    }
     const lives = s.lives - 1;
     const eliminatedIds = s.eliminatedIds.includes(choice.id)
       ? s.eliminatedIds
@@ -449,7 +490,12 @@ export function useGeoguessr() {
         guessName: choice.name,
       },
     });
-  }, []);
+  }, [
+    streakBonusPct,
+    onCorrectCash,
+    onGwenStreakProc,
+    tryEtienneBoost,
+  ]);
 
   const skip = useCallback(() => {
     const s = stateRef.current;
@@ -459,7 +505,8 @@ export function useGeoguessr() {
       missClearTimer.current = null;
     }
 
-    const lives = Math.max(0, s.lives - 1);
+    const freeSkip = tryFreeSkip();
+    const lives = freeSkip ? s.lives : Math.max(0, s.lives - 1);
     setState({
       ...s,
       phase: "feedback",
@@ -473,15 +520,24 @@ export function useGeoguessr() {
         guessName: "Skipped",
       },
     });
-  }, []);
+  }, [tryFreeSkip]);
+
+  useEffect(() => {
+    const s = stateRef.current;
+    if (s.phase !== "playing" || !s.challenge) return;
+    if (shouldChurchillClear(s.challenge.round)) {
+      answer(s.challenge.correct);
+    }
+  }, [state.challenge, state.phase, shouldChurchillClear, answer]);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {
       window.clearTimeout(missClearTimer.current);
     }
     recentIds.current = [];
-    setState(blankBoard({ bests: loadBestScores() }));
-  }, []);
+    resetRunFlags();
+    setState(blankBoard(makeMapChallenge(1), { bests: loadBestScores() }));
+  }, [makeMapChallenge, resetRunFlags]);
 
   return {
     state,

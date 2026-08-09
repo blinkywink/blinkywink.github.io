@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { towerEntities } from "../../data/towers";
 import type { TowerEntity } from "../../data/types";
 import { awardCoins } from "../../lib/awardCoins";
+import { applyHeroDifficulty, useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { preloadImage } from "../../utils/imageProcessing";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -66,10 +67,6 @@ export type ZoomedState = {
   continueBusy: boolean;
 };
 
-function makeInitialChallenge(): Challenge {
-  return createChallenge(1, towerEntities);
-}
-
 function buildRunStats(partial: {
   score: number;
   bestStreak: number;
@@ -89,7 +86,7 @@ function buildRunStats(partial: {
 function blankBoard(overrides: Partial<ZoomedState> = {}): ZoomedState {
   return {
     phase: "playing",
-    challenge: makeInitialChallenge(),
+    challenge: overrides.challenge ?? createChallenge(1, towerEntities),
     nextChallenge: null,
     score: 0,
     streak: 0,
@@ -115,7 +112,33 @@ function blankBoard(overrides: Partial<ZoomedState> = {}): ZoomedState {
 
 export function useZoomedGame() {
   const { profile, setCoinBalance } = useAuth();
+  const {
+    equipped,
+    notifyHeroProc,
+    resetRunFlags,
+    streakBonusPct,
+    onCorrectCash,
+    onGwenStreakProc,
+    tryFreeSkip,
+    shouldChurchillClear,
+    tryEtienneBoost,
+  } = useQuizHeroFx();
+
+  const makeChallenge = useCallback(
+    (round: number, recent?: string[]) => {
+      const raw = createChallenge(round, towerEntities, recent);
+      const difficulty = applyHeroDifficulty(
+        raw.difficulty,
+        equipped,
+        (message, heroId) => notifyHeroProc({ heroId, message }),
+      );
+      return { ...raw, difficulty };
+    },
+    [equipped, notifyHeroProc],
+  );
+
   const [state, setState] = useState<ZoomedState>(() => blankBoard());
+  const didApplyHeroInit = useRef(false);
 
   const recentIds = useRef<string[]>([]);
   const stateRef = useRef(state);
@@ -123,6 +146,17 @@ export function useZoomedGame() {
   const missClearTimer = useRef<number | null>(null);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
+
+  useEffect(() => {
+    if (didApplyHeroInit.current) return;
+    didApplyHeroInit.current = true;
+    resetRunFlags();
+    setState((s) =>
+      s.score === 0 && s.answeredCount === 0 && s.challenge?.round === 1
+        ? { ...s, challenge: makeChallenge(1) }
+        : s,
+    );
+  }, [makeChallenge, resetRunFlags]);
 
   const preloadChallenge = useCallback(async (c: Challenge) => {
     try {
@@ -143,11 +177,7 @@ export function useZoomedGame() {
       const withinMain =
         !state.freePlay && nextRound <= ZOOMED_CONFIG.roundsPerRun;
       if (withinMain || state.freePlay) {
-        const next = createChallenge(
-          nextRound,
-          towerEntities,
-          recentIds.current,
-        );
+        const next = makeChallenge(nextRound, recentIds.current);
         setState((s) =>
           s.nextChallenge ? s : { ...s, nextChallenge: next },
         );
@@ -160,6 +190,7 @@ export function useZoomedGame() {
     state.phase,
     state.freePlay,
     preloadChallenge,
+    makeChallenge,
   ]);
 
   useEffect(() => {
@@ -220,7 +251,7 @@ export function useZoomedGame() {
     (s: ZoomedState, nextRound: number) => {
       const challenge =
         s.nextChallenge ??
-        createChallenge(nextRound, towerEntities, recentIds.current);
+        makeChallenge(nextRound, recentIds.current);
 
       recentIds.current = [
         ...recentIds.current.slice(-6),
@@ -231,7 +262,7 @@ export function useZoomedGame() {
       const preloadNext =
         s.freePlay || nextRound + 1 <= ZOOMED_CONFIG.roundsPerRun;
       if (preloadNext) {
-        nextChallenge = createChallenge(nextRound + 1, towerEntities, [
+        nextChallenge = makeChallenge(nextRound + 1, [
           ...recentIds.current,
         ]);
         void preloadChallenge(nextChallenge);
@@ -253,7 +284,7 @@ export function useZoomedGame() {
         continueBusy: false,
       }));
     },
-    [preloadChallenge],
+    [makeChallenge, preloadChallenge],
   );
 
   const goNext = useCallback(() => {
@@ -315,16 +346,14 @@ export function useZoomedGame() {
     }
     setCoinBalanceRef.current(balance);
 
-    const challenge = createChallenge(
-      resumeRound,
-      towerEntities,
-      recentIds.current,
-    );
+    resetRunFlags();
+
+    const challenge = makeChallenge(resumeRound, recentIds.current);
     recentIds.current = [
       ...recentIds.current.slice(-6),
       challenge.correct.id,
     ];
-    const nextChallenge = createChallenge(resumeRound + 1, towerEntities, [
+    const nextChallenge = makeChallenge(resumeRound + 1, [
       ...recentIds.current,
     ]);
     void preloadChallenge(challenge);
@@ -351,7 +380,7 @@ export function useZoomedGame() {
       continueError: null,
       lastRun: null,
     }));
-  }, [preloadChallenge, profile?.coins]);
+  }, [makeChallenge, preloadChallenge, profile?.coins, resetRunFlags]);
 
   const answer = useCallback((choice: TowerEntity) => {
     const s = stateRef.current;
@@ -377,6 +406,7 @@ export function useZoomedGame() {
         streak,
         attemptMult,
         s.challenge.round,
+        streak >= 2 ? streakBonusPct : 0,
       );
       const score = s.score + breakdown.points;
       const correctCount = s.correctCount + 1;
@@ -395,12 +425,19 @@ export function useZoomedGame() {
       });
 
       void awardCoins(breakdown.points).then((balance) => {
-        if (balance != null) setCoinBalanceRef.current(balance);
+        if (balance != null) setCoinBalance(balance);
       });
+      void onCorrectCash(setCoinBalance);
+      if (streak >= 2 && streakBonusPct > 0) {
+        onGwenStreakProc(streak);
+      }
       return;
     }
 
-    const attemptsUsed = s.attemptsUsed + 1;
+    let attemptsUsed = s.attemptsUsed + 1;
+    if (tryEtienneBoost()) {
+      attemptsUsed += 1;
+    }
     const lives = s.lives - 1;
     const eliminatedIds = s.eliminatedIds.includes(choice.id)
       ? s.eliminatedIds
@@ -449,7 +486,13 @@ export function useZoomedGame() {
         guessName: choice.name,
       },
     });
-  }, []);
+  }, [
+    onCorrectCash,
+    onGwenStreakProc,
+    setCoinBalance,
+    streakBonusPct,
+    tryEtienneBoost,
+  ]);
 
   /** Give up on this question — lose a life, reveal, then advance. */
   const skip = useCallback(() => {
@@ -460,7 +503,8 @@ export function useZoomedGame() {
       missClearTimer.current = null;
     }
 
-    const lives = Math.max(0, s.lives - 1);
+    const freeSkip = tryFreeSkip();
+    const lives = freeSkip ? s.lives : Math.max(0, s.lives - 1);
     setState({
       ...s,
       phase: "feedback",
@@ -474,15 +518,26 @@ export function useZoomedGame() {
         guessName: "Skipped",
       },
     });
-  }, []);
+  }, [tryFreeSkip]);
+
+  useEffect(() => {
+    const challenge = state.challenge;
+    if (state.phase !== "playing" || !challenge) return;
+    if (shouldChurchillClear(challenge.round)) {
+      answer(challenge.correct);
+    }
+  }, [state.phase, state.challenge, shouldChurchillClear, answer]);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {
       window.clearTimeout(missClearTimer.current);
     }
     recentIds.current = [];
-    setState(blankBoard({ bests: loadBestScores() }));
-  }, []);
+    resetRunFlags();
+    setState(
+      blankBoard({ bests: loadBestScores(), challenge: makeChallenge(1) }),
+    );
+  }, [makeChallenge, resetRunFlags]);
 
   return {
     state,

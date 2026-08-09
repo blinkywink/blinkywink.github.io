@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import { useHeroFx } from "../../auth/HeroFxProvider";
 import { AnswerReveal } from "../../components/AnswerReveal";
 import { AnswerSearch } from "../../components/AnswerSearch";
 import { ChallengeImage } from "../../components/ChallengeImage";
@@ -18,6 +19,7 @@ type Props = {
 
 export function ZoomedGame({ onBack, onRunEnd }: Props) {
   const { profile } = useAuth();
+  const { equipped } = useHeroFx();
   const {
     state,
     answer,
@@ -174,7 +176,9 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
                 onClick={skip}
                 disabled={searchLocked}
               >
-                Skip (costs a life)
+                {equipped?.heroId === "striker-jones"
+                  ? "Skip (life or free)"
+                  : "Skip (costs a life)"}
               </button>
             </>
           )}

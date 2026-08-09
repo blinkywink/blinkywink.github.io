@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CardCollectionProvider } from "./auth/CardCollectionProvider";
+import { HeroFxProvider } from "./auth/HeroFxProvider";
 import App from "./App";
 import { supabaseConfigured } from "./lib/supabase";
 import "./index.css";
@@ -29,7 +30,9 @@ VITE_SUPABASE_PUBLISHABLE_KEY</pre>
     <StrictMode>
       <AuthProvider>
         <CardCollectionProvider>
-          <App />
+          <HeroFxProvider>
+            <App />
+          </HeroFxProvider>
         </CardCollectionProvider>
       </AuthProvider>
     </StrictMode>,

@@ -164,8 +164,12 @@ export function allCategoryPacks(): PackDef[] {
 }
 
 /** Featured shop row: BTD6 + 3 rotating tower packs. */
-export function featuredShopPacks(dayKey = dayStamp()): PackDef[] {
-  return [btd6Pack(), ...dailyTowerPicks(3, dayKey).map(towerPack)];
+export function featuredShopPacks(
+  dayKey = dayStamp(),
+  rerollSalt = 0,
+): PackDef[] {
+  const key = rerollSalt > 0 ? `${dayKey}:r${rerollSalt}` : dayKey;
+  return [btd6Pack(), ...dailyTowerPicks(3, key).map(towerPack)];
 }
 
 export function shortTowerName(tower: string): string {

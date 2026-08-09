@@ -18,8 +18,13 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { HeroCollectionStrip } from "./HeroCollectionStrip";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
+import {
+  normalizeHeroLevels,
+  normalizeOwnedHeroIds,
+} from "../lib/profileHeroes";
 
 export type CardsOpenOpts = {
   /** Jump straight into a tower page after opening a tower pack. */
@@ -34,6 +39,9 @@ export type CollectionViewer = {
   avatar?: AvatarCrop | null;
   showcaseCardIds?: string[];
   accentColor?: string | null;
+  ownedHeroIds?: string[];
+  equippedHeroId?: string | null;
+  heroLevels?: Record<string, number>;
 };
 
 type Props = {
@@ -112,7 +120,7 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 /** Player collection — owned cards in color, missing ones greyed out. */
 export function CardLab({ onBack, initial, viewer = null }: Props) {
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const { owned: myOwned } = useCardCollection();
@@ -422,6 +430,23 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 )}
               </div>
             ) : null}
+            <HeroCollectionStrip
+              ownedHeroIds={
+                isRemote
+                  ? viewer?.ownedHeroIds
+                  : normalizeOwnedHeroIds(profile?.owned_hero_ids)
+              }
+              equippedHeroId={
+                isRemote
+                  ? viewer?.equippedHeroId
+                  : profile?.equipped_hero_id ?? null
+              }
+              heroLevels={
+                isRemote
+                  ? viewer?.heroLevels
+                  : normalizeHeroLevels(profile?.hero_levels)
+              }
+            />
             {remoteError ? (
               <p className="card-lab__blurb">{remoteError}</p>
             ) : !isRemote ? (

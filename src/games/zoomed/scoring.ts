@@ -23,12 +23,14 @@ export function calculateScore(
   streakAfterCorrect: number,
   attemptMultiplier = 1,
   round = 1,
+  streakBonusPct = 0,
 ): ScoreBreakdown {
   const points = Math.round(
     rewardForCorrect({
       round,
       streakAfter: streakAfterCorrect,
       attemptMultiplier,
+      streakBonusPct,
     }) * ZOOMED_CASH_MULT,
   );
 

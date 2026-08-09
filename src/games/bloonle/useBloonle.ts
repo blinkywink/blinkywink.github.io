@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { bloonleSolveReward } from "../rewards";
 import {
   BLOONLE_CONFIG,
@@ -129,6 +130,7 @@ function makePracticeState(recentSlugs: string[], day: string): State {
 
 export function useBloonle() {
   const { setCoinBalance } = useAuth();
+  const { onCorrectCash } = useQuizHeroFx();
   const [state, setState] = useState<State>(makeDailyState);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
@@ -189,9 +191,10 @@ export function useBloonle() {
       if (reward <= 0) return { awarded: true, reward: 0 };
       const balance = await awardCoins(reward);
       if (balance != null) setCoinBalanceRef.current(balance);
+      void onCorrectCash(setCoinBalanceRef.current);
       return { awarded: true, reward };
     },
-    [],
+    [onCorrectCash],
   );
 
   const submit = useCallback(() => {

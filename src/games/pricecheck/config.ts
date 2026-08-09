@@ -24,10 +24,16 @@ export function sideSizeForRound(round: number): number {
   );
 }
 
-export function pointsForCorrect(round: number, streakAfter: number): number {
+export function pointsForCorrect(
+  round: number,
+  streakAfter: number,
+  streakBonusPct = 0,
+): number {
   return Math.max(
     1,
-    Math.round(rewardForCorrect({ round, streakAfter }) * 0.65),
+    Math.round(
+      rewardForCorrect({ round, streakAfter, streakBonusPct }) * 0.65,
+    ),
   );
 }
 

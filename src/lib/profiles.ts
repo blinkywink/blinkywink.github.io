@@ -6,6 +6,10 @@ import {
 } from "./avatar";
 import { cached, CacheTtl } from "./cache";
 import { normalizeAccentColor } from "./profileCosmetics";
+import {
+  normalizeHeroLevels,
+  normalizeOwnedHeroIds,
+} from "./profileHeroes";
 import { normalizeShowcaseIds } from "./profileShowcase";
 
 export type PublicProfile = {
@@ -14,6 +18,9 @@ export type PublicProfile = {
   avatar: AvatarCrop;
   showcaseCardIds: string[];
   accentColor: string | null;
+  ownedHeroIds: string[];
+  equippedHeroId: string | null;
+  heroLevels: Record<string, number>;
 };
 
 export type ProfileSearchHit = {
@@ -61,6 +68,11 @@ export async function fetchProfileByUsername(
       }),
       showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
       accentColor: normalizeAccentColor(row.accent_color),
+      ownedHeroIds: normalizeOwnedHeroIds(row.owned_hero_ids),
+      equippedHeroId: row.equipped_hero_id
+        ? String(row.equipped_hero_id)
+        : null,
+      heroLevels: normalizeHeroLevels(row.hero_levels),
     };
   });
 }

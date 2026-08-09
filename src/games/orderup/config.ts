@@ -7,8 +7,12 @@ export const ORDER_UP_CONFIG = {
   timerSeconds: 10,
 } as const;
 
-export function pointsForCorrect(round: number, streakAfter: number): number {
-  return rewardForCorrect({ round, streakAfter });
+export function pointsForCorrect(
+  round: number,
+  streakAfter: number,
+  streakBonusPct = 0,
+): number {
+  return rewardForCorrect({ round, streakAfter, streakBonusPct });
 }
 
 /** Hand grows 3 → 4 → 5 as the run progresses. */

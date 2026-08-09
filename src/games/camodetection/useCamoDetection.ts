@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import { CAMO_CONFIG, pointsForCorrect } from "./config";
@@ -136,6 +137,7 @@ function finishRun(
 
 export function useCamoDetection() {
   const { profile, setCoinBalance } = useAuth();
+  const { streakBonusPct, onCorrectCash, onGwenStreakProc } = useQuizHeroFx();
   const [state, setState] = useState<State>(initialState);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
@@ -189,7 +191,13 @@ export function useCamoDetection() {
       const ok = !timedOut && setsEqual(s.picked, s.round.camo);
       const streak = ok ? s.streak + 1 : 0;
       const bestStreak = Math.max(s.bestStreak, streak);
-      const points = ok ? pointsForCorrect(s.round.round, streak) : 0;
+      const points = ok
+        ? pointsForCorrect(
+            s.round.round,
+            streak,
+            streak >= 2 ? streakBonusPct : 0,
+          )
+        : 0;
       const lives = ok ? s.lives : s.lives - 1;
       const feedback: Feedback = {
         correct: ok,
@@ -203,6 +211,10 @@ export function useCamoDetection() {
         void awardCoins(points).then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
+        void onCorrectCash(setCoinBalanceRef.current);
+        if (streak >= 2 && streakBonusPct > 0) {
+          onGwenStreakProc(streak);
+        }
       }
 
       return {
@@ -219,7 +231,7 @@ export function useCamoDetection() {
         flashOn: false,
       };
     });
-  }, []);
+  }, [onCorrectCash, onGwenStreakProc, streakBonusPct]);
 
   const submit = useCallback(() => {
     settle(false);
