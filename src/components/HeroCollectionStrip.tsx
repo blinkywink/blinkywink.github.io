@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -7,12 +8,13 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   heroById,
   heroPortraitForLevel,
   type HeroEntity,
 } from "../data/heroes";
-import { heroLevelT } from "../lib/heroEffects";
+import { heroBlurb, heroLevelT } from "../lib/heroEffects";
 import { heroAccent, heroVisualTier } from "../lib/heroAccents";
 import {
   heroLevelFromProfile,
@@ -53,7 +55,7 @@ export function EquippedHeroPanel({
   );
 }
 
-/** Owned-hero gallery for Collection (read-only display). */
+/** Owned-hero gallery for Collection — click opens view-only focus. */
 export function HeroCollectionShelf({
   ownedHeroIds,
   equippedHeroId,
@@ -75,6 +77,70 @@ export function HeroCollectionShelf({
     () => shoppableHeroes().filter((h) => owned.includes(h.id)),
     [owned],
   );
+  const [focused, setFocused] = useState<HeroEntity | null>(null);
+  const focusLevel = focused
+    ? heroLevelFromProfile(levels, focused.id)
+    : 1;
+
+  useEffect(() => {
+    if (!focused) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setFocused(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [focused]);
+
+  const focusPortal = focused
+    ? createPortal(
+        <div
+          className="card-focus shop-hero-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={focused.name}
+        >
+          <button
+            type="button"
+            className="card-focus__backdrop"
+            aria-label="Close"
+            onClick={() => setFocused(null)}
+          />
+          <div className="card-focus__panel shop-hero-focus__panel">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm card-focus__close"
+              onClick={() => setFocused(null)}
+            >
+              ✕ Close
+            </button>
+            <HeroCardFace
+              hero={focused}
+              level={focusLevel}
+              equipped={equipped === focused.id}
+              size="lg"
+              mode="focus"
+              hideCaption
+            />
+            <h2 className="shop-hero-focus__name">{focused.name}</h2>
+            <p className="shop-hero-focus__blurb">
+              {heroBlurb(focused.id, focusLevel)}
+            </p>
+            <p className="pack-opener__buy-note">
+              Equip / level up on Profile & Shop
+            </p>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
 
   return (
     <section className={`hero-shelf ${className}`.trim()} aria-label="Heroes">
@@ -82,7 +148,7 @@ export function HeroCollectionShelf({
         <p className="hero-shelf__label">Heroes</p>
         <p className="hero-shelf__note">
           {heroes.length
-            ? `${heroes.length} owned · equip on Profile`
+            ? `${heroes.length} owned · tap to view · equip on Profile`
             : "Unlock heroes in the Shop"}
         </p>
       </div>
@@ -99,11 +165,13 @@ export function HeroCollectionShelf({
                 level={level}
                 equipped={equipped === hero.id}
                 mode="preview"
+                onSelect={() => setFocused(hero)}
               />
             );
           })}
         </div>
       )}
+      {focusPortal}
     </section>
   );
 }
@@ -114,7 +182,7 @@ type FaceProps = {
   equipped?: boolean;
   hideLevel?: boolean;
   hideCaption?: boolean;
-  /** preview = shelf; focus = modal with tilt + stronger FX */
+  /** preview = shelf (static VFX); focus = fullscreen with live FX */
   mode?: "preview" | "focus";
   size?: "sm" | "md" | "lg";
   footer?: ReactNode;
@@ -141,6 +209,8 @@ export function HeroCardFace({
   const rafRef = useRef<number | null>(null);
   const [active, setActive] = useState(false);
   const interactive = mode === "focus";
+  /** Animated layers only in fullscreen — keeps shelves cheap. */
+  const liveFx = mode === "focus";
 
   const style = {
     ["--hero-power" as string]: String(power),
@@ -211,6 +281,7 @@ export function HeroCardFace({
         `hero-card--${size}`,
         `hero-card--${mode}`,
         `hero-card--tier-${tier}`,
+        liveFx ? "hero-card--live-fx" : "hero-card--static-fx",
         equipped ? "is-equipped" : "",
         hideCaption ? "hero-card--plate-only" : "",
         active ? "is-tilting" : "",
@@ -220,32 +291,35 @@ export function HeroCardFace({
       style={style}
       data-tier={tier}
     >
-      <div className="hero-card__plate" aria-hidden>
-        <span className="hero-card__glow" />
-        <span className="hero-card__shine" />
-        <span className="hero-card__holo" />
-        <span className="hero-card__vfx hero-card__vfx--drift" />
-        <span className="hero-card__vfx hero-card__vfx--sweep" />
-        <span className="hero-card__vfx hero-card__vfx--orbs" />
-        <span className="hero-card__vfx hero-card__vfx--veins" />
-        <span className="hero-card__vfx hero-card__vfx--spark" />
-        <span className="hero-card__vfx hero-card__vfx--ultra" />
-        <span className="hero-card__frame" />
+      <div className="hero-card__plate">
+        <span className="hero-card__glow" aria-hidden />
+        <span className="hero-card__shine" aria-hidden />
+        <span className="hero-card__holo" aria-hidden />
+        {liveFx ? (
+          <>
+            <span className="hero-card__vfx hero-card__vfx--drift" aria-hidden />
+            <span className="hero-card__vfx hero-card__vfx--sweep" aria-hidden />
+            <span className="hero-card__vfx hero-card__vfx--orbs" aria-hidden />
+            <span className="hero-card__vfx hero-card__vfx--veins" aria-hidden />
+            <span className="hero-card__vfx hero-card__vfx--spark" aria-hidden />
+            <span className="hero-card__vfx hero-card__vfx--ultra" aria-hidden />
+          </>
+        ) : null}
+        <span className="hero-card__frame" aria-hidden />
         <img
           src={heroPortraitForLevel(hero, level)}
           alt=""
           className="hero-card__art"
+          aria-hidden
         />
-        {!hideLevel ? (
-          <span className="hero-card__lvl">Lv {level}</span>
-        ) : null}
+        <header className="hero-card__head">
+          <h2 className="hero-card__name">{hero.name}</h2>
+          {!hideLevel ? (
+            <p className="hero-card__lvl">Lv {level}</p>
+          ) : null}
+        </header>
         {equipped ? <span className="hero-card__badge">Equipped</span> : null}
       </div>
-      {!hideCaption ? (
-        <div className="hero-card__body">
-          <strong className="hero-card__name">{hero.name}</strong>
-        </div>
-      ) : null}
       {footer}
     </article>
   );
@@ -255,7 +329,13 @@ export function HeroCardFace({
   return (
     <div
       ref={sceneRef}
-      className={`hero-card-scene hero-card-scene--${mode}`}
+      className={[
+        "hero-card-scene",
+        `hero-card-scene--${mode}`,
+        onSelect ? "hero-card-scene--selectable" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onPointerMove={interactive ? onMove : undefined}
       onPointerLeave={interactive ? resetTilt : undefined}
       onClick={onSelect}

@@ -4,6 +4,8 @@ import type { TowerEntity } from "../data/types";
 import { towerIdSlug } from "./pathCombos";
 
 export const PACK_SIZE = 10;
+/** Tower packs from clearing a game / bonus pick — smaller than shop packs. */
+export const REWARD_PACK_SIZE = 5;
 export const BTD6_PACK_ART = "/images/ui/monkey-pack.jpg";
 
 export const CATEGORY_ORDER = [
@@ -135,7 +137,9 @@ export function pickRewardTowerPack(
   excludeTowers?: ReadonlySet<string>,
 ): PackDef | null {
   const bag = shuffleInPlace(allTowerPacks(excludeTowers));
-  return bag[0] ?? null;
+  const pack = bag[0];
+  if (!pack) return null;
+  return { ...pack, cardCount: REWARD_PACK_SIZE };
 }
 
 /** Up to `count` random tower packs (for bonus pick-one). */
@@ -144,7 +148,9 @@ export function pickRewardTowerPackChoices(
   count = 3,
   excludeTowers?: ReadonlySet<string>,
 ): PackDef[] {
-  return shuffleInPlace(allTowerPacks(excludeTowers)).slice(0, count);
+  return shuffleInPlace(allTowerPacks(excludeTowers))
+    .slice(0, count)
+    .map((pack) => ({ ...pack, cardCount: REWARD_PACK_SIZE }));
 }
 
 export function categoryPack(category: TowerCategory): PackDef {

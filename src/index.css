@@ -10202,6 +10202,7 @@ button.trade-offer-card:hover:not(:disabled) {
   border-radius: calc(22px * 0.42);
   overflow: hidden;
   isolation: isolate;
+  container-type: inline-size;
   border: 1px solid
     color-mix(in srgb, var(--hero-primary) 48%, rgba(255, 255, 255, 0.16));
   box-shadow:
@@ -10396,11 +10397,11 @@ button.trade-offer-card:hover:not(:disabled) {
   box-shadow: inset 0 0 0 1px transparent;
 }
 
-/* Tier 1+: drifting light wash */
-.hero-card--tier-1 .hero-card__vfx--drift,
-.hero-card--tier-2 .hero-card__vfx--drift,
-.hero-card--tier-3 .hero-card__vfx--drift,
-.hero-card--tier-4 .hero-card__vfx--drift {
+/* Tier 1+: drifting light wash — fullscreen focus only */
+.hero-card--live-fx.hero-card--tier-1 .hero-card__vfx--drift,
+.hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--drift,
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--drift,
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--drift {
   opacity: 0.7;
   background:
     radial-gradient(
@@ -10418,9 +10419,9 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 /* Tier 2+: diagonal energy sweep */
-.hero-card--tier-2 .hero-card__vfx--sweep,
-.hero-card--tier-3 .hero-card__vfx--sweep,
-.hero-card--tier-4 .hero-card__vfx--sweep {
+.hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--sweep,
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--sweep,
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--sweep {
   opacity: 0.85;
   background: linear-gradient(
     118deg,
@@ -10435,9 +10436,9 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 /* Tier 2+: floating orb dots */
-.hero-card--tier-2 .hero-card__vfx--orbs,
-.hero-card--tier-3 .hero-card__vfx--orbs,
-.hero-card--tier-4 .hero-card__vfx--orbs {
+.hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--orbs,
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--orbs,
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--orbs {
   opacity: 1;
   background:
     radial-gradient(circle at 22% 28%, var(--hero-tertiary) 0 2px, transparent 3px),
@@ -10450,8 +10451,8 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 /* Tier 3+: crackling vein network */
-.hero-card--tier-3 .hero-card__vfx--veins,
-.hero-card--tier-4 .hero-card__vfx--veins {
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--veins,
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--veins {
   opacity: 0.75;
   background:
     linear-gradient(
@@ -10478,8 +10479,8 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 /* Tier 3+: spark pulse */
-.hero-card--tier-3 .hero-card__vfx--spark,
-.hero-card--tier-4 .hero-card__vfx--spark {
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--spark,
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--spark {
   opacity: 0.9;
   background:
     radial-gradient(circle at 18% 62%, white 0 1px, transparent 2px),
@@ -10503,8 +10504,8 @@ button.trade-offer-card:hover:not(:disabled) {
     inset 0 0 18px color-mix(in srgb, var(--hero-secondary) 22%, transparent);
 }
 
-/* Tier 4 ultra overlay */
-.hero-card--tier-4 .hero-card__vfx--ultra {
+/* Tier 4 ultra overlay — focus only */
+.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--ultra {
   opacity: 1;
   background:
     conic-gradient(
@@ -10523,6 +10524,9 @@ button.trade-offer-card:hover:not(:disabled) {
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--hero-tertiary) 75%, white),
     inset 0 0 22px color-mix(in srgb, var(--hero-primary) 30%, transparent);
+}
+
+.hero-card--live-fx.hero-card--tier-4 .hero-card__frame {
   animation: hero-vfx-frame-pulse 2.4s ease-in-out infinite;
 }
 
@@ -10593,50 +10597,70 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .hero-card__art {
   position: absolute;
-  inset: 8% 6% 14%;
+  inset: 22% 6% 10%;
   width: auto;
   height: auto;
   max-width: 88%;
-  max-height: 78%;
+  max-height: 68%;
   margin: auto;
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45));
   z-index: 4;
 }
 
-.hero-card__lvl {
+/* Tower-style title block — scales with card width via cqi */
+.hero-card__head {
   position: absolute;
-  left: 0.4rem;
-  bottom: 0.4rem;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 6;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  color: #1a1408;
-  background: color-mix(in srgb, var(--hero-primary) 78%, var(--hero-tertiary));
+  padding: 6.5cqi 7cqi 14cqi;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 20, 0.82) 0%,
+    rgba(8, 12, 20, 0.4) 62%,
+    transparent 100%
+  );
+  text-align: left;
+  pointer-events: none;
 }
 
-.hero-card--tier-3 .hero-card__lvl,
-.hero-card--tier-4 .hero-card__lvl {
-  color: #0a0610;
-  background: linear-gradient(
-    115deg,
-    var(--hero-primary),
-    var(--hero-tertiary) 55%,
-    var(--hero-secondary)
-  );
+.hero-card__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 11cqi;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: #fff8e8;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.hero-card__lvl {
+  margin: 0.2em 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 5.8cqi;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: rgba(255, 248, 232, 0.82);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .hero-card__badge {
   position: absolute;
-  top: 0.4rem;
-  right: 0.35rem;
+  top: auto;
+  bottom: 5cqi;
+  right: 5cqi;
   z-index: 6;
-  padding: 0.12rem 0.35rem;
+  padding: 1.6cqi 3.2cqi;
   border-radius: 6px;
-  font-size: 0.58rem;
+  font-size: 4.6cqi;
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -10645,20 +10669,8 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .hero-card__body {
-  display: grid;
-  gap: 0.1rem;
-  text-align: center;
+  display: none;
 }
-
-.hero-card__name {
-  font-size: 0.82rem;
-  font-weight: 850;
-  line-height: 1.15;
-  color: #f0f0f4;
-}
-
-.hero-card--md .hero-card__name,
-.hero-card--lg .hero-card__name { font-size: 0.95rem; }
 
 .hero-card__footer {
   display: grid;
@@ -10676,21 +10688,21 @@ button.trade-offer-card:hover:not(:disabled) {
 .equipped-hero {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  margin: 0.55rem 0 0.15rem;
-  padding: 0.28rem 0.65rem 0.28rem 0.28rem;
+  gap: 0.7rem;
+  margin: 0.7rem 0 0.2rem;
+  padding: 0.42rem 1rem 0.42rem 0.42rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
   color: rgba(240, 240, 244, 0.72);
-  font-size: 0.82rem;
+  font-size: 1.23rem;
   font-weight: 650;
   line-height: 1.2;
 }
 
 .equipped-hero__img {
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 2.35rem;
+  height: 2.35rem;
   object-fit: contain;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.25);
@@ -10702,25 +10714,31 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .equipped-hero__lvl {
-  margin-left: 0.35rem;
+  margin-left: 0.5rem;
   color: rgba(240, 200, 74, 0.88);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-/* Card Collection — owned heroes in a horizontal scroll row */
+/* Card Collection — owned heroes in a centered horizontal row */
 .hero-shelf {
-  margin: 0.85rem 0 0.35rem;
+  margin: 0.85rem auto 0.35rem;
   width: 100%;
+  max-width: 100%;
+  display: grid;
+  justify-items: center;
 }
 
 .hero-shelf__head {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem 1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
   margin-bottom: 0.55rem;
+  text-align: center;
+  width: 100%;
 }
 
 .hero-shelf__label {
@@ -10737,6 +10755,7 @@ button.trade-offer-card:hover:not(:disabled) {
   font-size: 0.85rem;
   font-weight: 650;
   color: rgba(240, 240, 244, 0.58);
+  text-align: center;
 }
 
 .hero-shelf__row {
@@ -10744,10 +10763,12 @@ button.trade-offer-card:hover:not(:disabled) {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
+  justify-content: center;
   gap: 0.85rem;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.15rem 0.1rem 0.55rem;
+  width: 100%;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
@@ -10759,6 +10780,16 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .hero-shelf__row .hero-card {
   width: 6.5rem;
+}
+
+.hero-card-scene--selectable {
+  cursor: pointer;
+}
+
+.hero-card-scene--selectable:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--hero-primary, #f0c84a) 70%, white);
+  outline-offset: 4px;
+  border-radius: 10px;
 }
 
 .profile-heroes { margin-top: 1.5rem; }
