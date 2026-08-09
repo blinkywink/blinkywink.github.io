@@ -1,5 +1,6 @@
 import type { AvatarCrop } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
+import { MonkeyCard } from "./MonkeyCard";
 
 type Props = {
   crop: AvatarCrop | null | undefined;
@@ -8,7 +9,7 @@ type Props = {
   alt?: string;
 };
 
-/** Circular PFP from a card portrait + stored crop. Falls back to person icon. */
+/** Circular PFP cropping a real MonkeyCard (not just the tower portrait). */
 export function UserAvatar({
   crop,
   size = 36,
@@ -16,9 +17,8 @@ export function UserAvatar({
   alt = "",
 }: Props) {
   const card = crop?.cardId ? cardSpecById(crop.cardId) : null;
-  const src = card?.entity.image;
 
-  if (!src || !crop?.cardId) {
+  if (!card || !crop?.cardId) {
     return (
       <span
         className={`user-avatar user-avatar--fallback ${className}`.trim()}
@@ -46,9 +46,10 @@ export function UserAvatar({
     );
   }
 
-  const zoom = crop.zoom;
-  const x = crop.x;
-  const y = crop.y;
+  const previewW = Math.max(Math.round(size * 1.45), 52);
+  const previewH = Math.round((previewW * 3.5) / 2.5);
+  const previewScale = previewW / 400;
+  const lite = size < 100;
 
   return (
     <span
@@ -57,16 +58,28 @@ export function UserAvatar({
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
     >
-      <img
-        src={src}
-        alt=""
-        draggable={false}
+      <span
+        className="user-avatar__card"
         style={{
-          transform: `translate(-50%, -50%) scale(${zoom})`,
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
+          ["--card-face-w" as string]: "400px",
+          ["--card-preview-w" as string]: `${previewW}px`,
+          ["--card-preview-scale" as string]: String(previewScale),
+          ["--card-preview-h" as string]: `${previewH}px`,
+          width: previewW,
+          height: previewH,
+          left: `${crop.x * 100}%`,
+          top: `${crop.y * 100}%`,
+          transform: `translate(-50%, -50%) scale(${crop.zoom})`,
         }}
-      />
+      >
+        <MonkeyCard
+          entity={card.entity}
+          pathLevels={card.pathLevels}
+          mode="preview"
+          owned
+          staticArt={lite}
+        />
+      </span>
     </span>
   );
 }

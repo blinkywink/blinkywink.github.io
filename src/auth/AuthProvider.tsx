@@ -34,9 +34,9 @@ function profileFromGuest(coins: number): Profile {
     monkey_money: 0,
     last_daily_claim: null,
     avatar_card_id: null,
-    avatar_zoom: 1.35,
+    avatar_zoom: 1.25,
     avatar_x: 0.5,
-    avatar_y: 0.42,
+    avatar_y: 0.38,
     created_at: now,
     updated_at: now,
   };
@@ -96,9 +96,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
       ? String(data.last_daily_claim).slice(0, 10)
       : null,
     avatar_card_id: data.avatar_card_id ?? null,
-    avatar_zoom: Number(data.avatar_zoom ?? 1.35),
+    avatar_zoom: Number(data.avatar_zoom ?? 1.25),
     avatar_x: Number(data.avatar_x ?? 0.5),
-    avatar_y: Number(data.avatar_y ?? 0.42),
+    avatar_y: Number(data.avatar_y ?? 0.38),
   };
 }
 

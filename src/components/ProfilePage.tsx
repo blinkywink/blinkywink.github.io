@@ -5,6 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
@@ -15,23 +16,21 @@ import {
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "../lib/avatar";
-import {
-  allCardSpecs,
-  matchesCardQuery,
-} from "../lib/cardCatalog";
+import { cardSpecById } from "../lib/cardCatalog";
+import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import { collectionPath, userCollectionPath } from "../lib/routes";
 import { GameHeader } from "./GameHeader";
-import { MonkeyCard } from "./MonkeyCard";
+import { OwnedCardPicker } from "./OwnedCardPicker";
 import { UserAvatar } from "./UserAvatar";
 
-type Step = "home" | "pick" | "crop";
+type EditorStep = "pick" | "crop";
 
 export function ProfilePage() {
   const { ready, user, profile, isGuest, refreshProfile } = useAuth();
   const { owned } = useCardCollection();
-  const [step, setStep] = useState<Step>("home");
-  const [query, setQuery] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorStep, setEditorStep] = useState<EditorStep>("pick");
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,16 +41,70 @@ export function ProfilePage() {
     [profile],
   );
 
-  useEffect(() => {
-    if (step === "home") setDraft(saved);
-  }, [saved, step]);
+  const pickSelected = useMemo(
+    () => new Set(draft.cardId ? [draft.cardId] : []),
+    [draft.cardId],
+  );
 
-  const ownedCards = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allCardSpecs().filter(
-      (c) => owned.has(c.id) && matchesCardQuery(c, q),
-    );
-  }, [owned, query]);
+  const draftCard = draft.cardId ? cardSpecById(draft.cardId) : null;
+
+  useEffect(() => {
+    if (!editorOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) closeEditor();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [editorOpen, busy]);
+
+  function openEditor() {
+    setError(null);
+    setStatus(null);
+    setDraft(saved.cardId ? { ...saved } : { ...DEFAULT_AVATAR_CROP });
+    setEditorStep(saved.cardId ? "crop" : "pick");
+    setEditorOpen(true);
+  }
+
+  function closeEditor() {
+    if (busy) return;
+    setEditorOpen(false);
+    setError(null);
+  }
+
+  async function onSet() {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await setProfileAvatar(normalizeAvatarCrop(draft));
+      await refreshProfile();
+      setStatus("Profile picture updated.");
+      setEditorOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save.");
+    }
+    setBusy(false);
+  }
+
+  async function onClear() {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await setProfileAvatar(DEFAULT_AVATAR_CROP);
+      await refreshProfile();
+      setStatus("Profile picture removed.");
+      setEditorOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not clear.");
+    }
+    setBusy(false);
+  }
 
   if (!ready) {
     return (
@@ -68,189 +121,222 @@ export function ProfilePage() {
     return <Navigate to="/" replace />;
   }
 
-  async function onSet() {
-    setBusy(true);
-    setError(null);
-    setStatus(null);
-    try {
-      await setProfileAvatar(normalizeAvatarCrop(draft));
-      await refreshProfile();
-      setStatus("Profile picture updated.");
-      setStep("home");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
-    }
-    setBusy(false);
-  }
+  const editor = editorOpen
+    ? createPortal(
+        <div className="pfp-editor" role="dialog" aria-modal="true" aria-labelledby="pfp-editor-title">
+          <button
+            type="button"
+            className="pfp-editor__backdrop"
+            aria-label="Close"
+            disabled={busy}
+            onClick={closeEditor}
+          />
+          <div className="pfp-editor__panel">
+            <header className="pfp-editor__header">
+              <div>
+                <p className="pfp-editor__eyebrow">Profile picture</p>
+                <h2 id="pfp-editor-title">
+                  {editorStep === "pick" ? "Choose a card" : "Frame your card"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="pfp-editor__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeEditor}
+              >
+                ×
+              </button>
+            </header>
 
-  async function onClear() {
-    setBusy(true);
-    setError(null);
-    setStatus(null);
-    try {
-      await setProfileAvatar(DEFAULT_AVATAR_CROP);
-      await refreshProfile();
-      setStatus("Profile picture removed.");
-      setStep("home");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not clear.");
-    }
-    setBusy(false);
-  }
+            <ol className="pfp-editor__steps" aria-label="Steps">
+              <li className={editorStep === "pick" ? "is-active" : "is-done"}>
+                <span>1</span> Card
+              </li>
+              <li className={editorStep === "crop" ? "is-active" : ""}>
+                <span>2</span> Crop
+              </li>
+            </ol>
+
+            {error ? (
+              <p className="profile-banner profile-banner--err">{error}</p>
+            ) : null}
+
+            {editorStep === "pick" ? (
+              <div className="pfp-editor__body pfp-editor__body--pick">
+                <p className="pfp-editor__hint">
+                  Pick any card you own. You’ll crop it next.
+                </p>
+                <OwnedCardPicker
+                  owned={owned}
+                  selectedIds={pickSelected}
+                  onToggle={(cardId) => {
+                    setDraft({
+                      cardId,
+                      zoom: DEFAULT_AVATAR_CROP.zoom,
+                      x: DEFAULT_AVATAR_CROP.x,
+                      y: DEFAULT_AVATAR_CROP.y,
+                    });
+                    setEditorStep("crop");
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="pfp-editor__body pfp-editor__body--crop">
+                <div className="pfp-editor__crop-layout">
+                  <CropEditor crop={draft} onChange={setDraft} />
+
+                  <aside className="pfp-editor__side">
+                    {draftCard ? (
+                      <div className="pfp-editor__card-meta">
+                        <p className="pfp-editor__card-name">
+                          {draftCard.entity.name}
+                        </p>
+                        <p className="pfp-editor__card-path">
+                          {draftCard.isParagon
+                            ? "Paragon"
+                            : formatPathLevels(draftCard.pathLevels)}{" "}
+                          · {draftCard.tower}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <div className="pfp-editor__previews">
+                      <p>How it looks</p>
+                      <div className="pfp-editor__preview-row">
+                        <div>
+                          <UserAvatar crop={draft} size={56} />
+                          <span>Header</span>
+                        </div>
+                        <div>
+                          <UserAvatar crop={draft} size={44} />
+                          <span>Board</span>
+                        </div>
+                        <div>
+                          <UserAvatar crop={draft} size={28} />
+                          <span>Small</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pfp-editor__side-actions">
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        disabled={busy}
+                        onClick={() => setEditorStep("pick")}
+                      >
+                        Different card
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        disabled={busy || !draft.cardId}
+                        onClick={() =>
+                          setDraft((d) => ({
+                            ...d,
+                            zoom: DEFAULT_AVATAR_CROP.zoom,
+                            x: DEFAULT_AVATAR_CROP.x,
+                            y: DEFAULT_AVATAR_CROP.y,
+                          }))
+                        }
+                      >
+                        Reset crop
+                      </button>
+                    </div>
+                  </aside>
+                </div>
+              </div>
+            )}
+
+            <footer className="pfp-editor__footer">
+              {editorStep === "crop" ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busy}
+                    onClick={() => setEditorStep("pick")}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={busy || !draft.cardId}
+                    onClick={() => void onSet()}
+                  >
+                    {busy ? "Saving…" : "Set picture"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  disabled={busy}
+                  onClick={closeEditor}
+                >
+                  Cancel
+                </button>
+              )}
+            </footer>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
 
   return (
     <div className="profile-page">
       <GameHeader title="PROFILE" icon="" />
       <main className="profile-main">
-        {error ? (
-          <p className="profile-banner profile-banner--err">{error}</p>
-        ) : null}
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
         ) : null}
 
-        {step === "home" ? (
-          <section className="profile-home">
-            <UserAvatar crop={saved} size={112} alt={`${user.username} avatar`} />
-            <div className="profile-home__meta">
-              <h2>{user.username}</h2>
-              <p>Pick one of your cards, crop it, and use it as your PFP.</p>
-              <div className="profile-home__actions">
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={() => {
-                    setError(null);
-                    setStatus(null);
-                    setQuery("");
-                    setDraft(saved.cardId ? saved : DEFAULT_AVATAR_CROP);
-                    setStep("pick");
-                  }}
-                >
-                  {saved.cardId ? "Change picture" : "Set picture"}
-                </button>
-                {saved.cardId ? (
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    disabled={busy}
-                    onClick={() => void onClear()}
-                  >
-                    Remove
-                  </button>
-                ) : null}
-                <Link className="btn btn--secondary" to={collectionPath()}>
-                  My cards
-                </Link>
-                <Link
-                  className="btn btn--ghost"
-                  to={userCollectionPath(user.username)}
-                >
-                  Public page
-                </Link>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {step === "pick" ? (
-          <section className="profile-pick">
-            <div className="profile-step-bar">
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
-                onClick={() => setStep("home")}
-              >
-                ← Back
-              </button>
-              <h2>Choose a card</h2>
-            </div>
-            <label className="profile-search">
-              <span>Search your cards</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Tower, path, name…"
-                autoComplete="off"
-                autoFocus
-              />
-            </label>
-            {ownedCards.length === 0 ? (
-              <p className="profile-empty">No matching owned cards.</p>
-            ) : (
-              <div className="profile-pick-grid">
-                {ownedCards.slice(0, 80).map((card) => (
-                  <button
-                    key={card.id}
-                    type="button"
-                    className={`profile-pick-card${draft.cardId === card.id ? " is-selected" : ""}`}
-                    onClick={() => {
-                      setDraft({
-                        cardId: card.id,
-                        zoom: DEFAULT_AVATAR_CROP.zoom,
-                        x: DEFAULT_AVATAR_CROP.x,
-                        y: DEFAULT_AVATAR_CROP.y,
-                      });
-                      setStep("crop");
-                    }}
-                  >
-                    <MonkeyCard
-                      entity={card.entity}
-                      pathLevels={card.pathLevels}
-                      mode="preview"
-                      owned
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : null}
-
-        {step === "crop" && draft.cardId ? (
-          <section className="profile-crop">
-            <div className="profile-step-bar">
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
-                onClick={() => setStep("pick")}
-              >
-                ← Cards
-              </button>
-              <h2>Crop & zoom</h2>
-            </div>
-            <p className="profile-crop__hint">
-              Drag to reposition. Use the slider to zoom, then press Set.
+        <section className="profile-home">
+          <div className="profile-home__avatar-wrap">
+            <UserAvatar crop={saved} size={140} alt={`${user.username} avatar`} />
+          </div>
+          <div className="profile-home__meta">
+            <h2>{user.username}</h2>
+            <p>
+              Your profile picture is a cropped card from your collection.
+              Other players see it on the leaderboard and marketplace.
             </p>
-            <CropEditor crop={draft} onChange={setDraft} />
-            <div className="profile-crop__preview-row">
-              <UserAvatar crop={draft} size={48} />
-              <UserAvatar crop={draft} size={36} />
-              <UserAvatar crop={draft} size={28} />
-              <span>Header previews</span>
-            </div>
             <div className="profile-home__actions">
               <button
                 type="button"
                 className="btn btn--primary"
-                disabled={busy}
-                onClick={() => void onSet()}
+                onClick={openEditor}
               >
-                {busy ? "Saving…" : "Set picture"}
+                {saved.cardId ? "Change picture" : "Set picture"}
               </button>
-              <button
-                type="button"
+              {saved.cardId ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  disabled={busy}
+                  onClick={() => void onClear()}
+                >
+                  Remove
+                </button>
+              ) : null}
+              <Link className="btn btn--secondary" to={collectionPath()}>
+                My cards
+              </Link>
+              <Link
                 className="btn btn--ghost"
-                disabled={busy}
-                onClick={() => setStep("home")}
+                to={userCollectionPath(user.username)}
               >
-                Cancel
-              </button>
+                Public page
+              </Link>
             </div>
-          </section>
-        ) : null}
+          </div>
+        </section>
       </main>
+      {editor}
     </div>
   );
 }
@@ -269,9 +355,11 @@ function CropEditor({
     px: number;
     py: number;
   } | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
     drag.current = {
       x: crop.x,
       y: crop.y,
@@ -297,36 +385,72 @@ function CropEditor({
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
     drag.current = null;
+    setDragging(false);
+  }
+
+  function nudgeZoom(delta: number) {
+    onChange({
+      ...crop,
+      zoom: clampAvatarZoom(crop.zoom + delta),
+    });
   }
 
   return (
     <div className="avatar-crop">
       <div
         ref={stageRef}
-        className="avatar-crop__stage"
+        className={`avatar-crop__stage${dragging ? " is-dragging" : ""}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <UserAvatar crop={crop} size={220} className="avatar-crop__live" />
+        <UserAvatar crop={crop} size={300} className="avatar-crop__live" />
+        <div className="avatar-crop__ring" aria-hidden />
+        {!dragging ? (
+          <p className="avatar-crop__drag-hint">Drag to move</p>
+        ) : null}
       </div>
-      <label className="avatar-crop__zoom">
-        <span>Zoom</span>
-        <input
-          type="range"
-          min={1}
-          max={3.5}
-          step={0.05}
-          value={crop.zoom}
-          onChange={(e) =>
-            onChange({
-              ...crop,
-              zoom: clampAvatarZoom(Number(e.target.value)),
-            })
-          }
-        />
-      </label>
+
+      <div className="avatar-crop__zoom">
+        <div className="avatar-crop__zoom-head">
+          <span>Zoom</span>
+          <span className="avatar-crop__zoom-val">
+            {crop.zoom.toFixed(2)}×
+          </span>
+        </div>
+        <div className="avatar-crop__zoom-row">
+          <button
+            type="button"
+            className="avatar-crop__zoom-btn"
+            aria-label="Zoom out"
+            onClick={() => nudgeZoom(-0.1)}
+          >
+            −
+          </button>
+          <input
+            type="range"
+            min={1}
+            max={3.5}
+            step={0.05}
+            value={crop.zoom}
+            onChange={(e) =>
+              onChange({
+                ...crop,
+                zoom: clampAvatarZoom(Number(e.target.value)),
+              })
+            }
+          />
+          <button
+            type="button"
+            className="avatar-crop__zoom-btn"
+            aria-label="Zoom in"
+            onClick={() => nudgeZoom(0.1)}
+          >
+            +
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

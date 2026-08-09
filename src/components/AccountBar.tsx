@@ -198,7 +198,7 @@ export function AccountBar() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <UserAvatar crop={avatar} size={32} />
+            <UserAvatar crop={avatar} size={36} />
           </button>
           {menuOpen ? (
             <div className="account-menu__dropdown" role="menu">

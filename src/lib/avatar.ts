@@ -9,9 +9,9 @@ export type AvatarCrop = {
 
 export const DEFAULT_AVATAR_CROP: AvatarCrop = {
   cardId: null,
-  zoom: 1.35,
+  zoom: 1.25,
   x: 0.5,
-  y: 0.42,
+  y: 0.38,
 };
 
 export function clampAvatarZoom(n: number): number {

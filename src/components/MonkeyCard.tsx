@@ -30,6 +30,8 @@ type Props = {
   /** Soft highlight after unlocking from a pack. */
   highlight?: boolean;
   onSelect?: () => void;
+  /** Skip canvas visualizer (tiny avatars / dense lists). */
+  staticArt?: boolean;
 };
 
 const accents = cardAccents as unknown as Record<string, Accent>;
@@ -163,6 +165,7 @@ export function MonkeyCard({
   owned = true,
   highlight = false,
   onSelect,
+  staticArt = false,
 }: Props) {
   const isPreview = mode === "preview";
   const locked = !owned;
@@ -176,7 +179,7 @@ export function MonkeyCard({
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
-  const visualizer = usesVisualizer(tier);
+  const visualizer = usesVisualizer(tier) && !staticArt;
   const holo = usesHoloFx(tier) && !isPreview;
 
   const pathIcons = useMemo(() => {

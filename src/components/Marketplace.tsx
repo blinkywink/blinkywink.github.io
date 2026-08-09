@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
-import {
-  allCardSpecs,
-  cardSpecById,
-  matchesCardQuery,
-} from "../lib/cardCatalog";
+import { cardSpecById, matchesCardQuery } from "../lib/cardCatalog";
 import {
   buyListing,
   cancelListing,
@@ -16,8 +12,10 @@ import {
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
 import { userCollectionPath } from "../lib/routes";
+import { CardChip } from "./CardChip";
 import { GameHeader } from "./GameHeader";
 import { MonkeyCard } from "./MonkeyCard";
+import { OwnedCardPicker } from "./OwnedCardPicker";
 import { UserAvatar } from "./UserAvatar";
 
 type Tab = "browse" | "sell" | "mine";
@@ -157,18 +155,12 @@ export function Marketplace({ onBack: _onBack }: Props) {
     return sorted;
   }, [listings, query, towerFilter, sortKey]);
 
-  const ownedCards = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allCardSpecs().filter((c) => {
-      if (!owned.has(c.id)) return false;
-      return matchesCardQuery(c, q);
-    });
-  }, [owned, query]);
-
   const myListings = useMemo(() => {
     const mine = user ? listings.filter((l) => l.sellerId === user.id) : [];
     return mine.slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }, [listings, user]);
+
+  const selectedList = useMemo(() => [...selected], [selected]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -374,26 +366,20 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </p>
         ) : null}
 
-        <label className="market-search">
-          <span className="market-search__label">
-            {tab === "sell"
-              ? "Search your cards"
-              : tab === "mine"
-                ? "Search your listings"
-                : "Search towers for sale"}
-          </span>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              tab === "sell"
-                ? "Dart Monkey, Ninja, 0-2-5…"
-                : "Tower name, upgrade, seller…"
-            }
-            autoComplete="off"
-          />
-        </label>
+        {tab !== "sell" ? (
+          <label className="market-search">
+            <span className="market-search__label">
+              {tab === "mine" ? "Search your listings" : "Search towers for sale"}
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tower name, upgrade, seller…"
+              autoComplete="off"
+            />
+          </label>
+        ) : null}
 
         {tab === "browse" ? (
           <div className="market-toolbar">
@@ -447,7 +433,9 @@ export function Marketplace({ onBack: _onBack }: Props) {
             >
               {busyId === "sell"
                 ? "Listing…"
-                : `List ${selected.size || ""}`.trim()}
+                : selected.size
+                  ? `List ${selected.size}`
+                  : "List"}
             </button>
           </div>
         ) : null}
@@ -494,44 +482,37 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 .map((row) => renderListing(row, "mine"))}
             </div>
           )
-        ) : ownedCards.length === 0 ? (
-          <p className="market-empty">
-            No owned cards{query.trim() ? " match that search" : " to sell"}.
-          </p>
         ) : (
-          <div className="market-grid">
-            {ownedCards.map((card) => {
-              const on = selected.has(card.id);
-              return (
-                <div
-                  key={card.id}
-                  className={`market-pick${on ? " is-selected" : ""}`}
-                  role="button"
-                  tabIndex={isGuest ? -1 : 0}
-                  aria-pressed={on}
-                  onClick={() => {
-                    if (!isGuest) toggleSelect(card.id);
-                  }}
-                  onKeyDown={(e) => {
-                    if (isGuest) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleSelect(card.id);
-                    }
-                  }}
-                >
-                  <MonkeyCard
-                    entity={card.entity}
-                    pathLevels={card.pathLevels}
-                    mode="preview"
-                    owned
-                  />
-                  <span className="market-pick__check">
-                    {on ? "Selected" : "Select"}
-                  </span>
+          <div className="market-sell-pick">
+            {selectedList.length > 0 ? (
+              <div className="market-selected">
+                <p className="market-selected__label">
+                  Selected ({selectedList.length})
+                </p>
+                <div className="owned-picker__chips">
+                  {selectedList.map((id) => (
+                    <CardChip
+                      key={id}
+                      cardId={id}
+                      selected
+                      disabled={busyId != null || isGuest}
+                      actionLabel="Remove"
+                      onClick={() => toggleSelect(id)}
+                    />
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <p className="market-empty">
+                Pick towers below or search — then list at one price.
+              </p>
+            )}
+            <OwnedCardPicker
+              owned={owned}
+              selectedIds={selected}
+              disabled={busyId != null || isGuest}
+              onToggle={toggleSelect}
+            />
           </div>
         )}
 

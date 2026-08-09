@@ -3,11 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import {
-  allCardSpecs,
-  cardSpecById,
-  matchesCardQuery,
-} from "../lib/cardCatalog";
-import {
   cancelTrade,
   fetchTrade,
   pingTrade,
@@ -17,8 +12,9 @@ import {
   type TradeState,
 } from "../lib/trades";
 import { collectionPath, marketplacePath } from "../lib/routes";
+import { CardChip } from "./CardChip";
 import { GameHeader } from "./GameHeader";
-import { MonkeyCard } from "./MonkeyCard";
+import { OwnedCardPicker } from "./OwnedCardPicker";
 
 export function TradeRoom() {
   const { tradeId = "" } = useParams();
@@ -29,7 +25,6 @@ export function TradeRoom() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [localOffer, setLocalOffer] = useState<string[]>([]);
 
@@ -88,13 +83,6 @@ export function TradeRoom() {
   }, [trade, user]);
 
   const offerSet = useMemo(() => new Set(localOffer), [localOffer]);
-
-  const searchable = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allCardSpecs().filter(
-      (c) => owned.has(c.id) && matchesCardQuery(c, q),
-    );
-  }, [owned, query]);
 
   async function syncOffer(next: string[]) {
     if (!tradeId) return;
@@ -209,7 +197,7 @@ export function TradeRoom() {
           {done
             ? "Trade finished. Cards are in both collections."
             : active
-              ? "Add cards from your collection. Both players must press Ready to swap."
+              ? "Add cards below. Both players Ready to finish."
               : `This trade is ${trade.status}.`}
         </p>
 
@@ -223,65 +211,45 @@ export function TradeRoom() {
         <div className="trade-sides">
           <section className="trade-side">
             <header className="trade-side__head">
-              <h2>You offer</h2>
+              <h2>You · {localOffer.length}/8</h2>
               <span className={iAmReady ? "is-ready" : ""}>
                 {iAmReady ? "Ready" : "Not ready"}
               </span>
             </header>
-            <div className="trade-offer-grid">
+            <div className="trade-chip-list">
               {localOffer.length === 0 ? (
-                <p className="trade-empty">No cards yet</p>
+                <p className="trade-empty">Nothing offered yet</p>
               ) : (
-                localOffer.map((id) => {
-                  const card = cardSpecById(id);
-                  if (!card) return null;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      className="trade-offer-card"
-                      disabled={!active || busy}
-                      onClick={() => toggleCard(id)}
-                      title="Remove from offer"
-                    >
-                      <MonkeyCard
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                      />
-                    </button>
-                  );
-                })
+                localOffer.map((id) => (
+                  <CardChip
+                    key={id}
+                    cardId={id}
+                    selected
+                    disabled={!active || busy}
+                    actionLabel={active ? "Remove" : undefined}
+                    onClick={active ? () => toggleCard(id) : undefined}
+                  />
+                ))
               )}
             </div>
           </section>
 
           <section className="trade-side">
             <header className="trade-side__head">
-              <h2>{partnerName} offers</h2>
+              <h2>
+                {partnerName} · {trade.theirOffer.length}/8
+              </h2>
               <span className={theyReady ? "is-ready" : ""}>
                 {theyReady ? "Ready" : "Not ready"}
               </span>
             </header>
-            <div className="trade-offer-grid">
+            <div className="trade-chip-list">
               {trade.theirOffer.length === 0 ? (
                 <p className="trade-empty">Waiting for their cards…</p>
               ) : (
-                trade.theirOffer.map((id) => {
-                  const card = cardSpecById(id);
-                  if (!card) return null;
-                  return (
-                    <div key={id} className="trade-offer-card is-locked">
-                      <MonkeyCard
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                      />
-                    </div>
-                  );
-                })
+                trade.theirOffer.map((id) => (
+                  <CardChip key={id} cardId={id} locked />
+                ))
               )}
             </div>
           </section>
@@ -310,42 +278,15 @@ export function TradeRoom() {
 
         {active ? (
           <section className="trade-picker">
-            <h3>Your cards</h3>
-            <label className="trade-search">
-              <span className="trade-search__label">Search</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Tower, path, name…"
-                autoComplete="off"
-              />
-            </label>
-            <div className="trade-pick-grid">
-              {searchable.length === 0 ? (
-                <p className="trade-empty">No matching owned cards.</p>
-              ) : (
-                searchable.slice(0, 60).map((card) => {
-                  const selected = offerSet.has(card.id);
-                  return (
-                    <button
-                      key={card.id}
-                      type="button"
-                      className={`trade-pick${selected ? " is-selected" : ""}`}
-                      disabled={busy}
-                      onClick={() => toggleCard(card.id)}
-                    >
-                      <MonkeyCard
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                      />
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            <h3>Add from your collection</h3>
+            <OwnedCardPicker
+              owned={owned}
+              selectedIds={offerSet}
+              disabled={busy}
+              maxSelected={8}
+              onMaxReached={() => setError("Max 8 cards on your side.")}
+              onToggle={toggleCard}
+            />
           </section>
         ) : null}
       </main>

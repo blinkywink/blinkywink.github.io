@@ -92,7 +92,9 @@ export function TradeInbox() {
 
   const badge =
     inbox.incoming.length + inbox.active.length + inbox.outgoing.length;
-  const highlight = inbox.incoming.length > 0;
+
+  // Nothing to show — hide completely (no icon clutter)
+  if (badge === 0 && !open) return null;
 
   async function onAccept(item: TradeInboxItem) {
     setBusyId(item.id);
@@ -139,36 +141,13 @@ export function TradeInbox() {
     <div className="trade-inbox" ref={wrapRef}>
       <button
         type="button"
-        className={`trade-inbox__btn${highlight ? " is-hot" : ""}`}
-        aria-label="Trade notifications"
+        className={`trade-inbox__pill${inbox.incoming.length > 0 ? " is-hot" : ""}`}
+        aria-label={`${badge} trade notification${badge === 1 ? "" : "s"}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M15 17H9a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5h.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M9 7h6a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5H14.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M13 3l3 3-3 3M11 15l-3 3 3 3"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        {badge > 0 ? (
-          <span className="trade-inbox__badge">{badge > 9 ? "9+" : badge}</span>
-        ) : null}
+        {badge > 9 ? "9+" : badge}
       </button>
 
       {open ? (
@@ -176,9 +155,7 @@ export function TradeInbox() {
           <p className="trade-inbox__title">Trades</p>
           {error ? <p className="trade-inbox__err">{error}</p> : null}
 
-          {inbox.incoming.length === 0 &&
-          inbox.outgoing.length === 0 &&
-          inbox.active.length === 0 ? (
+          {badge === 0 ? (
             <p className="trade-inbox__empty">No trade activity right now.</p>
           ) : null}
 
