@@ -60,4 +60,5 @@ export const CacheTtl = {
   leaderboard: 45_000,
   playerCards: 60_000,
   profiles: 60_000,
+  cardPullCount: 45_000,
 } as const;

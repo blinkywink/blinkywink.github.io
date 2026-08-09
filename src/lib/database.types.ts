@@ -221,6 +221,14 @@ export type Database = {
           last_daily_claim: string;
         };
       };
+      record_card_pulls: {
+        Args: { p_card_ids: string[] };
+        Returns: undefined;
+      };
+      get_card_pull_count: {
+        Args: { p_card_id: string };
+        Returns: number;
+      };
       username_signup: {
         Args: { p_username: string; p_password: string };
         Returns: {

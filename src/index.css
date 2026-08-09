@@ -3541,6 +3541,19 @@ body:has(.zoomed-page) {
   max-width: none;
 }
 
+.card-pull-count {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.55);
+  letter-spacing: 0.02em;
+}
+
+.card-pull-count.is-loading {
+  min-height: 1.15em;
+}
+
 .card-lab__hint {
   text-align: center;
   color: rgba(255, 248, 232, 0.8);
@@ -5249,6 +5262,23 @@ body:has(.zoomed-page) {
   letter-spacing: 0.03em;
   white-space: nowrap;
   pointer-events: none;
+}
+
+.pack-opener__pull-count {
+  position: absolute;
+  left: 50%;
+  bottom: -1.75rem;
+  z-index: 5;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(90vw, 22rem);
+  color: rgba(240, 240, 244, 0.72);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
+.listing-showcase .card-pull-count {
+  margin-top: 0.55rem;
 }
 
 .pack-opener__card--enter {
