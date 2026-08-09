@@ -362,8 +362,7 @@ function SearchPanel({
 }
 
 export function MixUpGame({ onBack, onRunEnd }: Props) {
-  const { state, current, roundsPerRun, settle, goNext, playAgain } =
-    useMixUp();
+  const { state, current, roundsPerRun, settle, goNext } = useMixUp();
   const runEndNotified = useRef(false);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -410,6 +409,50 @@ export function MixUpGame({ onBack, onRunEnd }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [state.phase, onRevealNext]);
 
+  if (state.phase === "loading") {
+    return (
+      <div className="mixup-page">
+        <div className="results">
+          <div className="results__card">
+            <p className="eyebrow">Mix Up</p>
+            <h2 className="results__title">LOADING</h2>
+            <p className="mixup-results__note">Checking today&apos;s mix…</p>
+            <div className="results__actions">
+              <button type="button" className="btn btn--ghost" onClick={onBack}>
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.phase === "locked") {
+    return (
+      <div className="mixup-page">
+        <div className="results">
+          <div className="results__card">
+            <p className="eyebrow">Mix Up</p>
+            <h2 className="results__title">LOCKED</h2>
+            <p className="mixup-results__scoreline">
+              Locked until {state.unlockLabel}
+            </p>
+            <p className="mixup-results__note">
+              One shared mix per day for everyone. A new set unlocks at UTC
+              midnight.
+            </p>
+            <div className="results__actions">
+              <button type="button" className="btn btn--primary" onClick={onBack}>
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (state.phase === "results" && state.results) {
     const r = state.results;
     const cleared = r.correct === r.total;
@@ -436,18 +479,14 @@ export function MixUpGame({ onBack, onRunEnd }: Props) {
                 ? ` + ${Math.round(MIXUP_CONFIG.clearBonusRate * 100)}% bonus ${r.bonus.toLocaleString()}`
                 : ""}
             </p>
+            <p className="mixup-locked-until">
+              Locked until {state.unlockLabel}
+            </p>
             <p className="mixup-results__note">
-              Cash is paid at the end only. Bonus applies to what you got right.
+              Same mix for everyone today. Come back tomorrow for a new one.
             </p>
             <div className="results__actions">
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={playAgain}
-              >
-                Play again
-              </button>
-              <button type="button" className="btn btn--ghost" onClick={onBack}>
+              <button type="button" className="btn btn--primary" onClick={onBack}>
                 Back
               </button>
             </div>

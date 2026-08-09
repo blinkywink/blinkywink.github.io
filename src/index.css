@@ -7069,6 +7069,14 @@ body:has(.zoomed-page) {
   color: rgba(240, 240, 244, 0.58);
 }
 
+.mixup-locked-until {
+  margin: 0.75rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #f0c84a;
+}
+
 /* ——— Bloons Sweeper ——— */
 .sweeper-page {
   --sweeper-ink: #f4efe8;

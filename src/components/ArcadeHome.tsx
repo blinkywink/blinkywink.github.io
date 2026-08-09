@@ -356,8 +356,8 @@ export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
     {
       id: "mixup" as const,
       title: "MIX UP",
-      blurb: "Five medium quizzes in one run. Cash paid at the end with a bonus.",
-      label: "Mix Up — Five medium questions from every quiz, cash at the end",
+      blurb: "One shared mix a day. Five medium quizzes, cash at the end.",
+      label: "Mix Up — Daily shared medium mix from every quiz",
       preview: <MixupPreview />,
     },
     {
