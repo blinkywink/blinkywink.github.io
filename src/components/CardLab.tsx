@@ -422,13 +422,14 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 )}
               </div>
             ) : null}
-            <p className="card-lab__blurb">
-              {remoteError
-                ? remoteError
-                : isRemote
-                  ? `${totalOwned} / ${totalCards} owned · browse by tower or open All Cards.`
-                  : `${totalOwned} / ${totalCards} owned · browse by tower, or open All Cards.`}
-            </p>
+            {remoteError ? (
+              <p className="card-lab__blurb">{remoteError}</p>
+            ) : !isRemote ? (
+              <p className="card-lab__blurb">
+                {totalOwned} / {totalCards} owned · browse by tower, or open All
+                Cards.
+              </p>
+            ) : null}
             {canRequestTrade ? (
               <div className="card-lab__trade">
                 <button

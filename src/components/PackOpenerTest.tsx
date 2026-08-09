@@ -224,6 +224,9 @@ export function PackOpenerTest({
   const pullsRef = useRef<MonkeyCardSpec[]>([]);
   const unlockedRef = useRef<MonkeyCardSpec[]>([]);
   const duplicateCashRef = useRef(0);
+  /** Indices already paid out during reveal (so Cash pops with each dup card). */
+  const paidDupIndicesRef = useRef<Set<number>>(new Set());
+  const duplicatesRef = useRef<ReadonlySet<string>>(new Set());
   const packRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
   /** Space currently down (incl. held through card changes). */
@@ -256,6 +259,8 @@ export function PackOpenerTest({
     pullsRef.current = [];
     unlockedRef.current = [];
     duplicateCashRef.current = 0;
+    paidDupIndicesRef.current = new Set();
+    duplicatesRef.current = new Set();
     setDuplicates(new Set());
     setDuplicateCash(0);
     setGodPack(false);
@@ -283,6 +288,8 @@ export function PackOpenerTest({
     pullsRef.current = [];
     unlockedRef.current = [];
     duplicateCashRef.current = 0;
+    paidDupIndicesRef.current = new Set();
+    duplicatesRef.current = new Set();
     setDuplicates(new Set());
     setDuplicateCash(0);
     setGodPack(false);
@@ -312,12 +319,45 @@ export function PackOpenerTest({
     return clearTimers;
   }, [open, pack.id, mode, reset]);
 
+  /** Credit Cash for one revealed duplicate (header +/- pops with the card). */
+  const awardDupCashForIndex = useCallback(
+    (i: number) => {
+      const card = pullsRef.current[i];
+      if (!card || !duplicatesRef.current.has(card.id)) return;
+      if (paidDupIndicesRef.current.has(i)) return;
+      paidDupIndicesRef.current.add(i);
+      const cash = duplicateCashForCard(card);
+      if (cash < 1) return;
+      void awardCoins(cash).then((balance) => {
+        if (balance != null) setCoinBalance(balance);
+      });
+    },
+    [setCoinBalance],
+  );
+
+  /** If they close mid-pack, still bank any unrevealed duplicate Cash. */
+  const flushUnpaidDupCash = useCallback(() => {
+    let remaining = 0;
+    pullsRef.current.forEach((card, i) => {
+      if (!duplicatesRef.current.has(card.id)) return;
+      if (paidDupIndicesRef.current.has(i)) return;
+      paidDupIndicesRef.current.add(i);
+      remaining += duplicateCashForCard(card);
+    });
+    if (remaining < 1) return;
+    void awardCoins(remaining).then((balance) => {
+      if (balance != null) setCoinBalance(balance);
+    });
+  }, [setCoinBalance]);
+
   const handleClose = () => {
+    flushUnpaidDupCash();
     reset();
     onClose();
   };
 
   const handleDone = () => {
+    flushUnpaidDupCash();
     const result = {
       pack,
       pulls: pullsRef.current,
@@ -347,23 +387,27 @@ export function PackOpenerTest({
     setPhaseBoth("sealed");
   }, [buyBusy, mode, price, profile?.coins, setCoinBalance]);
 
-  const showCardAt = useCallback((i: number) => {
-    indexRef.current = i;
-    setIndex(i);
-    setDrag({ x: 0, y: 0 });
-    dragRef.current = { x: 0, y: 0 };
-    setPhaseBoth("enter");
-    later(() => {
-      if (phaseRef.current !== "enter") return;
-      readyAtRef.current = performance.now();
-      const gate = spaceHoldGate(pullsRef.current[i]);
-      // Holding Space through a rare pull: force a fresh press.
-      if (gate === "rare" && spaceHeldRef.current) {
-        needFreshSpaceRef.current = true;
-      }
-      setPhaseBoth("ready");
-    }, CARD_ENTER_MS);
-  }, []);
+  const showCardAt = useCallback(
+    (i: number) => {
+      indexRef.current = i;
+      setIndex(i);
+      setDrag({ x: 0, y: 0 });
+      dragRef.current = { x: 0, y: 0 };
+      setPhaseBoth("enter");
+      awardDupCashForIndex(i);
+      later(() => {
+        if (phaseRef.current !== "enter") return;
+        readyAtRef.current = performance.now();
+        const gate = spaceHoldGate(pullsRef.current[i]);
+        // Holding Space through a rare pull: force a fresh press.
+        if (gate === "rare" && spaceHeldRef.current) {
+          needFreshSpaceRef.current = true;
+        }
+        setPhaseBoth("ready");
+      }, CARD_ENTER_MS);
+    },
+    [awardDupCashForIndex],
+  );
 
   const spaceCanFling = useCallback((e: KeyboardEvent): boolean => {
     const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
@@ -400,6 +444,8 @@ export function PackOpenerTest({
       pullsRef.current = cards;
       unlockedRef.current = unlocked;
       duplicateCashRef.current = cash;
+      duplicatesRef.current = dupIds;
+      paidDupIndicesRef.current = new Set();
       setPulls(cards);
       setDuplicates(dupIds);
       setDuplicateCash(cash);
@@ -408,14 +454,10 @@ export function PackOpenerTest({
       if (unlocked.length) {
         void awardCards(unlocked.map((c) => c.id));
       }
-      if (cash > 0) {
-        void awardCoins(cash).then((balance) => {
-          if (balance != null) setCoinBalance(balance);
-        });
-      }
+      // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
     },
-    [awardCards, owned, setCoinBalance, showCardAt],
+    [awardCards, owned, showCardAt],
   );
 
   const completeCut = useCallback(
@@ -519,6 +561,14 @@ export function PackOpenerTest({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (buyBusy) return;
+        flushUnpaidDupCash();
+        reset();
+        onClose();
+        return;
+      }
       if (e.code !== "Space" && e.key !== " ") return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
@@ -557,6 +607,9 @@ export function PackOpenerTest({
     buyAnother,
     buyBusy,
     spaceCanFling,
+    flushUnpaidDupCash,
+    reset,
+    onClose,
   ]);
 
   /** Pack-local % — not clamped, so the streak can start/end off the pack. */
@@ -710,7 +763,7 @@ export function PackOpenerTest({
         className="pack-opener__close btn btn--ghost btn--sm"
         onClick={handleClose}
       >
-        ✕
+        ✕ Close
       </button>
 
       {godPack && phase !== "shop" && phase !== "sealed" ? (

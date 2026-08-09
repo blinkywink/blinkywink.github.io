@@ -4656,10 +4656,9 @@ body:has(.zoomed-page) {
 
 .pack-opener__close {
   position: absolute;
-  top: 0.85rem;
+  top: calc(var(--site-header-h, 3.75rem) + 0.45rem);
   right: 0.85rem;
-  z-index: 3;
-  min-width: 2.5rem;
+  z-index: 5;
 }
 
 .pack-opener__arena {
