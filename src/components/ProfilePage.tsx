@@ -38,15 +38,13 @@ import {
   showcaseSlotsFromProfile,
 } from "../lib/profileShowcase";
 import {
-  HERO_EQUIP_SWAP_COST,
-  equipHero,
   heroLevelFromProfile,
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
 import { heroBlurb } from "../lib/heroEffects";
-import { collectionPath, userCollectionPath } from "../lib/routes";
+import { collectionPath, shopPath, userCollectionPath } from "../lib/routes";
 import { HeroCardFace } from "./HeroCollectionStrip";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
@@ -65,8 +63,6 @@ export function ProfilePage() {
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
-  const [heroEditorOpen, setHeroEditorOpen] = useState(false);
-  const [heroDraft, setHeroDraft] = useState<string | null>(null);
   const [colorDraft, setColorDraft] = useState("#F0C84A");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,64 +118,10 @@ export function ProfilePage() {
     [ownedHeroIds],
   );
 
-  async function onEquipHero(heroId: string | null) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    setStatus(null);
-    try {
-      const result = await equipHero(heroId);
-      setCoinBalance(result.coins);
-      await refreshProfile();
-      if (!heroId) {
-        setStatus("Hero unequipped.");
-      } else if (equippedHeroId && equippedHeroId !== heroId) {
-        setStatus(
-          `Equipped hero (−${HERO_EQUIP_SWAP_COST.toLocaleString()} Cash).`,
-        );
-      } else {
-        setStatus("Hero equipped.");
-      }
-      setHeroEditorOpen(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not equip hero.");
-    }
-    setBusy(false);
-  }
-
-  function openHeroEditor() {
-    setError(null);
-    setStatus(null);
-    setHeroDraft(equippedHeroId);
-    setHeroEditorOpen(true);
-  }
-
-  function closeHeroEditor() {
-    if (busy) return;
-    setHeroEditorOpen(false);
-  }
-
-  async function onApplyHero() {
-    if (busy) return;
-    const next = heroDraft;
-    if (next === equippedHeroId || (!next && !equippedHeroId)) {
-      setHeroEditorOpen(false);
-      return;
-    }
-    await onEquipHero(next);
-  }
-
   const equippedHero = useMemo(() => {
     if (!equippedHeroId) return null;
     return ownedHeroes.find((h) => h.id === equippedHeroId) ?? null;
   }, [equippedHeroId, ownedHeroes]);
-
-  const heroSwapCost =
-    heroDraft &&
-    equippedHeroId &&
-    heroDraft !== equippedHeroId
-      ? HERO_EQUIP_SWAP_COST
-      : 0;
 
   const pickSelected = useMemo(
     () => new Set(draft.cardId ? [draft.cardId] : []),
@@ -194,13 +136,12 @@ export function ProfilePage() {
   }, [cosmetics.accentColor]);
 
   useEffect(() => {
-    if (!editorOpen && !showcaseOpen && !heroEditorOpen) return;
+    if (!editorOpen && !showcaseOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) {
-        if (heroEditorOpen) closeHeroEditor();
-        else if (showcaseOpen) closeShowcaseEditor();
+        if (showcaseOpen) closeShowcaseEditor();
         else closeEditor();
       }
     };
@@ -209,7 +150,7 @@ export function ProfilePage() {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [editorOpen, showcaseOpen, heroEditorOpen, busy]);
+  }, [editorOpen, showcaseOpen, busy]);
 
   function openEditor() {
     setError(null);
@@ -620,127 +561,6 @@ export function ProfilePage() {
       )
     : null;
 
-  const heroEditor = heroEditorOpen
-    ? createPortal(
-        <div
-          className="pfp-editor"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="hero-editor-title"
-        >
-          <button
-            type="button"
-            className="pfp-editor__backdrop"
-            aria-label="Close"
-            disabled={busy}
-            onClick={closeHeroEditor}
-          />
-          <div className="pfp-editor__panel">
-            <header className="pfp-editor__header">
-              <div>
-                <p className="pfp-editor__eyebrow">Equipped hero</p>
-                <h2 id="hero-editor-title">Choose a hero</h2>
-              </div>
-              <button
-                type="button"
-                className="pfp-editor__close"
-                aria-label="Close"
-                disabled={busy}
-                onClick={closeHeroEditor}
-              >
-                ✕
-              </button>
-            </header>
-            <div className="pfp-editor__body">
-              <p className="profile-heroes__picker-note">
-                {heroSwapCost > 0 ? (
-                  <>
-                    Swapping costs{" "}
-                    <CashAmount amount={heroSwapCost} size={13} />. Unequip is
-                    free.
-                  </>
-                ) : (
-                  "Pick a hero, then Apply. Unequip is free."
-                )}
-              </p>
-              {error ? (
-                <p className="profile-banner profile-banner--err">{error}</p>
-              ) : null}
-              <div className="profile-heroes__picker">
-                <button
-                  type="button"
-                  className={`profile-heroes__none${heroDraft == null ? " is-selected" : ""}`}
-                  disabled={busy}
-                  onClick={() => setHeroDraft(null)}
-                >
-                  Unequipped
-                </button>
-                {ownedHeroes.map((hero) => {
-                  const level = heroLevelFromProfile(heroLevels, hero.id);
-                  const selected = heroDraft === hero.id;
-                  return (
-                    <button
-                      key={hero.id}
-                      type="button"
-                      className={`profile-heroes__pick${selected ? " is-selected" : ""}`}
-                      disabled={busy}
-                      onClick={() => setHeroDraft(hero.id)}
-                    >
-                      <HeroCardFace
-                        hero={hero}
-                        level={level}
-                        equipped={selected}
-                        size="md"
-                        hideCaption
-                      />
-                      <span className="profile-heroes__pick-name">
-                        {hero.name}
-                      </span>
-                      <span className="profile-heroes__pick-lvl">
-                        Lv {level}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <footer className="pfp-editor__footer">
-              <button
-                type="button"
-                className="btn btn--ghost"
-                disabled={busy}
-                onClick={closeHeroEditor}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn--primary"
-                disabled={
-                  busy ||
-                  (heroSwapCost > 0 &&
-                    (profile?.coins ?? 0) < heroSwapCost)
-                }
-                onClick={() => void onApplyHero()}
-              >
-                {busy ? (
-                  "Saving…"
-                ) : heroSwapCost > 0 ? (
-                  <>
-                    Apply
-                    <CashAmount amount={heroSwapCost} size={14} />
-                  </>
-                ) : (
-                  "Apply"
-                )}
-              </button>
-            </footer>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-
   return (
     <div className="profile-page">
       <PageHeader
@@ -752,7 +572,7 @@ export function ProfilePage() {
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
         ) : null}
-        {error && !editorOpen && !showcaseOpen && !heroEditorOpen ? (
+        {error && !editorOpen && !showcaseOpen ? (
           <p className="profile-banner profile-banner--err">{error}</p>
         ) : null}
 
@@ -859,25 +679,16 @@ export function ProfilePage() {
             <div>
               <h3>Hero</h3>
               <p>
-                Equip one hero for passive bonuses. First equip is free; swapping
-                costs <CashAmount amount={HERO_EQUIP_SWAP_COST} size={13} />.
-                Unequip is free.
+                Passive bonuses from your equipped hero. Unlock and equip heroes in
+                the{" "}
+                <Link to={shopPath()}>Shop</Link>.
               </p>
             </div>
-            {ownedHeroes.length > 0 ? (
-              <button
-                type="button"
-                className="btn btn--secondary"
-                disabled={busy}
-                onClick={openHeroEditor}
-              >
-                Change
-              </button>
-            ) : null}
           </div>
           {ownedHeroes.length === 0 ? (
             <p className="profile-heroes__empty">
-              No heroes unlocked yet. Visit the Shop Heroes shelf.
+              No heroes unlocked yet. Visit the{" "}
+              <Link to={shopPath()}>Shop</Link>.
             </p>
           ) : equippedHero ? (
             <div className="profile-heroes__current">
@@ -902,7 +713,8 @@ export function ProfilePage() {
             </div>
           ) : (
             <p className="profile-heroes__empty">
-              No hero equipped. Tap Change to pick one.
+              No hero equipped. Open the{" "}
+              <Link to={shopPath()}>Shop</Link> to equip one.
             </p>
           )}
         </section>
@@ -990,7 +802,6 @@ export function ProfilePage() {
       </main>
       {editor}
       {showcaseEditor}
-      {heroEditor}
     </div>
   );
 }

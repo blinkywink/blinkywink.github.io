@@ -148,7 +148,7 @@ export function HeroCollectionShelf({
         <p className="hero-shelf__label">Heroes</p>
         <p className="hero-shelf__note">
           {heroes.length
-            ? `${heroes.length} owned · tap to view · equip on Profile`
+            ? `${heroes.length} owned · tap to view · equip in Shop`
             : "Unlock heroes in the Shop"}
         </p>
       </div>

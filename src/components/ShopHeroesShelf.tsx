@@ -4,9 +4,11 @@ import { useAuth } from "../auth/AuthProvider";
 import type { HeroEntity } from "../data/heroes";
 import { heroBlurb } from "../lib/heroEffects";
 import {
+  HERO_EQUIP_SWAP_COST,
   HERO_MAX_LEVEL,
   HERO_UNLOCK_COST,
   buyHero,
+  equipHero,
   heroClearProgressFromProfile,
   heroClearsRequiredForNextLevel,
   heroLevelFromProfile,
@@ -39,6 +41,9 @@ export function ShopHeroesShelf() {
     () => normalizeHeroClearProgress(profile?.hero_clear_progress),
     [profile?.hero_clear_progress],
   );
+  const equippedId = profile?.equipped_hero_id
+    ? String(profile.equipped_hero_id).toLowerCase()
+    : null;
   const heroes = useMemo(() => shoppableHeroes(), []);
 
   function closeFocus() {
@@ -82,10 +87,44 @@ export function ShopHeroesShelf() {
       setStatus(
         mine
           ? `${focused.name} leveled to ${nextLevel}!`
-          : `Unlocked ${focused.name}!`,
+          : `Unlocked & equipped ${focused.name}!`,
       );
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : "Purchase failed.");
+    }
+    setBusy(false);
+  }
+
+  async function onEquip() {
+    if (!focused || busy || isGuest) return;
+    if (!owned.has(focused.id)) {
+      setBuyError("Unlock this hero first.");
+      return;
+    }
+    const already = equippedId === focused.id;
+    const swapCost =
+      !already && equippedId && equippedId !== focused.id
+        ? HERO_EQUIP_SWAP_COST
+        : 0;
+    if (swapCost > 0 && (profile?.coins ?? 0) < swapCost) {
+      setBuyError(`Need ${swapCost.toLocaleString()} Cash to swap heroes.`);
+      return;
+    }
+    setBusy(true);
+    setBuyError(null);
+    try {
+      const result = await equipHero(already ? null : focused.id);
+      setCoinBalance(result.coins);
+      await refreshProfile();
+      setStatus(
+        already
+          ? `${focused.name} unequipped.`
+          : swapCost > 0
+            ? `Equipped ${focused.name} (−${swapCost.toLocaleString()} Cash).`
+            : `Equipped ${focused.name}!`,
+      );
+    } catch (err) {
+      setBuyError(err instanceof Error ? err.message : "Could not equip.");
     }
     setBusy(false);
   }
@@ -125,9 +164,10 @@ export function ShopHeroesShelf() {
   const focusProgress = focused
     ? heroClearProgressFromProfile(clears, focused.id)
     : 0;
-  const focusNeed = focusMine && !focusMaxed
-    ? heroClearsRequiredForNextLevel(focusLevel)
-    : 0;
+  const focusNeed =
+    focusMine && !focusMaxed
+      ? heroClearsRequiredForNextLevel(focusLevel)
+      : 0;
   const focusReady =
     !focusMine || focusMaxed || heroLevelUpReady(focusLevel, focusProgress);
   const focusPrice = focused
@@ -137,6 +177,11 @@ export function ShopHeroesShelf() {
         : heroUpgradeCost(focusLevel + 1)
       : heroUpgradeCost(1)
     : 0;
+  const focusEquipped = Boolean(focused && equippedId === focused.id);
+  const focusSwapCost =
+    focusMine && !focusEquipped && equippedId
+      ? HERO_EQUIP_SWAP_COST
+      : 0;
   const canBuy =
     !isGuest && focused && (!focusMine || (!focusMaxed && focusReady));
 
@@ -167,6 +212,7 @@ export function ShopHeroesShelf() {
             <HeroCardFace
               hero={focused}
               level={focusLevel}
+              equipped={focusEquipped}
               size="lg"
               mode="focus"
               hideCaption
@@ -181,47 +227,75 @@ export function ShopHeroesShelf() {
               ) : null}
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to unlock.</p>
-              ) : focusMaxed ? (
-                <p className="pack-opener__buy-note">
-                  Max level · equip on Profile
-                </p>
-              ) : focusMine && !focusReady ? (
-                <p className="pack-opener__buy-note">
-                  Clear games with {focused.name} equipped · {focusProgress}/
-                  {focusNeed} to unlock level-up (
-                  <CashAmount amount={focusPrice} size={13} />)
-                </p>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    className="btn btn--primary btn--lg"
-                    disabled={busy || !canBuy}
-                    onClick={() => void onPurchase()}
-                  >
-                    {busy
-                      ? focusMine
-                        ? "Leveling…"
-                        : "Unlocking…"
-                      : focusMine
-                        ? `Level up · Space`
-                        : "Unlock · Space"}
-                  </button>
+                  {focusMine ? (
+                    <div className="shop-hero-focus__actions">
+                      <button
+                        type="button"
+                        className={`btn ${focusEquipped ? "btn--secondary" : "btn--primary"} btn--lg`}
+                        disabled={
+                          busy ||
+                          (focusSwapCost > 0 &&
+                            (profile?.coins ?? 0) < focusSwapCost)
+                        }
+                        onClick={() => void onEquip()}
+                      >
+                        {busy
+                          ? "…"
+                          : focusEquipped
+                            ? "Unequip"
+                            : focusSwapCost > 0
+                              ? "Equip"
+                              : "Equip"}
+                        {!focusEquipped && focusSwapCost > 0 ? (
+                          <CashAmount amount={focusSwapCost} size={16} />
+                        ) : null}
+                      </button>
+                      {!focusMaxed && focusReady ? (
+                        <button
+                          type="button"
+                          className="btn btn--primary btn--lg"
+                          disabled={busy || !canBuy}
+                          onClick={() => void onPurchase()}
+                        >
+                          {busy ? "Leveling…" : "Level up · Space"}
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--lg"
+                      disabled={busy || !canBuy}
+                      onClick={() => void onPurchase()}
+                    >
+                      {busy ? "Unlocking…" : "Unlock · Space"}
+                    </button>
+                  )}
+                  {focusMine && !focusReady && !focusMaxed ? (
+                    <p className="pack-opener__buy-note">
+                      Clear games with {focused.name} equipped · {focusProgress}/
+                      {focusNeed} to unlock level-up (
+                      <CashAmount amount={focusPrice} size={13} />)
+                    </p>
+                  ) : null}
+                  {focusMaxed ? (
+                    <p className="pack-opener__buy-note">Max level</p>
+                  ) : null}
                   {buyError ? (
                     <p className="pack-opener__buy-error">{buyError}</p>
                   ) : (
                     <p className="pack-opener__buy-note">
                       Balance {(profile?.coins ?? 0).toLocaleString()} Cash
-                      {focusMine
+                      {focusMine && focusReady && !focusMaxed
                         ? ` · Lv ${focusLevel} → ${focusLevel + 1}`
                         : ""}
+                      {focusEquipped ? " · Equipped" : ""}
                     </p>
                   )}
                 </>
               )}
-              {buyError && focusMine && !focusReady ? (
-                <p className="pack-opener__buy-error">{buyError}</p>
-              ) : null}
             </div>
           </div>
         </div>,
@@ -234,8 +308,8 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
         <p className="shop-heroes__note">
-          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · clear games with
-          them equipped to unlock each paid level-up
+          <CashAmount amount={HERO_UNLOCK_COST} /> unlock (auto-equips) · equip
+          here · clear games to unlock level-ups
         </p>
       </div>
       {status ? (
@@ -247,10 +321,10 @@ export function ShopHeroesShelf() {
           const level = mine ? heroLevelFromProfile(levels, hero.id) : 1;
           const maxed = mine && level >= HERO_MAX_LEVEL;
           const progress = heroClearProgressFromProfile(clears, hero.id);
-          const need = mine && !maxed
-            ? heroClearsRequiredForNextLevel(level)
-            : 0;
+          const need =
+            mine && !maxed ? heroClearsRequiredForNextLevel(level) : 0;
           const ready = !mine || maxed || heroLevelUpReady(level, progress);
+          const isEquipped = equippedId === hero.id;
           const price = mine
             ? maxed
               ? 0
@@ -260,7 +334,7 @@ export function ShopHeroesShelf() {
             <button
               key={hero.id}
               type="button"
-              className="pack-shelf__item"
+              className={`pack-shelf__item${isEquipped ? " is-equipped-hero" : ""}`}
               onClick={() => {
                 setBuyError(null);
                 setFocused(hero);
@@ -269,14 +343,20 @@ export function ShopHeroesShelf() {
               <HeroCardFace
                 hero={hero}
                 level={level}
+                equipped={isEquipped}
                 hideCaption
                 size="lg"
                 mode="preview"
               />
               <span className="pack-shelf__label">
-                <strong>{hero.name}</strong>
+                <strong>
+                  {hero.name}
+                  {isEquipped ? " ✓" : ""}
+                </strong>
                 <span className="pack-shelf__price">
-                  {maxed ? (
+                  {isEquipped ? (
+                    "Equipped"
+                  ) : maxed ? (
                     `Lv ${level} · Max`
                   ) : mine && !ready ? (
                     `${progress}/${need} clears · Lv ${level}`

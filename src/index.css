@@ -10102,6 +10102,19 @@ button.trade-offer-card:hover:not(:disabled) {
   color: rgba(240, 240, 244, 0.62);
 }
 
+.shop-hero-focus__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.shop-heroes__row .pack-shelf__item.is-equipped-hero .hero-card {
+  outline: 2px solid color-mix(in srgb, var(--hero-primary, #f0c84a) 70%, white);
+  outline-offset: 3px;
+}
+
 .shop-heroes__row .hero-card {
   width: min(22vw, 156px);
   pointer-events: none;
