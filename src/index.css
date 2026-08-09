@@ -8129,7 +8129,7 @@ button.card-chip:hover:not(:disabled) {
 
 .card-lab--picker {
   width: 100%;
-  min-height: 0;
+  min-height: 0 !important;
   padding: 0;
   margin: 0;
   display: flex;
@@ -8222,38 +8222,6 @@ button.card-chip:hover:not(:disabled) {
   margin: 0.65rem 0 0;
   border-radius: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.pfp-editor__body--pick {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding-bottom: 0;
-}
-
-.pfp-editor__body--pick > .pfp-editor__hint {
-  flex: 0 0 auto;
-}
-
-.pfp-editor__body--pick .card-lab--picker {
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-.pfp-editor__body--pick .pick-scroll {
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding-bottom: 0.35rem;
-}
-
-.pfp-editor__body--pick .pick-dock {
-  position: relative;
-  z-index: 50;
-  margin-top: 0.45rem;
-  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.4);
 }
 
 .pick-dock__meta {
@@ -8902,7 +8870,13 @@ button.trade-offer-card:hover:not(:disabled) {
   overflow: hidden;
 }
 
+/* Pickers need a real height so the list can scroll above Apply. */
+.pfp-editor__panel:has(.pfp-editor__body--pick) {
+  height: min(92dvh, 880px);
+}
+
 .pfp-editor__header {
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -8993,6 +8967,47 @@ button.trade-offer-card:hover:not(:disabled) {
   flex: 1 1 auto;
   overflow: auto;
   padding-right: 0.15rem;
+}
+
+/* Must beat .pfp-editor__body { overflow: auto } so only the card list scrolls. */
+.pfp-editor__body.pfp-editor__body--pick {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+  padding-right: 0;
+}
+
+.pfp-editor__body.pfp-editor__body--pick > .pfp-editor__hint {
+  flex: 0 0 auto;
+}
+
+.pfp-editor__body.pfp-editor__body--pick .card-lab--picker {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+
+.pfp-editor__body.pfp-editor__body--pick .pick-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding-bottom: 0.35rem;
+}
+
+.pfp-editor__body.pfp-editor__body--pick .pick-dock {
+  position: relative;
+  z-index: 50;
+  margin-top: 0.45rem;
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.4);
 }
 
 .pfp-editor__hint {
