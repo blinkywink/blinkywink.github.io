@@ -28,14 +28,14 @@ export type DifficultyConfig = {
 };
 
 /**
- * Crop fractions are intentionally tight — the whole point of Zoomed is
- * extreme close-ups. Effects ramp more than crop size past medium.
+ * Crop fractions start roomy on easy, then tighten.
+ * Zoom extras stay mild — “slightly zoomed” close-ups, not microscopic.
  */
 export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   easy: {
     tier: "easy",
-    cropSize: [0.48, 0.65],
-    zoom: [1.08, 1.28],
+    cropSize: [0.6, 0.81],
+    zoom: [1.06, 1.22],
     rotation: 6,
     blur: [0, 0],
     pixelation: [1, 1],
@@ -47,8 +47,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   },
   medium: {
     tier: "medium",
-    cropSize: [0.14, 0.22],
-    zoom: [1.4, 1.85],
+    cropSize: [0.175, 0.275],
+    zoom: [1.32, 1.68],
     rotation: 18,
     blur: [0, 0.2],
     pixelation: [1, 1.2],
@@ -60,8 +60,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   },
   hard: {
     tier: "hard",
-    cropSize: [0.1, 0.17],
-    zoom: [1.6, 2.2],
+    cropSize: [0.125, 0.212],
+    zoom: [1.48, 1.96],
     rotation: 35,
     blur: [0, 0.8],
     pixelation: [1, 2.5],
@@ -73,8 +73,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   },
   extreme: {
     tier: "extreme",
-    cropSize: [0.06, 0.11],
-    zoom: [2.0, 2.9],
+    cropSize: [0.075, 0.137],
+    zoom: [1.8, 2.52],
     rotation: 55,
     blur: [0.2, 1.4],
     pixelation: [1.5, 3.5],

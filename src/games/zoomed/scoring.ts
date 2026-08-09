@@ -1,6 +1,9 @@
 import type { DifficultyConfig } from "./config";
 import { rewardForCorrect } from "../rewards";
 
+/** Zoomed pays more than the shared arcade curve. */
+const ZOOMED_CASH_MULT = 1.5;
+
 export type ScoreBreakdown = {
   points: number;
   base: number;
@@ -12,7 +15,7 @@ export type ScoreBreakdown = {
 
 /**
  * Points / Cash for a correct Zoomed answer.
- * Uses the shared arcade payout so both games feel similar.
+ * Shared curve × Zoomed bonus so other games stay unchanged.
  */
 export function calculateScore(
   difficulty: DifficultyConfig,
@@ -21,11 +24,13 @@ export function calculateScore(
   attemptMultiplier = 1,
   round = 1,
 ): ScoreBreakdown {
-  const points = rewardForCorrect({
-    round,
-    streakAfter: streakAfterCorrect,
-    attemptMultiplier,
-  });
+  const points = Math.round(
+    rewardForCorrect({
+      round,
+      streakAfter: streakAfterCorrect,
+      attemptMultiplier,
+    }) * ZOOMED_CASH_MULT,
+  );
 
   return {
     points,
