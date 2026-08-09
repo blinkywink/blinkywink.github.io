@@ -424,13 +424,6 @@ body:has(.zoomed-page) {
   position: relative;
   display: grid;
   gap: 2rem;
-  /* Same width as hub shop packs (.home-hub__pack-item .pack-shelf__booster). */
-  --hub-card-gap: 0.85rem;
-  --hub-peek-w: 140px;
-  --card-face-w: 400px;
-  --card-preview-w: 140px;
-  --card-preview-scale: 0.35;
-  --card-preview-h: 196px;
 }
 
 .home-hub__atmosphere {
@@ -452,7 +445,6 @@ body:has(.zoomed-page) {
   display: grid;
   gap: 0.75rem;
   min-width: 0;
-  overflow: visible;
 }
 
 .home-hub__head {
@@ -490,114 +482,76 @@ body:has(.zoomed-page) {
   color: rgba(240, 240, 244, 0.62);
 }
 
-/* One tidy row per section */
+.home-hub__destinations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.35rem;
+}
+
+.home-hub__dest {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.home-hub__dest:hover,
+.home-hub__dest:focus-visible {
+  border-color: rgba(240, 200, 74, 0.45);
+  background: rgba(255, 255, 255, 0.055);
+  transform: translateY(-2px);
+}
+
+.home-hub__dest strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f0f0f4;
+}
+
+.home-hub__dest span {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.62);
+}
+
+.home-hub__dest--shop {
+  background:
+    linear-gradient(135deg, rgba(240, 200, 74, 0.1), transparent 55%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.home-hub__dest--cards {
+  background:
+    linear-gradient(135deg, rgba(110, 200, 255, 0.1), transparent 55%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.home-hub__dest--market {
+  background:
+    linear-gradient(135deg, rgba(180, 140, 255, 0.1), transparent 55%),
+    rgba(255, 255, 255, 0.03);
+}
+
 .home-hub__row {
   display: grid;
-  gap: var(--hub-card-gap);
+  gap: 0.85rem;
   align-items: start;
   min-width: 0;
-  overflow: visible;
-}
-
-.home-hub__row--packs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: start;
-  gap: var(--hub-card-gap);
-}
-
-.home-hub__row--cards {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: start;
-  gap: var(--hub-card-gap);
-  overflow: visible;
-}
-
-.home-hub__card-cell {
-  display: grid;
-  gap: 0.4rem;
-  justify-items: center;
-  width: var(--hub-peek-w);
-  flex: 0 0 var(--hub-peek-w);
-  min-width: 0;
-  overflow: visible;
-}
-
-.home-hub__card-cell .monkey-card-scene--preview {
-  --card-preview-w: var(--hub-peek-w);
-  --card-preview-scale: 0.35;
-  --card-preview-h: 196px;
-  width: var(--hub-peek-w);
-  height: 196px;
-  position: relative;
-  overflow: hidden;
-  border-radius: calc(22px * 0.35);
-  flex-shrink: 0;
-  isolation: isolate;
-}
-
-.home-hub__card-cell .monkey-card-scene--preview > .monkey-card {
-  --opacity: 0;
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: var(--card-face-w);
-  height: calc(var(--card-face-w) * 3.5 / 2.5);
-  transform: scale(var(--card-preview-scale));
-  transform-origin: top left;
-  transform-style: flat;
 }
 
 .home-hub__row--players {
   grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.home-hub__price {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  padding: 0;
-  cursor: pointer;
-}
-
-.home-hub__seller {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  max-width: 100%;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: rgba(240, 240, 244, 0.7);
-  text-decoration: none;
-  min-width: 0;
-}
-
-.home-hub__seller span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.home-hub__seller:hover {
-  color: #ffe08a;
-}
-
-/* Hub shop packs — keep shelf sizing (avoid % self-reference) */
-.home-hub__pack-item {
-  width: auto;
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
-.home-hub__pack-item .pack-shelf__booster {
-  --booster-w: 140px;
-  --booster-h: calc(140px * 1.62);
 }
 
 .home-hub__player-chip {
@@ -646,7 +600,6 @@ body:has(.zoomed-page) {
 @media (max-width: 900px) {
   .home-hub {
     gap: 1.6rem;
-    --hub-card-gap: 0.75rem;
   }
 
   .home-hub__row--players {
@@ -661,30 +614,10 @@ body:has(.zoomed-page) {
 @media (max-width: 640px) {
   .home-hub {
     gap: 1.45rem;
-    --hub-card-gap: 0.7rem;
-    --hub-peek-w: 120px;
-    --card-preview-w: 120px;
-    --card-preview-scale: 0.3;
-    --card-preview-h: 168px;
   }
 
-  .home-hub__card-cell {
-    width: var(--hub-peek-w);
-    flex-basis: var(--hub-peek-w);
-  }
-
-  .home-hub__card-cell .monkey-card-scene--preview {
-    --card-preview-w: var(--hub-peek-w);
-    --card-preview-scale: 0.3;
-    --card-preview-h: 168px;
-    width: var(--hub-peek-w);
-    height: 168px;
-    border-radius: calc(22px * 0.3);
-  }
-
-  .home-hub__pack-item .pack-shelf__booster {
-    --booster-w: 120px;
-    --booster-h: calc(120px * 1.62);
+  .home-hub__destinations {
+    grid-template-columns: 1fr;
   }
 
   .home-hub__row--players {

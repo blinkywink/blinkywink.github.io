@@ -1,33 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DEFAULT_AVATAR_CROP,
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "../lib/avatar";
-import { cardSpecById } from "../lib/cardCatalog";
 import { cached, CacheTtl } from "../lib/cache";
-import {
-  fetchMarketplaceListings,
-  type MarketplaceListing,
-} from "../lib/marketplace";
 import {
   collectionPath,
   gamePath,
   gamesPath,
   leaderboardPath,
-  listingPath,
   marketplacePath,
   shopPath,
   userCollectionPath,
   type GamePath,
 } from "../lib/routes";
-import { featuredShopPacks, packPrice, type PackDef } from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
-import { BoosterPack } from "./BoosterPack";
 import { CashAmount } from "./CurrencyChip";
-import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
 type BoardRow = {
@@ -37,27 +28,31 @@ type BoardRow = {
   avatar: AvatarCrop;
 };
 
-/** Site hub — one compact row per area. */
+const DESTINATIONS = [
+  {
+    to: shopPath(),
+    title: "Shop",
+    blurb: "Buy packs with Cash",
+    tone: "shop",
+  },
+  {
+    to: collectionPath(),
+    title: "Cards",
+    blurb: "Browse your collection",
+    tone: "cards",
+  },
+  {
+    to: marketplacePath(),
+    title: "Market",
+    blurb: "Trade with players",
+    tone: "market",
+  },
+] as const;
+
+/** Site hub — games up top, simple links below. */
 export function HomeHub() {
   const navigate = useNavigate();
-  const featured = useMemo(() => featuredShopPacks(), []);
-  const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [topPlayers, setTopPlayers] = useState<BoardRow[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rows = await fetchMarketplaceListings();
-        if (!cancelled) setListings(rows.slice(0, 4));
-      } catch {
-        if (!cancelled) setListings([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,16 +93,6 @@ export function HomeHub() {
     };
   }, []);
 
-  const sampleCards = useMemo(() => {
-    const ids = [
-      "dart-monkey-0-0-0",
-      "ninja-monkey-5-0-0",
-      "super-monkey-0-5-0",
-      "wizard-monkey-5-0-0",
-    ];
-    return ids.map((id) => cardSpecById(id)).filter(Boolean);
-  }, []);
-
   return (
     <div className="home-hub">
       <div className="home-hub__atmosphere" aria-hidden />
@@ -122,92 +107,19 @@ export function HomeHub() {
           limit={3}
           onPlay={(game) => navigate(gamePath(game as GamePath))}
         />
-      </section>
 
-      <section className="home-hub__section" aria-labelledby="hub-shop">
-        <div className="home-hub__head">
-          <h2 id="hub-shop">Shop</h2>
-          <Link to={shopPath()}>Open shop →</Link>
-        </div>
-        <div className="home-hub__row home-hub__row--packs">
-          {featured.map((pack) => (
-            <HubPackButton key={pack.id} pack={pack} />
+        <div className="home-hub__destinations" aria-label="Explore">
+          {DESTINATIONS.map((d) => (
+            <Link
+              key={d.to}
+              to={d.to}
+              className={`home-hub__dest home-hub__dest--${d.tone}`}
+            >
+              <strong>{d.title}</strong>
+              <span>{d.blurb}</span>
+            </Link>
           ))}
         </div>
-      </section>
-
-      <section className="home-hub__section" aria-labelledby="hub-cards">
-        <div className="home-hub__head">
-          <h2 id="hub-cards">Cards</h2>
-          <Link to={collectionPath()}>Collection →</Link>
-        </div>
-        <div className="home-hub__row home-hub__row--cards">
-          {sampleCards.map((card) =>
-            card ? (
-              <div key={card.id} className="home-hub__card-cell">
-                <MonkeyCard
-                  entity={card.entity}
-                  pathLevels={card.pathLevels}
-                  mode="preview"
-                  owned
-                  onSelect={() => navigate(collectionPath())}
-                />
-              </div>
-            ) : null,
-          )}
-        </div>
-      </section>
-
-      <section className="home-hub__section" aria-labelledby="hub-market">
-        <div className="home-hub__head">
-          <h2 id="hub-market">Market</h2>
-          <Link to={marketplacePath()}>Browse →</Link>
-        </div>
-        {listings.length === 0 ? (
-          <p className="home-hub__note">No active listings right now.</p>
-        ) : (
-          <div className="home-hub__row home-hub__row--cards">
-            {listings.map((row) => {
-              const card = cardSpecById(row.cardId);
-              const open = () => navigate(listingPath(row.id));
-              return (
-                <article key={row.id} className="home-hub__card-cell">
-                  {card ? (
-                    <MonkeyCard
-                      entity={card.entity}
-                      pathLevels={card.pathLevels}
-                      mode="preview"
-                      owned
-                      onSelect={open}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className="market-card__missing"
-                      onClick={open}
-                    >
-                      {row.cardId}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="home-hub__price"
-                    onClick={open}
-                  >
-                    <CashAmount amount={row.price} size={15} />
-                  </button>
-                  <Link
-                    className="home-hub__seller"
-                    to={userCollectionPath(row.sellerUsername)}
-                  >
-                    <UserAvatar crop={row.sellerAvatar} size={22} />
-                    <span>{row.sellerUsername}</span>
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        )}
       </section>
 
       <section className="home-hub__section" aria-labelledby="hub-board">
@@ -249,35 +161,5 @@ export function HomeHub() {
         <p>BTD6 Creator code: blinky</p>
       </footer>
     </div>
-  );
-}
-
-function HubPackButton({ pack }: { pack: PackDef }) {
-  const navigate = useNavigate();
-  const price = packPrice(pack);
-  return (
-    <button
-      type="button"
-      className="pack-shelf__item home-hub__pack-item"
-      onClick={() => navigate(shopPath())}
-    >
-      <BoosterPack
-        pack={pack}
-        effects={false}
-        className="pack-shelf__booster"
-      />
-      <span className="pack-shelf__label">
-        <strong>{pack.title}</strong>
-        <span className="pack-shelf__price">
-          <img
-            src="/images/ui/money-icon.webp"
-            alt=""
-            width={22}
-            height={22}
-          />
-          {price.toLocaleString()}
-        </span>
-      </span>
-    </button>
   );
 }
