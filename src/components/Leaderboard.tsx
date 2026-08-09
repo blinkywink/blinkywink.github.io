@@ -233,53 +233,45 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
             {trimmed && searchLoading ? (
               <p className="board-status">Searching…</p>
             ) : null}
-            <table className="board-table">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Player</th>
-                  <th scope="col">Earned</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayRows.map((row) => {
-                  const mine = user?.id === row.id;
-                  const chrome = playerChromeStyle({
-                    accentColor: row.accentColor,
-                    auraCardId: row.auraCardId,
-                  });
-                  const chromeOn = hasPlayerChrome(chrome);
-                  return (
-                    <tr
-                      key={row.id}
-                      className={`board-table__row${mine ? " is-you" : ""}${chromeOn ? " has-player-chrome" : ""}`}
+            <ul className="board-list">
+              {displayRows.map((row) => {
+                const mine = user?.id === row.id;
+                const chrome = playerChromeStyle({
+                  accentColor: row.accentColor,
+                  auraCardId: row.auraCardId,
+                });
+                const chromeOn = hasPlayerChrome(chrome);
+                return (
+                  <li key={row.id}>
+                    <button
+                      type="button"
+                      className={`board-card${mine ? " is-you" : ""}${chromeOn ? " has-player-chrome" : ""}`}
                       style={chromeOn ? chrome : undefined}
+                      onClick={() =>
+                        onOpenCollection({
+                          userId: row.id,
+                          username: row.username,
+                        })
+                      }
                     >
-                      <td>{row.rank ?? "—"}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="board-table__player"
-                          onClick={() =>
-                            onOpenCollection({
-                              userId: row.id,
-                              username: row.username,
-                            })
-                          }
-                        >
-                          <UserAvatar crop={row.avatar} size={56} />
-                          <span>
-                            {row.username}
-                            {mine ? " (you)" : ""}
-                          </span>
-                        </button>
-                      </td>
-                      <td>{row.coins_earned.toLocaleString("en-US")}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      <span className="board-card__rank">
+                        {row.rank ?? "—"}
+                      </span>
+                      <UserAvatar crop={row.avatar} size={56} />
+                      <span className="board-card__name">
+                        {row.username}
+                        {mine ? (
+                          <span className="board-card__you">you</span>
+                        ) : null}
+                      </span>
+                      <span className="board-card__earned">
+                        {row.coins_earned.toLocaleString("en-US")}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </>
         )}
       </main>

@@ -7562,93 +7562,98 @@ body:has(.zoomed-page) {
   color: #f07178;
 }
 
-.board-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-body);
-  font-size: 1.12rem;
-}
-
-.board-table th,
-.board-table td {
-  padding: 0.85rem 0.9rem;
-  text-align: left;
-  border-bottom: 1px solid rgba(240, 240, 244, 0.1);
-}
-
-.board-table th {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(240, 240, 244, 0.45);
-  font-weight: 600;
-  border-bottom-color: rgba(240, 240, 244, 0.18);
-}
-
-.board-table th:first-child,
-.board-table td:first-child {
-  width: 3rem;
-  color: rgba(240, 240, 244, 0.5);
-  font-variant-numeric: tabular-nums;
-  font-size: 1.05rem;
-}
-
-.board-table th:last-child,
-.board-table td:last-child {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: 1.15rem;
-  font-weight: 800;
-}
-
-.board-table tbody tr.is-you {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.board-table tbody tr.is-you td {
-  color: #ffe08a;
-}
-
-.board-table tbody tr.is-you td:first-child {
-  color: #ffe08a;
-}
-
-.board-table__player {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-weight: 800;
-  font-size: 1.12rem;
-  padding: 0;
+.board-list {
+  list-style: none;
   margin: 0;
-  cursor: pointer;
-  text-align: left;
-  text-decoration: underline;
-  text-decoration-color: rgba(240, 240, 244, 0.28);
-  text-underline-offset: 0.18em;
-  display: inline-flex;
-  align-items: center;
+  padding: 0;
+  display: grid;
   gap: 0.65rem;
 }
 
-.board-table__player:hover,
-.board-table__player:focus-visible {
-  color: #9fd6ff;
-  text-decoration-color: #9fd6ff;
+.board-card {
+  --player-accent: transparent;
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2.5rem auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem 0.85rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f0f0f4;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.board-card:hover,
+.board-card:focus-visible {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.055);
+  transform: translateY(-1px);
   outline: none;
 }
 
-.board-table tbody tr.is-you .board-table__player {
+.board-card.is-you {
+  border-color: rgba(240, 200, 74, 0.45);
+  background: rgba(240, 200, 74, 0.08);
+}
+
+.board-card__rank {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(240, 240, 244, 0.48);
+  text-align: center;
+}
+
+.board-card.is-you .board-card__rank {
   color: #ffe08a;
 }
 
-.board-table tbody tr.is-you .board-table__player:hover,
-.board-table tbody tr.is-you .board-table__player:focus-visible {
-  color: #ffe8a8;
-  text-decoration-color: #ffe8a8;
+.board-card__name {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  font-size: 1.08rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-card.is-you .board-card__name {
+  color: #ffe08a;
+}
+
+.board-card__you {
+  flex-shrink: 0;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 200, 74, 0.4);
+  background: rgba(240, 200, 74, 0.14);
+  color: #ffe08a;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.board-card__earned {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: rgba(240, 240, 244, 0.88);
 }
 
 .board-main > .btn {
@@ -9404,15 +9409,62 @@ button.trade-offer-card:hover:not(:disabled) {
     0 0 18px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35);
 }
 
-.board-table__row.has-player-chrome .board-table__player {
-  border-radius: 12px;
+.board-card.has-player-chrome {
+  border-color: color-mix(in srgb, var(--player-accent) 72%, transparent);
+  background:
+    radial-gradient(
+      circle at 12% 40%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.32),
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 88% 20%,
+      color-mix(in srgb, var(--player-accent-2) 18%, transparent),
+      transparent 45%
+    ),
+    rgba(14, 14, 20, 0.92);
   box-shadow:
-    inset 3px 0 0 var(--player-accent),
-    0 0 18px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.12 + var(--player-holo) * 0.22));
+    0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35),
+    0 10px 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.18 + var(--player-holo) * 0.22));
 }
 
-.board-table__row.has-player-chrome .user-avatar {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--player-accent) 65%, transparent);
+.board-card.has-player-chrome:hover,
+.board-card.has-player-chrome:focus-visible {
+  border-color: color-mix(in srgb, var(--player-accent) 88%, #fff);
+  background:
+    radial-gradient(
+      circle at 12% 40%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.42),
+      transparent 58%
+    ),
+    rgba(16, 16, 24, 0.96);
+}
+
+.board-card.has-player-chrome::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: calc(var(--player-aura) * (0.28 + var(--player-holo) * 0.4));
+  background: linear-gradient(
+    112deg,
+    transparent 18%,
+    color-mix(in srgb, var(--player-accent) 40%, transparent) 44%,
+    color-mix(in srgb, var(--player-accent-2) 42%, transparent) 58%,
+    transparent 82%
+  );
+  mix-blend-mode: screen;
+}
+
+.board-card.has-player-chrome .user-avatar {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--player-accent) 75%, transparent),
+    0 0 16px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.45);
+}
+
+.board-card.has-player-chrome .board-card__rank {
+  color: color-mix(in srgb, var(--player-accent) 80%, #fff);
 }
 
 .home-hub__player-chip.has-player-chrome {
