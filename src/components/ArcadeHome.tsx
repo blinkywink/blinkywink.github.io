@@ -8,7 +8,8 @@ export type GameId =
   | "pricecheck"
   | "orderup"
   | "bloonle"
-  | "camodetection";
+  | "camodetection"
+  | "bloonssweeper";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -226,6 +227,35 @@ function CamoPreview() {
   );
 }
 
+function SweeperPreview() {
+  const mines = new Set([2, 7, 11]);
+  const opens = new Set([0, 1, 4, 5, 8]);
+  return (
+    <div className="game-preview game-preview--sweeper" aria-hidden>
+      <div className="game-preview__sweeper-grid">
+        {Array.from({ length: 16 }, (_, i) => (
+          <span
+            key={i}
+            className={[
+              "game-preview__sweeper-cell",
+              opens.has(i) ? "is-open" : "",
+              mines.has(i) ? "is-mine" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {mines.has(i) ? (
+              <img src="/images/bloons/red-bloon.png" alt="" draggable={false} />
+            ) : opens.has(i) ? (
+              <span>{(i % 3) + 1}</span>
+            ) : null}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MapPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -320,6 +350,13 @@ export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
       blurb: "Remember where the camo bloons flashed.",
       label: "Camo Detection — Remember where the camo bloons flashed",
       preview: <CamoPreview />,
+    },
+    {
+      id: "bloonssweeper" as const,
+      title: "BLOONS SWEEPER",
+      blurb: "Minesweeper — red bloons are the mines.",
+      label: "Bloons Sweeper — Classic minesweeper with red bloon mines",
+      preview: <SweeperPreview />,
     },
   ];
   const shown =

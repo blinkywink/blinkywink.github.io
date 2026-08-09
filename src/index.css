@@ -391,6 +391,7 @@ p {
 .site-main:has(.orderup-page),
 .site-main:has(.bloonle-page),
 .site-main:has(.camo-page),
+.site-main:has(.sweeper-page),
 .site-main:has(.zoomed-page) {
   height: 100dvh;
   max-height: 100dvh;
@@ -401,6 +402,7 @@ body:has(.price-page),
 body:has(.orderup-page),
 body:has(.bloonle-page),
 body:has(.camo-page),
+body:has(.sweeper-page),
 body:has(.zoomed-page) {
   overflow: hidden;
   height: 100dvh;
@@ -1453,6 +1455,48 @@ body:has(.zoomed-page) {
   height: 78%;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+.game-preview--sweeper {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 45% 30%, #3a2a48 0%, #14101c 70%);
+}
+
+.game-preview__sweeper-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.18rem;
+  width: 74%;
+  aspect-ratio: 1;
+}
+
+.game-preview__sweeper-cell {
+  border-radius: 0.28rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(160deg, #4a3a6a, #2a2040);
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #f0e8ff;
+  overflow: hidden;
+}
+
+.game-preview__sweeper-cell.is-open {
+  background: #1c1830;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.game-preview__sweeper-cell.is-mine {
+  background: rgba(90, 30, 40, 0.55);
+}
+
+.game-preview__sweeper-cell img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
 }
 
 .game-preview--cards {
@@ -5203,25 +5247,13 @@ body:has(.zoomed-page) {
 }
 
 .pack-opener__card-glow--t5 {
-  inset: 0;
-  border-radius: inherit;
-  box-shadow:
-    0 0 16px 3px rgba(240, 196, 86, 0.55),
-    0 0 36px 10px rgba(230, 170, 40, 0.38),
-    0 0 64px 16px rgba(200, 140, 20, 0.2);
-  animation: pack-card-glow-t5 1.55s ease-in-out infinite alternate;
+  /* Soft gold bloom via drop-shadow on the card — no rectangular ring */
+  display: none;
 }
 
 .pack-opener__card-glow--paragon {
-  inset: 0;
-  border-radius: inherit;
-  background: none;
-  /* Soft violet bloom that hugs the card — no hard outline */
-  box-shadow:
-    0 0 18px 2px rgba(200, 120, 255, 0.55),
-    0 0 42px 10px rgba(160, 70, 255, 0.42),
-    0 0 78px 18px rgba(110, 40, 200, 0.28);
-  animation: pack-card-glow-paragon 1.6s ease-in-out infinite alternate;
+  /* Soft violet bloom via drop-shadow on the card — no rectangular ring */
+  display: none;
 }
 
 .pack-opener__card.is-glow-t4 .monkey-card-scene {
@@ -5231,9 +5263,9 @@ body:has(.zoomed-page) {
 
 .pack-opener__card.is-glow-t5 .monkey-card-scene {
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45))
-    drop-shadow(0 0 10px rgba(255, 210, 100, 0.7))
-    drop-shadow(0 0 26px rgba(240, 180, 50, 0.5))
-    drop-shadow(0 0 48px rgba(200, 140, 20, 0.3));
+    drop-shadow(0 0 12px rgba(255, 210, 100, 0.65))
+    drop-shadow(0 0 28px rgba(240, 180, 50, 0.45))
+    drop-shadow(0 0 52px rgba(200, 140, 20, 0.28));
 }
 
 .pack-opener__card.is-glow-paragon .monkey-card-scene {
@@ -6821,6 +6853,247 @@ body:has(.zoomed-page) {
   .camo-cell.is-missed,
   .camo-page.is-watching .camo-cell.has-camo .camo-cell__img {
     animation: none;
+  }
+}
+
+/* ——— Bloons Sweeper ——— */
+.sweeper-page {
+  --sweeper-ink: #f4efe8;
+  width: min(var(--content-max), calc(100% - 1.25rem));
+  margin: 0 auto;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.35rem 0 0.75rem;
+  color: var(--sweeper-ink);
+  overflow: hidden;
+}
+
+.sweeper-page > .game-header {
+  flex: 0 0 auto;
+}
+
+.sweeper-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  overflow: auto;
+  padding-bottom: 0.5rem;
+}
+
+.sweeper-hud {
+  width: min(100%, 36rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 0.75rem;
+}
+
+.sweeper-hud__stats {
+  display: inline-flex;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.sweeper-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sweeper-stat img {
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.sweeper-stat__label {
+  opacity: 0.65;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sweeper-diff {
+  display: inline-flex;
+  gap: 0.3rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.sweeper-diff__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.sweeper-diff__btn.is-active {
+  background: rgba(240, 200, 74, 0.2);
+  color: #f0c84a;
+  opacity: 1;
+}
+
+.sweeper-diff__btn:disabled {
+  cursor: default;
+}
+
+.sweeper-hud__actions {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.sweeper-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.sweeper-board {
+  --sweeper-gap: 0.18rem;
+  display: grid;
+  grid-template-columns: repeat(var(--sweeper-cols), minmax(0, 1fr));
+  gap: var(--sweeper-gap);
+  width: min(100%, calc(var(--sweeper-cols) * 2.05rem));
+  padding: 0.45rem;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #2a2040 0%, #161022 100%);
+  border: 3px solid #3a2a58;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  touch-action: manipulation;
+}
+
+.sweeper-cell {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.28rem;
+  aspect-ratio: 1;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(0.7rem, 2.4vw, 0.95rem);
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  color: #fff8ee;
+  background: linear-gradient(160deg, #5a4a7a, #352850);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  user-select: none;
+}
+
+.sweeper-cell.is-closed:hover {
+  filter: brightness(1.08);
+}
+
+.sweeper-cell.is-open {
+  background: #1a1628;
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  cursor: default;
+}
+
+.sweeper-cell.is-flagged {
+  background: linear-gradient(160deg, #6a4060, #3a2040);
+}
+
+.sweeper-cell.is-mine {
+  background: rgba(90, 28, 36, 0.55);
+}
+
+.sweeper-cell.is-boom {
+  background: rgba(180, 40, 50, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 80, 80, 0.55);
+}
+
+.sweeper-cell.is-n1 { color: #6ec8ff; }
+.sweeper-cell.is-n2 { color: #6ee08a; }
+.sweeper-cell.is-n3 { color: #ff7a7a; }
+.sweeper-cell.is-n4 { color: #b39dff; }
+.sweeper-cell.is-n5 { color: #f0c84a; }
+.sweeper-cell.is-n6 { color: #5ee0d0; }
+.sweeper-cell.is-n7 { color: #f4efe8; }
+.sweeper-cell.is-n8 { color: #c0c0c8; }
+
+.sweeper-cell__mine,
+.sweeper-cell__flag {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.sweeper-cell__pin {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #ff6b7a;
+}
+
+.sweeper-result {
+  width: min(100%, 24rem);
+  margin-top: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  text-align: center;
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  background: rgba(12, 10, 20, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.sweeper-result h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.sweeper-result p {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.sweeper-result.is-win {
+  border-color: rgba(240, 200, 74, 0.55);
+}
+
+.sweeper-result.is-lose {
+  border-color: rgba(255, 100, 100, 0.4);
+}
+
+.sweeper-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .sweeper-board {
+    width: min(100%, calc(var(--sweeper-cols) * 1.7rem));
+    --sweeper-gap: 0.12rem;
+    padding: 0.35rem;
+  }
+
+  .sweeper-hud {
+    justify-content: center;
   }
 }
 
