@@ -6989,7 +6989,7 @@ body:has(.zoomed-page) {
   display: grid;
   grid-template-columns: repeat(var(--sweeper-cols), minmax(0, 1fr));
   gap: var(--sweeper-gap);
-  width: min(100%, calc(var(--sweeper-cols) * 2.05rem));
+  width: min(100%, calc(var(--sweeper-cols) * 3.075rem));
   padding: 0.45rem;
   border-radius: 14px;
   background: linear-gradient(165deg, #2a2040 0%, #161022 100%);
@@ -7105,7 +7105,7 @@ body:has(.zoomed-page) {
 
 @media (max-width: 640px) {
   .sweeper-board {
-    width: min(100%, calc(var(--sweeper-cols) * 1.7rem));
+    width: min(100%, calc(var(--sweeper-cols) * 2.55rem));
     --sweeper-gap: 0.12rem;
     padding: 0.35rem;
   }

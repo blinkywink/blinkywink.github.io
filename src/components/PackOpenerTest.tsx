@@ -330,7 +330,7 @@ export function PackOpenerTest({
   };
 
   const purchase = useCallback(async () => {
-    if (buyBusy || phaseRef.current !== "shop") return;
+    if (buyBusy || mode === "reward" || phaseRef.current !== "shop") return;
     setBuyError(null);
     if ((profile?.coins ?? 0) < price) {
       setBuyError("Not enough Cash.");
@@ -345,7 +345,7 @@ export function PackOpenerTest({
     }
     setCoinBalance(balance);
     setPhaseBoth("sealed");
-  }, [buyBusy, price, profile?.coins, setCoinBalance]);
+  }, [buyBusy, mode, price, profile?.coins, setCoinBalance]);
 
   const showCardAt = useCallback((i: number) => {
     indexRef.current = i;
@@ -491,6 +491,7 @@ export function PackOpenerTest({
     if (next >= pullsRef.current.length) {
       setPhaseBoth("done");
       // Holding Space through the last card should buy another without a re-tap.
+      // Reward packs are free post-game grants — not purchasable again.
       if (spaceHeldRef.current && mode !== "reward") {
         later(() => {
           if (phaseRef.current === "done" && spaceHeldRef.current) {
@@ -532,8 +533,8 @@ export function PackOpenerTest({
       } else if (p === "ready") {
         if (spaceCanFling(e)) flingAway();
       } else if (p === "done") {
-        // Allow key-repeat / hold-through from the last card.
-        void buyAnother();
+        // Reward packs aren't in the shop — no buy-another.
+        if (mode !== "reward") void buyAnother();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -549,6 +550,7 @@ export function PackOpenerTest({
     };
   }, [
     open,
+    mode,
     autoSlashOpen,
     flingAway,
     purchase,
@@ -939,16 +941,18 @@ export function PackOpenerTest({
             })}
           </div>
           <div className="pack-opener__actions">
-            <button
-              type="button"
-              className="btn btn--secondary"
-              disabled={buyBusy || mode === "reward"}
-              onClick={() => {
-                void buyAnother();
-              }}
-            >
-              {buyBusy ? "Buying…" : "Buy another · Space"}
-            </button>
+            {mode !== "reward" ? (
+              <button
+                type="button"
+                className="btn btn--secondary"
+                disabled={buyBusy}
+                onClick={() => {
+                  void buyAnother();
+                }}
+              >
+                {buyBusy ? "Buying…" : "Buy another · Space"}
+              </button>
+            ) : null}
             <button type="button" className="btn btn--primary" onClick={handleDone}>
               View collection
             </button>

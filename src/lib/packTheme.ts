@@ -74,8 +74,8 @@ export type CategoryPackTheme = {
 };
 
 export const PACK_PRICES = {
-  btd6: 1000,
-  tower: 1500,
+  btd6: 1750,
+  tower: 1000,
   category: 1200,
 } as const;
 
