@@ -370,33 +370,47 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
             </h1>
             {isRemote && !remoteError ? (
               <div className="player-showcase">
-                <p className="player-showcase__label">Player cards</p>
-                {showcaseCards.length > 0 ? (
-                  <div className="player-showcase__row">
-                    {showcaseCards.map((card) => (
-                      <MonkeyCard
-                        key={card.id}
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="player-showcase__empty">No showcase cards yet.</p>
-                )}
-                <ul className="player-showcase__stats">
+                <div className="player-showcase__cards">
+                  <p className="player-showcase__label">Player cards</p>
+                  {showcaseCards.length > 0 ? (
+                    <div className="player-showcase__row">
+                      {showcaseCards.map((card) => (
+                        <MonkeyCard
+                          key={card.id}
+                          entity={card.entity}
+                          pathLevels={card.pathLevels}
+                          mode="preview"
+                          owned
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="player-showcase__empty">
+                      No showcase cards yet.
+                    </p>
+                  )}
+                </div>
+                <ul className="player-showcase__stats" aria-label="Collection stats">
                   <li>
-                    <strong>{stats.total}</strong> cards
+                    <span className="player-showcase__stat-val">
+                      {stats.total}
+                    </span>
+                    <span className="player-showcase__stat-key">cards</span>
                   </li>
                   <li>
-                    <strong>{stats.uniqueTowers}</strong> towers
+                    <span className="player-showcase__stat-val">
+                      {stats.uniqueTowers}
+                    </span>
+                    <span className="player-showcase__stat-key">towers</span>
                   </li>
                   {stats.topTower ? (
-                    <li>
-                      Most from <strong>{stats.topTower}</strong> (
-                      {stats.topTowerCount})
+                    <li className="player-showcase__stat--wide">
+                      <span className="player-showcase__stat-val">
+                        {stats.topTower}
+                      </span>
+                      <span className="player-showcase__stat-key">
+                        most owned · {stats.topTowerCount}
+                      </span>
                     </li>
                   ) : null}
                 </ul>

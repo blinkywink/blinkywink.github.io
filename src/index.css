@@ -8632,10 +8632,18 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .player-showcase {
-  width: min(100%, 36rem);
+  --card-preview-w: 92px;
+  --card-preview-scale: 0.23;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+  width: min(100%, 40rem);
   display: grid;
-  gap: 0.55rem;
-  margin: 0.35rem 0 0.15rem;
+  gap: 0.9rem;
+  margin: 0.65rem 0 0.35rem;
+}
+
+.player-showcase__cards {
+  display: grid;
+  gap: 0.45rem;
 }
 
 .player-showcase__label {
@@ -8650,11 +8658,23 @@ button.trade-offer-card:hover:not(:disabled) {
 .player-showcase__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  align-items: flex-start;
+  gap: 0.65rem;
 }
 
-.player-showcase__row .monkey-card-scene {
-  width: 5.6rem;
+.player-showcase__row .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
+}
+
+.player-showcase__row .monkey-card-scene--preview > .monkey-card {
+  width: var(--card-face-w);
+  height: calc(var(--card-face-w) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
 }
 
 .player-showcase__empty {
@@ -8667,21 +8687,52 @@ button.trade-offer-card:hover:not(:disabled) {
 .player-showcase__stats {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.85rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: rgba(255, 248, 232, 0.88);
+  padding: 0.7rem 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.65rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
 }
 
-.player-showcase__stats strong {
-  color: #f0c84a;
+.player-showcase__stats li {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.player-showcase__stats .player-showcase__stat--wide {
+  grid-column: 1 / -1;
+}
+
+.player-showcase__stat-val {
+  font-size: 1.05rem;
   font-weight: 800;
+  color: #f0c84a;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.player-showcase__stat-key {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 232, 0.62);
+}
+
+@media (max-width: 520px) {
+  .player-showcase {
+    --card-preview-w: 78px;
+    --card-preview-scale: 0.195;
+  }
 }
 
 .profile-showcase-edit {
+  --card-preview-w: 96px;
+  --card-preview-scale: 0.24;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
   display: grid;
   gap: 0.75rem;
   padding: 1rem 1.1rem;
@@ -8719,18 +8770,29 @@ button.trade-offer-card:hover:not(:disabled) {
 .profile-showcase-edit__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  align-items: flex-start;
 }
 
 .profile-showcase-edit__slot {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
   justify-items: center;
+  width: var(--card-preview-w);
 }
 
-.profile-showcase-edit__row .monkey-card-scene,
-.profile-showcase-edit__slot .monkey-card-scene {
-  width: 5.6rem;
+.profile-showcase-edit__slot .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
+}
+
+.profile-showcase-edit__slot .monkey-card-scene--preview > .monkey-card {
+  width: var(--card-face-w, 400px);
+  height: calc(var(--card-face-w, 400px) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
 }
 
 .profile-showcase-edit__empty {
