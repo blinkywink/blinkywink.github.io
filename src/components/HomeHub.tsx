@@ -31,7 +31,6 @@ import {
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
 import { UserAvatar } from "./UserAvatar";
-import { PlayerAuraFx } from "./PlayerAuraFx";
 import {
   hasPlayerChrome,
   normalizeAccentColor,
@@ -44,7 +43,6 @@ type BoardRow = {
   coins_earned: number;
   avatar: AvatarCrop;
   accentColor: string | null;
-  auraCardId: string | null;
 };
 
 const CARD_PEEK_IDS = [
@@ -126,7 +124,7 @@ export function HomeHub() {
             const { data, error } = await supabase
               .from("profiles")
               .select(
-                "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, aura_card_id",
+                "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color",
               )
               .order("coins_earned", { ascending: false })
               .limit(5);
@@ -142,7 +140,6 @@ export function HomeHub() {
                 y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
               }),
               accentColor: normalizeAccentColor(r.accent_color),
-              auraCardId: r.aura_card_id ? String(r.aura_card_id) : null,
             }));
           },
         );
@@ -238,7 +235,6 @@ export function HomeHub() {
             {topPlayers.map((row, i) => {
               const chrome = playerChromeStyle({
                 accentColor: row.accentColor,
-                auraCardId: row.auraCardId,
               });
               const chromeOn = hasPlayerChrome(chrome);
               return (
@@ -248,10 +244,6 @@ export function HomeHub() {
                   style={chromeOn ? chrome : undefined}
                   to={userCollectionPath(row.username)}
                 >
-                  <PlayerAuraFx
-                    accentColor={row.accentColor}
-                    auraCardId={row.auraCardId}
-                  />
                   <span className="home-hub__rank">{i + 1}</span>
                   <UserAvatar crop={row.avatar} size={36} />
                   <strong>{row.username}</strong>

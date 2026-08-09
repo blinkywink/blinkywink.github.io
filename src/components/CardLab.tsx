@@ -19,7 +19,6 @@ import {
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { MonkeyCard } from "./MonkeyCard";
-import { PlayerAuraFx } from "./PlayerAuraFx";
 import { UserAvatar } from "./UserAvatar";
 
 export type CardsOpenOpts = {
@@ -35,7 +34,6 @@ export type CollectionViewer = {
   avatar?: AvatarCrop | null;
   showcaseCardIds?: string[];
   accentColor?: string | null;
-  auraCardId?: string | null;
 };
 
 type Props = {
@@ -114,7 +112,7 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 /** Player collection — owned cards in color, missing ones greyed out. */
 export function CardLab({ onBack, initial, viewer = null }: Props) {
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const { owned: myOwned } = useCardCollection();
@@ -185,12 +183,13 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const chromeStyle = useMemo(
     () =>
       playerChromeStyle({
-        accentColor: viewer?.accentColor,
-        auraCardId: viewer?.auraCardId,
+        accentColor: isRemote
+          ? viewer?.accentColor
+          : profile?.accent_color,
       }),
-    [viewer?.accentColor, viewer?.auraCardId],
+    [isRemote, viewer?.accentColor, profile?.accent_color],
   );
-  const chromeOn = isRemote && hasPlayerChrome(chromeStyle);
+  const chromeOn = hasPlayerChrome(chromeStyle);
 
   async function onRequestTrade() {
     if (!viewer || tradeBusy) return;
@@ -378,10 +377,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         <header
           className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
         >
-          <PlayerAuraFx
-            accentColor={viewer?.accentColor}
-            auraCardId={viewer?.auraCardId}
-          />
           {isRemote ? (
             <button
               type="button"

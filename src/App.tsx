@@ -113,7 +113,6 @@ function UserCollectionPage() {
     avatar: AvatarCrop;
     showcaseCardIds: string[];
     accentColor: string | null;
-    auraCardId: string | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,7 +136,6 @@ function UserCollectionPage() {
           avatar: profile.avatar,
           showcaseCardIds: profile.showcaseCardIds,
           accentColor: profile.accentColor,
-          auraCardId: profile.auraCardId,
         });
         setLoading(false);
       })

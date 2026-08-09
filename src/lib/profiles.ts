@@ -14,7 +14,6 @@ export type PublicProfile = {
   avatar: AvatarCrop;
   showcaseCardIds: string[];
   accentColor: string | null;
-  auraCardId: string | null;
 };
 
 export type ProfileSearchHit = {
@@ -23,7 +22,6 @@ export type ProfileSearchHit = {
   coinsEarned: number;
   avatar: AvatarCrop;
   accentColor: string | null;
-  auraCardId: string | null;
 };
 
 function escapeIlike(raw: string): string {
@@ -63,7 +61,6 @@ export async function fetchProfileByUsername(
       }),
       showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
       accentColor: normalizeAccentColor(row.accent_color),
-      auraCardId: row.aura_card_id ? String(row.aura_card_id) : null,
     };
   });
 }
@@ -80,7 +77,7 @@ export async function searchProfilesByUsername(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, aura_card_id",
+      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color",
     )
     .ilike("username", pattern)
     .order("coins_earned", { ascending: false })
@@ -102,6 +99,5 @@ export async function searchProfilesByUsername(
       y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
     }),
     accentColor: normalizeAccentColor(row.accent_color),
-    auraCardId: row.aura_card_id ? String(row.aura_card_id) : null,
   }));
 }

@@ -38,6 +38,7 @@ function profileFromGuest(coins: number): Profile {
     avatar_x: 0.5,
     avatar_y: 0.38,
     showcase_card_ids: [],
+    showcase_slots: 0,
     accent_unlocked: false,
     accent_color: null,
     aura_unlocked: false,

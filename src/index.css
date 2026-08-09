@@ -9102,6 +9102,13 @@ button.trade-offer-card:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  align-items: center;
+}
+
+.profile-showcase-edit__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .profile-showcase-edit__head h3 {
@@ -9152,6 +9159,7 @@ button.trade-offer-card:hover:not(:disabled) {
 
 /* Profile page */
 .profile-page {
+  position: relative;
   width: min(var(--content-max), calc(100% - 2rem));
   margin: 0 auto;
   padding: 0.75rem 0 3rem;
@@ -9220,14 +9228,9 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .profile-cosmetics__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.85rem;
-}
-
-@media (max-width: 720px) {
-  .profile-cosmetics__grid {
-    grid-template-columns: 1fr;
-  }
+  max-width: 28rem;
 }
 
 .profile-cosmetics__card {
@@ -9299,52 +9302,47 @@ button.trade-offer-card:hover:not(:disabled) {
   color: rgba(240, 240, 244, 0.5);
 }
 
-.profile-cosmetics__aura-preview {
-  --card-preview-w: 72px;
-  --card-preview-scale: 0.18;
-  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.profile-cosmetics__aura-preview .monkey-card-scene--preview {
-  width: var(--card-preview-w);
-  height: var(--card-preview-h);
-  overflow: hidden;
-  border-radius: calc(22px * var(--card-preview-scale));
-  flex-shrink: 0;
-}
-
-.profile-cosmetics__aura-preview .monkey-card-scene--preview > .monkey-card {
-  width: var(--card-face-w, 400px);
-  height: calc(var(--card-face-w, 400px) * 3.5 / 2.5);
-  transform: scale(var(--card-preview-scale));
-  transform-origin: top left;
-}
-
-.profile-cosmetics__aura-preview p {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: rgba(240, 240, 244, 0.72);
-}
-
-.profile-cosmetics__aura-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-/* Shared player accent / aura chrome */
+/* Shared player accent chrome */
 .has-player-chrome {
   --player-accent: #f0c84a;
-  --player-accent-2: #7cf0c0;
+  --player-accent-2: #f0c84a;
   --player-accent-r: 240;
   --player-accent-g: 200;
   --player-accent-b: 74;
-  --player-holo: 0;
-  --player-aura: 0;
+}
+
+.profile-page__atmosphere {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.34),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 12% 78%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.18),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 64%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.14),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--player-accent) 10%, #08080c) 0%,
+      #08080c 55%,
+      #08080c 100%
+    );
+}
+
+.profile-page.has-player-chrome > :not(.profile-page__atmosphere) {
+  position: relative;
+  z-index: 1;
 }
 
 .profile-home.has-player-chrome {
@@ -9358,7 +9356,7 @@ button.trade-offer-card:hover:not(:disabled) {
     rgba(255, 255, 255, 0.03);
   box-shadow:
     0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
-    0 12px 40px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.12 + var(--player-holo) * 0.18));
+    0 12px 40px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.16);
 }
 
 .profile-home.has-player-chrome .profile-home__avatar-wrap {
@@ -9369,24 +9367,32 @@ button.trade-offer-card:hover:not(:disabled) {
   );
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--player-accent) 65%, transparent),
-    0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.25 + var(--player-holo) * 0.35));
+    0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35);
 }
 
-.profile-home.has-player-chrome::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: calc(var(--player-aura) * (0.22 + var(--player-holo) * 0.45));
-  background: linear-gradient(
-    115deg,
-    transparent 20%,
-    color-mix(in srgb, var(--player-accent) 35%, transparent) 42%,
-    color-mix(in srgb, var(--player-accent-2) 40%, transparent) 58%,
-    transparent 78%
-  );
-  mix-blend-mode: screen;
+.card-lab.has-player-chrome .card-lab__atmosphere {
+  background:
+    radial-gradient(
+      circle at 50% 12%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.38),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 14% 82%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 88% 68%,
+      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.16),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--player-accent) 12%, #08080c) 0%,
+      #08080c 52%,
+      #08080c 100%
+    );
 }
 
 .card-lab.has-player-chrome .card-lab__header--remote,
@@ -9403,7 +9409,7 @@ button.trade-offer-card:hover:not(:disabled) {
       transparent 50%
     ),
     rgba(12, 12, 16, 0.55);
-  box-shadow: 0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.12 + var(--player-holo) * 0.2));
+  box-shadow: 0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.18);
 }
 
 .card-lab.has-player-chrome .card-lab__avatar,
@@ -9429,7 +9435,7 @@ button.trade-offer-card:hover:not(:disabled) {
     rgba(14, 14, 20, 0.92);
   box-shadow:
     0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35),
-    0 10px 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.18 + var(--player-holo) * 0.22));
+    0 10px 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22);
 }
 
 .board-card.has-player-chrome:hover,
@@ -9442,23 +9448,6 @@ button.trade-offer-card:hover:not(:disabled) {
       transparent 58%
     ),
     rgba(16, 16, 24, 0.96);
-}
-
-.board-card.has-player-chrome::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: calc(var(--player-aura) * (0.28 + var(--player-holo) * 0.4));
-  background: linear-gradient(
-    112deg,
-    transparent 18%,
-    color-mix(in srgb, var(--player-accent) 40%, transparent) 44%,
-    color-mix(in srgb, var(--player-accent-2) 42%, transparent) 58%,
-    transparent 82%
-  );
-  mix-blend-mode: screen;
 }
 
 .board-card.has-player-chrome .user-avatar {
@@ -9480,96 +9469,11 @@ button.trade-offer-card:hover:not(:disabled) {
       transparent 65%
     ),
     rgba(18, 18, 24, 0.9);
-  box-shadow: 0 0 16px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), calc(0.12 + var(--player-holo) * 0.2));
+  box-shadow: 0 0 16px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.16);
 }
 
 .home-hub__player-chip.has-player-chrome .user-avatar {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--player-accent) 65%, transparent);
-}
-
-/* Real card holo stack on profile / board chrome */
-.player-aura-fx {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  overflow: hidden;
-}
-
-.player-aura-fx__foil,
-.player-aura-fx__glare,
-.player-aura-fx__spark,
-.player-aura-fx__sheen {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-.player-aura-fx__foil {
-  opacity: calc(var(--opacity, 0.9) * 0.7 * var(--holo-mul, 0.8));
-  background: linear-gradient(
-    125deg,
-    rgba(255, 90, 160, 0.5) 0%,
-    rgba(255, 190, 70, 0.45) 18%,
-    rgba(90, 230, 160, 0.42) 36%,
-    rgba(70, 170, 255, 0.48) 54%,
-    rgba(170, 110, 255, 0.45) 72%,
-    rgba(255, 90, 160, 0.5) 100%
-  );
-  background-size: 240% 240%;
-  mix-blend-mode: color-dodge;
-  filter: saturate(1.25) brightness(1.08);
-  animation: monkey-holo-rainbow 7s ease-in-out infinite;
-}
-
-.player-aura-fx__glare {
-  opacity: calc(var(--opacity, 0.9) * 0.6 * var(--holo-mul, 0.8));
-  background: radial-gradient(
-    130% 90% at var(--px, 42%) var(--py, 38%),
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(255, 255, 255, 0.12) 30%,
-    transparent 58%
-  );
-  mix-blend-mode: soft-light;
-}
-
-.player-aura-fx__spark {
-  opacity: calc(var(--opacity, 0.9) * 0.7 * var(--holo-mul, 0.8));
-  background: linear-gradient(
-    125deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.18) 42%,
-    rgba(190, 255, 255, 0.55) 50%,
-    rgba(255, 255, 255, 0.18) 58%,
-    transparent 70%
-  );
-  background-size: 200% 200%;
-  mix-blend-mode: overlay;
-  animation: monkey-holo-sweep 4.5s ease-in-out infinite;
-}
-
-.player-aura-fx__sheen {
-  opacity: calc(var(--opacity, 0.9) * 0.45 * var(--holo-mul, 0.8));
-  background: linear-gradient(
-    125deg,
-    transparent 28%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 72%
-  );
-  background-size: 220% 220%;
-  background-position: var(--px, 42%) var(--py, 38%);
-  mix-blend-mode: soft-light;
-  animation: monkey-holo-sweep 5.5s ease-in-out infinite reverse;
-}
-
-.board-card > :not(.player-aura-fx),
-.profile-home > :not(.player-aura-fx),
-.home-hub__player-chip > :not(.player-aura-fx),
-.card-lab__header > :not(.player-aura-fx) {
-  position: relative;
-  z-index: 1;
 }
 
 .profile-home__avatar-wrap {

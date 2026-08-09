@@ -16,6 +16,8 @@ export type Profile = {
   avatar_y: number;
   /** Up to 3 owned card ids shown on the public collection page. */
   showcase_card_ids?: string[] | null;
+  /** Purchased showcase slot capacity (0–3). */
+  showcase_slots?: number | null;
   /** One-time unlock for custom profile accent color. */
   accent_unlocked?: boolean | null;
   /** Hex `#RRGGBB` accent, or null. */
@@ -51,6 +53,7 @@ export type Database = {
           avatar_x?: number;
           avatar_y?: number;
           showcase_card_ids?: string[] | null;
+          showcase_slots?: number;
           accent_unlocked?: boolean;
           accent_color?: string | null;
           aura_unlocked?: boolean;
@@ -69,6 +72,7 @@ export type Database = {
           avatar_x?: number;
           avatar_y?: number;
           showcase_card_ids?: string[] | null;
+          showcase_slots?: number;
           accent_unlocked?: boolean;
           accent_color?: string | null;
           aura_unlocked?: boolean;
@@ -195,7 +199,11 @@ export type Database = {
       };
       set_profile_showcase: {
         Args: { p_card_ids: string[] };
-        Returns: boolean;
+        Returns: number;
+      };
+      buy_showcase_slot: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       set_profile_accent: {
         Args: { p_color: string };
