@@ -499,7 +499,7 @@ body:has(.zoomed-page) {
   text-decoration: none;
   color: inherit;
   background: rgba(255, 255, 255, 0.03);
-  min-height: 13.5rem;
+  min-height: 12rem;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -518,9 +518,9 @@ body:has(.zoomed-page) {
 .home-hub__dest-visual {
   display: grid;
   place-items: center;
-  min-height: 7.5rem;
+  min-height: 6.5rem;
   pointer-events: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .home-hub__dest-copy {
@@ -562,65 +562,57 @@ body:has(.zoomed-page) {
     rgba(255, 255, 255, 0.03);
 }
 
-/* Shop: real booster packs */
-.home-hub__pack-spread {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.home-hub__pack-real {
-  --booster-w: 74px;
-  --booster-h: calc(74px * 1.62);
-  width: var(--booster-w);
-  height: var(--booster-h);
-  flex: 0 0 auto;
-  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.35));
-}
-
-.home-hub__pack-real .booster__model {
-  animation: none !important;
-  transform: none;
-}
-
-/* Cards: real MonkeyCard peeks */
-.home-hub__card-spread {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.45rem;
-  --card-face-w: 400px;
-  --hub-card-w: 78px;
-  --card-preview-w: var(--hub-card-w);
-  --card-preview-scale: calc(var(--hub-card-w) / var(--card-face-w));
-  --card-preview-h: calc(var(--hub-card-w) * 3.5 / 2.5);
-}
-
-.home-hub__card-real {
-  flex: 0 0 auto;
-  width: var(--hub-card-w);
-}
-
-.home-hub__card-real .monkey-card-scene--preview {
-  width: var(--hub-card-w);
-  height: var(--card-preview-h);
+/* Static image fans (no live MonkeyCard / BoosterPack mounts) */
+.home-hub__img-spread {
   position: relative;
-  overflow: hidden;
-  border-radius: calc(22px * var(--card-preview-scale));
-  isolation: isolate;
+  width: 8.2rem;
+  height: 5.8rem;
 }
 
-.home-hub__card-real .monkey-card-scene--preview > .monkey-card {
-  --opacity: 0;
+.home-hub__img-peek {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: var(--card-face-w);
-  height: calc(var(--card-face-w) * 3.5 / 2.5);
-  transform: scale(var(--card-preview-scale));
-  transform-origin: top left;
-  transform-style: flat;
+  left: 50%;
+  bottom: 0.15rem;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 10px 16px rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 100%;
+  user-select: none;
+}
+
+.home-hub__img-peek.is-pack {
+  width: 2.7rem;
+  height: 4.35rem;
+  margin-left: -1.35rem;
+  border-radius: 0.4rem;
+  border: 2px solid rgba(18, 14, 8, 0.9);
+  object-position: center;
+  background: #2a2418;
+}
+
+.home-hub__img-peek.is-card {
+  width: 3rem;
+  height: 4.2rem;
+  margin-left: -1.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid rgba(230, 220, 190, 0.55);
+  object-position: center 18%;
+  background: #1a1428;
+}
+
+.home-hub__img-peek.is-0 {
+  transform: translateX(-1.55rem) rotate(-14deg);
+  z-index: 1;
+}
+
+.home-hub__img-peek.is-1 {
+  transform: translateY(-0.2rem) rotate(0deg);
+  z-index: 3;
+}
+
+.home-hub__img-peek.is-2 {
+  transform: translateX(1.55rem) rotate(14deg);
+  z-index: 2;
 }
 
 /* Market: buy / sell teaser */

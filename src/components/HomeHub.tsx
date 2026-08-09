@@ -23,12 +23,14 @@ import {
   userCollectionPath,
   type GamePath,
 } from "../lib/routes";
-import { featuredShopPacks } from "../lib/packTheme";
+import {
+  featuredShopPacks,
+  resolveTowerPackTheme,
+  type PackDef,
+} from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
-import { BoosterPack } from "./BoosterPack";
 import { CashAmount } from "./CurrencyChip";
-import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
 type BoardRow = {
@@ -43,6 +45,14 @@ const CARD_PEEK_IDS = [
   "ninja-monkey-5-0-0",
   "super-monkey-0-5-0",
 ] as const;
+
+function packPeekSrc(pack: PackDef): string {
+  if (pack.coverArt) return pack.coverArt;
+  if (pack.tower) {
+    return resolveTowerPackTheme(pack.tower)?.image ?? "/images/ui/monkey-pack.jpg";
+  }
+  return "/images/ui/monkey-pack.jpg";
+}
 
 function DestTile({
   to,
@@ -159,13 +169,15 @@ export function HomeHub() {
             title="Shop"
             blurb="Open packs with Cash."
           >
-            <div className="home-hub__pack-spread">
-              {shopPeeks.map((pack) => (
-                <BoosterPack
+            <div className="home-hub__img-spread home-hub__img-spread--packs">
+              {shopPeeks.map((pack, i) => (
+                <img
                   key={pack.id}
-                  pack={pack}
-                  effects={false}
-                  className="pack-shelf__booster home-hub__pack-real"
+                  className={`home-hub__img-peek is-pack is-${i}`}
+                  src={packPeekSrc(pack)}
+                  alt=""
+                  draggable={false}
+                  decoding="async"
                 />
               ))}
             </div>
@@ -177,16 +189,16 @@ export function HomeHub() {
             title="Cards"
             blurb="Browse your collection."
           >
-            <div className="home-hub__card-spread">
-              {cardPeeks.map((card) => (
-                <div key={card.id} className="home-hub__card-real">
-                  <MonkeyCard
-                    entity={card.entity}
-                    pathLevels={card.pathLevels}
-                    mode="preview"
-                    owned
-                  />
-                </div>
+            <div className="home-hub__img-spread home-hub__img-spread--cards">
+              {cardPeeks.map((card, i) => (
+                <img
+                  key={card.id}
+                  className={`home-hub__img-peek is-card is-${i}`}
+                  src={card.entity.image}
+                  alt=""
+                  draggable={false}
+                  decoding="async"
+                />
               ))}
             </div>
           </DestTile>
