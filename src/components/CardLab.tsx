@@ -14,6 +14,10 @@ import {
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { pingInbox, requestTrade } from "../lib/trades";
+import {
+  hasPlayerChrome,
+  playerChromeStyle,
+} from "../lib/profileCosmetics";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
@@ -29,6 +33,8 @@ export type CollectionViewer = {
   username: string;
   avatar?: AvatarCrop | null;
   showcaseCardIds?: string[];
+  accentColor?: string | null;
+  auraCardId?: string | null;
 };
 
 type Props = {
@@ -174,6 +180,16 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     !isGuest &&
     Boolean(user) &&
     user?.id !== viewer?.userId;
+
+  const chromeStyle = useMemo(
+    () =>
+      playerChromeStyle({
+        accentColor: viewer?.accentColor,
+        auraCardId: viewer?.auraCardId,
+      }),
+    [viewer?.accentColor, viewer?.auraCardId],
+  );
+  const chromeOn = isRemote && hasPlayerChrome(chromeStyle);
 
   async function onRequestTrade() {
     if (!viewer || tradeBusy) return;
@@ -329,7 +345,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   if (view.kind === "towers") {
     if (isRemote && remoteLoading) {
       return (
-        <div className="card-lab">
+        <div
+          className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
+          style={chromeOn ? chromeStyle : undefined}
+        >
           <div className="card-lab__atmosphere" aria-hidden="true" />
           <header className="card-lab__header">
             <button
@@ -350,7 +369,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     }
 
     return (
-      <div className="card-lab">
+      <div
+        className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
+        style={chromeOn ? chromeStyle : undefined}
+      >
         <div className="card-lab__atmosphere" aria-hidden="true" />
         <header
           className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
@@ -502,7 +524,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   // ——— All owned cards ———
   if (view.kind === "all") {
     return (
-      <div className="card-lab">
+      <div
+        className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
+        style={chromeOn ? chromeStyle : undefined}
+      >
         <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
           <button
@@ -579,7 +604,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;
 
   return (
-    <div className="card-lab">
+    <div
+      className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
+      style={chromeOn ? chromeStyle : undefined}
+    >
       <div className="card-lab__atmosphere" aria-hidden="true" />
       <header className="card-lab__header">
         <button

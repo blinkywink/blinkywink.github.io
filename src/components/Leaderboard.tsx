@@ -8,6 +8,11 @@ import {
 import { supabase } from "../lib/supabase";
 import { cached, CacheTtl } from "../lib/cache";
 import { searchProfilesByUsername } from "../lib/profiles";
+import {
+  hasPlayerChrome,
+  normalizeAccentColor,
+  playerChromeStyle,
+} from "../lib/profileCosmetics";
 import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
 
@@ -26,6 +31,8 @@ type Row = {
   username: string;
   coins_earned: number;
   avatar: AvatarCrop;
+  accentColor: string | null;
+  auraCardId: string | null;
   /** Global rank among top board, when known. */
   rank: number | null;
 };
@@ -38,6 +45,8 @@ function mapProfileRow(r: {
   avatar_zoom: number | null;
   avatar_x: number | null;
   avatar_y: number | null;
+  accent_color?: string | null;
+  aura_card_id?: string | null;
 }, rank: number | null): Row {
   return {
     id: String(r.id),
@@ -49,6 +58,8 @@ function mapProfileRow(r: {
       x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
       y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
     }),
+    accentColor: normalizeAccentColor(r.accent_color),
+    auraCardId: r.aura_card_id ? String(r.aura_card_id) : null,
     rank,
   };
 }
@@ -74,7 +85,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
           const { data, error: err } = await supabase
             .from("profiles")
             .select(
-              "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+              "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, aura_card_id",
             )
             .order("coins_earned", { ascending: false })
             .limit(100);
@@ -120,6 +131,8 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
               username: h.username,
               coins_earned: h.coinsEarned,
               avatar: h.avatar,
+              accentColor: h.accentColor,
+              auraCardId: h.auraCardId,
               rank: null,
             })),
           );
@@ -231,10 +244,16 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
               <tbody>
                 {displayRows.map((row) => {
                   const mine = user?.id === row.id;
+                  const chrome = playerChromeStyle({
+                    accentColor: row.accentColor,
+                    auraCardId: row.auraCardId,
+                  });
+                  const chromeOn = hasPlayerChrome(chrome);
                   return (
                     <tr
                       key={row.id}
-                      className={`board-table__row${mine ? " is-you" : ""}`}
+                      className={`board-table__row${mine ? " is-you" : ""}${chromeOn ? " has-player-chrome" : ""}`}
+                      style={chromeOn ? chrome : undefined}
                     >
                       <td>{row.rank ?? "—"}</td>
                       <td>

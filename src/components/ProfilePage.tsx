@@ -20,12 +20,23 @@ import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import {
+  cosmeticsFromProfile,
+  hasPlayerChrome,
+  normalizeAccentColor,
+  playerChromeStyle,
+  PROFILE_ACCENT_COST,
+  PROFILE_AURA_COST,
+  setProfileAccent,
+  setProfileAura,
+} from "../lib/profileCosmetics";
+import {
   SHOWCASE_MAX,
   setProfileShowcase,
   showcaseFromProfile,
 } from "../lib/profileShowcase";
 import { collectionPath, userCollectionPath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
+import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
@@ -33,13 +44,17 @@ import { UserAvatar } from "./UserAvatar";
 type EditorStep = "pick" | "crop";
 
 export function ProfilePage() {
-  const { ready, user, profile, isGuest, refreshProfile } = useAuth();
+  const { ready, user, profile, isGuest, refreshProfile, setCoinBalance } =
+    useAuth();
   const { owned } = useCardCollection();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorStep, setEditorStep] = useState<EditorStep>("pick");
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
+  const [auraOpen, setAuraOpen] = useState(false);
+  const [auraDraft, setAuraDraft] = useState<Set<string>>(new Set());
+  const [colorDraft, setColorDraft] = useState("#F0C84A");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -53,6 +68,22 @@ export function ProfilePage() {
     () => (profile ? showcaseFromProfile(profile) : []),
     [profile],
   );
+
+  const cosmetics = useMemo(
+    () => (profile ? cosmeticsFromProfile(profile) : cosmeticsFromProfile({})),
+    [profile],
+  );
+
+  const chromeOn = hasPlayerChrome(
+    playerChromeStyle({
+      accentColor: cosmetics.accentColor,
+      auraCardId: cosmetics.auraCardId,
+    }),
+  );
+
+  const auraSpec = cosmetics.auraCardId
+    ? cardSpecById(cosmetics.auraCardId)
+    : null;
 
   const showcaseSpecs = useMemo(
     () =>
@@ -70,12 +101,18 @@ export function ProfilePage() {
   const draftCard = draft.cardId ? cardSpecById(draft.cardId) : null;
 
   useEffect(() => {
-    if (!editorOpen && !showcaseOpen) return;
+    const next = cosmetics.accentColor ?? "#F0C84A";
+    setColorDraft(next);
+  }, [cosmetics.accentColor]);
+
+  useEffect(() => {
+    if (!editorOpen && !showcaseOpen && !auraOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) {
-        if (showcaseOpen) closeShowcaseEditor();
+        if (auraOpen) closeAuraEditor();
+        else if (showcaseOpen) closeShowcaseEditor();
         else closeEditor();
       }
     };
@@ -84,7 +121,7 @@ export function ProfilePage() {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [editorOpen, showcaseOpen, busy]);
+  }, [editorOpen, showcaseOpen, auraOpen, busy]);
 
   function openEditor() {
     setError(null);
@@ -194,6 +231,82 @@ export function ProfilePage() {
       setShowcaseOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not clear.");
+    }
+    setBusy(false);
+  }
+
+  function openAuraEditor() {
+    setError(null);
+    setStatus(null);
+    setAuraDraft(
+      new Set(cosmetics.auraCardId ? [cosmetics.auraCardId] : []),
+    );
+    setAuraOpen(true);
+  }
+
+  function closeAuraEditor() {
+    if (busy) return;
+    setAuraOpen(false);
+    setError(null);
+  }
+
+  async function onSaveAccent() {
+    const color = normalizeAccentColor(colorDraft);
+    if (!color) {
+      setError("Pick a valid color.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const balance = await setProfileAccent(color);
+      setCoinBalance(balance);
+      await refreshProfile();
+      setStatus(
+        cosmetics.accentUnlocked
+          ? "Profile color updated."
+          : `Unlocked profile color for ${PROFILE_ACCENT_COST.toLocaleString()} Cash.`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save color.");
+    }
+    setBusy(false);
+  }
+
+  async function onSaveAura(cardId: string) {
+    if (!cardId) return;
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const balance = await setProfileAura(cardId);
+      setCoinBalance(balance);
+      await refreshProfile();
+      setStatus(
+        cosmetics.auraUnlocked
+          ? "Profile aura updated."
+          : `Unlocked profile aura for ${PROFILE_AURA_COST.toLocaleString()} Cash.`,
+      );
+      setAuraOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save aura.");
+    }
+    setBusy(false);
+  }
+
+  async function onClearAura() {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const balance = await setProfileAura(null);
+      setCoinBalance(balance);
+      await refreshProfile();
+      setStatus("Profile aura cleared.");
+      setAuraOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not clear aura.");
     }
     setBusy(false);
   }
@@ -444,22 +557,104 @@ export function ProfilePage() {
       )
     : null;
 
+  const auraEditor = auraOpen
+    ? createPortal(
+        <div
+          className="pfp-editor"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="aura-editor-title"
+        >
+          <button
+            type="button"
+            className="pfp-editor__backdrop"
+            aria-label="Close"
+            disabled={busy}
+            onClick={closeAuraEditor}
+          />
+          <div className="pfp-editor__panel">
+            <header className="pfp-editor__header">
+              <div>
+                <p className="pfp-editor__eyebrow">Profile aura</p>
+                <h2 id="aura-editor-title">Pick FX from a card</h2>
+              </div>
+              <button
+                type="button"
+                className="pfp-editor__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeAuraEditor}
+              >
+                ×
+              </button>
+            </header>
+            {error ? (
+              <p className="profile-banner profile-banner--err">{error}</p>
+            ) : null}
+            <div className="pfp-editor__body pfp-editor__body--pick">
+              <p className="pfp-editor__hint">
+                Copies that card’s aura colors onto your profile chrome — not
+                the tower portrait.
+                {!cosmetics.auraUnlocked ? (
+                  <>
+                    {" "}
+                    First unlock costs{" "}
+                    <CashAmount amount={PROFILE_AURA_COST} size={14} />.
+                  </>
+                ) : null}
+              </p>
+              <OwnedCardPicker
+                owned={owned}
+                selectedIds={auraDraft}
+                multi={false}
+                disabled={busy}
+                confirmLabel={
+                  busy
+                    ? "Saving…"
+                    : cosmetics.auraUnlocked
+                      ? "Apply aura"
+                      : "Buy & apply"
+                }
+                onConfirm={(ids) => {
+                  const cardId = ids[0];
+                  if (!cardId) return;
+                  setAuraDraft(new Set([cardId]));
+                  void onSaveAura(cardId);
+                }}
+              />
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="profile-page">
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        blurb="Your picture and showcase cards show on your public page."
+        blurb="Picture, cosmetics, and showcase cards for your public page."
       />
       <main className="profile-main">
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
         ) : null}
-        {error && !editorOpen && !showcaseOpen ? (
+        {error && !editorOpen && !showcaseOpen && !auraOpen ? (
           <p className="profile-banner profile-banner--err">{error}</p>
         ) : null}
 
-        <section className="profile-home">
+        <section
+          className={`profile-home${chromeOn || cosmetics.accentUnlocked ? " has-player-chrome" : ""}`}
+          style={
+            chromeOn || cosmetics.accentUnlocked
+              ? playerChromeStyle({
+                  accentColor: cosmetics.accentColor ?? colorDraft,
+                  auraCardId: cosmetics.auraCardId,
+                })
+              : undefined
+          }
+        >
           <div className="profile-home__avatar-wrap">
             <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
           </div>
@@ -489,6 +684,118 @@ export function ProfilePage() {
               <span aria-hidden="true">·</span>
               <Link to={userCollectionPath(user.username)}>Public page</Link>
             </p>
+          </div>
+        </section>
+
+        <section className="profile-cosmetics">
+          <div className="profile-cosmetics__head">
+            <div>
+              <h3>Profile cosmetics</h3>
+              <p>
+                Custom color for your page and leaderboard chip. Aura copies FX
+                colors from an owned card — not the tower art.
+              </p>
+            </div>
+          </div>
+
+          <div className="profile-cosmetics__grid">
+            <div className="profile-cosmetics__card">
+              <div className="profile-cosmetics__card-head">
+                <h4>Color</h4>
+                <span className="profile-cosmetics__price">
+                  {cosmetics.accentUnlocked ? (
+                    "Unlocked · free to change"
+                  ) : (
+                    <>
+                      Unlock <CashAmount amount={PROFILE_ACCENT_COST} size={14} />
+                    </>
+                  )}
+                </span>
+              </div>
+              <label className="profile-cosmetics__color">
+                <span>Accent</span>
+                <input
+                  type="color"
+                  value={colorDraft}
+                  onChange={(e) => setColorDraft(e.target.value.toUpperCase())}
+                  disabled={busy}
+                />
+                <code>{colorDraft}</code>
+              </label>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                disabled={
+                  busy ||
+                  (!cosmetics.accentUnlocked &&
+                    (profile?.coins ?? 0) < PROFILE_ACCENT_COST)
+                }
+                onClick={() => void onSaveAccent()}
+              >
+                {cosmetics.accentUnlocked
+                  ? "Save color"
+                  : "Buy & save color"}
+              </button>
+            </div>
+
+            <div className="profile-cosmetics__card">
+              <div className="profile-cosmetics__card-head">
+                <h4>Aura</h4>
+                <span className="profile-cosmetics__price">
+                  {cosmetics.auraUnlocked ? (
+                    "Unlocked · free to change"
+                  ) : (
+                    <>
+                      Unlock <CashAmount amount={PROFILE_AURA_COST} size={14} />
+                    </>
+                  )}
+                </span>
+              </div>
+              {auraSpec ? (
+                <div className="profile-cosmetics__aura-preview">
+                  <MonkeyCard
+                    entity={auraSpec.entity}
+                    pathLevels={auraSpec.pathLevels}
+                    mode="preview"
+                    owned
+                    staticArt
+                  />
+                  <p>
+                    FX from <strong>{auraSpec.entity.name}</strong>
+                  </p>
+                </div>
+              ) : (
+                <p className="profile-cosmetics__empty">No aura selected.</p>
+              )}
+              <div className="profile-cosmetics__aura-actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={
+                    busy ||
+                    (!cosmetics.auraUnlocked &&
+                      (profile?.coins ?? 0) < PROFILE_AURA_COST)
+                  }
+                  onClick={openAuraEditor}
+                >
+                  {cosmetics.auraUnlocked
+                    ? cosmetics.auraCardId
+                      ? "Change aura"
+                      : "Pick aura"
+                    : "Buy & pick aura"}
+                </button>
+                {cosmetics.auraCardId ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busy}
+                    onClick={() => void onClearAura()}
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -552,6 +859,7 @@ export function ProfilePage() {
       </main>
       {editor}
       {showcaseEditor}
+      {auraEditor}
     </div>
   );
 }

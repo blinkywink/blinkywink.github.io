@@ -31,12 +31,19 @@ import {
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
 import { UserAvatar } from "./UserAvatar";
+import {
+  hasPlayerChrome,
+  normalizeAccentColor,
+  playerChromeStyle,
+} from "../lib/profileCosmetics";
 
 type BoardRow = {
   id: string;
   username: string;
   coins_earned: number;
   avatar: AvatarCrop;
+  accentColor: string | null;
+  auraCardId: string | null;
 };
 
 const CARD_PEEK_IDS = [
@@ -118,7 +125,7 @@ export function HomeHub() {
             const { data, error } = await supabase
               .from("profiles")
               .select(
-                "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+                "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, aura_card_id",
               )
               .order("coins_earned", { ascending: false })
               .limit(5);
@@ -133,6 +140,8 @@ export function HomeHub() {
                 x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
                 y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
               }),
+              accentColor: normalizeAccentColor(r.accent_color),
+              auraCardId: r.aura_card_id ? String(r.aura_card_id) : null,
             }));
           },
         );
@@ -225,17 +234,25 @@ export function HomeHub() {
           <p className="home-hub__note">Leaderboard loading…</p>
         ) : (
           <div className="home-hub__row home-hub__row--players">
-            {topPlayers.map((row, i) => (
-              <Link
-                key={row.id}
-                className="home-hub__player-chip"
-                to={userCollectionPath(row.username)}
-              >
-                <span className="home-hub__rank">{i + 1}</span>
-                <UserAvatar crop={row.avatar} size={36} />
-                <strong>{row.username}</strong>
-              </Link>
-            ))}
+            {topPlayers.map((row, i) => {
+              const chrome = playerChromeStyle({
+                accentColor: row.accentColor,
+                auraCardId: row.auraCardId,
+              });
+              const chromeOn = hasPlayerChrome(chrome);
+              return (
+                <Link
+                  key={row.id}
+                  className={`home-hub__player-chip${chromeOn ? " has-player-chrome" : ""}`}
+                  style={chromeOn ? chrome : undefined}
+                  to={userCollectionPath(row.username)}
+                >
+                  <span className="home-hub__rank">{i + 1}</span>
+                  <UserAvatar crop={row.avatar} size={36} />
+                  <strong>{row.username}</strong>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

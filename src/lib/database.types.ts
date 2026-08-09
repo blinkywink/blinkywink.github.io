@@ -16,6 +16,14 @@ export type Profile = {
   avatar_y: number;
   /** Up to 3 owned card ids shown on the public collection page. */
   showcase_card_ids?: string[] | null;
+  /** One-time unlock for custom profile accent color. */
+  accent_unlocked?: boolean | null;
+  /** Hex `#RRGGBB` accent, or null. */
+  accent_color?: string | null;
+  /** One-time unlock for profile aura FX. */
+  aura_unlocked?: boolean | null;
+  /** Owned card id whose FX palette is copied onto profile chrome. */
+  aura_card_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -43,6 +51,10 @@ export type Database = {
           avatar_x?: number;
           avatar_y?: number;
           showcase_card_ids?: string[] | null;
+          accent_unlocked?: boolean;
+          accent_color?: string | null;
+          aura_unlocked?: boolean;
+          aura_card_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -57,6 +69,10 @@ export type Database = {
           avatar_x?: number;
           avatar_y?: number;
           showcase_card_ids?: string[] | null;
+          accent_unlocked?: boolean;
+          accent_color?: string | null;
+          aura_unlocked?: boolean;
+          aura_card_id?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -173,11 +189,21 @@ export type Database = {
           avatar_x: number;
           avatar_y: number;
           showcase_card_ids: string[] | null;
+          accent_color: string | null;
+          aura_card_id: string | null;
         }[];
       };
       set_profile_showcase: {
         Args: { p_card_ids: string[] };
         Returns: boolean;
+      };
+      set_profile_accent: {
+        Args: { p_color: string };
+        Returns: number;
+      };
+      set_profile_aura: {
+        Args: { p_card_id: string | null };
+        Returns: number;
       };
       list_card_for_sale: {
         Args: { p_card_id: string; p_price: number };
