@@ -117,7 +117,7 @@ declare
   excluded text[];
   pick record;
   listing public.shop_direct_slots%rowtype;
-  stale_after interval := interval '3 days';
+  stale_after interval := interval '24 hours';
 begin
   for s in 1..4 loop
     select * into listing
@@ -137,7 +137,7 @@ begin
       continue;
     end if;
 
-    -- Auto-cycle unsold cards after 3 days.
+    -- Auto-cycle unsold cards after 24 hours.
     if listing.updated_at <= timezone('utc', now()) - stale_after then
       select coalesce(array_agg(card_id), '{}') into excluded
       from public.shop_direct_slots

@@ -10,6 +10,8 @@ import {
 import {
   buyShopDirectCard,
   fetchShopDirectListings,
+  formatShopDirectCountdown,
+  shopDirectExpiresAtMs,
   type ShopDirectListing,
 } from "../lib/shopDirect";
 import { CashAmount } from "./CurrencyChip";
@@ -32,6 +34,7 @@ export function ShopDirectShelf() {
   const [focused, setFocused] = useState<FocusedDeal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async (force = false) => {
     try {
@@ -54,6 +57,18 @@ export function ShopDirectShelf() {
       window.removeEventListener("focus", onFocus);
     };
   }, [load]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const t = Date.now();
+      setNow(t);
+      // When any listing expires, force a refresh so the server can rotate it.
+      if (listings.some((row) => shopDirectExpiresAtMs(row) <= t)) {
+        void load(true);
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [listings, load]);
 
   useEffect(() => {
     if (!focused) return;
@@ -209,7 +224,7 @@ export function ShopDirectShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Limited cards</h3>
         <p className="shop-direct__note">
-          Shared stock · T4 7,500 · T5 25,000 · unsold after 3 days auto-cycles
+          Shared stock · T4 7,500 · T5 25,000 · refreshes in 24 hours if unsold
         </p>
       </div>
 
@@ -253,6 +268,9 @@ export function ShopDirectShelf() {
                     {card ? card.entity.name : row.cardId}
                   </p>
                   <CashAmount amount={row.price} size={18} />
+                  <p className="shop-direct__timer" aria-label="Time until refresh">
+                    {formatShopDirectCountdown(row, now)}
+                  </p>
                 </div>
               </article>
             );

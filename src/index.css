@@ -5333,6 +5333,14 @@ body:has(.zoomed-page) {
   line-height: 1.2;
 }
 
+.shop-direct__timer {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: rgba(240, 200, 74, 0.92);
+}
+
 .shop-direct__missing {
   width: var(--card-preview-w);
   height: var(--card-preview-h);

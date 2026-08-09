@@ -1,9 +1,12 @@
 import { cacheInvalidate, cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
+import { formatShopCountdown } from "./packTheme";
 
 export const SHOP_DIRECT_T4_PRICE = 7500;
 export const SHOP_DIRECT_T5_PRICE = 25000;
+/** Unsold limited cards rotate after this long. */
+export const SHOP_DIRECT_CYCLE_MS = 24 * 60 * 60 * 1000;
 
 export type ShopDirectListing = {
   slot: number;
@@ -13,6 +16,20 @@ export type ShopDirectListing = {
   version: number;
   updatedAt: string;
 };
+
+/** UTC ms when this listing auto-cycles if unsold. */
+export function shopDirectExpiresAtMs(listing: ShopDirectListing): number {
+  const start = Date.parse(listing.updatedAt);
+  if (!Number.isFinite(start)) return Date.now() + SHOP_DIRECT_CYCLE_MS;
+  return start + SHOP_DIRECT_CYCLE_MS;
+}
+
+export function formatShopDirectCountdown(
+  listing: ShopDirectListing,
+  now = Date.now(),
+): string {
+  return formatShopCountdown(Math.max(0, shopDirectExpiresAtMs(listing) - now));
+}
 
 function mapListing(raw: Record<string, unknown>): ShopDirectListing | null {
   const slot = Number(raw.slot);
