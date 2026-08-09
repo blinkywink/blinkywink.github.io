@@ -282,8 +282,8 @@ body:has(.zoomed-page) {
 }
 
 .account-menu__avatar {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.85rem;
+  height: 2.85rem;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -6634,6 +6634,154 @@ button.card-chip:hover:not(:disabled) {
   gap: 0.4rem;
 }
 
+.owned-picker__grid {
+  --card-face-w: 400px;
+  --card-preview-w: 168px;
+  --card-preview-scale: 0.42;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-preview-w), 1fr));
+  gap: 0.9rem 0.75rem;
+  justify-items: center;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.owned-picker__grid--compact {
+  --card-preview-w: 132px;
+  --card-preview-scale: 0.33;
+}
+
+@media (min-width: 900px) {
+  .owned-picker__grid {
+    --card-preview-w: 190px;
+    --card-preview-scale: 0.475;
+  }
+
+  .owned-picker__grid--compact {
+    --card-preview-w: 150px;
+    --card-preview-scale: 0.375;
+  }
+}
+
+.owned-picker__card {
+  appearance: none;
+  width: var(--card-preview-w);
+  border: 2px solid transparent;
+  background: transparent;
+  padding: 0.25rem;
+  border-radius: 16px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+}
+
+.owned-picker__card:hover:not(:disabled) {
+  border-color: rgba(240, 200, 74, 0.45);
+  background: rgba(240, 200, 74, 0.06);
+}
+
+.owned-picker__card.is-selected {
+  border-color: #f0c84a;
+  background: rgba(240, 200, 74, 0.1);
+}
+
+.owned-picker__card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.owned-picker__card .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
+  cursor: inherit;
+}
+
+.owned-picker__card .monkey-card-scene--preview > .monkey-card {
+  width: var(--card-face-w);
+  height: calc(var(--card-face-w) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
+}
+
+.owned-picker__card-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.45);
+}
+
+.owned-picker__card.is-selected .owned-picker__card-tag {
+  color: #f0c84a;
+}
+
+.owned-picker__card.is-unavailable {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.55);
+}
+
+.owned-picker__card.is-unavailable .owned-picker__card-tag {
+  color: rgba(240, 240, 244, 0.45);
+}
+
+.trade-picker__note {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.trade-offer-grid {
+  --card-face-w: 400px;
+  --card-preview-w: 120px;
+  --card-preview-scale: 0.3;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-preview-w), 1fr));
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+.trade-offer-card {
+  appearance: none;
+  width: var(--card-preview-w);
+  border: 2px solid transparent;
+  background: transparent;
+  padding: 0.2rem;
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.trade-offer-card.is-locked {
+  cursor: default;
+}
+
+button.trade-offer-card:hover:not(:disabled) {
+  border-color: rgba(240, 200, 74, 0.45);
+}
+
+.trade-offer-card .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
+  cursor: inherit;
+}
+
+.trade-offer-card .monkey-card-scene--preview > .monkey-card {
+  width: var(--card-face-w);
+  height: calc(var(--card-face-w) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
+}
+
 .owned-picker__tower-bar {
   display: flex;
   flex-wrap: wrap;
@@ -7074,8 +7222,8 @@ button.card-chip:hover:not(:disabled) {
 
 .avatar-crop__stage {
   position: relative;
-  width: min(300px, 72vw);
-  height: min(300px, 72vw);
+  width: min(340px, 78vw);
+  height: min(340px, 78vw);
   border-radius: 999px;
   cursor: grab;
   touch-action: none;
@@ -7126,7 +7274,7 @@ button.card-chip:hover:not(:disabled) {
 .avatar-crop__zoom {
   display: grid;
   gap: 0.45rem;
-  width: min(300px, 72vw);
+  width: min(340px, 78vw);
   color: rgba(240, 240, 244, 0.7);
 }
 

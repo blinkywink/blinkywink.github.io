@@ -206,15 +206,15 @@ export function ProfilePage() {
                       <p>How it looks</p>
                       <div className="pfp-editor__preview-row">
                         <div>
-                          <UserAvatar crop={draft} size={56} />
+                          <UserAvatar crop={draft} size={72} />
                           <span>Header</span>
                         </div>
                         <div>
-                          <UserAvatar crop={draft} size={44} />
+                          <UserAvatar crop={draft} size={56} />
                           <span>Board</span>
                         </div>
                         <div>
-                          <UserAvatar crop={draft} size={28} />
+                          <UserAvatar crop={draft} size={40} />
                           <span>Small</span>
                         </div>
                       </div>
@@ -297,7 +297,7 @@ export function ProfilePage() {
 
         <section className="profile-home">
           <div className="profile-home__avatar-wrap">
-            <UserAvatar crop={saved} size={140} alt={`${user.username} avatar`} />
+            <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
           </div>
           <div className="profile-home__meta">
             <h2>{user.username}</h2>
@@ -405,7 +405,7 @@ function CropEditor({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <UserAvatar crop={crop} size={300} className="avatar-crop__live" />
+        <UserAvatar crop={crop} size={340} className="avatar-crop__live" />
         <div className="avatar-crop__ring" aria-hidden />
         {!dragging ? (
           <p className="avatar-crop__drag-hint">Drag to move</p>

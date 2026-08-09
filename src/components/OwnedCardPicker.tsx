@@ -8,7 +8,7 @@ import {
   buildTowerCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
-import { CardChip } from "./CardChip";
+import { MonkeyCard } from "./MonkeyCard";
 
 const CATEGORY_ORDER = ["Primary", "Military", "Magic", "Support"];
 
@@ -36,19 +36,23 @@ const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
   TOWER_CHOICES.map((t) => [t.name, buildTowerCardSpecs(t.name)]),
 );
 
+const EMPTY_SET: ReadonlySet<string> = new Set();
+
 type Props = {
   owned: ReadonlySet<string>;
   selectedIds: ReadonlySet<string>;
   onToggle: (cardId: string) => void;
   disabled?: boolean;
-  /** When set, refuse selecting more than this many. */
   maxSelected?: number;
   onMaxReached?: () => void;
+  /** Cards that cannot be selected (e.g. partner already owns). */
+  unavailableIds?: ReadonlySet<string>;
+  unavailableLabel?: string;
 };
 
 /**
- * Pick owned cards without dumping every MonkeyCard at once.
- * Default: tower list. Click a tower, or search (2+ chars).
+ * Pick owned cards: tower list first, then real MonkeyCard grid.
+ * Search (2+ chars) also shows real cards.
  */
 export function OwnedCardPicker({
   owned,
@@ -57,12 +61,15 @@ export function OwnedCardPicker({
   disabled = false,
   maxSelected,
   onMaxReached,
+  unavailableIds,
+  unavailableLabel = "Already owned",
 }: Props) {
   const [query, setQuery] = useState("");
   const [tower, setTower] = useState<string | null>(null);
 
   const q = query.trim().toLowerCase();
   const searching = q.length >= 2;
+  const blocked = unavailableIds ?? EMPTY_SET;
 
   const ownedByTower = useMemo(() => {
     const map = new Map<string, number>();
@@ -77,12 +84,11 @@ export function OwnedCardPicker({
 
   const towerList = useMemo(() => {
     if (searching) return TOWER_CHOICES;
-    const tq = q;
-    if (!tq) return TOWER_CHOICES;
+    if (!q) return TOWER_CHOICES;
     return TOWER_CHOICES.filter(
       (t) =>
-        t.name.toLowerCase().includes(tq) ||
-        t.category.toLowerCase().includes(tq),
+        t.name.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q),
     );
   }, [q, searching]);
 
@@ -99,7 +105,7 @@ export function OwnedCardPicker({
   }, [tower, owned]);
 
   function pick(cardId: string) {
-    if (disabled) return;
+    if (disabled || blocked.has(cardId)) return;
     if (!selectedIds.has(cardId) && maxSelected != null) {
       if (selectedIds.size >= maxSelected) {
         onMaxReached?.();
@@ -107,6 +113,43 @@ export function OwnedCardPicker({
       }
     }
     onToggle(cardId);
+  }
+
+  function renderCardGrid(cards: MonkeyCardSpec[]) {
+    return (
+      <div className="owned-picker__grid">
+        {cards.map((card) => {
+          const on = selectedIds.has(card.id);
+          const unavailable = blocked.has(card.id);
+          return (
+            <button
+              key={card.id}
+              type="button"
+              className={`owned-picker__card${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}`}
+              disabled={disabled || unavailable}
+              aria-pressed={on}
+              title={unavailable ? unavailableLabel : undefined}
+              onClick={() => pick(card.id)}
+            >
+              <MonkeyCard
+                entity={card.entity}
+                pathLevels={card.pathLevels}
+                mode="preview"
+                owned
+                staticArt
+              />
+              <span className="owned-picker__card-tag">
+                {unavailable
+                  ? unavailableLabel
+                  : on
+                    ? "Selected"
+                    : "Select"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
@@ -120,7 +163,7 @@ export function OwnedCardPicker({
             setQuery(e.target.value);
             if (e.target.value.trim().length >= 2) setTower(null);
           }}
-          placeholder="Type at least 2 letters… or pick a tower below"
+          placeholder="Type a name… or open a tower below"
           autoComplete="off"
         />
       </label>
@@ -128,23 +171,12 @@ export function OwnedCardPicker({
       {searching ? (
         <div className="owned-picker__results">
           <p className="owned-picker__hint">
-            {searchResults.length} match{searchResults.length === 1 ? "" : "es"}
+            {searchResults.length} card{searchResults.length === 1 ? "" : "s"}
           </p>
           {searchResults.length === 0 ? (
             <p className="owned-picker__empty">No owned cards match.</p>
           ) : (
-            <div className="owned-picker__chips">
-              {searchResults.map((card) => (
-                <CardChip
-                  key={card.id}
-                  card={card}
-                  selected={selectedIds.has(card.id)}
-                  disabled={disabled}
-                  actionLabel={selectedIds.has(card.id) ? "Added" : "Add"}
-                  onClick={() => pick(card.id)}
-                />
-              ))}
-            </div>
+            renderCardGrid(searchResults)
           )}
         </div>
       ) : tower ? (
@@ -161,20 +193,11 @@ export function OwnedCardPicker({
             <span>{towerCards.length} owned</span>
           </div>
           {towerCards.length === 0 ? (
-            <p className="owned-picker__empty">You don’t own any {tower} cards.</p>
+            <p className="owned-picker__empty">
+              You don’t own any {tower} cards.
+            </p>
           ) : (
-            <div className="owned-picker__chips">
-              {towerCards.map((card) => (
-                <CardChip
-                  key={card.id}
-                  card={card}
-                  selected={selectedIds.has(card.id)}
-                  disabled={disabled}
-                  actionLabel={selectedIds.has(card.id) ? "Added" : "Add"}
-                  onClick={() => pick(card.id)}
-                />
-              ))}
-            </div>
+            renderCardGrid(towerCards)
           )}
         </div>
       ) : (

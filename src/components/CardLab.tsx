@@ -345,7 +345,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               {isRemote && viewer?.avatar ? (
                 <UserAvatar
                   crop={viewer.avatar}
-                  size={44}
+                  size={56}
                   alt=""
                   className="card-lab__avatar"
                 />

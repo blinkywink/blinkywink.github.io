@@ -356,7 +356,8 @@ declare
   t public.trades%rowtype;
   cleaned text[];
   cid text;
-  n integer;
+  partner uuid;
+  partner_offer text[];
 begin
   if uid is null then
     raise exception 'Not authenticated';
@@ -387,6 +388,16 @@ begin
     raise exception 'Max 8 cards per side';
   end if;
 
+  partner := case
+    when t.requester_id = uid then t.recipient_id
+    else t.requester_id
+  end;
+
+  select coalesce(array_agg(o.card_id), '{}')
+  into partner_offer
+  from public.trade_offers o
+  where o.trade_id = t.id and o.owner_id = partner;
+
   foreach cid in array cleaned
   loop
     if char_length(cid) < 3 or char_length(cid) > 80 then
@@ -397,6 +408,12 @@ begin
       where user_id = uid and card_id = cid
     ) then
       raise exception 'You do not own one of those cards';
+    end if;
+    if exists (
+      select 1 from public.owned_cards
+      where user_id = partner and card_id = cid
+    ) and not (cid = any (partner_offer)) then
+      raise exception 'They already own one of those cards';
     end if;
   end loop;
 
@@ -414,7 +431,6 @@ begin
       updated_at = now()
   where id = t.id;
 
-  get diagnostics n = row_count;
   return true;
 end;
 $$;

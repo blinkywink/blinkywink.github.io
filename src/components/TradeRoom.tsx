@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
+import { fetchPlayerCardIds } from "../lib/awardCards";
+import { cardSpecById } from "../lib/cardCatalog";
 import {
   cancelTrade,
   fetchTrade,
@@ -12,8 +14,8 @@ import {
   type TradeState,
 } from "../lib/trades";
 import { collectionPath, marketplacePath } from "../lib/routes";
-import { CardChip } from "./CardChip";
 import { GameHeader } from "./GameHeader";
+import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 
 export function TradeRoom() {
@@ -27,6 +29,10 @@ export function TradeRoom() {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [localOffer, setLocalOffer] = useState<string[]>([]);
+  const [partnerOwned, setPartnerOwned] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const strippingRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!tradeId || !user) return;
@@ -61,6 +67,31 @@ export function TradeRoom() {
     };
   }, [tradeId, user, load]);
 
+  const partnerId = useMemo(() => {
+    if (!trade || !user) return null;
+    return trade.requesterId === user.id
+      ? trade.recipientId
+      : trade.requesterId;
+  }, [trade, user]);
+
+  useEffect(() => {
+    if (!partnerId) {
+      setPartnerOwned(new Set());
+      return;
+    }
+    let cancelled = false;
+    void fetchPlayerCardIds(partnerId)
+      .then((ids) => {
+        if (!cancelled) setPartnerOwned(new Set(ids));
+      })
+      .catch(() => {
+        if (!cancelled) setPartnerOwned(new Set());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [partnerId]);
+
   const partnerName = useMemo(() => {
     if (!trade || !user) return "Partner";
     return trade.requesterId === user.id
@@ -84,25 +115,56 @@ export function TradeRoom() {
 
   const offerSet = useMemo(() => new Set(localOffer), [localOffer]);
 
-  async function syncOffer(next: string[]) {
-    if (!tradeId) return;
-    setBusy(true);
-    setError(null);
-    setStatus(null);
-    try {
-      await setTradeOffer(tradeId, next);
-      setLocalOffer(next);
-      await pingTrade(tradeId);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update offer.");
-      await load();
+  /** Partner already keeps these (not offering them away). */
+  const unavailableIds = useMemo(() => {
+    const theirOffer = new Set(trade?.theirOffer ?? []);
+    const blocked = new Set<string>();
+    for (const id of partnerOwned) {
+      if (!theirOffer.has(id)) blocked.add(id);
     }
-    setBusy(false);
-  }
+    return blocked;
+  }, [partnerOwned, trade?.theirOffer]);
+
+  const syncOffer = useCallback(
+    async (next: string[]) => {
+      if (!tradeId) return;
+      setBusy(true);
+      setError(null);
+      setStatus(null);
+      try {
+        await setTradeOffer(tradeId, next);
+        setLocalOffer(next);
+        await pingTrade(tradeId);
+        await load();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not update offer.");
+        await load();
+      }
+      setBusy(false);
+    },
+    [tradeId, load],
+  );
+
+  // Drop offer cards that became invalid if partner stopped offering a duplicate.
+  useEffect(() => {
+    if (!trade || trade.status !== "active" || busy || strippingRef.current) {
+      return;
+    }
+    if (unavailableIds.size === 0) return;
+    const cleaned = localOffer.filter((id) => !unavailableIds.has(id));
+    if (cleaned.length === localOffer.length) return;
+    strippingRef.current = true;
+    void syncOffer(cleaned).finally(() => {
+      strippingRef.current = false;
+    });
+  }, [unavailableIds, trade, busy, localOffer, syncOffer]);
 
   function toggleCard(cardId: string) {
     if (busy || trade?.status !== "active") return;
+    if (!offerSet.has(cardId) && unavailableIds.has(cardId)) {
+      setError("They already own that card.");
+      return;
+    }
     const has = offerSet.has(cardId);
     if (!has && localOffer.length >= 8) {
       setError("Max 8 cards on your side.");
@@ -197,7 +259,7 @@ export function TradeRoom() {
           {done
             ? "Trade finished. Cards are in both collections."
             : active
-              ? "Add cards below. Both players Ready to finish."
+              ? "Add cards they don’t already own. Both players Ready to finish."
               : `This trade is ${trade.status}.`}
         </p>
 
@@ -216,20 +278,32 @@ export function TradeRoom() {
                 {iAmReady ? "Ready" : "Not ready"}
               </span>
             </header>
-            <div className="trade-chip-list">
+            <div className="trade-offer-grid">
               {localOffer.length === 0 ? (
                 <p className="trade-empty">Nothing offered yet</p>
               ) : (
-                localOffer.map((id) => (
-                  <CardChip
-                    key={id}
-                    cardId={id}
-                    selected
-                    disabled={!active || busy}
-                    actionLabel={active ? "Remove" : undefined}
-                    onClick={active ? () => toggleCard(id) : undefined}
-                  />
-                ))
+                localOffer.map((id) => {
+                  const card = cardSpecById(id);
+                  if (!card) return null;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="trade-offer-card"
+                      disabled={!active || busy}
+                      title="Remove from offer"
+                      onClick={() => toggleCard(id)}
+                    >
+                      <MonkeyCard
+                        entity={card.entity}
+                        pathLevels={card.pathLevels}
+                        mode="preview"
+                        owned
+                        staticArt
+                      />
+                    </button>
+                  );
+                })
               )}
             </div>
           </section>
@@ -243,13 +317,25 @@ export function TradeRoom() {
                 {theyReady ? "Ready" : "Not ready"}
               </span>
             </header>
-            <div className="trade-chip-list">
+            <div className="trade-offer-grid">
               {trade.theirOffer.length === 0 ? (
                 <p className="trade-empty">Waiting for their cards…</p>
               ) : (
-                trade.theirOffer.map((id) => (
-                  <CardChip key={id} cardId={id} locked />
-                ))
+                trade.theirOffer.map((id) => {
+                  const card = cardSpecById(id);
+                  if (!card) return null;
+                  return (
+                    <div key={id} className="trade-offer-card is-locked">
+                      <MonkeyCard
+                        entity={card.entity}
+                        pathLevels={card.pathLevels}
+                        mode="preview"
+                        owned
+                        staticArt
+                      />
+                    </div>
+                  );
+                })
               )}
             </div>
           </section>
@@ -279,9 +365,15 @@ export function TradeRoom() {
         {active ? (
           <section className="trade-picker">
             <h3>Add from your collection</h3>
+            <p className="trade-picker__note">
+              Cards they already own are greyed out (unless they’re offering that
+              same card away).
+            </p>
             <OwnedCardPicker
               owned={owned}
               selectedIds={offerSet}
+              unavailableIds={unavailableIds}
+              unavailableLabel="They own this"
               disabled={busy}
               maxSelected={8}
               onMaxReached={() => setError("Max 8 cards on your side.")}

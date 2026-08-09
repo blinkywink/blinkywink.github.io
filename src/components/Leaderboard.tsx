@@ -111,7 +111,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                           })
                         }
                       >
-                        <UserAvatar crop={row.avatar} size={44} />
+                        <UserAvatar crop={row.avatar} size={56} />
                         <span>
                           {row.username}
                           {mine ? " (you)" : ""}

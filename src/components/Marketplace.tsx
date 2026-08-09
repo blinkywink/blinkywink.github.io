@@ -12,7 +12,6 @@ import {
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
 import { userCollectionPath } from "../lib/routes";
-import { CardChip } from "./CardChip";
 import { GameHeader } from "./GameHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
@@ -277,7 +276,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
               className="market-card__seller"
               to={userCollectionPath(row.sellerUsername)}
             >
-              <UserAvatar crop={row.sellerAvatar} size={22} />
+              <UserAvatar crop={row.sellerAvatar} size={32} />
               <span>{row.sellerUsername}</span>
             </Link>
           ) : (
@@ -487,24 +486,36 @@ export function Marketplace({ onBack: _onBack }: Props) {
             {selectedList.length > 0 ? (
               <div className="market-selected">
                 <p className="market-selected__label">
-                  Selected ({selectedList.length})
+                  Selected ({selectedList.length}) — tap to remove
                 </p>
-                <div className="owned-picker__chips">
-                  {selectedList.map((id) => (
-                    <CardChip
-                      key={id}
-                      cardId={id}
-                      selected
-                      disabled={busyId != null || isGuest}
-                      actionLabel="Remove"
-                      onClick={() => toggleSelect(id)}
-                    />
-                  ))}
+                <div className="owned-picker__grid owned-picker__grid--compact">
+                  {selectedList.map((id) => {
+                    const card = cardSpecById(id);
+                    if (!card) return null;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className="owned-picker__card is-selected"
+                        disabled={busyId != null || isGuest}
+                        onClick={() => toggleSelect(id)}
+                      >
+                        <MonkeyCard
+                          entity={card.entity}
+                          pathLevels={card.pathLevels}
+                          mode="preview"
+                          owned
+                          staticArt
+                        />
+                        <span className="owned-picker__card-tag">Remove</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
               <p className="market-empty">
-                Pick towers below or search — then list at one price.
+                Open a tower or search — then list at one price.
               </p>
             )}
             <OwnedCardPicker
