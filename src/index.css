@@ -502,9 +502,11 @@ body:has(.zoomed-page) {
 
 .home-hub__row--cards {
   width: 100%;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  justify-content: stretch;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 9.5rem));
+  justify-content: center;
   column-gap: var(--hub-card-gap);
+  row-gap: var(--hub-card-gap);
 }
 
 .home-hub__row--players {
@@ -641,7 +643,7 @@ body:has(.zoomed-page) {
   }
 
   .home-hub__row--cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 8.25rem));
   }
 
   .home-hub__row--players {
@@ -663,7 +665,7 @@ body:has(.zoomed-page) {
   }
 
   .home-hub__row--cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 8.5rem));
   }
 
   .home-hub__row--players {
@@ -5204,7 +5206,6 @@ body:has(.zoomed-page) {
   inset: 0;
   border-radius: inherit;
   box-shadow:
-    0 0 0 1px rgba(255, 220, 120, 0.4),
     0 0 16px 3px rgba(240, 196, 86, 0.55),
     0 0 36px 10px rgba(230, 170, 40, 0.38),
     0 0 64px 16px rgba(200, 140, 20, 0.2);
@@ -5215,9 +5216,8 @@ body:has(.zoomed-page) {
   inset: 0;
   border-radius: inherit;
   background: none;
-  /* Soft violet bloom that hugs the card, not a disk */
+  /* Soft violet bloom that hugs the card — no hard outline */
   box-shadow:
-    0 0 0 1px rgba(230, 190, 255, 0.45),
     0 0 18px 2px rgba(200, 120, 255, 0.55),
     0 0 42px 10px rgba(160, 70, 255, 0.42),
     0 0 78px 18px rgba(110, 40, 200, 0.28);
