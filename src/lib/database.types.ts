@@ -229,6 +229,10 @@ export type Database = {
         Args: { p_card_id: string };
         Returns: number;
       };
+      get_card_pull_stats: {
+        Args: { p_card_id: string };
+        Returns: { count: number; total: number };
+      };
       username_signup: {
         Args: { p_username: string; p_password: string };
         Returns: {

@@ -1,6 +1,13 @@
 import { cacheInvalidate, cached, CacheTtl } from "./cache";
 import { supabase } from "./supabase";
 
+export type CardPullStats = {
+  /** Times this specific card was pulled (includes duplicates). */
+  count: number;
+  /** All card pulls in the game ever (includes every duplicate). */
+  total: number;
+};
+
 /** Bump global pull totals when a pack is opened (includes duplicates). */
 export async function recordCardPulls(cardIds: string[]): Promise<void> {
   const ids = cardIds
@@ -16,25 +23,27 @@ export async function recordCardPulls(cardIds: string[]): Promise<void> {
     return;
   }
 
-  for (const id of new Set(ids)) {
-    cacheInvalidate(`card-pulls:${id}`);
-  }
+  cacheInvalidate("card-pulls:");
 }
 
-/** Global times this card has been pulled across the game. */
-export async function fetchCardPullCount(cardId: string): Promise<number> {
+/** Per-card pulls + all-time total pulls (duplicates count in both). */
+export async function fetchCardPullStats(
+  cardId: string,
+): Promise<CardPullStats> {
   const id = String(cardId ?? "").trim();
-  if (id.length < 3) return 0;
+  if (id.length < 3) return { count: 0, total: 0 };
 
   return cached(`card-pulls:${id}`, CacheTtl.cardPullCount, async () => {
-    const { data, error } = await supabase.rpc("get_card_pull_count", {
+    const { data, error } = await supabase.rpc("get_card_pull_stats", {
       p_card_id: id,
     });
     if (error) {
-      console.warn("get_card_pull_count failed", error.message);
-      return 0;
+      console.warn("get_card_pull_stats failed", error.message);
+      return { count: 0, total: 0 };
     }
-    const n = Number(data);
-    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    const raw = data as { count?: unknown; total?: unknown } | null;
+    const count = Math.max(0, Math.floor(Number(raw?.count) || 0));
+    const total = Math.max(0, Math.floor(Number(raw?.total) || 0));
+    return { count, total: Math.max(total, count) };
   });
 }

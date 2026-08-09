@@ -1,27 +1,30 @@
 import { useEffect, useState } from "react";
-import { fetchCardPullCount } from "../lib/cardPullStats";
+import {
+  fetchCardPullStats,
+  type CardPullStats,
+} from "../lib/cardPullStats";
 
 type Props = {
   cardId: string;
   className?: string;
 };
 
-/** “This card has been pulled X times” under fullscreen card views. */
+/** “This card has been pulled X times out of Y pulls” under focus views. */
 export function CardPullCount({ cardId, className = "" }: Props) {
-  const [count, setCount] = useState<number | null>(null);
+  const [stats, setStats] = useState<CardPullStats | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setCount(null);
-    void fetchCardPullCount(cardId).then((n) => {
-      if (!cancelled) setCount(n);
+    setStats(null);
+    void fetchCardPullStats(cardId).then((n) => {
+      if (!cancelled) setStats(n);
     });
     return () => {
       cancelled = true;
     };
   }, [cardId]);
 
-  if (count == null) {
+  if (stats == null) {
     return (
       <p className={`card-pull-count is-loading ${className}`.trim()} aria-hidden>
         {"\u00a0"}
@@ -29,10 +32,10 @@ export function CardPullCount({ cardId, className = "" }: Props) {
     );
   }
 
-  const label =
-    count === 1
-      ? "This card has been pulled 1 time"
-      : `This card has been pulled ${count.toLocaleString()} times`;
+  const { count, total } = stats;
+  const cardWord = count === 1 ? "time" : "times";
+  const totalWord = total === 1 ? "pull" : "pulls";
+  const label = `This card has been pulled ${count.toLocaleString()} ${cardWord} out of ${total.toLocaleString()} ${totalWord}`;
 
   return (
     <p className={`card-pull-count ${className}`.trim()} role="status">
