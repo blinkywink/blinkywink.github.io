@@ -1,5 +1,6 @@
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
+import { cached, cacheInvalidate, CacheTtl } from "./cache";
 
 export type TradeInboxItem = {
   id: string;
@@ -82,6 +83,7 @@ export async function requestTrade(username: string): Promise<string> {
     p_username: username.trim(),
   });
   if (error) throw new Error(error.message);
+  cacheInvalidate("trade:inbox");
   return String(data);
 }
 
@@ -95,6 +97,7 @@ export async function respondTrade(
     p_accept: accept,
   });
   if (error) throw new Error(error.message);
+  cacheInvalidate("trade:inbox");
   return data === "active" ? "active" : "declined";
 }
 
@@ -104,18 +107,28 @@ export async function cancelTrade(tradeId: string): Promise<void> {
     p_trade_id: tradeId,
   });
   if (error) throw new Error(error.message);
+  cacheInvalidate("trade:inbox");
 }
 
-export async function fetchTradeInbox(): Promise<TradeInbox> {
+export async function fetchTradeInbox(
+  opts?: { force?: boolean },
+): Promise<TradeInbox> {
   requireSession();
-  const { data, error } = await supabase.rpc("get_trade_inbox");
-  if (error) throw new Error(error.message);
-  const raw = (data ?? {}) as Record<string, unknown>;
-  return {
-    incoming: asInboxItems(raw.incoming),
-    outgoing: asInboxItems(raw.outgoing),
-    active: asInboxItems(raw.active),
-  };
+  return cached(
+    "trade:inbox",
+    CacheTtl.inbox,
+    async () => {
+      const { data, error } = await supabase.rpc("get_trade_inbox");
+      if (error) throw new Error(error.message);
+      const raw = (data ?? {}) as Record<string, unknown>;
+      return {
+        incoming: asInboxItems(raw.incoming),
+        outgoing: asInboxItems(raw.outgoing),
+        active: asInboxItems(raw.active),
+      };
+    },
+    opts,
+  );
 }
 
 export async function fetchTrade(tradeId: string): Promise<TradeState> {
@@ -149,7 +162,9 @@ export async function setTradeReady(
     p_ready: ready,
   });
   if (error) throw new Error(error.message);
-  return asTradeState(data);
+  const next = asTradeState(data);
+  cacheInvalidate("trade:inbox");
+  return next;
 }
 
 function findChannel(topicSuffix: string) {

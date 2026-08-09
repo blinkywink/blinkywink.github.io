@@ -1,4 +1,5 @@
 import { awardGuestCards, loadGuestCardIds } from "./guestCollection";
+import { cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 
@@ -100,15 +101,17 @@ export async function fetchPlayerCardIds(userId: string): Promise<string[]> {
   const id = String(userId ?? "").trim();
   if (!id) return [];
 
-  const { data, error } = await supabase.rpc("get_player_cards", {
-    p_user_id: id,
+  return cached(`player-cards:${id}`, CacheTtl.playerCards, async () => {
+    const { data, error } = await supabase.rpc("get_player_cards", {
+      p_user_id: id,
+    });
+
+    if (error) {
+      console.warn("get_player_cards failed", error.message);
+      throw new Error(error.message);
+    }
+
+    if (!Array.isArray(data)) return [];
+    return [...new Set(data.map(String))];
   });
-
-  if (error) {
-    console.warn("get_player_cards failed", error.message);
-    throw new Error(error.message);
-  }
-
-  if (!Array.isArray(data)) return [];
-  return [...new Set(data.map(String))];
 }

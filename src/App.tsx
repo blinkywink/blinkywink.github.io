@@ -13,6 +13,7 @@ import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { Leaderboard } from "./components/Leaderboard";
+import { ListingPage } from "./components/ListingPage";
 import { Marketplace } from "./components/Marketplace";
 import { PackOpenerTest } from "./components/PackOpenerTest";
 import { ProfilePage } from "./components/ProfilePage";
@@ -279,6 +280,7 @@ function AppShell() {
             path="/marketplace"
             element={<Marketplace onBack={goHome} />}
           />
+          <Route path="/marketplace/:listingId" element={<ListingPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/trade/:tradeId" element={<TradeRoom />} />
           <Route path="/user/:username" element={<UserCollectionPage />} />

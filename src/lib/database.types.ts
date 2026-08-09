@@ -92,6 +92,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketplace_offers: {
+        Row: {
+          id: string;
+          listing_id: string;
+          buyer_id: string;
+          offer_price: number;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          buyer_id: string;
+          offer_price: number;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: string;
+          offer_price?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -133,6 +159,22 @@ export type Database = {
       buy_listing: {
         Args: { p_listing_id: string };
         Returns: number;
+      };
+      make_listing_offer: {
+        Args: { p_listing_id: string; p_offer_price: number };
+        Returns: string;
+      };
+      respond_listing_offer: {
+        Args: { p_offer_id: string; p_accept: boolean };
+        Returns: number | null;
+      };
+      get_market_offer_inbox: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      get_listing_offers: {
+        Args: { p_listing_id: string };
+        Returns: unknown;
       };
       request_trade: {
         Args: { p_username: string };

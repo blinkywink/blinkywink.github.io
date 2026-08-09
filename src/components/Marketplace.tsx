@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { cardSpecById, matchesCardQuery } from "../lib/cardCatalog";
 import {
-  buyListing,
-  cancelListing,
   fetchMarketplaceListings,
   listCardForSale,
   type MarketplaceListing,
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
-import { userCollectionPath } from "../lib/routes";
+import { userCollectionPath, listingPath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
+import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { UserAvatar } from "./UserAvatar";
@@ -59,7 +58,8 @@ const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 ];
 
 export function Marketplace({ onBack: _onBack }: Props) {
-  const { user, profile, isGuest, setCoinBalance, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const { user, isGuest } = useAuth();
   const { owned, refresh: refreshCards } = useCardCollection();
   const [tab, setTab] = useState<Tab>("browse");
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
@@ -73,11 +73,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [priceInput, setPriceInput] = useState("100");
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
     try {
-      const rows = await fetchMarketplaceListings();
+      const rows = await fetchMarketplaceListings({ force });
       setListings(rows);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load market.");
@@ -204,49 +204,10 @@ export function Marketplace({ onBack: _onBack }: Props) {
     setBusyId(null);
   };
 
-  const onBuy = async (listing: MarketplaceListing) => {
-    if (isGuest || !user) {
-      setError("Sign in to buy cards.");
-      return;
-    }
-    setBusyId(listing.id);
-    setError(null);
-    setStatus(null);
-    try {
-      const bal = await buyListing(listing.id);
-      setCoinBalance(bal);
-      await Promise.all([refreshCards(), refreshProfile(), load()]);
-      setStatus(`Bought card from ${listing.sellerUsername}.`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Purchase failed.");
-      await load();
-    }
-    setBusyId(null);
-  };
-
-  const onCancel = async (listing: MarketplaceListing) => {
-    setBusyId(listing.id);
-    setError(null);
-    setStatus(null);
-    try {
-      await cancelListing(listing.id);
-      await Promise.all([refreshCards(), load()]);
-      setStatus("Listing cancelled. Card returned.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Cancel failed.");
-      await load();
-    }
-    setBusyId(null);
-  };
-
   const renderListing = (row: MarketplaceListing, mode: "browse" | "mine") => {
     const card = cardSpecById(row.cardId);
     const mine = user?.id === row.sellerId;
-    const canBuy =
-      !mine &&
-      !isGuest &&
-      (profile?.coins ?? 0) >= row.price &&
-      !owned.has(row.cardId);
+    const openListing = () => navigate(listingPath(row.id));
     return (
       <article key={row.id} className="market-card">
         {card ? (
@@ -255,13 +216,26 @@ export function Marketplace({ onBack: _onBack }: Props) {
             pathLevels={card.pathLevels}
             mode="preview"
             owned
+            onSelect={openListing}
           />
         ) : (
-          <div className="market-card__missing">{row.cardId}</div>
+          <button
+            type="button"
+            className="market-card__missing"
+            onClick={openListing}
+          >
+            {row.cardId}
+          </button>
         )}
         <div className="market-card__meta">
           <div className="market-card__price-row">
-            <strong>{row.price.toLocaleString()} Cash</strong>
+            <button
+              type="button"
+              className="market-card__price"
+              onClick={openListing}
+            >
+              <CashAmount amount={row.price} size={16} />
+            </button>
             <span className="market-card__time">
               {formatPostedAt(row.createdAt)}
             </span>
@@ -277,38 +251,13 @@ export function Marketplace({ onBack: _onBack }: Props) {
           ) : (
             <span className="market-card__yours">Your listing</span>
           )}
-          {mode === "mine" || mine ? (
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm market-card__action"
-              disabled={busyId === row.id}
-              onClick={() => void onCancel(row)}
-            >
-              {busyId === row.id ? "…" : "Cancel"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn--primary btn--sm market-card__action"
-              disabled={busyId === row.id || !canBuy}
-              title={
-                owned.has(row.cardId)
-                  ? "You already own this card"
-                  : isGuest
-                    ? "Sign in to buy"
-                    : (profile?.coins ?? 0) < row.price
-                      ? "Not enough Cash"
-                      : undefined
-              }
-              onClick={() => void onBuy(row)}
-            >
-              {owned.has(row.cardId)
-                ? "Owned"
-                : busyId === row.id
-                  ? "Buying…"
-                  : "Buy"}
-            </button>
-          )}
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm market-card__action"
+            onClick={openListing}
+          >
+            {mode === "mine" || mine ? "Manage" : "View"}
+          </button>
         </div>
       </article>
     );
@@ -411,7 +360,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm market-refresh"
-                  onClick={() => void load()}
+                  onClick={() => void load(true)}
                   disabled={loading}
                 >
                   Refresh
@@ -421,7 +370,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
               <button
                 type="button"
                 className="btn btn--ghost btn--sm market-refresh"
-                onClick={() => void load()}
+                onClick={() => void load(true)}
                 disabled={loading}
               >
                 Refresh

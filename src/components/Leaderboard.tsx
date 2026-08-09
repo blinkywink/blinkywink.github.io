@@ -6,6 +6,7 @@ import {
   type AvatarCrop,
 } from "../lib/avatar";
 import { supabase } from "../lib/supabase";
+import { cached, CacheTtl } from "../lib/cache";
 import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
 
@@ -32,34 +33,41 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
-    const { data, error: err } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
-      )
-      .order("coins_earned", { ascending: false })
-      .limit(100);
+    try {
+      const rows = await cached(
+        "leaderboard:top",
+        CacheTtl.leaderboard,
+        async () => {
+          const { data, error: err } = await supabase
+            .from("profiles")
+            .select(
+              "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+            )
+            .order("coins_earned", { ascending: false })
+            .limit(100);
 
-    if (err) {
-      setError(err.message);
-      setRows([]);
-    } else {
-      setRows(
-        (data ?? []).map((r) => ({
-          id: String(r.id),
-          username: String(r.username ?? "Player"),
-          coins_earned: Number(r.coins_earned) || 0,
-          avatar: normalizeAvatarCrop({
-            cardId: r.avatar_card_id ?? null,
-            zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
-            x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
-            y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
-          }),
-        })),
+          if (err) throw new Error(err.message);
+          return (data ?? []).map((r) => ({
+            id: String(r.id),
+            username: String(r.username ?? "Player"),
+            coins_earned: Number(r.coins_earned) || 0,
+            avatar: normalizeAvatarCrop({
+              cardId: r.avatar_card_id ?? null,
+              zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+              x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+              y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+            }),
+          }));
+        },
+        { force },
       );
+      setRows(rows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load.");
+      setRows([]);
     }
     setLoading(false);
   }, []);
@@ -80,7 +88,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
           <button
             type="button"
             className="btn btn--ghost btn--sm"
-            onClick={() => void load()}
+            onClick={() => void load(true)}
             disabled={loading}
           >
             Refresh

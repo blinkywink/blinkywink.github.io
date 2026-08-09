@@ -447,6 +447,36 @@ body:has(.zoomed-page) {
     drop-shadow(-1px 0 0 #000);
 }
 
+.cash-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-weight: 800;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.cash-amount img {
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+}
+
+.cash-amount--lg {
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  color: #f0c84a;
+}
+
+.btn .cash-amount {
+  gap: 0.22rem;
+}
+
+.btn .cash-amount img {
+  filter: drop-shadow(0 0 0 transparent);
+}
+
 .coin-chip__value {
   font-family: var(--font-btd);
   font-weight: 400;
@@ -6283,6 +6313,18 @@ body:has(.zoomed-page) {
   gap: 0.55rem;
 }
 
+.market-card__hit {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: calc(22px * var(--card-preview-scale));
+}
+
+.market-card__hit:focus-visible {
+  outline: 3px solid #f0c84a;
+  outline-offset: 3px;
+}
+
 /* Match CardLab preview cell exactly (scale + clip). */
 .market-grid .monkey-card-scene--preview {
   width: var(--card-preview-w);
@@ -6326,6 +6368,28 @@ body:has(.zoomed-page) {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.4rem;
+}
+
+.market-card__price {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #f0c84a;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-align: left;
+}
+
+.market-card__price .cash-amount {
+  color: #f0c84a;
+}
+
+.market-card__price:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
 
 .market-card__price-row strong {
@@ -6535,6 +6599,28 @@ a.market-card__seller:hover {
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.88rem;
   color: rgba(240, 240, 244, 0.85);
+}
+
+.trade-inbox__row--offer {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.trade-inbox__row--offer .trade-inbox__actions {
+  grid-column: 1 / -1;
+}
+
+.trade-inbox__thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #121218;
+}
+
+.trade-inbox__row em {
+  font-style: normal;
+  color: rgba(240, 240, 244, 0.45);
 }
 
 .trade-inbox__actions {
@@ -6964,6 +7050,228 @@ button.trade-offer-card:hover:not(:disabled) {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(240, 240, 244, 0.5);
+}
+
+/* Listing detail */
+.listing-page {
+  width: min(var(--content-max), calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 0.75rem 0 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.listing-page__top {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+}
+
+.listing-page__top .page-header {
+  margin: 0;
+}
+
+.listing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .listing-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.listing-showcase {
+  --card-face-w: min(72vw, 380px, calc(70vh * 2.5 / 3.5));
+  display: grid;
+  justify-items: center;
+  padding: 1rem;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 40% 20%, rgba(240, 200, 74, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.listing-showcase .monkey-card-scene {
+  width: min(100%, var(--card-face-w));
+  max-width: none;
+}
+
+.listing-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.listing-ask {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.listing-ask__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.45);
+}
+
+.listing-ask__price {
+  color: #f0c84a;
+}
+
+.listing-ask__time {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.45);
+}
+
+.listing-seller {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.listing-seller span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.listing-seller strong {
+  color: #9fd6ff;
+}
+
+.listing-seller em {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: rgba(240, 240, 244, 0.45);
+}
+
+.listing-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.listing-note {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.55);
+  font-weight: 700;
+}
+
+.listing-my-offer {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(240, 200, 74, 0.08);
+  border: 1px solid rgba(240, 200, 74, 0.25);
+}
+
+.listing-my-offer p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.listing-offer-form {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.listing-offer-form label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.listing-offer-form input {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #2a2a34;
+  background: #0e0e14;
+  color: #f0f0f4;
+  padding: 0.6rem 0.7rem;
+  font: inherit;
+  font-weight: 800;
+}
+
+.listing-offer-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.5);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.listing-offer-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.listing-offers h3 {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.listing-offers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.listing-offer-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.listing-offer-row__meta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.listing-offer-row__meta strong {
+  color: #f0c84a;
+  font-size: 1.05rem;
+}
+
+.listing-offer-row__meta span {
+  font-size: 0.85rem;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.listing-offer-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 /* User avatar (real card crop) */
