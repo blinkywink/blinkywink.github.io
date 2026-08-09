@@ -28,38 +28,46 @@ const ZERO: HeroEffectStats = {
   featuredFreezeChance: 0,
 };
 
-/** Level-1 balanced constants (kept for call sites / docs). */
+/**
+ * Mild passives only — L1 is a nibble (~2–5% niche), L20 is a treat (~12–18%),
+ * never run-defining. Anchors: perfect quiz ~2525 Cash, BTD6 pack 1750,
+ * featured clear 500, T5 0.7%, Paragon 0.1%.
+ */
 export const HERO_EFFECTS_L1 = {
-  quincy: { bonusCashPerCorrect: 10 },
-  gwendolin: { streakBonusPct: 0.03 },
-  "obyn-greenfoot": { extraCardChance: 0.04 },
-  benjamin: { dupCashBonusPct: 0.15 },
-  ezili: { t5WeightBonus: 0.003 },
-  sauda: { btd6DiscountChance: 0.07, btd6DiscountPct: 0.07 },
-  psi: { paragonWeightBonus: 0.0005 },
+  quincy: { bonusCashPerCorrect: 8 },
+  gwendolin: { streakBonusPct: 0.025 },
+  "obyn-greenfoot": { extraCardChance: 0.03 },
+  benjamin: { dupCashBonusPct: 0.1 },
+  ezili: { t5WeightBonus: 0.0015 },
+  sauda: { btd6DiscountChance: 0.12, btd6DiscountPct: 0.08 },
+  psi: { paragonWeightBonus: 0.00025 },
   silas: { featuredFreezeChance: 0.2 },
 } as const;
 
 const L1: Record<string, HeroEffectStats> = {
-  quincy: { ...ZERO, bonusCashPerCorrect: 10 },
-  gwendolin: { ...ZERO, streakBonusPct: 0.03 },
-  "obyn-greenfoot": { ...ZERO, extraCardChance: 0.04 },
-  benjamin: { ...ZERO, dupCashBonusPct: 0.15 },
-  ezili: { ...ZERO, t5WeightBonus: 0.003 },
-  sauda: { ...ZERO, btd6DiscountChance: 0.07, btd6DiscountPct: 0.07 },
-  psi: { ...ZERO, paragonWeightBonus: 0.0005 },
+  quincy: { ...ZERO, bonusCashPerCorrect: 8 },
+  gwendolin: { ...ZERO, streakBonusPct: 0.025 },
+  "obyn-greenfoot": { ...ZERO, extraCardChance: 0.03 },
+  benjamin: { ...ZERO, dupCashBonusPct: 0.1 },
+  ezili: { ...ZERO, t5WeightBonus: 0.0015 },
+  sauda: { ...ZERO, btd6DiscountChance: 0.12, btd6DiscountPct: 0.08 },
+  psi: { ...ZERO, paragonWeightBonus: 0.00025 },
   silas: { ...ZERO, featuredFreezeChance: 0.2 },
 };
 
 const L20: Record<string, HeroEffectStats> = {
-  quincy: { ...ZERO, bonusCashPerCorrect: 500 },
-  gwendolin: { ...ZERO, streakBonusPct: 0.15 },
-  "obyn-greenfoot": { ...ZERO, extraCardChance: 0.1 },
-  benjamin: { ...ZERO, dupCashBonusPct: 0.5 },
-  ezili: { ...ZERO, t5WeightBonus: 0.012 },
-  sauda: { ...ZERO, btd6DiscountChance: 0.25, btd6DiscountPct: 0.2 },
-  psi: { ...ZERO, paragonWeightBonus: 0.0025 },
-  silas: { ...ZERO, featuredFreezeChance: 0.55 },
+  /** ~+400 on a perfect 10-correct run — not another full quiz. */
+  quincy: { ...ZERO, bonusCashPerCorrect: 40 },
+  gwendolin: { ...ZERO, streakBonusPct: 0.12 },
+  "obyn-greenfoot": { ...ZERO, extraCardChance: 0.08 },
+  benjamin: { ...ZERO, dupCashBonusPct: 0.28 },
+  /** T5 0.70% → ~1.15% at L20 (~1.6×), not nearly 3×. */
+  ezili: { ...ZERO, t5WeightBonus: 0.0045 },
+  sauda: { ...ZERO, btd6DiscountChance: 0.22, btd6DiscountPct: 0.15 },
+  /** Paragon 0.10% → ~0.19% at L20 (~1.9×). */
+  psi: { ...ZERO, paragonWeightBonus: 0.0009 },
+  /** Hold procs stay spicy; L20 still expects rotate most of the time. */
+  silas: { ...ZERO, featuredFreezeChance: 0.4 },
 };
 
 export type EquippedHeroContext = {

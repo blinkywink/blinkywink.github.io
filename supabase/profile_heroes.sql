@@ -9,7 +9,22 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists hero_levels jsonb not null default '{}'::jsonb;
 
--- Unlock a hero for 5,000 Cash, or spend 5,000 again to level up (max 20).
+-- Unlock / level-up costs scale with target level (never below 5,000).
+-- Client: heroUpgradeCost(toLevel) in profileHeroes.ts — keep in sync.
+create or replace function public.hero_upgrade_cost(p_to_level integer)
+returns integer
+language sql
+immutable
+as $$
+  select greatest(
+    5000,
+    (
+      round((5000 * power(1.118::numeric, greatest(1, least(20, p_to_level)) - 1)) / 250.0)
+      * 250
+    )::integer
+  );
+$$;
+
 create or replace function public.buy_hero(p_hero_id text)
 returns json
 language plpgsql
@@ -24,6 +39,7 @@ declare
   new_balance integer;
   cur_level integer;
   next_level integer;
+  price integer;
   allowed text[] := array[
     'quincy','gwendolin','obyn-greenfoot',
     'benjamin','ezili','sauda','psi','silas'
@@ -46,10 +62,6 @@ begin
     raise exception 'Profile not found';
   end if;
 
-  if new_balance < 5000 then
-    raise exception 'Insufficient coins';
-  end if;
-
   if hid = any(coalesce(owned, '{}')) then
     cur_level := greatest(
       1,
@@ -59,21 +71,32 @@ begin
       raise exception 'Hero max level';
     end if;
     next_level := cur_level + 1;
+    price := public.hero_upgrade_cost(next_level);
+
+    if new_balance < price then
+      raise exception 'Insufficient coins';
+    end if;
 
     perform set_config('bloon.allow_coin_update', 'on', true);
     update public.profiles
     set
-      coins = coins - 5000,
+      coins = coins - price,
       hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, next_level),
       updated_at = now()
     where id = uid
     returning coins, owned_hero_ids, hero_levels
       into new_balance, owned, levels;
   else
+    price := public.hero_upgrade_cost(1);
+
+    if new_balance < price then
+      raise exception 'Insufficient coins';
+    end if;
+
     perform set_config('bloon.allow_coin_update', 'on', true);
     update public.profiles
     set
-      coins = coins - 5000,
+      coins = coins - price,
       owned_hero_ids = array_append(coalesce(owned_hero_ids, '{}'), hid),
       hero_levels = coalesce(hero_levels, '{}'::jsonb) || jsonb_build_object(hid, 1),
       updated_at = now()
@@ -92,6 +115,9 @@ begin
   );
 end;
 $$;
+
+revoke all on function public.hero_upgrade_cost(integer) from public;
+grant execute on function public.hero_upgrade_cost(integer) to anon, authenticated;
 
 revoke all on function public.buy_hero(text) from public;
 grant execute on function public.buy_hero(text) to anon, authenticated;

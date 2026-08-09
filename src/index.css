@@ -10120,16 +10120,19 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .shop-hero-focus__panel {
+  /* Match pack-card focus, slightly smaller so hero viewer stays distinct */
+  --card-face-w: min(66vw, calc(54vh * 2.5 / 3.5));
   display: grid;
   justify-items: center;
   gap: 0.65rem;
-  max-width: min(28rem, 94vw);
+  width: min(100%, calc(var(--card-face-w) + 20px));
+  max-width: none;
   text-align: center;
 }
 
 .shop-hero-focus__panel .hero-card-scene,
 .shop-hero-focus__panel .hero-card {
-  width: min(280px, 72vw);
+  width: min(100%, var(--card-face-w));
 }
 
 .shop-hero-focus__name {
@@ -10139,16 +10142,9 @@ button.trade-offer-card:hover:not(:disabled) {
   letter-spacing: 0.03em;
 }
 
-.shop-hero-focus__lvl {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: rgba(240, 200, 74, 0.9);
-}
-
 .shop-hero-focus__blurb {
   margin: 0;
-  max-width: 20rem;
+  max-width: min(22rem, var(--card-face-w));
   color: rgba(240, 240, 244, 0.78);
   font-size: 0.95rem;
   line-height: 1.4;
@@ -10163,7 +10159,7 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .hero-card-scene--focus {
-  width: min(280px, 72vw);
+  width: min(100%, var(--card-face-w, min(66vw, calc(54vh * 2.5 / 3.5))));
 }
 
 .hero-card {
@@ -10178,7 +10174,7 @@ button.trade-offer-card:hover:not(:disabled) {
 .hero-card--lg { width: min(22vw, 156px); }
 
 .hero-card--focus.hero-card--lg {
-  width: min(280px, 72vw);
+  width: min(100%, var(--card-face-w, min(66vw, calc(54vh * 2.5 / 3.5))));
 }
 
 .hero-card--plate-only { gap: 0; }
@@ -10204,7 +10200,7 @@ button.trade-offer-card:hover:not(:disabled) {
       circle at 32% 22%,
       color-mix(
         in srgb,
-        var(--hero-primary, #f0c84a) calc(18% + var(--hp) * 42%),
+        var(--hero-primary, #f0c84a) calc(38% + var(--hp) * 42%),
         transparent
       ),
       transparent 52%
@@ -10213,7 +10209,7 @@ button.trade-offer-card:hover:not(:disabled) {
       circle at 78% 78%,
       color-mix(
         in srgb,
-        var(--hero-secondary, #8a7a40) calc(12% + var(--hp) * 38%),
+        var(--hero-secondary, #8a7a40) calc(28% + var(--hp) * 40%),
         transparent
       ),
       transparent 48%
@@ -10222,14 +10218,19 @@ button.trade-offer-card:hover:not(:disabled) {
       155deg,
       color-mix(
         in srgb,
-        var(--hero-primary, #f0c84a) calc(8% + var(--hp) * 28%),
+        var(--hero-primary, #f0c84a) calc(22% + var(--hp) * 32%),
         #161820
       )
         0%,
-      #12141c 48%,
       color-mix(
         in srgb,
-        var(--hero-secondary, #8a7a40) calc(6% + var(--hp) * 24%),
+        var(--hero-secondary, #8a7a40) calc(10% + var(--hp) * 18%),
+        #12141c
+      )
+        48%,
+      color-mix(
+        in srgb,
+        var(--hero-secondary, #8a7a40) calc(16% + var(--hp) * 28%),
         #0a0c12
       )
         100%
@@ -10237,17 +10238,17 @@ button.trade-offer-card:hover:not(:disabled) {
   border: 1px solid
     color-mix(
       in srgb,
-      var(--hero-primary, #f0c84a) calc(22% + var(--hp) * 55%),
+      var(--hero-primary, #f0c84a) calc(42% + var(--hp) * 48%),
       rgba(255, 255, 255, 0.14)
     );
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, calc(0.05 + var(--hp) * 0.1)),
-    0 0 calc(6px + var(--hp) * 26px)
+    0 0 calc(8px + var(--hp) * 26px)
       rgba(
         var(--hero-r, 240),
         var(--hero-g, 200),
         var(--hero-b, 74),
-        calc(0.05 + var(--hp) * 0.42)
+        calc(0.14 + var(--hp) * 0.4)
       );
 }
 
@@ -10435,6 +10436,59 @@ button.trade-offer-card:hover:not(:disabled) {
   color: rgba(240, 200, 74, 0.88);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* Card Collection — owned heroes in a horizontal scroll row */
+.hero-shelf {
+  margin: 0.85rem 0 0.35rem;
+  width: 100%;
+}
+
+.hero-shelf__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.hero-shelf__label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: rgba(240, 240, 244, 0.88);
+}
+
+.hero-shelf__note,
+.hero-shelf__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: rgba(240, 240, 244, 0.58);
+}
+
+.hero-shelf__row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0.85rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15rem 0.1rem 0.55rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.hero-shelf__row > .hero-card,
+.hero-shelf__row > .hero-card-scene {
+  flex: 0 0 auto;
+}
+
+.hero-shelf__row .hero-card {
+  width: 6.5rem;
 }
 
 .profile-heroes { margin-top: 1.5rem; }

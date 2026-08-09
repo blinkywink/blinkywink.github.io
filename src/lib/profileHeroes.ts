@@ -4,10 +4,23 @@ import { cacheInvalidate } from "./cache";
 import { heroes } from "../data/heroes";
 
 export const HERO_UNLOCK_COST = 5_000;
-/** Same Cash cost to unlock or gain +1 level (max 20). */
-export const HERO_LEVEL_COST = HERO_UNLOCK_COST;
 export const HERO_MAX_LEVEL = 20;
 export const HERO_EQUIP_SWAP_COST = 1_000;
+
+/**
+ * Cash to unlock (toLevel 1) or buy into `toLevel` (2..20).
+ * Always ≥ unlock cost and rises each level — early levels buyable after
+ * a quiz or two; late levels are long sinks (~L20 step ≈ 42k, full max ≈ 352k).
+ */
+export function heroUpgradeCost(toLevel: number): number {
+  const L = Math.max(1, Math.min(HERO_MAX_LEVEL, Math.floor(toLevel) || 1));
+  const raw = HERO_UNLOCK_COST * Math.pow(1.118, L - 1);
+  const snapped = Math.round(raw / 250) * 250;
+  return Math.max(HERO_UNLOCK_COST, snapped);
+}
+
+/** @deprecated use heroUpgradeCost — unlock floor only */
+export const HERO_LEVEL_COST = HERO_UNLOCK_COST;
 
 /** Heroes available for purchase in the shop. */
 export const SHOPPABLE_HERO_IDS = [
@@ -79,8 +92,11 @@ export type EquipHeroResult = {
   equippedHeroId: string | null;
 };
 
-/** Unlock a hero or level it up for 5k Cash (max level 20). */
-export async function buyHero(heroId: string): Promise<BuyHeroResult> {
+/** Unlock a hero (level 1) or level it up. Cost scales with next level. */
+export async function buyHero(
+  heroId: string,
+  opts?: { expectedCost?: number },
+): Promise<BuyHeroResult> {
   const app = loadAppSession();
   if (!getAccessToken() || !app) {
     throw new Error("Sign in to unlock heroes.");
@@ -93,9 +109,8 @@ export async function buyHero(heroId: string): Promise<BuyHeroResult> {
   });
   if (error) {
     if (/Insufficient coins/i.test(error.message)) {
-      throw new Error(
-        `Need ${HERO_LEVEL_COST.toLocaleString()} Cash for this hero.`,
-      );
+      const need = opts?.expectedCost ?? HERO_UNLOCK_COST;
+      throw new Error(`Need ${need.toLocaleString()} Cash for this hero.`);
     }
     if (/Hero max level/i.test(error.message)) {
       throw new Error("That hero is already max level.");

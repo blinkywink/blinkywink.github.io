@@ -213,7 +213,7 @@ function pullGodPackCards(
 }
 
 export type PackTierMods = {
-  /** Ezili: absolute add to T5 weight (e.g. 0.003). */
+  /** Ezili: absolute add to T5 weight (e.g. 0.0015 at L1). */
   t5WeightBonus?: number;
   /** Psi: absolute add to Paragon weight (e.g. 0.0005). */
   paragonWeightBonus?: number;

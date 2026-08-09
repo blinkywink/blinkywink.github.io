@@ -121,7 +121,7 @@ type FaceProps = {
   onSelect?: () => void;
 };
 
-/** Hero plate: desaturated at L1, gains color/FX as level rises. */
+/** Hero plate: full-color art; accent backgrounds intensify with level. */
 export function HeroCardFace({
   hero,
   level,

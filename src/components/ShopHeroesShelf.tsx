@@ -4,10 +4,11 @@ import { useAuth } from "../auth/AuthProvider";
 import type { HeroEntity } from "../data/heroes";
 import { heroBlurb } from "../lib/heroEffects";
 import {
-  HERO_LEVEL_COST,
   HERO_MAX_LEVEL,
+  HERO_UNLOCK_COST,
   buyHero,
   heroLevelFromProfile,
+  heroUpgradeCost,
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
   shoppableHeroes,
@@ -50,14 +51,15 @@ export function ShopHeroesShelf() {
       setBuyError("Already max level.");
       return;
     }
-    if ((profile?.coins ?? 0) < HERO_LEVEL_COST) {
+    const price = mine ? heroUpgradeCost(level + 1) : heroUpgradeCost(1);
+    if ((profile?.coins ?? 0) < price) {
       setBuyError("Not enough Cash.");
       return;
     }
     setBusy(true);
     setBuyError(null);
     try {
-      const result = await buyHero(focused.id);
+      const result = await buyHero(focused.id, { expectedCost: price });
       setCoinBalance(result.coins);
       await refreshProfile();
       const nextLevel = result.heroLevels[focused.id] ?? (mine ? level + 1 : 1);
@@ -105,6 +107,13 @@ export function ShopHeroesShelf() {
       : 1
     : 1;
   const focusMaxed = focusMine && focusLevel >= HERO_MAX_LEVEL;
+  const focusPrice = focused
+    ? focusMine
+      ? focusMaxed
+        ? 0
+        : heroUpgradeCost(focusLevel + 1)
+      : heroUpgradeCost(1)
+    : 0;
   const canBuy =
     !isGuest && focused && (!focusMine || !focusMaxed);
 
@@ -140,15 +149,12 @@ export function ShopHeroesShelf() {
               hideCaption
             />
             <h2 className="shop-hero-focus__name">{focused.name}</h2>
-            <p className="shop-hero-focus__lvl">
-              {focusMine ? `Level ${focusLevel}` : "Not owned · Level 1 preview"}
-            </p>
             <p className="shop-hero-focus__blurb">
               {heroBlurb(focused.id, focusLevel)}
             </p>
             <div className="pack-opener__buy shop-hero-focus__buy">
               {!focusMaxed ? (
-                <CurrencyChip amount={HERO_LEVEL_COST} />
+                <CurrencyChip amount={focusPrice} />
               ) : null}
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to unlock.</p>
@@ -196,8 +202,8 @@ export function ShopHeroesShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
         <p className="shop-heroes__note">
-          <CashAmount amount={HERO_LEVEL_COST} /> unlock / +1 level · equip on
-          Profile
+          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · each level costs
+          more · equip on Profile
         </p>
       </div>
       {status ? (
@@ -208,6 +214,11 @@ export function ShopHeroesShelf() {
           const mine = owned.has(hero.id);
           const level = mine ? heroLevelFromProfile(levels, hero.id) : 1;
           const maxed = mine && level >= HERO_MAX_LEVEL;
+          const price = mine
+            ? maxed
+              ? 0
+              : heroUpgradeCost(level + 1)
+            : heroUpgradeCost(1);
           return (
             <button
               key={hero.id}
@@ -238,7 +249,7 @@ export function ShopHeroesShelf() {
                         width={22}
                         height={22}
                       />
-                      {HERO_LEVEL_COST.toLocaleString()}
+                      {price.toLocaleString()}
                       {mine ? ` · Lv ${level}` : ""}
                     </>
                   )}
