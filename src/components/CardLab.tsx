@@ -268,6 +268,11 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     };
   }, [focused]);
 
+  // Fresh view = top of page (don't keep tower-list scroll).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
+
   const focusPortal = focused
     ? createPortal(
         <div

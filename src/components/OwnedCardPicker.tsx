@@ -133,6 +133,11 @@ export function OwnedCardPicker({
     );
   }, [selectedIds]);
 
+  // Fresh view = top of page (don't keep tower-list scroll).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
+
   const filteredTowers = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q || view.kind !== "towers") return TOWER_CHOICES;
@@ -150,8 +155,15 @@ export function OwnedCardPicker({
     if (tierHighFirst) {
       list = list.slice().sort((a, b) => sortCardSpecs(b, a));
     }
+    if (blocked.size > 0) {
+      list = list.slice().sort((a, b) => {
+        const au = blocked.has(a.id) ? 1 : 0;
+        const bu = blocked.has(b.id) ? 1 : 0;
+        return au - bu;
+      });
+    }
     return list;
-  }, [owned, query, tierHighFirst]);
+  }, [owned, query, tierHighFirst, blocked]);
 
   const towerCards = useMemo(() => {
     if (view.kind !== "tower") return [];
@@ -216,10 +228,15 @@ export function OwnedCardPicker({
     );
   }
 
-  const ownedTowerCards = useMemo(
-    () => towerCards.filter((c) => owned.has(c.id)),
-    [towerCards, owned],
-  );
+  const ownedTowerCards = useMemo(() => {
+    const list = towerCards.filter((c) => owned.has(c.id));
+    if (blocked.size === 0) return list;
+    return list.slice().sort((a, b) => {
+      const au = blocked.has(a.id) ? 1 : 0;
+      const bu = blocked.has(b.id) ? 1 : 0;
+      return au - bu;
+    });
+  }, [towerCards, owned, blocked]);
 
   const sortToggle = (
     <button
