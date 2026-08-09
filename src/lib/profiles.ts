@@ -1,8 +1,14 @@
 import { supabase } from "./supabase";
+import {
+  DEFAULT_AVATAR_CROP,
+  normalizeAvatarCrop,
+  type AvatarCrop,
+} from "./avatar";
 
 export type PublicProfile = {
   userId: string;
   username: string;
+  avatar: AvatarCrop;
 };
 
 /** Look up a profile by username (case-insensitive). */
@@ -27,5 +33,11 @@ export async function fetchProfileByUsername(
   return {
     userId: String(row.id),
     username: String(row.username ?? raw),
+    avatar: normalizeAvatarCrop({
+      cardId: row.avatar_card_id ?? null,
+      zoom: row.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+      x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+      y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+    }),
   };
 }

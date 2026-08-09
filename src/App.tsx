@@ -15,6 +15,7 @@ import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { Leaderboard } from "./components/Leaderboard";
 import { Marketplace } from "./components/Marketplace";
 import { PackOpenerTest } from "./components/PackOpenerTest";
+import { ProfilePage } from "./components/ProfilePage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { BloonleGame } from "./games/bloonle";
@@ -36,6 +37,7 @@ import {
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
+import type { AvatarCrop } from "./lib/avatar";
 import "./index.css";
 
 type RewardPackState = {
@@ -88,6 +90,7 @@ function UserCollectionPage() {
   const [viewer, setViewer] = useState<{
     userId: string;
     username: string;
+    avatar: AvatarCrop;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,7 +108,11 @@ function UserCollectionPage() {
           setLoading(false);
           return;
         }
-        setViewer(profile);
+        setViewer({
+          userId: profile.userId,
+          username: profile.username,
+          avatar: profile.avatar,
+        });
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -275,6 +282,7 @@ function AppShell() {
             path="/marketplace"
             element={<Marketplace onBack={goHome} />}
           />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/trade/:tradeId" element={<TradeRoom />} />
           <Route path="/user/:username" element={<UserCollectionPage />} />
           <Route

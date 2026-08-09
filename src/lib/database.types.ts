@@ -9,6 +9,11 @@ export type Profile = {
   monkey_money: number;
   /** UTC date (YYYY-MM-DD) of last daily claim, or null. */
   last_daily_claim: string | null;
+  /** Owned card id used as profile picture, or null. */
+  avatar_card_id: string | null;
+  avatar_zoom: number;
+  avatar_x: number;
+  avatar_y: number;
   created_at: string;
   updated_at: string;
 };
@@ -31,6 +36,10 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
+          avatar_card_id?: string | null;
+          avatar_zoom?: number;
+          avatar_x?: number;
+          avatar_y?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -40,6 +49,10 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
+          avatar_card_id?: string | null;
+          avatar_zoom?: number;
+          avatar_x?: number;
+          avatar_y?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -100,7 +113,14 @@ export type Database = {
       };
       get_profile_by_username: {
         Args: { p_username: string };
-        Returns: { id: string; username: string }[];
+        Returns: {
+          id: string;
+          username: string;
+          avatar_card_id: string | null;
+          avatar_zoom: number;
+          avatar_x: number;
+          avatar_y: number;
+        }[];
       };
       list_card_for_sale: {
         Args: { p_card_id: string; p_price: number };
@@ -141,6 +161,15 @@ export type Database = {
       set_trade_ready: {
         Args: { p_trade_id: string; p_ready: boolean };
         Returns: unknown;
+      };
+      set_profile_avatar: {
+        Args: {
+          p_card_id: string | null;
+          p_zoom: number;
+          p_x: number;
+          p_y: number;
+        };
+        Returns: boolean;
       };
       claim_daily_cash: {
         Args: Record<string, never>;

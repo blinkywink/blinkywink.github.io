@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
+import {
+  DEFAULT_AVATAR_CROP,
+  normalizeAvatarCrop,
+  type AvatarCrop,
+} from "../lib/avatar";
 import { supabase } from "../lib/supabase";
 import { GameHeader } from "./GameHeader";
+import { UserAvatar } from "./UserAvatar";
 
 export type LeaderboardPlayer = {
   userId: string;
@@ -17,6 +23,7 @@ type Row = {
   id: string;
   username: string;
   coins_earned: number;
+  avatar: AvatarCrop;
 };
 
 export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
@@ -30,7 +37,9 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
     setError(null);
     const { data, error: err } = await supabase
       .from("profiles")
-      .select("id, username, coins_earned")
+      .select(
+        "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+      )
       .order("coins_earned", { ascending: false })
       .limit(100);
 
@@ -43,6 +52,12 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
           id: String(r.id),
           username: String(r.username ?? "Player"),
           coins_earned: Number(r.coins_earned) || 0,
+          avatar: normalizeAvatarCrop({
+            cardId: r.avatar_card_id ?? null,
+            zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+            x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+            y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+          }),
         })),
       );
     }
@@ -96,8 +111,11 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                           })
                         }
                       >
-                        {row.username}
-                        {mine ? " (you)" : ""}
+                        <UserAvatar crop={row.avatar} size={28} />
+                        <span>
+                          {row.username}
+                          {mine ? " (you)" : ""}
+                        </span>
                       </button>
                     </td>
                     <td>{row.coins_earned.toLocaleString("en-US")}</td>

@@ -5,6 +5,7 @@ import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
 import { fetchPlayerCardIds } from "../lib/awardCards";
+import type { AvatarCrop } from "../lib/avatar";
 import {
   buildTowerCardSpecs,
   formatPathLevels,
@@ -13,6 +14,7 @@ import {
 } from "../lib/pathCombos";
 import { pingInbox, requestTrade } from "../lib/trades";
 import { MonkeyCard } from "./MonkeyCard";
+import { UserAvatar } from "./UserAvatar";
 
 export type CardsOpenOpts = {
   /** Jump straight into a tower page after opening a tower pack. */
@@ -24,6 +26,7 @@ export type CardsOpenOpts = {
 export type CollectionViewer = {
   userId: string;
   username: string;
+  avatar?: AvatarCrop | null;
 };
 
 type Props = {
@@ -338,7 +341,17 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           ) : null}
           <div className="card-lab__titles">
             <p className="eyebrow">{isRemote ? "Player collection" : "Collection"}</p>
-            <h1>{isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}</h1>
+            <h1 className={isRemote ? "card-lab__title-row" : undefined}>
+              {isRemote && viewer?.avatar ? (
+                <UserAvatar
+                  crop={viewer.avatar}
+                  size={44}
+                  alt=""
+                  className="card-lab__avatar"
+                />
+              ) : null}
+              {isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}
+            </h1>
             <p className="card-lab__blurb">
               {remoteError
                 ? remoteError

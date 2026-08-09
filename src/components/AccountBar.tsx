@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { avatarFromProfile } from "../lib/profileAvatar";
+import { collectionPath, profilePath } from "../lib/routes";
 import { CurrencyChip } from "./CurrencyChip";
+import { UserAvatar } from "./UserAvatar";
 
 type Mode = "signin" | "signup";
 
 export function AccountBar() {
   const { ready, user, profile, displayName, signIn, signUp, signOut } =
     useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("signin");
@@ -180,6 +185,7 @@ export function AccountBar() {
   }
 
   if (user) {
+    const avatar = profile ? avatarFromProfile(profile) : null;
     return (
       <div className="account-bar">
         <CurrencyChip amount={profile?.coins ?? 0} />
@@ -192,30 +198,33 @@ export function AccountBar() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <svg
-              className="account-menu__icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
-            >
-              <circle
-                cx="12"
-                cy="8"
-                r="3.25"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                d="M5.5 19.25a6.5 6.5 0 0 1 13 0"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+            <UserAvatar crop={avatar} size={32} />
           </button>
           {menuOpen ? (
             <div className="account-menu__dropdown" role="menu">
               <p className="account-menu__user">{displayName}</p>
+              <button
+                type="button"
+                className="account-menu__item"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate(profilePath());
+                }}
+              >
+                My profile
+              </button>
+              <button
+                type="button"
+                className="account-menu__item"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate(collectionPath());
+                }}
+              >
+                My cards
+              </button>
               <button
                 type="button"
                 className="account-menu__item"

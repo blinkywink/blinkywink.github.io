@@ -18,6 +18,7 @@ import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
 import { userCollectionPath } from "../lib/routes";
 import { GameHeader } from "./GameHeader";
 import { MonkeyCard } from "./MonkeyCard";
+import { UserAvatar } from "./UserAvatar";
 
 type Tab = "browse" | "sell" | "mine";
 
@@ -284,7 +285,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
               className="market-card__seller"
               to={userCollectionPath(row.sellerUsername)}
             >
-              {row.sellerUsername}
+              <UserAvatar crop={row.sellerAvatar} size={22} />
+              <span>{row.sellerUsername}</span>
             </Link>
           ) : (
             <span className="market-card__seller">Your listing</span>

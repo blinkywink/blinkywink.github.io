@@ -1,10 +1,16 @@
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
+import {
+  DEFAULT_AVATAR_CROP,
+  normalizeAvatarCrop,
+  type AvatarCrop,
+} from "./avatar";
 
 export type MarketplaceListing = {
   id: string;
   sellerId: string;
   sellerUsername: string;
+  sellerAvatar: AvatarCrop;
   cardId: string;
   price: number;
   createdAt: string;
@@ -31,25 +37,42 @@ export async function fetchMarketplaceListings(): Promise<MarketplaceListing[]> 
 
   const rows = data ?? [];
   const sellerIds = [...new Set(rows.map((r) => String(r.seller_id)))];
-  const names = new Map<string, string>();
+  const profiles = new Map<
+    string,
+    { username: string; avatar: AvatarCrop }
+  >();
   if (sellerIds.length) {
-    const { data: profiles } = await supabase
+    const { data: profileRows } = await supabase
       .from("profiles")
-      .select("id, username")
+      .select(
+        "id, username, avatar_card_id, avatar_zoom, avatar_x, avatar_y",
+      )
       .in("id", sellerIds);
-    for (const p of profiles ?? []) {
-      names.set(String(p.id), String(p.username ?? "Player"));
+    for (const p of profileRows ?? []) {
+      profiles.set(String(p.id), {
+        username: String(p.username ?? "Player"),
+        avatar: normalizeAvatarCrop({
+          cardId: p.avatar_card_id ?? null,
+          zoom: p.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+          x: p.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+          y: p.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+        }),
+      });
     }
   }
 
-  return rows.map((r) => ({
-    id: String(r.id),
-    sellerId: String(r.seller_id),
-    sellerUsername: names.get(String(r.seller_id)) ?? "Player",
-    cardId: String(r.card_id),
-    price: Number(r.price) || 0,
-    createdAt: String(r.created_at),
-  }));
+  return rows.map((r) => {
+    const seller = profiles.get(String(r.seller_id));
+    return {
+      id: String(r.id),
+      sellerId: String(r.seller_id),
+      sellerUsername: seller?.username ?? "Player",
+      sellerAvatar: seller?.avatar ?? DEFAULT_AVATAR_CROP,
+      cardId: String(r.card_id),
+      price: Number(r.price) || 0,
+      createdAt: String(r.created_at),
+    };
+  });
 }
 
 export async function listCardForSale(

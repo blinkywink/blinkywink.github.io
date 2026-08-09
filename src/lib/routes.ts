@@ -35,6 +35,10 @@ export function marketplacePath(): string {
   return "/marketplace";
 }
 
+export function profilePath(): string {
+  return "/profile";
+}
+
 export function tradePath(tradeId: string): string {
   return `/trade/${encodeURIComponent(tradeId)}`;
 }
