@@ -13,7 +13,7 @@ import {
   type HeroEntity,
 } from "../data/heroes";
 import { heroLevelT } from "../lib/heroEffects";
-import { heroAccent } from "../lib/heroAccents";
+import { heroAccent, heroVisualTier } from "../lib/heroAccents";
 import {
   heroLevelFromProfile,
   normalizeHeroLevels,
@@ -121,7 +121,7 @@ type FaceProps = {
   onSelect?: () => void;
 };
 
-/** Hero plate: full-color art; accent backgrounds intensify with level. */
+/** Hero plate: full-color art; palette + VFX restyle every 5 levels (L20 ultra). */
 export function HeroCardFace({
   hero,
   level,
@@ -134,7 +134,8 @@ export function HeroCardFace({
   onSelect,
 }: FaceProps) {
   const power = heroLevelT(level);
-  const accent = heroAccent(hero.id);
+  const tier = heroVisualTier(level);
+  const accent = heroAccent(hero.id, level);
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -143,8 +144,10 @@ export function HeroCardFace({
 
   const style = {
     ["--hero-power" as string]: String(power),
+    ["--hero-tier" as string]: String(tier),
     ["--hero-primary" as string]: accent.primary,
     ["--hero-secondary" as string]: accent.secondary,
+    ["--hero-tertiary" as string]: accent.tertiary,
     ["--hero-r" as string]: String(accent.rgb[0]),
     ["--hero-g" as string]: String(accent.rgb[1]),
     ["--hero-b" as string]: String(accent.rgb[2]),
@@ -207,6 +210,7 @@ export function HeroCardFace({
         "hero-card",
         `hero-card--${size}`,
         `hero-card--${mode}`,
+        `hero-card--tier-${tier}`,
         equipped ? "is-equipped" : "",
         hideCaption ? "hero-card--plate-only" : "",
         active ? "is-tilting" : "",
@@ -214,11 +218,19 @@ export function HeroCardFace({
         .filter(Boolean)
         .join(" ")}
       style={style}
+      data-tier={tier}
     >
       <div className="hero-card__plate" aria-hidden>
         <span className="hero-card__glow" />
         <span className="hero-card__shine" />
         <span className="hero-card__holo" />
+        <span className="hero-card__vfx hero-card__vfx--drift" />
+        <span className="hero-card__vfx hero-card__vfx--sweep" />
+        <span className="hero-card__vfx hero-card__vfx--orbs" />
+        <span className="hero-card__vfx hero-card__vfx--veins" />
+        <span className="hero-card__vfx hero-card__vfx--spark" />
+        <span className="hero-card__vfx hero-card__vfx--ultra" />
+        <span className="hero-card__frame" />
         <img
           src={heroPortraitForLevel(hero, level)}
           alt=""
