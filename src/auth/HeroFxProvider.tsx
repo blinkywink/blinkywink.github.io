@@ -45,7 +45,6 @@ function themeForHero(heroId: string): HeroProc["theme"] {
     case "silas":
       return "ice";
     case "gwendolin":
-    case "adora":
       return "fire";
     case "obyn-greenfoot":
       return "nature";

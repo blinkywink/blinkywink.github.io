@@ -3,7 +3,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { maps } from "../../data/maps";
 import type { MapEntity } from "../../data/types";
 import { awardCoins } from "../../lib/awardCoins";
-import { applyHeroDifficulty, useQuizHeroFx } from "../../lib/quizHeroFx";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { preloadImage } from "../../utils/imageProcessing";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -116,33 +116,17 @@ function blankBoard(
 export function useGeoguessr() {
   const { profile, setCoinBalance } = useAuth();
   const {
-    equipped,
-    notifyHeroProc,
     resetRunFlags,
     streakBonusPct,
     onCorrectCash,
     onGwenStreakProc,
     tryFreeSkip,
-    shouldChurchillClear,
     tryEtienneBoost,
   } = useQuizHeroFx();
 
-  const equippedRef = useRef(equipped);
-  equippedRef.current = equipped;
-  const notifyHeroProcRef = useRef(notifyHeroProc);
-  notifyHeroProcRef.current = notifyHeroProc;
-
   const makeMapChallenge = useCallback(
-    (round: number, recent: string[] = []) => {
-      const raw = createMapChallenge(round, maps, recent);
-      const difficulty = applyHeroDifficulty(
-        raw.difficulty,
-        equippedRef.current,
-        (message, heroId) =>
-          notifyHeroProcRef.current({ heroId, message }),
-      );
-      return { ...raw, difficulty };
-    },
+    (round: number, recent: string[] = []) =>
+      createMapChallenge(round, maps, recent),
     [],
   );
 
@@ -521,14 +505,6 @@ export function useGeoguessr() {
       },
     });
   }, [tryFreeSkip]);
-
-  useEffect(() => {
-    const s = stateRef.current;
-    if (s.phase !== "playing" || !s.challenge) return;
-    if (shouldChurchillClear(s.challenge.round)) {
-      answer(s.challenge.correct);
-    }
-  }, [state.challenge, state.phase, shouldChurchillClear, answer]);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {

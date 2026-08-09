@@ -3,7 +3,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import { towerEntities } from "../../data/towers";
 import type { TowerEntity } from "../../data/types";
 import { awardCoins } from "../../lib/awardCoins";
-import { applyHeroDifficulty, useQuizHeroFx } from "../../lib/quizHeroFx";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { preloadImage } from "../../utils/imageProcessing";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -113,28 +113,18 @@ function blankBoard(overrides: Partial<ZoomedState> = {}): ZoomedState {
 export function useZoomedGame() {
   const { profile, setCoinBalance } = useAuth();
   const {
-    equipped,
-    notifyHeroProc,
     resetRunFlags,
     streakBonusPct,
     onCorrectCash,
     onGwenStreakProc,
     tryFreeSkip,
-    shouldChurchillClear,
     tryEtienneBoost,
   } = useQuizHeroFx();
 
   const makeChallenge = useCallback(
-    (round: number, recent?: string[]) => {
-      const raw = createChallenge(round, towerEntities, recent);
-      const difficulty = applyHeroDifficulty(
-        raw.difficulty,
-        equipped,
-        (message, heroId) => notifyHeroProc({ heroId, message }),
-      );
-      return { ...raw, difficulty };
-    },
-    [equipped, notifyHeroProc],
+    (round: number, recent?: string[]) =>
+      createChallenge(round, towerEntities, recent),
+    [],
   );
 
   const [state, setState] = useState<ZoomedState>(() => blankBoard());
@@ -519,14 +509,6 @@ export function useZoomedGame() {
       },
     });
   }, [tryFreeSkip]);
-
-  useEffect(() => {
-    const challenge = state.challenge;
-    if (state.phase !== "playing" || !challenge) return;
-    if (shouldChurchillClear(challenge.round)) {
-      answer(challenge.correct);
-    }
-  }, [state.phase, state.challenge, shouldChurchillClear, answer]);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {

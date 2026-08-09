@@ -12,16 +12,11 @@ export const SHOPPABLE_HERO_IDS = [
   "gwendolin",
   "striker-jones",
   "obyn-greenfoot",
-  "captain-churchill",
   "benjamin",
   "ezili",
-  "pat-fusty",
-  "adora",
-  "admiral-brickell",
   "etienne",
   "sauda",
   "psi",
-  "geraldo",
   "silas",
 ] as const;
 

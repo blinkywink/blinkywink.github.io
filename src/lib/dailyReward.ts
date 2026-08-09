@@ -60,28 +60,6 @@ export function todaysDailyCard(now = new Date()): DailyCardReward {
   return dailyCardForDay(dayStamp(now));
 }
 
-/** Pat Fusty bonus — different card from today's primary pick. */
-export function bonusDailyCard(dayKey = dayStamp()): DailyCardReward {
-  const primary = dailyCardForDay(dayKey);
-  const attempt = dailyCardForDay(`${dayKey}:pat`);
-  if (attempt.card.id !== primary.card.id) {
-    return { ...attempt, dayKey: `${dayKey}:pat` };
-  }
-  const tier = primary.tier;
-  const pool = cardsAtTier(tier).filter((c) => c.id !== primary.card.id);
-  if (pool.length) {
-    const pickSeed = hashString(`daily-card-pat-fallback:${dayKey}`);
-    const card = pool[pickSeed % pool.length]!;
-    return { card, tier, dayKey: `${dayKey}:pat` };
-  }
-  const t3 = cardsAtTier(3).filter((c) => c.id !== primary.card.id);
-  const card = t3[hashString(`pat:${dayKey}`) % t3.length] ?? t3[0]!;
-  if (!card) {
-    return { ...primary, dayKey: `${dayKey}:pat` };
-  }
-  return { card, tier: 3, dayKey: `${dayKey}:pat` };
-}
-
 export function msUntilDailyRefresh(now = new Date()): number {
   return msUntilShopRotation(now);
 }

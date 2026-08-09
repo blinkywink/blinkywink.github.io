@@ -7,30 +7,20 @@ import {
   type EquippedHeroContext,
 } from "./heroEffects";
 import type { PackPullMods, DupCashMods } from "./packPull";
-import {
-  DIFFICULTY_PRESETS,
-  type DifficultyConfig,
-  type DifficultyTier,
-} from "../games/zoomed/config";
 
 /** Shared helpers for signed-in equipped hero level-1 procs. */
 export function useQuizHeroFx() {
   const { equipped, notifyHeroProc } = useHeroFx();
   const freeSkipReady = useRef(false);
   const freeSkipUsed = useRef(false);
-  const churchillRound = useRef<number | null>(null);
 
   const resetRunFlags = useCallback(() => {
     freeSkipUsed.current = false;
     freeSkipReady.current = false;
-    churchillRound.current = null;
     if (equipped?.heroId === "striker-jones") {
       freeSkipReady.current = rollChance(
         HERO_EFFECTS_L1["striker-jones"].freeSkipChance,
       );
-      if (freeSkipReady.current) {
-        // Armed silently — toast when consumed.
-      }
     }
   }, [equipped?.heroId]);
 
@@ -81,23 +71,6 @@ export function useQuizHeroFx() {
     return true;
   }, [equipped?.heroId, notifyHeroProc]);
 
-  const shouldChurchillClear = useCallback(
-    (round: number): boolean => {
-      if (equipped?.heroId !== "captain-churchill") return false;
-      if (churchillRound.current === round) return false;
-      churchillRound.current = round;
-      if (!rollChance(HERO_EFFECTS_L1["captain-churchill"].autoClearChance)) {
-        return false;
-      }
-      notifyHeroProc({
-        heroId: "captain-churchill",
-        message: "Churchill: round auto-cleared!",
-      });
-      return true;
-    },
-    [equipped?.heroId, notifyHeroProc],
-  );
-
   /** Etienne: on miss, maybe boost zoom/hint. */
   const tryEtienneBoost = useCallback((): boolean => {
     if (equipped?.heroId !== "etienne") return false;
@@ -141,9 +114,7 @@ export function useQuizHeroFx() {
   const trySaudaDiscount = useCallback(
     (price: number): { price: number; discounted: boolean } => {
       if (equipped?.heroId !== "sauda") return { price, discounted: false };
-      if (
-        !rollChance(HERO_EFFECTS_L1.sauda.btd6DiscountChance)
-      ) {
+      if (!rollChance(HERO_EFFECTS_L1.sauda.btd6DiscountChance)) {
         return { price, discounted: false };
       }
       const next = Math.max(
@@ -159,18 +130,6 @@ export function useQuizHeroFx() {
     [equipped?.heroId, notifyHeroProc],
   );
 
-  const tryPatBonusDaily = useCallback((): boolean => {
-    if (equipped?.heroId !== "pat-fusty") return false;
-    if (!rollChance(HERO_EFFECTS_L1["pat-fusty"].bonusDailyCardChance)) {
-      return false;
-    }
-    notifyHeroProc({
-      heroId: "pat-fusty",
-      message: "Pat Fusty: bonus daily card!",
-    });
-    return true;
-  }, [equipped?.heroId, notifyHeroProc]);
-
   return {
     equipped: equipped as EquippedHeroContext | null,
     streakBonusPct,
@@ -179,46 +138,10 @@ export function useQuizHeroFx() {
     onCorrectCash,
     onGwenStreakProc,
     tryFreeSkip,
-    shouldChurchillClear,
     tryEtienneBoost,
     packPullMods,
     onObynExtra,
     dupCashMods,
     trySaudaDiscount,
-    tryPatBonusDaily,
   };
-}
-
-/** Adora / Brickell difficulty transforms for Zoomed & Geoguessr. */
-export function applyHeroDifficulty(
-  difficulty: DifficultyConfig,
-  equipped: EquippedHeroContext | null,
-  notify: (msg: string, heroId: string) => void,
-): DifficultyConfig {
-  if (!equipped) return difficulty;
-  const tier = difficulty.tier as DifficultyTier;
-
-  if (
-    equipped.heroId === "adora" &&
-    (tier === "hard" || tier === "extreme") &&
-    rollChance(HERO_EFFECTS_L1.adora.hardToMediumChance)
-  ) {
-    notify("Adora: hard crop eased", "adora");
-    return {
-      ...DIFFICULTY_PRESETS.medium,
-      scoreMultiplier: difficulty.scoreMultiplier,
-      tier: difficulty.tier,
-    };
-  }
-
-  if (
-    equipped.heroId === "admiral-brickell" &&
-    tier === "easy" &&
-    rollChance(HERO_EFFECTS_L1["admiral-brickell"].easyToMediumChance)
-  ) {
-    notify("Brickell: easy pays like medium", "admiral-brickell");
-    return { ...DIFFICULTY_PRESETS.medium };
-  }
-
-  return difficulty;
 }

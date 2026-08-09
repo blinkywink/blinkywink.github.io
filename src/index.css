@@ -10117,8 +10117,6 @@ button.trade-offer-card:hover:not(:disabled) {
   font-weight: 650;
 }
 
-.shop-geraldo-reroll { margin: 0 0 0.65rem; }
-
 /* Collection / profile hero cards */
 .hero-card {
   display: grid;

@@ -3,7 +3,6 @@ import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { awardCoins } from "../lib/awardCoins";
 import {
-  bonusDailyCard,
   DAILY_CASH_AMOUNT,
   formatDailyCountdown,
   msUntilDailyRefresh,
@@ -30,7 +29,7 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
     setCoinBalance,
   } = useAuth();
   const { owned, awardCards } = useCardCollection();
-  const { dupCashMods, tryPatBonusDaily } = useQuizHeroFx();
+  const { dupCashMods } = useQuizHeroFx();
   const [cashBusy, setCashBusy] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
   const [cashNote, setCashNote] = useState<string | null>(null);
@@ -87,27 +86,6 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
     } else {
       await awardCards([reward.card.id]);
       setCardNote(`${reward.card.entity.name} unlocked`);
-    }
-
-    if (tryPatBonusDaily()) {
-      const bonus = bonusDailyCard(reward.dayKey);
-      if (owned.has(bonus.card.id)) {
-        const dup = duplicateCashForCard(bonus.card, dupCashMods());
-        const bal = await awardCoins(dup);
-        if (bal != null) setCoinBalance(bal);
-        setCardNote((prev) =>
-          prev
-            ? `${prev} · Pat bonus +${dup.toLocaleString()} Cash`
-            : `Pat bonus +${dup.toLocaleString()} Cash`,
-        );
-      } else {
-        await awardCards([bonus.card.id]);
-        setCardNote((prev) =>
-          prev
-            ? `${prev} · Pat bonus: ${bonus.card.entity.name}`
-            : `Pat bonus: ${bonus.card.entity.name}`,
-        );
-      }
     }
     setCardBusy(false);
   }

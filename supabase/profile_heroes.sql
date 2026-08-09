@@ -23,9 +23,8 @@ declare
   levels jsonb;
   new_balance integer;
   allowed text[] := array[
-    'quincy','gwendolin','striker-jones','obyn-greenfoot','captain-churchill',
-    'benjamin','ezili','pat-fusty','adora','admiral-brickell','etienne','sauda',
-    'psi','geraldo','silas'
+    'quincy','gwendolin','striker-jones','obyn-greenfoot',
+    'benjamin','ezili','etienne','sauda','psi','silas'
   ];
 begin
   if uid is null then
@@ -208,3 +207,34 @@ $$;
 
 revoke all on function public.get_profile_by_username(text) from public;
 grant execute on function public.get_profile_by_username(text) to anon, authenticated;
+
+-- Gut retired shop heroes: strip ownership / equip / levels.
+do $$
+declare
+  retired text[] := array[
+    'captain-churchill','pat-fusty','adora','admiral-brickell','geraldo'
+  ];
+begin
+  update public.profiles
+  set
+    equipped_hero_id = case
+      when equipped_hero_id = any(retired) then null
+      else equipped_hero_id
+    end,
+    owned_hero_ids = coalesce((
+      select array_agg(x order by ord)
+      from unnest(owned_hero_ids) with ordinality as t(x, ord)
+      where not (x = any(retired))
+    ), '{}'),
+    hero_levels = coalesce((
+      select jsonb_object_agg(key, value)
+      from jsonb_each(coalesce(hero_levels, '{}'::jsonb))
+      where not (key = any(retired))
+    ), '{}'::jsonb),
+    updated_at = now()
+  where
+    equipped_hero_id = any(retired)
+    or owned_hero_ids && retired
+    or hero_levels ?| retired;
+end;
+$$;
