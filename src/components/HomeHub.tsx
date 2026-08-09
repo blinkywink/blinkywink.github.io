@@ -30,7 +30,6 @@ import {
 } from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
-import { CashAmount } from "./CurrencyChip";
 import { UserAvatar } from "./UserAvatar";
 
 type BoardRow = {
@@ -219,7 +218,7 @@ export function HomeHub() {
 
       <section className="home-hub__section" aria-labelledby="hub-board">
         <div className="home-hub__head">
-          <h2 id="hub-board">Players</h2>
+          <h2 id="hub-board">Top players</h2>
           <Link to={leaderboardPath()}>Leaderboard →</Link>
         </div>
         {topPlayers.length === 0 ? (
@@ -235,7 +234,6 @@ export function HomeHub() {
                 <span className="home-hub__rank">{i + 1}</span>
                 <UserAvatar crop={row.avatar} size={36} />
                 <strong>{row.username}</strong>
-                <CashAmount amount={row.coins_earned} size={13} />
               </Link>
             ))}
           </div>
