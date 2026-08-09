@@ -133,7 +133,7 @@ export function ProfilePage() {
   function openShowcaseEditor() {
     setError(null);
     setStatus(null);
-    setShowcaseDraft(new Set(savedShowcase));
+    setShowcaseDraft(new Set());
     setShowcaseOpen(true);
   }
 
@@ -143,21 +143,42 @@ export function ProfilePage() {
     setError(null);
   }
 
-  async function onSaveShowcase(ids: string[]) {
+  async function onAddShowcaseCard(cardId: string) {
+    if (!cardId) return;
+    if (savedShowcase.includes(cardId)) {
+      setError("That card is already on your profile.");
+      return;
+    }
+    if (savedShowcase.length >= SHOWCASE_MAX) {
+      setError(`You can only show ${SHOWCASE_MAX} player cards.`);
+      return;
+    }
+    const next = [...savedShowcase, cardId];
     setBusy(true);
     setError(null);
     setStatus(null);
     try {
-      await setProfileShowcase(ids);
+      await setProfileShowcase(next);
       await refreshProfile();
-      setStatus(
-        ids.length
-          ? `Saved ${ids.length} player card${ids.length === 1 ? "" : "s"}.`
-          : "Cleared player cards.",
-      );
+      setStatus("Added player card.");
       setShowcaseOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save.");
+    }
+    setBusy(false);
+  }
+
+  async function onRemoveShowcaseCard(cardId: string) {
+    const next = savedShowcase.filter((id) => id !== cardId);
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await setProfileShowcase(next);
+      await refreshProfile();
+      setStatus("Removed player card.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update.");
     }
     setBusy(false);
   }
@@ -381,7 +402,7 @@ export function ProfilePage() {
             <header className="pfp-editor__header">
               <div>
                 <p className="pfp-editor__eyebrow">Player cards</p>
-                <h2 id="showcase-editor-title">Pick up to {SHOWCASE_MAX}</h2>
+                <h2 id="showcase-editor-title">Add one card</h2>
               </div>
               <button
                 type="button"
@@ -398,18 +419,22 @@ export function ProfilePage() {
             ) : null}
             <div className="pfp-editor__body pfp-editor__body--pick">
               <p className="pfp-editor__hint">
-                These show at the top of your public collection page.
+                Slot {savedShowcase.length + 1} of {SHOWCASE_MAX}. Pick one, then
+                apply.
               </p>
               <OwnedCardPicker
                 owned={owned}
                 selectedIds={showcaseDraft}
-                multi
-                maxSelected={SHOWCASE_MAX}
+                multi={false}
+                unavailableIds={new Set(savedShowcase)}
+                unavailableLabel="Already shown"
                 disabled={busy}
-                confirmLabel={busy ? "Saving…" : "Save player cards"}
+                confirmLabel={busy ? "Saving…" : "Apply"}
                 onConfirm={(ids) => {
-                  setShowcaseDraft(new Set(ids));
-                  void onSaveShowcase(ids);
+                  const cardId = ids[0];
+                  if (!cardId) return;
+                  setShowcaseDraft(new Set([cardId]));
+                  void onAddShowcaseCard(cardId);
                 }}
               />
             </div>
@@ -422,16 +447,6 @@ export function ProfilePage() {
               >
                 Cancel
               </button>
-              {savedShowcase.length > 0 ? (
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  disabled={busy}
-                  onClick={() => void onClearShowcase()}
-                >
-                  Clear all
-                </button>
-              ) : null}
             </footer>
           </div>
         </div>,
@@ -491,26 +506,53 @@ export function ProfilePage() {
           <div className="profile-showcase-edit__head">
             <div>
               <h3>Player cards</h3>
-              <p>Up to {SHOWCASE_MAX} cards on your public collection page.</p>
+              <p>
+                {savedShowcase.length}/{SHOWCASE_MAX} on your public page. Add one
+                at a time.
+              </p>
             </div>
-            <button
-              type="button"
-              className="btn btn--secondary"
-              onClick={openShowcaseEditor}
-            >
-              {showcaseSpecs.length ? "Edit" : "Pick cards"}
-            </button>
+            <div className="profile-showcase-edit__actions">
+              {savedShowcase.length < SHOWCASE_MAX ? (
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={busy}
+                  onClick={openShowcaseEditor}
+                >
+                  Add card
+                </button>
+              ) : null}
+              {savedShowcase.length > 0 ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  disabled={busy}
+                  onClick={() => void onClearShowcase()}
+                >
+                  Clear all
+                </button>
+              ) : null}
+            </div>
           </div>
           {showcaseSpecs.length > 0 ? (
             <div className="profile-showcase-edit__row">
               {showcaseSpecs.map((card) => (
-                <MonkeyCard
-                  key={card.id}
-                  entity={card.entity}
-                  pathLevels={card.pathLevels}
-                  mode="preview"
-                  owned
-                />
+                <div key={card.id} className="profile-showcase-edit__slot">
+                  <MonkeyCard
+                    entity={card.entity}
+                    pathLevels={card.pathLevels}
+                    mode="preview"
+                    owned
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    disabled={busy}
+                    onClick={() => void onRemoveShowcaseCard(card.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
