@@ -190,7 +190,7 @@ export function AccountBar() {
       <div className="account-bar">
         <CurrencyChip
           amount={profile?.coins ?? 0}
-          resetKey={user?.id ?? "guest"}
+          resetKey={user.id}
         />
         <div className="account-menu" ref={menuRef}>
           <button
@@ -239,7 +239,7 @@ export function AccountBar() {
     <div className="account-bar">
       <CurrencyChip
         amount={profile?.coins ?? 0}
-        resetKey={user?.id ?? "guest"}
+        resetKey="guest"
       />
       <button
         type="button"
