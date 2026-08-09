@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { CashAmount } from "../../components/CurrencyChip";
 import {
@@ -12,22 +11,9 @@ type Props = {
   onBack: () => void;
 };
 
-function formatElapsed(ms: number): string {
-  const sec = Math.floor(ms / 1000);
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 export function BloonsSweeperGame({ onBack }: Props) {
   const { state, minesLeft, setDifficulty, restart, reveal, toggleFlag } =
     useBloonsSweeper();
-
-  const elapsed = useMemo(() => {
-    if (state.startedAt == null) return 0;
-    const end = state.finishedAt ?? Date.now();
-    return Math.max(0, end - state.startedAt);
-  }, [state.startedAt, state.finishedAt, state.status, state.board]);
 
   const done = state.status === "won" || state.status === "lost";
 
@@ -41,12 +27,6 @@ export function BloonsSweeperGame({ onBack }: Props) {
             <span className="sweeper-stat" title="Red bloons left">
               <img src={RED_BLOON_IMAGE} alt="" width={22} height={28} />
               <strong>{minesLeft}</strong>
-            </span>
-            <span className="sweeper-stat">
-              <span className="sweeper-stat__label">Time</span>
-              <strong>
-                {state.startedAt == null ? "0:00" : formatElapsed(elapsed)}
-              </strong>
             </span>
           </div>
 

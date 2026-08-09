@@ -27,8 +27,6 @@ export type SweeperState = {
   minesPlaced: boolean;
   reward: number;
   awarded: boolean;
-  startedAt: number | null;
-  finishedAt: number | null;
 };
 
 function fresh(difficulty: SweeperDifficulty): SweeperState {
@@ -41,8 +39,6 @@ function fresh(difficulty: SweeperDifficulty): SweeperState {
     minesPlaced: false,
     reward: 0,
     awarded: false,
-    startedAt: null,
-    finishedAt: null,
   };
 }
 
@@ -78,11 +74,9 @@ export function useBloonsSweeper() {
 
         let board = s.board;
         let minesPlaced = s.minesPlaced;
-        let startedAt = s.startedAt;
         if (!minesPlaced) {
           board = placeMines(board, s.cfg, r, c);
           minesPlaced = true;
-          startedAt = Date.now();
         }
 
         const target = board[r]![c]!;
@@ -92,9 +86,7 @@ export function useBloonsSweeper() {
             ...s,
             board,
             minesPlaced,
-            startedAt,
             status: "lost",
-            finishedAt: Date.now(),
           };
         }
 
@@ -116,9 +108,7 @@ export function useBloonsSweeper() {
             ...s,
             board,
             minesPlaced,
-            startedAt,
             status: "won",
-            finishedAt: Date.now(),
             reward,
             awarded: false,
           };
@@ -128,7 +118,6 @@ export function useBloonsSweeper() {
           ...s,
           board,
           minesPlaced,
-          startedAt,
           status: "playing",
         };
       });
@@ -150,7 +139,6 @@ export function useBloonsSweeper() {
         ...s,
         board,
         status: s.status === "ready" ? "playing" : s.status,
-        startedAt: s.startedAt ?? Date.now(),
       };
     });
   }, []);
