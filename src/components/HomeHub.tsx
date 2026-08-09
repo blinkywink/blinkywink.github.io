@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DEFAULT_AVATAR_CROP,
@@ -17,14 +23,12 @@ import {
   userCollectionPath,
   type GamePath,
 } from "../lib/routes";
-import {
-  featuredShopPacks,
-  resolveTowerPackTheme,
-  type PackDef,
-} from "../lib/packTheme";
+import { featuredShopPacks } from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
 import { ArcadeHome } from "./ArcadeHome";
+import { BoosterPack } from "./BoosterPack";
 import { CashAmount } from "./CurrencyChip";
+import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
 type BoardRow = {
@@ -40,16 +44,48 @@ const CARD_PEEK_IDS = [
   "super-monkey-0-5-0",
 ] as const;
 
-function packPeekImage(pack: PackDef): string {
-  if (pack.coverArt) return pack.coverArt;
-  if (pack.tower) {
-    const theme = resolveTowerPackTheme(pack.tower);
-    if (theme?.image) return theme.image;
-  }
-  return "/images/ui/monkey-pack.jpg";
+function DestTile({
+  to,
+  tone,
+  title,
+  blurb,
+  children,
+}: {
+  to: string;
+  tone: "shop" | "cards" | "market";
+  title: string;
+  blurb: string;
+  children: ReactNode;
+}) {
+  const navigate = useNavigate();
+  const go = () => navigate(to);
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      go();
+    }
+  };
+
+  return (
+    <div
+      className={`home-hub__dest home-hub__dest--${tone}`}
+      role="link"
+      tabIndex={0}
+      onClick={go}
+      onKeyDown={onKeyDown}
+    >
+      <div className="home-hub__dest-visual" aria-hidden>
+        {children}
+      </div>
+      <div className="home-hub__dest-copy">
+        <strong>{title}</strong>
+        <span>{blurb}</span>
+      </div>
+    </div>
+  );
 }
 
-/** Site hub — games up top, feature tiles below. */
+/** Site hub. Games up top, feature tiles below. */
 export function HomeHub() {
   const navigate = useNavigate();
   const [topPlayers, setTopPlayers] = useState<BoardRow[]>([]);
@@ -117,62 +153,55 @@ export function HomeHub() {
         />
 
         <div className="home-hub__destinations" aria-label="Explore">
-          <Link to={shopPath()} className="home-hub__dest home-hub__dest--shop">
-            <div className="home-hub__dest-visual" aria-hidden>
-              <div className="home-hub__pack-spread">
-                {shopPeeks.map((pack, i) => (
-                  <span
-                    key={pack.id}
-                    className={`home-hub__pack-peek is-${i}`}
-                    style={
-                      {
-                        "--peek-img": `url(${packPeekImage(pack)})`,
-                      } as CSSProperties
-                    }
-                  />
-                ))}
-              </div>
+          <DestTile
+            to={shopPath()}
+            tone="shop"
+            title="Shop"
+            blurb="Open packs with Cash."
+          >
+            <div className="home-hub__pack-spread">
+              {shopPeeks.map((pack) => (
+                <BoosterPack
+                  key={pack.id}
+                  pack={pack}
+                  effects={false}
+                  className="pack-shelf__booster home-hub__pack-real"
+                />
+              ))}
             </div>
-            <div className="home-hub__dest-copy">
-              <strong>Shop</strong>
-              <span>Open packs with Cash — new cards every pull.</span>
-            </div>
-          </Link>
+          </DestTile>
 
-          <Link
+          <DestTile
             to={collectionPath()}
-            className="home-hub__dest home-hub__dest--cards"
+            tone="cards"
+            title="Cards"
+            blurb="Browse your collection."
           >
-            <div className="home-hub__dest-visual" aria-hidden>
-              <div className="home-hub__card-spread">
-                {cardPeeks.map((card, i) => (
-                  <span key={card.id} className={`home-hub__card-peek is-${i}`}>
-                    <img src={card.entity.image} alt="" draggable={false} />
-                  </span>
-                ))}
-              </div>
+            <div className="home-hub__card-spread">
+              {cardPeeks.map((card) => (
+                <div key={card.id} className="home-hub__card-real">
+                  <MonkeyCard
+                    entity={card.entity}
+                    pathLevels={card.pathLevels}
+                    mode="preview"
+                    owned
+                  />
+                </div>
+              ))}
             </div>
-            <div className="home-hub__dest-copy">
-              <strong>Cards</strong>
-              <span>Your collection — every tower, path, and paragon.</span>
-            </div>
-          </Link>
+          </DestTile>
 
-          <Link
+          <DestTile
             to={marketplacePath()}
-            className="home-hub__dest home-hub__dest--market"
+            tone="market"
+            title="Market"
+            blurb="Buy and sell cards with other players."
           >
-            <div className="home-hub__dest-visual" aria-hidden>
-              <div className="home-hub__market-actions">
-                <span className="home-hub__market-btn is-buy">Buy</span>
-                <span className="home-hub__market-btn is-sell">Sell</span>
-              </div>
+            <div className="home-hub__market-actions">
+              <span className="home-hub__market-btn is-buy">Buy</span>
+              <span className="home-hub__market-btn is-sell">Sell</span>
             </div>
-            <div className="home-hub__dest-copy">
-              <strong>Market</strong>
-              <span>List extras for Cash or snag cards from other players.</span>
-            </div>
-          </Link>
+          </DestTile>
         </div>
       </section>
 
