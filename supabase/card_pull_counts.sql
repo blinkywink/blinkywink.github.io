@@ -130,19 +130,19 @@ set search_path = public
 stable
 as $$
 declare
-  id text := trim(coalesce(p_card_id, ''));
+  card_key text := trim(coalesce(p_card_id, ''));
   n bigint := 0;
   t bigint := 0;
 begin
-  if char_length(id) >= 3 and char_length(id) <= 80 then
-    select pull_count into n
-    from public.card_pull_counts
-    where card_id = id;
+  if char_length(card_key) >= 3 and char_length(card_key) <= 80 then
+    select c.pull_count into n
+    from public.card_pull_counts c
+    where c.card_id = card_key;
   end if;
 
-  select total_pulls into t
-  from public.card_pull_totals
-  where id = true;
+  select tot.total_pulls into t
+  from public.card_pull_totals tot
+  where tot.id = true;
 
   return json_build_object(
     'count', coalesce(n, 0),
