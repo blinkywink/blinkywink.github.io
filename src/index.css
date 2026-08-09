@@ -504,36 +504,35 @@ body:has(.zoomed-page) {
 
 .home-hub__row--cards {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 9.5rem));
+  display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
-  column-gap: var(--hub-card-gap);
-  row-gap: var(--hub-card-gap);
-}
-
-.home-hub__row--players {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: flex-start;
+  gap: 0.75rem;
+  overflow: hidden;
 }
 
 .home-hub__card-cell {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.35rem;
   justify-items: center;
-  width: 100%;
+  flex: 0 1 7.75rem;
+  width: 7.75rem;
+  max-width: calc(25% - 0.6rem);
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
   container-type: inline-size;
   container-name: hub-card;
 }
 
 .home-hub__card-cell .monkey-card-scene--preview {
-  /* Fill the column so the row matches Games/Shop width */
-  --hub-local-w: 100cqi;
+  --hub-local-w: min(100cqi, 7.75rem);
   --card-preview-w: var(--hub-local-w);
   --card-preview-scale: calc(var(--hub-local-w) / var(--card-face-w));
   --card-preview-h: calc(var(--hub-local-w) * 3.5 / 2.5);
   width: var(--hub-local-w);
-  height: calc(var(--hub-local-w) * 3.5 / 2.5 + 6px);
+  height: calc(var(--hub-local-w) * 3.5 / 2.5);
+  max-width: 100%;
   position: relative;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
@@ -551,6 +550,10 @@ body:has(.zoomed-page) {
   transform: scale(var(--card-preview-scale));
   transform-origin: top left;
   transform-style: flat;
+}
+
+.home-hub__row--players {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .home-hub__price {
@@ -645,7 +648,13 @@ body:has(.zoomed-page) {
   }
 
   .home-hub__row--cards {
-    grid-template-columns: repeat(4, minmax(0, 8.25rem));
+    gap: 0.55rem;
+  }
+
+  .home-hub__card-cell {
+    flex-basis: 6.75rem;
+    width: 6.75rem;
+    max-width: calc(25% - 0.45rem);
   }
 
   .home-hub__row--players {
@@ -667,7 +676,16 @@ body:has(.zoomed-page) {
   }
 
   .home-hub__row--cards {
-    grid-template-columns: repeat(2, minmax(0, 8.5rem));
+    flex-wrap: wrap;
+    max-width: 17.5rem;
+    margin-inline: auto;
+    overflow: visible;
+  }
+
+  .home-hub__card-cell {
+    flex: 0 0 calc(50% - 0.35rem);
+    width: calc(50% - 0.35rem);
+    max-width: none;
   }
 
   .home-hub__row--players {
