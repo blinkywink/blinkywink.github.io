@@ -112,14 +112,14 @@ export function ShopHeroesShelf() {
             >
               ✕ Close
             </button>
-            <HeroCardFace
-              hero={focused}
-              level={focusMine ? focusLevel : 1}
-              size="md"
-              locked={!focusMine}
-              hideLevel={!focusMine}
-              hideCaption
-            />
+              <HeroCardFace
+                hero={focused}
+                level={focusMine ? focusLevel : 1}
+                size="md"
+                locked={focusMine}
+                hideLevel={!focusMine}
+                hideCaption
+              />
             <h2 className="shop-hero-focus__name">{focused.name}</h2>
             <p className="shop-hero-focus__blurb">{heroBlurb(focused.id)}</p>
             <div className="pack-opener__buy shop-hero-focus__buy">
@@ -182,7 +182,7 @@ export function ShopHeroesShelf() {
               <HeroCardFace
                 hero={hero}
                 level={mine ? level : 1}
-                locked={!mine}
+                locked={mine}
                 hideLevel={!mine}
                 hideCaption
                 size="md"
