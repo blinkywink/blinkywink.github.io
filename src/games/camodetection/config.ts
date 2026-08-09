@@ -13,27 +13,26 @@ export const CAMO_CONFIG = {
   recallSeconds: 20,
 } as const;
 
-/** Grid edge length for this round — grows slowly from 3×3. */
+/** Grid edge length for this round — grows slowly from 4×4. */
 export function gridSizeForRound(round: number): number {
-  // 1–3: 3 | 4–6: 4 | 7–9: 5 | 10+: 6
-  if (round <= 3) return 3;
-  if (round <= 6) return 4;
-  if (round <= 9) return 5;
+  // 1–3: 4 | 4–6: 5 | 7+: 6
+  if (round <= 3) return 4;
+  if (round <= 6) return 5;
   return Math.min(CAMO_CONFIG.maxGrid, 6);
 }
 
 /** How many camo cells flash this round. */
 export function camoCountForRound(round: number, grid: number): number {
   const cells = grid * grid;
-  // Start at 2–3, climb toward ~45% of the board.
-  const base = 2 + Math.floor((round - 1) / 2);
-  return Math.min(CAMO_CONFIG.maxCamo, cells - 1, Math.max(2, base));
+  // Start at 3, climb toward ~45% of the board.
+  const base = 3 + Math.floor((round - 1) / 2);
+  return Math.min(CAMO_CONFIG.maxCamo, cells - 1, Math.max(3, base));
 }
 
 /** How long camo stay visible before they vanish (ms). */
 export function flashMsForRound(round: number): number {
-  // Longer early, snappier late — still readable on phone.
-  return Math.max(550, 1400 - (round - 1) * 90);
+  // Snappy from round 1 — gets tighter later.
+  return Math.max(420, 950 - (round - 1) * 70);
 }
 
 export function pointsForCorrect(round: number, streakAfter: number): number {

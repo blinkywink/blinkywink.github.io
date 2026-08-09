@@ -422,10 +422,11 @@ body:has(.zoomed-page) {
   position: relative;
   display: grid;
   gap: 2rem;
-  /* Same card scale for Cards + Market so rows don’t clip differently. */
+  /* Match market preview sizing; keep values fixed (no % self-ref). */
+  --hub-card-gap: 1rem;
   --card-face-w: 400px;
-  --card-preview-w: 168px;
-  --card-preview-scale: calc(var(--card-preview-w) / var(--card-face-w));
+  --card-preview-w: 200px;
+  --card-preview-scale: 0.5;
   --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
 }
 
@@ -448,6 +449,7 @@ body:has(.zoomed-page) {
   display: grid;
   gap: 0.75rem;
   min-width: 0;
+  overflow: visible;
 }
 
 .home-hub__head {
@@ -488,9 +490,10 @@ body:has(.zoomed-page) {
 /* One tidy row per section */
 .home-hub__row {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--hub-card-gap);
   align-items: start;
   min-width: 0;
+  overflow: visible;
 }
 
 .home-hub__row--packs {
@@ -498,7 +501,9 @@ body:has(.zoomed-page) {
 }
 
 .home-hub__row--cards {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, var(--card-preview-w));
+  justify-content: start;
+  column-gap: var(--hub-card-gap);
 }
 
 .home-hub__row--players {
@@ -509,15 +514,20 @@ body:has(.zoomed-page) {
   display: grid;
   gap: 0.4rem;
   justify-items: center;
-  min-width: 0;
+  width: var(--card-preview-w);
+  min-width: var(--card-preview-w);
+  overflow: visible;
 }
 
 .home-hub__card-cell .monkey-card-scene--preview {
   width: var(--card-preview-w);
-  height: var(--card-preview-h);
+  /* A few px taller than the face so the rail isn’t flush against the clip */
+  height: calc(var(--card-preview-h) + 6px);
   position: relative;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
+  flex-shrink: 0;
+  isolation: isolate;
 }
 
 .home-hub__card-cell .monkey-card-scene--preview > .monkey-card {
@@ -529,6 +539,7 @@ body:has(.zoomed-page) {
   height: calc(var(--card-face-w) * 3.5 / 2.5);
   transform: scale(var(--card-preview-scale));
   transform-origin: top left;
+  transform-style: flat;
 }
 
 .home-hub__price {
@@ -563,9 +574,15 @@ body:has(.zoomed-page) {
   color: #ffe08a;
 }
 
+/* Hub shop packs — keep shelf sizing (avoid % self-reference) */
 .home-hub__pack-item {
   width: 100%;
   min-width: 0;
+}
+
+.home-hub__pack-item .pack-shelf__booster {
+  --booster-w: 140px;
+  --booster-h: calc(140px * 1.62);
 }
 
 .home-hub__player-chip {
@@ -613,7 +630,8 @@ body:has(.zoomed-page) {
 
 @media (max-width: 900px) {
   .home-hub {
-    --card-preview-w: 140px;
+    --card-preview-w: 168px;
+    --card-preview-scale: 0.42;
     gap: 1.6rem;
   }
 
@@ -628,12 +646,16 @@ body:has(.zoomed-page) {
 
 @media (max-width: 640px) {
   .home-hub {
-    --card-preview-w: 120px;
+    --card-preview-w: 148px;
+    --card-preview-scale: 0.37;
   }
 
-  .home-hub__row--packs,
-  .home-hub__row--cards {
+  .home-hub__row--packs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-hub__row--cards {
+    grid-template-columns: repeat(2, var(--card-preview-w));
   }
 
   .home-hub__row--players {
@@ -1397,9 +1419,9 @@ body:has(.zoomed-page) {
 
 .game-preview__camo-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.28rem;
-  width: 68%;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.22rem;
+  width: 72%;
   aspect-ratio: 1;
 }
 

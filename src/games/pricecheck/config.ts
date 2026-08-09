@@ -7,6 +7,8 @@ export const PRICE_CHECK_CONFIG = {
   maxSideSize: 5,
   /** Seconds to pick the higher-cost side. */
   timerSeconds: 10,
+  /** Wrong answer costs this fraction of the correct-answer payout. */
+  wrongPenaltyRate: 0.33,
 } as const;
 
 /** How many towers each side may roll this round (grows over the run). */
@@ -20,4 +22,10 @@ export function sideSizeForRound(round: number): number {
 
 export function pointsForCorrect(round: number, streakAfter: number): number {
   return rewardForCorrect({ round, streakAfter });
+}
+
+/** Cash lost on a miss — 33% of what a correct answer would have paid. */
+export function penaltyForWrong(round: number): number {
+  const wouldEarn = pointsForCorrect(round, 0);
+  return Math.max(1, Math.round(wouldEarn * PRICE_CHECK_CONFIG.wrongPenaltyRate));
 }

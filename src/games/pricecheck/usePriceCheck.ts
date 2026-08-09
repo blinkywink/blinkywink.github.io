@@ -3,7 +3,11 @@ import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
-import { PRICE_CHECK_CONFIG, pointsForCorrect } from "./config";
+import {
+  PRICE_CHECK_CONFIG,
+  penaltyForWrong,
+  pointsForCorrect,
+} from "./config";
 import { createPriceRound, type PriceRound } from "./generateRound";
 import {
   loadBestScores,
@@ -20,7 +24,10 @@ export type Feedback = {
   correct: boolean;
   leftTotal: number;
   rightTotal: number;
+  /** Cash earned this answer (0 on miss). */
   points: number;
+  /** Cash deducted this answer (0 on hit). */
+  penalty: number;
   timedOut?: boolean;
 };
 
@@ -138,6 +145,7 @@ export function usePriceCheck() {
       const streak = ok ? s.streak + 1 : 0;
       const bestStreak = Math.max(s.bestStreak, streak);
       const points = ok ? pointsForCorrect(s.round.round, streak) : 0;
+      const penalty = ok ? 0 : penaltyForWrong(s.round.round);
       const lives = ok ? s.lives : s.lives - 1;
       const feedback: Feedback = {
         guess: side,
@@ -145,6 +153,7 @@ export function usePriceCheck() {
         leftTotal: s.round.left.total,
         rightTotal: s.round.right.total,
         points,
+        penalty,
         timedOut: timedOut || undefined,
       };
 
@@ -152,6 +161,14 @@ export function usePriceCheck() {
         void awardCoins(points).then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
+      } else if (penalty > 0) {
+        const balance = profileRef.current?.coins ?? 0;
+        const take = Math.min(penalty, Math.max(0, balance));
+        if (take > 0) {
+          void spendCoins(take).then((next) => {
+            if (next != null) setCoinBalanceRef.current(next);
+          });
+        }
       }
 
       return {
@@ -159,7 +176,7 @@ export function usePriceCheck() {
         phase: "reveal",
         streak,
         bestStreak,
-        score: s.score + points,
+        score: Math.max(0, s.score + points - penalty),
         correct: s.correct + (ok ? 1 : 0),
         answered: s.answered + 1,
         lives,

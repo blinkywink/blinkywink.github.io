@@ -203,11 +203,11 @@ function BloonlePreview() {
 }
 
 function CamoPreview() {
-  const camo = new Set([0, 4, 7]);
+  const camo = new Set([1, 6, 11, 12]);
   return (
     <div className="game-preview game-preview--camo" aria-hidden>
       <div className="game-preview__camo-grid">
-        {Array.from({ length: 9 }, (_, i) => (
+        {Array.from({ length: 16 }, (_, i) => (
           <span
             key={i}
             className={`game-preview__camo-cell${camo.has(i) ? " has-camo" : ""}`}

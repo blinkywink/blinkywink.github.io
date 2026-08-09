@@ -225,8 +225,8 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
               {state.feedback.correct
                 ? `Correct! +${state.feedback.points}`
                 : state.feedback.timedOut
-                  ? "Time’s up"
-                  : "Wrong side"}
+                  ? `Time’s up −${state.feedback.penalty}`
+                  : `Wrong −${state.feedback.penalty}`}
             </p>
           ) : null}
         </div>
