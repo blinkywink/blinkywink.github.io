@@ -343,18 +343,9 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     return (
       <div className="card-lab">
         <div className="card-lab__atmosphere" aria-hidden="true" />
-        <header className="card-lab__header">
-          {isRemote ? (
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={onBack}
-            >
-              ← Leaderboard
-            </button>
-          ) : null}
-          <div className="card-lab__titles">
-            <p className="eyebrow">{isRemote ? "Player collection" : "Collection"}</p>
+        <header
+          className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
+        >
             <h1 className={isRemote ? "card-lab__title-row" : undefined}>
               {isRemote && viewer?.avatar ? (
                 <UserAvatar
