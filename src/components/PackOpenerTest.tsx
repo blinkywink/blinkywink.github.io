@@ -16,10 +16,8 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
-import { recordCardPulls } from "../lib/cardPullStats";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
-import { CardPullCount } from "./CardPullCount";
 import { CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
@@ -410,8 +408,6 @@ export function PackOpenerTest({
       if (unlocked.length) {
         void awardCards(unlocked.map((c) => c.id));
       }
-      // Count every pull (new + duplicate) toward global rarity.
-      void recordCardPulls(cards.map((c) => c.id));
       if (cash > 0) {
         void awardCoins(cash).then((balance) => {
           if (balance != null) setCoinBalance(balance);
@@ -872,10 +868,6 @@ export function PackOpenerTest({
                   entity={current.entity}
                   pathLevels={current.pathLevels}
                   mode="focus"
-                />
-                <CardPullCount
-                  cardId={current.id}
-                  className="pack-opener__pull-count"
                 />
                 {currentIsDup ? (
                   <p className="pack-opener__dup-banner" role="status">

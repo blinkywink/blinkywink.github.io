@@ -9,8 +9,7 @@ export type GameId =
   | "orderup"
   | "bloonle"
   | "camodetection"
-  | "bloonssweeper"
-  | "mixup";
+  | "bloonssweeper";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -257,21 +256,6 @@ function SweeperPreview() {
   );
 }
 
-function MixupPreview() {
-  const tags = ["ZOOM", "GEO", "PRICE", "ORDER", "CAMO"];
-  return (
-    <div className="game-preview game-preview--mixup" aria-hidden>
-      <div className="game-preview__mixup-grid">
-        {tags.map((t) => (
-          <span key={t} className="game-preview__mixup-chip">
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function MapPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -352,13 +336,6 @@ export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
       blurb: "Drag towers cheap to pricey before time runs out.",
       label: "Order Up — Drag towers by price before time runs out",
       preview: <OrderPreview />,
-    },
-    {
-      id: "mixup" as const,
-      title: "MIX UP",
-      blurb: "One shared mix a day. Five medium quizzes, cash at the end.",
-      label: "Mix Up — Daily shared medium mix from every quiz",
-      preview: <MixupPreview />,
     },
     {
       id: "bloonle" as const,

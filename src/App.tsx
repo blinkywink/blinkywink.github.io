@@ -25,7 +25,6 @@ import { BloonleGame } from "./games/bloonle";
 import { BloonsSweeperGame } from "./games/bloonssweeper";
 import { CamoDetectionGame } from "./games/camodetection";
 import { GeoguessrGame } from "./games/geoguessr";
-import { MixUpGame } from "./games/mixup";
 import { OrderUpGame } from "./games/orderup";
 import { PriceCheckGame } from "./games/pricecheck";
 import { ZoomedGame } from "./games/zoomed";
@@ -346,12 +345,6 @@ function AppShell() {
           <Route
             path="/bloonssweeper"
             element={<BloonsSweeperGame onBack={goGames} />}
-          />
-          <Route
-            path="/mixup"
-            element={
-              <MixUpGame onBack={goGames} onRunEnd={offerQuizRewards} />
-            }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

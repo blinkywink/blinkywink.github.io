@@ -14,7 +14,6 @@ import {
 } from "../lib/pathCombos";
 import { pingInbox, requestTrade } from "../lib/trades";
 import { MonkeyCard } from "./MonkeyCard";
-import { CardPullCount } from "./CardPullCount";
 import { UserAvatar } from "./UserAvatar";
 
 export type CardsOpenOpts = {
@@ -303,7 +302,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               mode="focus"
               owned
             />
-            <CardPullCount cardId={focused.id} />
           </div>
         </div>,
         document.body,

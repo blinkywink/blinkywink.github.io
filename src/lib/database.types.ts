@@ -9,8 +9,6 @@ export type Profile = {
   monkey_money: number;
   /** UTC date (YYYY-MM-DD) of last daily claim, or null. */
   last_daily_claim: string | null;
-  /** UTC date of last completed Mix Up, or null. */
-  last_mixup_day?: string | null;
   /** Owned card id used as profile picture, or null. */
   avatar_card_id: string | null;
   avatar_zoom: number;
@@ -38,7 +36,6 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
-          last_mixup_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -52,7 +49,6 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
-          last_mixup_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -224,35 +220,6 @@ export type Database = {
           coins: number;
           last_daily_claim: string;
         };
-      };
-      get_mixup_daily_status: {
-        Args: Record<string, never>;
-        Returns: {
-          day: string;
-          completed: boolean;
-          signed_in: boolean;
-          last_mixup_day: string | null;
-        };
-      };
-      complete_mixup_daily: {
-        Args: Record<string, never>;
-        Returns: {
-          day: string;
-          claimed: boolean;
-          completed: boolean;
-        };
-      };
-      record_card_pulls: {
-        Args: { p_card_ids: string[] };
-        Returns: undefined;
-      };
-      get_card_pull_count: {
-        Args: { p_card_id: string };
-        Returns: number;
-      };
-      get_card_pull_stats: {
-        Args: { p_card_id: string };
-        Returns: { count: number; total: number };
       };
       username_signup: {
         Args: { p_username: string; p_password: string };

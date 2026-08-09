@@ -17,7 +17,6 @@ import {
 import { formatPathLevels, maxPathTier } from "../lib/pathCombos";
 import { marketplacePath, userCollectionPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
-import { CardPullCount } from "./CardPullCount";
 import { MonkeyCard } from "./MonkeyCard";
 import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
@@ -258,7 +257,6 @@ export function ListingPage() {
                 mode="focus"
                 owned
               />
-              <CardPullCount cardId={card.id} />
             </>
           ) : (
             <div className="market-card__missing">{listing.cardId}</div>
