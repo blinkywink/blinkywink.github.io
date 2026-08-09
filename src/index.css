@@ -4657,6 +4657,7 @@ body:has(.zoomed-page) {
 .pack-opener__close {
   justify-self: end;
   z-index: 5;
+  margin-bottom: -0.25rem;
 }
 
 .pack-opener__panel {
@@ -4669,7 +4670,7 @@ body:has(.zoomed-page) {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 0.65rem;
+  gap: 0.35rem;
   width: max(var(--pack-card-w), var(--booster-w));
 }
 

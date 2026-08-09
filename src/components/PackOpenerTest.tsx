@@ -783,23 +783,6 @@ export function PackOpenerTest({
               ✕ Close
             </button>
 
-            <p className="pack-opener__hint">
-              {phase === "shop" && `${pack.title} pack · Space to buy`}
-              {phase === "sealed" &&
-                (mode === "reward"
-                  ? `Clear reward · ${pack.title} · slash / Space`
-                  : "slash through the pack · Space")}
-              {phase === "sliced" && (godPack ? "GOD PACK!" : "…")}
-              {(phase === "enter" || phase === "ready" || phase === "exit") &&
-                (godPack
-                  ? `GOD PACK · ${index + 1}/${pack.cardCount}`
-                  : currentTier === "paragon" || currentTier === "t5"
-                    ? `${index + 1}/${pack.cardCount} · tap Space / swipe`
-                    : spaceHoldGate(current) === "t4"
-                      ? `${index + 1}/${pack.cardCount} · hold pauses · Space / swipe`
-                      : `${index + 1}/${pack.cardCount} · swipe / Space`)}
-            </p>
-
             {godPack &&
             (phase === "enter" || phase === "ready" || phase === "exit") ? (
               <p className="pack-opener__god-title" role="status">
