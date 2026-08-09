@@ -172,36 +172,27 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setError("Price must be at least 10 Cash.");
       return;
     }
-    const toList = cardIds?.length ? cardIds : [...selected];
-    if (toList.length === 0) {
-      setError("Select at least one card to sell.");
+    if (price > 1_000_000) {
+      setError("Price can't be over 1,000,000 Cash.");
       return;
     }
+    const toList = cardIds?.length ? cardIds : [...selected];
+    if (toList.length === 0) {
+      setError("Select a card to sell.");
+      return;
+    }
+    const cardId = toList[0]!;
     setBusyId("sell");
     setError(null);
     setStatus(null);
-    let ok = 0;
     try {
-      for (const cardId of toList) {
-        await listCardForSale(cardId, price);
-        ok += 1;
-      }
+      await listCardForSale(cardId, price);
       setSelected(new Set());
-      setStatus(
-        ok === 1
-          ? "Listed 1 card."
-          : `Listed ${ok} cards at ${price.toLocaleString()} Cash each.`,
-      );
+      setStatus(`Listed for ${price.toLocaleString()} Cash.`);
       await Promise.all([refreshCards(), load()]);
       setTab("mine");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? ok > 0
-            ? `${ok} listed, then: ${err.message}`
-            : err.message
-          : "Could not list cards.",
-      );
+      setError(err instanceof Error ? err.message : "Could not list card.");
       await Promise.all([refreshCards(), load()]);
     }
     setBusyId(null);
@@ -429,20 +420,20 @@ export function Marketplace({ onBack: _onBack }: Props) {
             <OwnedCardPicker
               owned={owned}
               selectedIds={selected}
+              multi={false}
               disabled={busyId != null || isGuest}
-              confirmLabel={
-                busyId === "sell" ? "Listing…" : "List selected"
-              }
+              confirmLabel={busyId === "sell" ? "Listing…" : "List card"}
               onConfirm={(ids) => {
-                setSelected(new Set(ids));
-                void postListings(ids);
+                setSelected(new Set(ids.slice(0, 1)));
+                void postListings(ids.slice(0, 1));
               }}
               dockExtra={
                 <label className="market-price market-price--dock">
-                  <span>Price each</span>
+                  <span>Price</span>
                   <input
                     type="number"
                     min={10}
+                    max={1000000}
                     step={10}
                     value={priceInput}
                     onChange={(e) => setPriceInput(e.target.value)}

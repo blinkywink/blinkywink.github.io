@@ -5,11 +5,13 @@ import {
   type AvatarCrop,
 } from "./avatar";
 import { cached, CacheTtl } from "./cache";
+import { normalizeShowcaseIds } from "./profileShowcase";
 
 export type PublicProfile = {
   userId: string;
   username: string;
   avatar: AvatarCrop;
+  showcaseCardIds: string[];
 };
 
 /** Look up a profile by username (case-insensitive). */
@@ -42,6 +44,7 @@ export async function fetchProfileByUsername(
         x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
         y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
       }),
+      showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
     };
   });
 }

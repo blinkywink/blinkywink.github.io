@@ -19,9 +19,15 @@ import {
 import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
+import {
+  SHOWCASE_MAX,
+  setProfileShowcase,
+  showcaseFromProfile,
+} from "../lib/profileShowcase";
 import { collectionPath, userCollectionPath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
 import { OwnedCardPicker } from "./OwnedCardPicker";
+import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
 type EditorStep = "pick" | "crop";
@@ -32,6 +38,8 @@ export function ProfilePage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorStep, setEditorStep] = useState<EditorStep>("pick");
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -39,6 +47,19 @@ export function ProfilePage() {
   const saved = useMemo(
     () => (profile ? avatarFromProfile(profile) : DEFAULT_AVATAR_CROP),
     [profile],
+  );
+
+  const savedShowcase = useMemo(
+    () => (profile ? showcaseFromProfile(profile) : []),
+    [profile],
+  );
+
+  const showcaseSpecs = useMemo(
+    () =>
+      savedShowcase
+        .map((id) => cardSpecById(id))
+        .filter((c): c is NonNullable<typeof c> => Boolean(c)),
+    [savedShowcase],
   );
 
   const pickSelected = useMemo(
@@ -49,18 +70,21 @@ export function ProfilePage() {
   const draftCard = draft.cardId ? cardSpecById(draft.cardId) : null;
 
   useEffect(() => {
-    if (!editorOpen) return;
+    if (!editorOpen && !showcaseOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) closeEditor();
+      if (e.key === "Escape" && !busy) {
+        if (showcaseOpen) closeShowcaseEditor();
+        else closeEditor();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [editorOpen, busy]);
+  }, [editorOpen, showcaseOpen, busy]);
 
   function openEditor() {
     setError(null);
@@ -100,6 +124,53 @@ export function ProfilePage() {
       await refreshProfile();
       setStatus("Profile picture removed.");
       setEditorOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not clear.");
+    }
+    setBusy(false);
+  }
+
+  function openShowcaseEditor() {
+    setError(null);
+    setStatus(null);
+    setShowcaseDraft(new Set(savedShowcase));
+    setShowcaseOpen(true);
+  }
+
+  function closeShowcaseEditor() {
+    if (busy) return;
+    setShowcaseOpen(false);
+    setError(null);
+  }
+
+  async function onSaveShowcase(ids: string[]) {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await setProfileShowcase(ids);
+      await refreshProfile();
+      setStatus(
+        ids.length
+          ? `Saved ${ids.length} player card${ids.length === 1 ? "" : "s"}.`
+          : "Cleared player cards.",
+      );
+      setShowcaseOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save.");
+    }
+    setBusy(false);
+  }
+
+  async function onClearShowcase() {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await setProfileShowcase([]);
+      await refreshProfile();
+      setStatus("Cleared player cards.");
+      setShowcaseOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not clear.");
     }
@@ -291,16 +362,96 @@ export function ProfilePage() {
       )
     : null;
 
+  const showcaseEditor = showcaseOpen
+    ? createPortal(
+        <div
+          className="pfp-editor"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="showcase-editor-title"
+        >
+          <button
+            type="button"
+            className="pfp-editor__backdrop"
+            aria-label="Close"
+            disabled={busy}
+            onClick={closeShowcaseEditor}
+          />
+          <div className="pfp-editor__panel">
+            <header className="pfp-editor__header">
+              <div>
+                <p className="pfp-editor__eyebrow">Player cards</p>
+                <h2 id="showcase-editor-title">Pick up to {SHOWCASE_MAX}</h2>
+              </div>
+              <button
+                type="button"
+                className="pfp-editor__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeShowcaseEditor}
+              >
+                ×
+              </button>
+            </header>
+            {error ? (
+              <p className="profile-banner profile-banner--err">{error}</p>
+            ) : null}
+            <div className="pfp-editor__body pfp-editor__body--pick">
+              <p className="pfp-editor__hint">
+                These show at the top of your public collection page.
+              </p>
+              <OwnedCardPicker
+                owned={owned}
+                selectedIds={showcaseDraft}
+                multi
+                maxSelected={SHOWCASE_MAX}
+                disabled={busy}
+                confirmLabel={busy ? "Saving…" : "Save player cards"}
+                onConfirm={(ids) => {
+                  setShowcaseDraft(new Set(ids));
+                  void onSaveShowcase(ids);
+                }}
+              />
+            </div>
+            <footer className="pfp-editor__footer">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                disabled={busy}
+                onClick={closeShowcaseEditor}
+              >
+                Cancel
+              </button>
+              {savedShowcase.length > 0 ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  disabled={busy}
+                  onClick={() => void onClearShowcase()}
+                >
+                  Clear all
+                </button>
+              ) : null}
+            </footer>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="profile-page">
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        blurb="Your picture is a cropped card. Players see it on the board and market."
+        blurb="Your picture and player cards show on your public page."
       />
       <main className="profile-main">
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
+        ) : null}
+        {error && !editorOpen && !showcaseOpen ? (
+          <p className="profile-banner profile-banner--err">{error}</p>
         ) : null}
 
         <section className="profile-home">
@@ -335,8 +486,40 @@ export function ProfilePage() {
             </p>
           </div>
         </section>
+
+        <section className="profile-showcase-edit">
+          <div className="profile-showcase-edit__head">
+            <div>
+              <h3>Player cards</h3>
+              <p>Up to {SHOWCASE_MAX} cards on your public collection page.</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={openShowcaseEditor}
+            >
+              {showcaseSpecs.length ? "Edit" : "Pick cards"}
+            </button>
+          </div>
+          {showcaseSpecs.length > 0 ? (
+            <div className="profile-showcase-edit__row">
+              {showcaseSpecs.map((card) => (
+                <MonkeyCard
+                  key={card.id}
+                  entity={card.entity}
+                  pathLevels={card.pathLevels}
+                  mode="preview"
+                  owned
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="profile-showcase-edit__empty">None selected yet.</p>
+          )}
+        </section>
       </main>
       {editor}
+      {showcaseEditor}
     </div>
   );
 }

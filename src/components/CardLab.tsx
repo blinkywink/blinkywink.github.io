@@ -6,6 +6,8 @@ import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
 import { fetchPlayerCardIds } from "../lib/awardCards";
 import type { AvatarCrop } from "../lib/avatar";
+import { cardSpecById } from "../lib/cardCatalog";
+import { collectionStats } from "../lib/collectionStats";
 import {
   buildTowerCardSpecs,
   formatPathLevels,
@@ -27,6 +29,7 @@ export type CollectionViewer = {
   userId: string;
   username: string;
   avatar?: AvatarCrop | null;
+  showcaseCardIds?: string[];
 };
 
 type Props = {
@@ -197,6 +200,13 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
 
   const totalOwned = owned.size;
   const totalCards = ALL_SPECS.length;
+  const stats = useMemo(() => collectionStats(owned), [owned]);
+  const showcaseCards = useMemo(() => {
+    const ids = viewer?.showcaseCardIds ?? [];
+    return ids
+      .map((id) => cardSpecById(id))
+      .filter((c): c is MonkeyCardSpec => Boolean(c));
+  }, [viewer?.showcaseCardIds]);
 
   const filteredTowers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -358,6 +368,40 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               ) : null}
               {isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}
             </h1>
+            {isRemote && !remoteError ? (
+              <div className="player-showcase">
+                <p className="player-showcase__label">Player cards</p>
+                {showcaseCards.length > 0 ? (
+                  <div className="player-showcase__row">
+                    {showcaseCards.map((card) => (
+                      <MonkeyCard
+                        key={card.id}
+                        entity={card.entity}
+                        pathLevels={card.pathLevels}
+                        mode="preview"
+                        owned
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="player-showcase__empty">No showcase cards yet.</p>
+                )}
+                <ul className="player-showcase__stats">
+                  <li>
+                    <strong>{stats.total}</strong> cards
+                  </li>
+                  <li>
+                    <strong>{stats.uniqueTowers}</strong> towers
+                  </li>
+                  {stats.topTower ? (
+                    <li>
+                      Most from <strong>{stats.topTower}</strong> (
+                      {stats.topTowerCount})
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            ) : null}
             <p className="card-lab__blurb">
               {remoteError
                 ? remoteError

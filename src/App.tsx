@@ -105,6 +105,7 @@ function UserCollectionPage() {
     userId: string;
     username: string;
     avatar: AvatarCrop;
+    showcaseCardIds: string[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,6 +127,7 @@ function UserCollectionPage() {
           userId: profile.userId,
           username: profile.username,
           avatar: profile.avatar,
+          showcaseCardIds: profile.showcaseCardIds,
         });
         setLoading(false);
       })

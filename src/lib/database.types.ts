@@ -14,6 +14,8 @@ export type Profile = {
   avatar_zoom: number;
   avatar_x: number;
   avatar_y: number;
+  /** Up to 3 owned card ids shown on the public collection page. */
+  showcase_card_ids?: string[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -40,6 +42,7 @@ export type Database = {
           avatar_zoom?: number;
           avatar_x?: number;
           avatar_y?: number;
+          showcase_card_ids?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -53,6 +56,7 @@ export type Database = {
           avatar_zoom?: number;
           avatar_x?: number;
           avatar_y?: number;
+          showcase_card_ids?: string[] | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -146,7 +150,12 @@ export type Database = {
           avatar_zoom: number;
           avatar_x: number;
           avatar_y: number;
+          showcase_card_ids: string[] | null;
         }[];
+      };
+      set_profile_showcase: {
+        Args: { p_card_ids: string[] };
+        Returns: boolean;
       };
       list_card_for_sale: {
         Args: { p_card_id: string; p_price: number };

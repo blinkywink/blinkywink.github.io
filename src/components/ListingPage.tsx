@@ -148,6 +148,10 @@ export function ListingPage() {
       setError("Offer must be lower than the asking price.");
       return;
     }
+    if (price > 1_000_000) {
+      setError("Offer can't be over 1,000,000 Cash.");
+      return;
+    }
     setBusy(true);
     setError(null);
     setStatus(null);

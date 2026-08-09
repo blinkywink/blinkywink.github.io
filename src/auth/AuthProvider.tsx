@@ -37,6 +37,7 @@ function profileFromGuest(coins: number): Profile {
     avatar_zoom: 1.25,
     avatar_x: 0.5,
     avatar_y: 0.38,
+    showcase_card_ids: [],
     created_at: now,
     updated_at: now,
   };
@@ -99,6 +100,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     avatar_zoom: Number(data.avatar_zoom ?? 1.25),
     avatar_x: Number(data.avatar_x ?? 0.5),
     avatar_y: Number(data.avatar_y ?? 0.38),
+    showcase_card_ids: Array.isArray(data.showcase_card_ids)
+      ? data.showcase_card_ids.map(String)
+      : [],
   };
 }
 

@@ -8626,6 +8626,101 @@ button.trade-offer-card:hover:not(:disabled) {
   flex-shrink: 0;
 }
 
+.player-showcase {
+  width: min(100%, 36rem);
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.player-showcase__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 232, 0.72);
+}
+
+.player-showcase__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.player-showcase__row .monkey-card-scene {
+  width: 5.6rem;
+}
+
+.player-showcase__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 248, 232, 0.55);
+}
+
+.player-showcase__stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 248, 232, 0.88);
+}
+
+.player-showcase__stats strong {
+  color: #f0c84a;
+  font-weight: 800;
+}
+
+.profile-showcase-edit {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.profile-showcase-edit__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.profile-showcase-edit__head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.profile-showcase-edit__head p {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.62);
+}
+
+.profile-showcase-edit__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.profile-showcase-edit__row .monkey-card-scene {
+  width: 5.6rem;
+}
+
+.profile-showcase-edit__empty {
+  margin: 0;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.5);
+}
+
 /* Profile page */
 .profile-page {
   width: min(var(--content-max), calc(100% - 2rem));

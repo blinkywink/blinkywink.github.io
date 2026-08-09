@@ -149,9 +149,16 @@ export async function listCardForSale(
   price: number,
 ): Promise<string> {
   requireSession();
+  const amount = Math.round(price);
+  if (!Number.isFinite(amount) || amount < 10) {
+    throw new Error("Price must be at least 10 Cash.");
+  }
+  if (amount > 1_000_000) {
+    throw new Error("Price can't be over 1,000,000 Cash.");
+  }
   const { data, error } = await supabase.rpc("list_card_for_sale", {
     p_card_id: cardId,
-    p_price: Math.round(price),
+    p_price: amount,
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("market:");
