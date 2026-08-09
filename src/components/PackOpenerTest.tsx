@@ -982,7 +982,7 @@ export function PackOpenerTest({
           <h2>{godPack ? "GOD PACK!" : "Pack opened"}</h2>
           <p>
             {pulls.length} card{pulls.length === 1 ? "" : "s"}
-            {godPack ? " · all T4+" : ""}
+            {godPack ? " · all T5+" : ""}
             {duplicateCash > 0
               ? ` · ${duplicates.size} duplicate${duplicates.size === 1 ? "" : "s"} → +${duplicateCash} Cash`
               : ""}

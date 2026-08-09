@@ -106,13 +106,18 @@ function cardPullTier(card: MonkeyCardSpec): PullTier {
   return maxPathTier(card.pathLevels) as 0 | 1 | 2 | 3 | 4 | 5;
 }
 
-/** God pack filler: T5 heavier than T4. */
-function godTierWeight(card: MonkeyCardSpec): number {
-  if (card.isParagon) return 0;
-  const tier = maxPathTier(card.pathLevels);
-  if (tier === 5) return 5;
-  if (tier === 4) return 2;
-  return 0;
+/**
+ * Paragon count for a god pack:
+ * 1% → 3, 3% → 2, else 50/50 between 1 and 0.
+ */
+function rollGodParagonCount(available: number): number {
+  if (available <= 0) return 0;
+  const r = Math.random();
+  let n: number;
+  if (r < 0.01) n = 3;
+  else if (r < 0.04) n = 2;
+  else n = Math.random() < 0.5 ? 1 : 0;
+  return Math.min(available, n);
 }
 
 function takeWeighted(bag: { c: MonkeyCardSpec; weight: number }[]): MonkeyCardSpec {
@@ -158,58 +163,34 @@ function fillFrom(
   }
 }
 
-/** All T4+ (and a Paragon when the pool has one). */
+/** All T5+ only (no T4). Paragons usually 0–1, rarely 2–3. */
 function pullGodPackCards(
   pool: MonkeyCardSpec[],
   count: number,
   owned: ReadonlySet<string>,
 ): MonkeyCardSpec[] {
-  const t4Pool = pool.filter(
-    (c) => !c.isParagon && maxPathTier(c.pathLevels) === 4,
-  );
   const t5Pool = pool.filter(
     (c) => !c.isParagon && maxPathTier(c.pathLevels) === 5,
   );
   const paragonPool = pool.filter((c) => c.isParagon);
-  const highPool = [...t4Pool, ...t5Pool];
   const pulls: MonkeyCardSpec[] = [];
 
-  // Prefer any Paragon when the pool has one.
-  if (paragonPool.length) {
-    pulls.push(paragonPool[Math.floor(Math.random() * paragonPool.length)]!);
+  const paraBag = paragonPool.map((c) => ({ c, weight: 1 }));
+  const paraTarget = rollGodParagonCount(paraBag.length);
+  for (let i = 0; i < paraTarget && paraBag.length && pulls.length < count; i++) {
+    pulls.push(takeWeighted(paraBag));
   }
 
   const t5Bag = t5Pool
     .filter((c) => !pulls.some((p) => p.id === c.id))
     .map((c) => ({ c, weight: 1 }));
-  const t5Target = Math.min(
-    t5Pool.length,
-    Math.max(3, Math.ceil(count * 0.4)),
-    count - pulls.length,
-  );
-  while (
-    pulls.filter((p) => !p.isParagon && maxPathTier(p.pathLevels) === 5)
-      .length < t5Target &&
-    t5Bag.length &&
-    pulls.length < count
-  ) {
+  while (pulls.length < count && t5Bag.length) {
     pulls.push(takeWeighted(t5Bag));
   }
 
-  const bag = highPool
-    .filter((c) => !pulls.some((p) => p.id === c.id))
-    .map((c) => ({
-      c,
-      weight: godTierWeight(c),
-    }))
-    .filter((x) => x.weight > 0);
-
-  while (pulls.length < count && bag.length) {
-    pulls.push(takeWeighted(bag));
-  }
-
-  if (pulls.length < count) fillFrom(pulls, highPool, count, owned, false);
-  if (pulls.length < count) fillFrom(pulls, pool, count, owned, false);
+  // Never fall back to T4 or lower.
+  if (pulls.length < count) fillFrom(pulls, t5Pool, count, owned, false);
+  if (pulls.length < count) fillFrom(pulls, paragonPool, count, owned, false);
 
   return shuffle(pulls);
 }
@@ -301,7 +282,7 @@ export type PackPullMods = PackTierMods & {
 
 /**
  * Open a pack:
- * - 0.25% god pack (all T4+, usually with a Paragon) — always 7 cards
+ * - 0.25% god pack (T5+ only; usually 0–1 Paragon) — always 7 cards
  * - Obyn may still add +1 on god or normal packs
  * - otherwise each card rolls tier odds independently (ownership ignored)
  * - duplicates convert to Cash in the opener
@@ -317,7 +298,7 @@ export function pullPackCards(
   }
 
   const highEnough = pool.some(
-    (c) => c.isParagon || maxPathTier(c.pathLevels) >= 4,
+    (c) => c.isParagon || maxPathTier(c.pathLevels) >= 5,
   );
   const godPack = highEnough && Math.random() < PACK_GOD_CHANCE;
   let n = godPack ? PACK_GOD_SIZE : count;
