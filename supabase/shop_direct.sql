@@ -116,11 +116,16 @@ declare
   s smallint;
   excluded text[];
   pick record;
+  listing public.shop_direct_slots%rowtype;
+  stale_after interval := interval '3 days';
 begin
   for s in 1..4 loop
-    if not exists (
-      select 1 from public.shop_direct_slots where slot = s
-    ) then
+    select * into listing
+    from public.shop_direct_slots
+    where slot = s
+    for update;
+
+    if not found then
       select coalesce(array_agg(card_id), '{}') into excluded
       from public.shop_direct_slots;
 
@@ -129,6 +134,28 @@ begin
 
       insert into public.shop_direct_slots (slot, card_id, tier, price)
       values (s, pick.card_id, pick.tier, pick.price);
+      continue;
+    end if;
+
+    -- Auto-cycle unsold cards after 3 days.
+    if listing.updated_at <= timezone('utc', now()) - stale_after then
+      select coalesce(array_agg(card_id), '{}') into excluded
+      from public.shop_direct_slots
+      where slot <> s;
+
+      excluded := array_append(excluded, listing.card_id);
+
+      select * into pick
+      from public._shop_pick_direct_card(excluded);
+
+      update public.shop_direct_slots
+      set
+        card_id = pick.card_id,
+        tier = pick.tier,
+        price = pick.price,
+        version = listing.version + 1,
+        updated_at = now()
+      where slot = s;
     end if;
   end loop;
 end;
