@@ -117,8 +117,6 @@ export function useZoomedGame() {
     streakBonusPct,
     onCorrectCash,
     onGwenStreakProc,
-    tryFreeSkip,
-    tryEtienneBoost,
   } = useQuizHeroFx();
 
   const makeChallenge = useCallback(
@@ -424,10 +422,7 @@ export function useZoomedGame() {
       return;
     }
 
-    let attemptsUsed = s.attemptsUsed + 1;
-    if (tryEtienneBoost()) {
-      attemptsUsed += 1;
-    }
+    const attemptsUsed = s.attemptsUsed + 1;
     const lives = s.lives - 1;
     const eliminatedIds = s.eliminatedIds.includes(choice.id)
       ? s.eliminatedIds
@@ -476,13 +471,7 @@ export function useZoomedGame() {
         guessName: choice.name,
       },
     });
-  }, [
-    onCorrectCash,
-    onGwenStreakProc,
-    setCoinBalance,
-    streakBonusPct,
-    tryEtienneBoost,
-  ]);
+  }, [onCorrectCash, onGwenStreakProc, setCoinBalance, streakBonusPct]);
 
   /** Give up on this question — lose a life, reveal, then advance. */
   const skip = useCallback(() => {
@@ -493,8 +482,7 @@ export function useZoomedGame() {
       missClearTimer.current = null;
     }
 
-    const freeSkip = tryFreeSkip();
-    const lives = freeSkip ? s.lives : Math.max(0, s.lives - 1);
+    const lives = Math.max(0, s.lives - 1);
     setState({
       ...s,
       phase: "feedback",
@@ -508,7 +496,7 @@ export function useZoomedGame() {
         guessName: "Skipped",
       },
     });
-  }, [tryFreeSkip]);
+  }, []);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {

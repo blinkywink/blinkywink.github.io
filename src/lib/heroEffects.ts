@@ -8,11 +8,9 @@ import {
 export const HERO_EFFECTS_L1 = {
   quincy: { bonusCashPerCorrect: 10 }, // L20 target ~500
   gwendolin: { streakBonusPct: 0.03 }, // L20 ~0.15
-  "striker-jones": { freeSkipChance: 0.1 }, // L20 ~0.5
   "obyn-greenfoot": { extraCardChance: 0.04 }, // L20 ~0.1
   benjamin: { dupCashBonusPct: 0.15 },
   ezili: { t5WeightBonus: 0.003 }, // +0.3% abs
-  etienne: { earlierHintChance: 0.15 },
   sauda: { btd6DiscountChance: 0.07, btd6DiscountPct: 0.07 },
   psi: { paragonWeightBonus: 0.0005 }, // +0.05% abs
   silas: { featuredFreezeChance: 0.2 },
@@ -65,16 +63,12 @@ export function heroBlurb(heroId: string): string {
       return `+${e.quincy.bonusCashPerCorrect} Cash on each quiz correct`;
     case "gwendolin":
       return `+${pctLabel(e.gwendolin.streakBonusPct)} Cash on streak corrects (2+)`;
-    case "striker-jones":
-      return `${pctLabel(e["striker-jones"].freeSkipChance)} chance of one free skip per quiz run`;
     case "obyn-greenfoot":
       return `${pctLabel(e["obyn-greenfoot"].extraCardChance)} chance of +1 pack card`;
     case "benjamin":
       return `+${pctLabel(e.benjamin.dupCashBonusPct)} Cash from pack duplicates`;
     case "ezili":
       return `+${pctLabel(e.ezili.t5WeightBonus)} absolute T5 pack weight`;
-    case "etienne":
-      return `${pctLabel(e.etienne.earlierHintChance)} chance per miss for an earlier hint`;
     case "sauda":
       return `${pctLabel(e.sauda.btd6DiscountChance)} chance BTD6 packs cost ${pctLabel(e.sauda.btd6DiscountPct)} less`;
     case "psi":

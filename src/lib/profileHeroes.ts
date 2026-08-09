@@ -10,11 +10,9 @@ export const HERO_EQUIP_SWAP_COST = 1_000;
 export const SHOPPABLE_HERO_IDS = [
   "quincy",
   "gwendolin",
-  "striker-jones",
   "obyn-greenfoot",
   "benjamin",
   "ezili",
-  "etienne",
   "sauda",
   "psi",
   "silas",

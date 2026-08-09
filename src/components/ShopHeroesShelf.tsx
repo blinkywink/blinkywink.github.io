@@ -182,6 +182,7 @@ export function ShopHeroesShelf() {
                 level={mine ? level : 1}
                 locked={!mine}
                 hideLevel={!mine}
+                size="md"
               />
               <span className="shop-heroes__price">
                 {mine ? (

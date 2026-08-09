@@ -10103,15 +10103,19 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .shop-heroes__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: 0.9rem 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem 1rem;
   justify-items: center;
+  max-width: 44rem;
+  margin-inline: auto;
 }
 
 .shop-heroes__tile {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.45rem;
   justify-items: center;
+  width: 100%;
+  max-width: 9.75rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -10124,7 +10128,10 @@ button.trade-offer-card:hover:not(:disabled) {
   border-color: rgba(240, 200, 74, 0.55);
 }
 
-.shop-heroes__tile .hero-card {
+.shop-heroes__tile .hero-card,
+.shop-heroes__tile .hero-card--md {
+  width: 100%;
+  max-width: 9.75rem;
   pointer-events: none;
 }
 
@@ -10398,11 +10405,29 @@ button.trade-offer-card:hover:not(:disabled) {
 
 @media (max-width: 900px) {
   .shop-heroes__grid {
-    grid-template-columns: repeat(auto-fill, minmax(6.75rem, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem 0.65rem;
+    max-width: 36rem;
+  }
+
+  .shop-heroes__tile,
+  .shop-heroes__tile .hero-card {
+    max-width: 8.25rem;
   }
 }
 
 @media (max-width: 520px) {
+  .shop-heroes__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem 0.75rem;
+    max-width: 22rem;
+  }
+
+  .shop-heroes__tile,
+  .shop-heroes__tile .hero-card {
+    max-width: 9.5rem;
+  }
+
   .hero-card { width: 6.5rem; }
   .hero-card--md { width: 100%; max-width: 10rem; }
 }

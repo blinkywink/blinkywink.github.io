@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { useHeroFx } from "../auth/HeroFxProvider";
 import { awardCoins } from "./awardCoins";
 import {
@@ -11,18 +11,10 @@ import type { PackPullMods, DupCashMods } from "./packPull";
 /** Shared helpers for signed-in equipped hero level-1 procs. */
 export function useQuizHeroFx() {
   const { equipped, notifyHeroProc } = useHeroFx();
-  const freeSkipReady = useRef(false);
-  const freeSkipUsed = useRef(false);
 
   const resetRunFlags = useCallback(() => {
-    freeSkipUsed.current = false;
-    freeSkipReady.current = false;
-    if (equipped?.heroId === "striker-jones") {
-      freeSkipReady.current = rollChance(
-        HERO_EFFECTS_L1["striker-jones"].freeSkipChance,
-      );
-    }
-  }, [equipped?.heroId]);
+    // Reserved for per-run state if needed again.
+  }, []);
 
   const streakBonusPct =
     equipped?.heroId === "gwendolin"
@@ -57,30 +49,6 @@ export function useQuizHeroFx() {
     },
     [equipped?.heroId, notifyHeroProc],
   );
-
-  /** Returns true if skip should not cost a life. */
-  const tryFreeSkip = useCallback((): boolean => {
-    if (equipped?.heroId !== "striker-jones") return false;
-    if (freeSkipUsed.current || !freeSkipReady.current) return false;
-    freeSkipUsed.current = true;
-    freeSkipReady.current = false;
-    notifyHeroProc({
-      heroId: "striker-jones",
-      message: "Striker Jones: free skip!",
-    });
-    return true;
-  }, [equipped?.heroId, notifyHeroProc]);
-
-  /** Etienne: on miss, maybe boost zoom/hint. */
-  const tryEtienneBoost = useCallback((): boolean => {
-    if (equipped?.heroId !== "etienne") return false;
-    if (!rollChance(HERO_EFFECTS_L1.etienne.earlierHintChance)) return false;
-    notifyHeroProc({
-      heroId: "etienne",
-      message: "Etienne: earlier hint!",
-    });
-    return true;
-  }, [equipped?.heroId, notifyHeroProc]);
 
   const packPullMods = useCallback((): PackPullMods => {
     if (!equipped) return {};
@@ -137,8 +105,6 @@ export function useQuizHeroFx() {
     resetRunFlags,
     onCorrectCash,
     onGwenStreakProc,
-    tryFreeSkip,
-    tryEtienneBoost,
     packPullMods,
     onObynExtra,
     dupCashMods,

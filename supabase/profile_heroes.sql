@@ -23,8 +23,8 @@ declare
   levels jsonb;
   new_balance integer;
   allowed text[] := array[
-    'quincy','gwendolin','striker-jones','obyn-greenfoot',
-    'benjamin','ezili','etienne','sauda','psi','silas'
+    'quincy','gwendolin','obyn-greenfoot',
+    'benjamin','ezili','sauda','psi','silas'
   ];
 begin
   if uid is null then
@@ -212,7 +212,8 @@ grant execute on function public.get_profile_by_username(text) to anon, authenti
 do $$
 declare
   retired text[] := array[
-    'captain-churchill','pat-fusty','adora','admiral-brickell','geraldo'
+    'captain-churchill','pat-fusty','adora','admiral-brickell','geraldo',
+    'striker-jones','etienne'
   ];
 begin
   update public.profiles

@@ -120,8 +120,6 @@ export function useGeoguessr() {
     streakBonusPct,
     onCorrectCash,
     onGwenStreakProc,
-    tryFreeSkip,
-    tryEtienneBoost,
   } = useQuizHeroFx();
 
   const makeMapChallenge = useCallback(
@@ -422,10 +420,7 @@ export function useGeoguessr() {
       return;
     }
 
-    let attemptsUsed = s.attemptsUsed + 1;
-    if (tryEtienneBoost()) {
-      attemptsUsed += 1;
-    }
+    const attemptsUsed = s.attemptsUsed + 1;
     const lives = s.lives - 1;
     const eliminatedIds = s.eliminatedIds.includes(choice.id)
       ? s.eliminatedIds
@@ -474,12 +469,7 @@ export function useGeoguessr() {
         guessName: choice.name,
       },
     });
-  }, [
-    streakBonusPct,
-    onCorrectCash,
-    onGwenStreakProc,
-    tryEtienneBoost,
-  ]);
+  }, [streakBonusPct, onCorrectCash, onGwenStreakProc]);
 
   const skip = useCallback(() => {
     const s = stateRef.current;
@@ -489,8 +479,7 @@ export function useGeoguessr() {
       missClearTimer.current = null;
     }
 
-    const freeSkip = tryFreeSkip();
-    const lives = freeSkip ? s.lives : Math.max(0, s.lives - 1);
+    const lives = Math.max(0, s.lives - 1);
     setState({
       ...s,
       phase: "feedback",
@@ -504,7 +493,7 @@ export function useGeoguessr() {
         guessName: "Skipped",
       },
     });
-  }, [tryFreeSkip]);
+  }, []);
 
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {
