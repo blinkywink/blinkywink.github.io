@@ -3,12 +3,46 @@ import {
   type MonkeyCardSpec,
 } from "./pathCombos";
 
-/** Chance the pack includes one T5 (replaces a filler slot when any exist). */
-export const PACK_T5_CHANCE = 1 / 40;
-/** Chance the pack includes one Paragon (replaces a filler slot when any exist). */
-export const PACK_PARAGON_CHANCE = 1 / 80;
-/** Ultra-rare all-highs pack. */
+/** Ultra-rare all-highs pack (only pack-level exception). */
 export const PACK_GOD_CHANCE = 1 / 400;
+
+/**
+ * Per-card tier odds (each slot rolls independently).
+ * High tiers fixed by design; T0–T3 share the leftover ~93.2% with the
+ * peak at T2 (bell-ish from T0 → T3).
+ *
+ *   Paragon  0.10%
+ *   T5       0.70%
+ *   T4       6.00%
+ *   T3      18.20%
+ *   T2      36.00%   ← center
+ *   T1      25.00%
+ *   T0      14.00%
+ *           -------
+ *           100.00%
+ */
+export const CARD_TIER_ODDS = {
+  paragon: 0.001,
+  5: 0.007,
+  4: 0.06,
+  3: 0.182,
+  2: 0.36,
+  1: 0.25,
+  0: 0.14,
+} as const;
+
+type PullTier = "paragon" | 0 | 1 | 2 | 3 | 4 | 5;
+
+const TIER_ROLL_ORDER: PullTier[] = [
+  "paragon",
+  5,
+  4,
+  3,
+  2,
+  1,
+  0,
+];
+
 /** Cash paid when a pulled card is already owned (by max path tier). */
 export const PACK_DUPLICATE_CASH_BY_TIER = [
   20, // T0
@@ -47,19 +81,12 @@ export type PackPullResult = {
   godPack: boolean;
 };
 
-function tierWeight(card: MonkeyCardSpec): number {
-  if (card.isParagon) return 0;
-  const tier = maxPathTier(card.pathLevels);
-  // Mostly T1–T3; T4 is a rare filler spice.
-  if (tier <= 0) return 10;
-  if (tier === 1) return 28;
-  if (tier === 2) return 24;
-  if (tier === 3) return 14;
-  if (tier === 4) return 0.45;
-  return 0;
+function cardPullTier(card: MonkeyCardSpec): PullTier {
+  if (card.isParagon) return "paragon";
+  return maxPathTier(card.pathLevels) as 0 | 1 | 2 | 3 | 4 | 5;
 }
 
-/** God pack: T5 heavier than T4. */
+/** God pack filler: T5 heavier than T4. */
 function godTierWeight(card: MonkeyCardSpec): number {
   if (card.isParagon) return 0;
   const tier = maxPathTier(card.pathLevels);
@@ -108,38 +135,6 @@ function shuffle<T>(items: T[]): T[] {
     out[j] = tmp;
   }
   return out;
-}
-
-function injectRare(
-  pulls: MonkeyCardSpec[],
-  rares: MonkeyCardSpec[],
-  owned: ReadonlySet<string>,
-): void {
-  if (!pulls.length || !rares.length) return;
-  const already = new Set(pulls.map((c) => c.id));
-  const fresh = rares.filter((c) => !already.has(c.id) && !owned.has(c.id));
-  const dups = rares.filter((c) => !already.has(c.id) && owned.has(c.id));
-  // Prefer a new rare; only fall back to a duplicate rare if none remain.
-  const options = fresh.length ? fresh : dups;
-  if (!options.length) return;
-
-  const rare = options[Math.floor(Math.random() * options.length)]!;
-
-  let replaceAt = -1;
-  let bestScore = Infinity;
-  for (let i = 0; i < pulls.length; i++) {
-    const card = pulls[i]!;
-    if (card.isParagon || maxPathTier(card.pathLevels) >= 5) continue;
-    const score = maxPathTier(card.pathLevels);
-    if (score < bestScore) {
-      bestScore = score;
-      replaceAt = i;
-    }
-  }
-  if (replaceAt < 0) {
-    replaceAt = Math.floor(Math.random() * pulls.length);
-  }
-  pulls[replaceAt] = rare;
 }
 
 function fillFrom(
@@ -225,51 +220,77 @@ function pullGodPackCards(
   return shuffle(pulls);
 }
 
+function rollCardTier(available: ReadonlySet<PullTier>): PullTier {
+  let total = 0;
+  for (const tier of TIER_ROLL_ORDER) {
+    if (available.has(tier)) total += CARD_TIER_ODDS[tier];
+  }
+  if (total <= 0) return 0;
+
+  let roll = Math.random() * total;
+  for (const tier of TIER_ROLL_ORDER) {
+    if (!available.has(tier)) continue;
+    roll -= CARD_TIER_ODDS[tier];
+    if (roll <= 0) return tier;
+  }
+  return 0;
+}
+
 function pullNormalPackCards(
   pool: MonkeyCardSpec[],
   count: number,
   owned: ReadonlySet<string>,
 ): MonkeyCardSpec[] {
-  const lowPool = pool.filter(
-    (c) => !c.isParagon && maxPathTier(c.pathLevels) <= 4,
-  );
-  const t5Pool = pool.filter(
-    (c) => !c.isParagon && maxPathTier(c.pathLevels) === 5,
-  );
-  const paragonPool = pool.filter((c) => c.isParagon);
   const ratio = ownershipRatio(pool, owned);
   const dupMult = ownedPullMult(ratio);
 
-  const pulls: MonkeyCardSpec[] = [];
-  const bag = lowPool
-    .map((c) => ({
-      c,
-      weight:
-        tierWeight(c) * (owned.has(c.id) ? Math.max(0.001, dupMult) : 1),
-    }))
-    .filter((x) => x.weight > 0);
+  // Bags per tier — cards removed after pick so a pack has unique IDs.
+  const bags = new Map<PullTier, { c: MonkeyCardSpec; weight: number }[]>();
+  for (const tier of TIER_ROLL_ORDER) bags.set(tier, []);
 
-  while (pulls.length < count && bag.length) {
+  for (const c of pool) {
+    const tier = cardPullTier(c);
+    const weight = owned.has(c.id) ? Math.max(0.001, dupMult) : 1;
+    if (weight <= 0) continue;
+    bags.get(tier)!.push({ c, weight });
+  }
+
+  const pulls: MonkeyCardSpec[] = [];
+
+  while (pulls.length < count) {
+    const available = new Set<PullTier>();
+    for (const tier of TIER_ROLL_ORDER) {
+      if ((bags.get(tier)?.length ?? 0) > 0) available.add(tier);
+    }
+    if (!available.size) break;
+
+    const tier = rollCardTier(available);
+    const bag = bags.get(tier)!;
+    // If the rolled tier somehow emptied, fall through lower tiers.
+    if (!bag.length) {
+      let picked: MonkeyCardSpec | null = null;
+      for (const fallback of TIER_ROLL_ORDER) {
+        const fb = bags.get(fallback)!;
+        if (!fb.length) continue;
+        picked = takeWeighted(fb);
+        break;
+      }
+      if (!picked) break;
+      pulls.push(picked);
+      continue;
+    }
     pulls.push(takeWeighted(bag));
   }
 
-  if (pulls.length < count) fillFrom(pulls, t5Pool, count, owned, true);
-  if (pulls.length < count) fillFrom(pulls, paragonPool, count, owned, true);
-
-  if (Math.random() < PACK_T5_CHANCE) {
-    injectRare(pulls, t5Pool, owned);
-  }
-  if (Math.random() < PACK_PARAGON_CHANCE) {
-    injectRare(pulls, paragonPool, owned);
-  }
+  if (pulls.length < count) fillFrom(pulls, pool, count, owned, true);
 
   return shuffle(pulls);
 }
 
 /**
  * Open a pack:
- * - 0.25% god pack (all T4+, usually with a Paragon)
- * - otherwise weighted commons + rare injects
+ * - 0.25% god pack (all T4+, usually with a Paragon) — pack-level only
+ * - otherwise each card rolls tier odds independently
  * - early collections heavily prefer new cards; dups ramp as you complete the pool
  * - duplicates convert to Cash in the opener
  */

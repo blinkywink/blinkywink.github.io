@@ -490,10 +490,18 @@ export function PackOpenerTest({
     const next = indexRef.current + 1;
     if (next >= pullsRef.current.length) {
       setPhaseBoth("done");
+      // Holding Space through the last card should buy another without a re-tap.
+      if (spaceHeldRef.current && mode !== "reward") {
+        later(() => {
+          if (phaseRef.current === "done" && spaceHeldRef.current) {
+            void buyAnother();
+          }
+        }, 60);
+      }
       return;
     }
     showCardAt(next);
-  }, [showCardAt]);
+  }, [buyAnother, mode, showCardAt]);
 
   const flingAway = useCallback(
     (dir?: { x: number; y: number }) => {
@@ -524,7 +532,8 @@ export function PackOpenerTest({
       } else if (p === "ready") {
         if (spaceCanFling(e)) flingAway();
       } else if (p === "done") {
-        if (!e.repeat) void buyAnother();
+        // Allow key-repeat / hold-through from the last card.
+        void buyAnother();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -650,8 +659,6 @@ export function PackOpenerTest({
   const showTierGlow =
     Boolean(currentTier) &&
     (phase === "enter" || phase === "ready" || phase === "exit");
-  const showRareFx =
-    (currentTier === "t5" || currentTier === "paragon") && showTierGlow;
   const showPack =
     phase === "shop" || phase === "sealed" || phase === "sliced";
   const showCard =
@@ -840,8 +847,6 @@ export function PackOpenerTest({
                   `pack-opener__card--${phase}`,
                   currentIsDup ? "is-duplicate" : "",
                   currentTier ? `is-glow-${currentTier}` : "",
-                  currentTier === "t5" ? "is-rare-t5" : "",
-                  currentTier === "paragon" ? "is-rare-paragon" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -856,23 +861,6 @@ export function PackOpenerTest({
                     className={`pack-opener__card-glow pack-opener__card-glow--${currentTier}`}
                     aria-hidden
                   />
-                ) : null}
-                {showRareFx && currentTier !== "paragon" ? (
-                  <div
-                    className={`pack-opener__rare-burst pack-opener__rare-burst--${currentTier}`}
-                    aria-hidden
-                  >
-                    <span />
-                    <span />
-                  </div>
-                ) : null}
-                {showRareFx ? (
-                  <p
-                    className={`pack-opener__rare-label pack-opener__rare-label--${currentTier}`}
-                    role="status"
-                  >
-                    {currentTier === "paragon" ? "PARAGON" : "TIER 5"}
-                  </p>
                 ) : null}
                 <MonkeyCard
                   entity={current.entity}
