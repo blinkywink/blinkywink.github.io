@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { CashAmount } from "../../components/CurrencyChip";
 import {
@@ -9,11 +10,21 @@ import { useBloonsSweeper } from "./useBloonsSweeper";
 
 type Props = {
   onBack: () => void;
+  onRunEnd?: (info: { cleared: boolean }) => void;
 };
 
-export function BloonsSweeperGame({ onBack }: Props) {
+export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
   const { state, minesLeft, setDifficulty, restart, reveal, toggleFlag } =
     useBloonsSweeper();
+  const prevStatus = useRef(state.status);
+
+  useEffect(() => {
+    const was = prevStatus.current;
+    prevStatus.current = state.status;
+    if (was === "won" || was === "lost") return;
+    if (state.status === "won") onRunEnd?.({ cleared: true });
+    else if (state.status === "lost") onRunEnd?.({ cleared: false });
+  }, [state.status, onRunEnd]);
 
   const done = state.status === "won" || state.status === "lost";
 

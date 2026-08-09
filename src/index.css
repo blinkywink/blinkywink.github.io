@@ -20,6 +20,8 @@
   --font-body: "Nunito", "Fredoka", system-ui, sans-serif;
   --site-header-h: 3.75rem;
   --content-max: 1180px;
+  /* Hotspot: tip near top-left, nudged right a tad */
+  --cursor-site: url("/images/ui/site-cursor.png") 3 1, auto;
   color: var(--ink);
   font-family: var(--font-body);
   font-synthesis: none;
@@ -31,12 +33,14 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  cursor: var(--cursor-site);
 }
 
 html,
 body,
 #root {
   min-height: 100%;
+  cursor: var(--cursor-site);
 }
 
 body {
@@ -63,7 +67,7 @@ a {
 }
 
 button {
-  cursor: pointer;
+  cursor: var(--cursor-site);
   border: none;
   background: none;
 }
@@ -252,7 +256,7 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #f0f0f4;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   padding: 0;
 }
 
@@ -500,7 +504,7 @@ body:has(.zoomed-page) {
   color: inherit;
   background: rgba(255, 255, 255, 0.03);
   min-height: 12rem;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
@@ -1144,7 +1148,7 @@ body:has(.zoomed-page) {
   border: 2px solid #2a2a34;
   background: #121218;
   color: rgba(240, 240, 244, 0.85);
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .arcade-link-btn:hover,
@@ -1155,7 +1159,7 @@ body:has(.zoomed-page) {
 
 .arcade-link-btn:disabled {
   opacity: 0.55;
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .arcade-link-btn--daily.is-ready {
@@ -1307,7 +1311,7 @@ body:has(.zoomed-page) {
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   transition:
     border-color 0.15s ease,
     transform 0.15s ease,
@@ -1328,6 +1332,50 @@ body:has(.zoomed-page) {
 
 .game-card:active {
   transform: translateY(0);
+}
+
+.game-card--bonus {
+  border-color: #f0c84a;
+  box-shadow:
+    0 0 0 1px rgba(240, 200, 74, 0.45),
+    0 0 28px rgba(240, 200, 74, 0.28),
+    var(--shadow);
+  animation:
+    pop-in 0.45s 0.08s ease both,
+    game-card-bonus-pulse 2.2s ease-in-out infinite;
+}
+
+.game-card--bonus:hover,
+.game-card--bonus:focus-visible {
+  border-color: #ffd65c;
+  background: #1a1810;
+}
+
+.game-card--bonus:focus-visible {
+  outline-color: #f0c84a;
+}
+
+.game-card__bonus {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #f0c84a;
+}
+
+@keyframes game-card-bonus-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(240, 200, 74, 0.4),
+      0 0 18px rgba(240, 200, 74, 0.2),
+      var(--shadow);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(240, 200, 74, 0.7),
+      0 0 34px rgba(240, 200, 74, 0.42),
+      var(--shadow);
+  }
 }
 
 .game-card--lab {
@@ -1910,7 +1958,7 @@ body:has(.zoomed-page) {
   font-weight: 700;
   letter-spacing: 0.02em;
   color: rgba(240, 240, 244, 0.55);
-  cursor: pointer;
+  cursor: var(--cursor-site);
   text-decoration: underline;
   text-decoration-color: rgba(240, 240, 244, 0.22);
   text-underline-offset: 0.18em;
@@ -1925,7 +1973,7 @@ body:has(.zoomed-page) {
 
 .guess-skip:disabled {
   opacity: 0.35;
-  cursor: default;
+  cursor: var(--cursor-site);
   text-decoration: none;
 }
 
@@ -2478,7 +2526,7 @@ body:has(.zoomed-page) {
 
 .answer-search__input:disabled {
   opacity: 0.92;
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .answer-search--correct .answer-search__input {
@@ -2882,7 +2930,7 @@ body:has(.zoomed-page) {
 }
 
 .answer-btn:disabled {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .answer-btn--correct {
@@ -3217,7 +3265,7 @@ body:has(.zoomed-page) {
   background: linear-gradient(165deg, #1a2418 0%, #121816 100%);
   color: #f0f0f4;
   text-align: left;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   box-shadow: var(--shadow-sm);
   transition:
     border-color 0.15s ease,
@@ -3326,7 +3374,7 @@ body:has(.zoomed-page) {
   background: #121218;
   color: #f0f0f4;
   text-align: left;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   transition:
     transform 0.15s ease,
     border-color 0.15s ease,
@@ -3421,7 +3469,7 @@ body:has(.zoomed-page) {
 }
 
 .monkey-card-scene--preview {
-  cursor: pointer;
+  cursor: var(--cursor-site);
   touch-action: manipulation;
 }
 
@@ -3436,7 +3484,7 @@ body:has(.zoomed-page) {
 }
 
 .monkey-card-scene--locked {
-  cursor: default;
+  cursor: var(--cursor-site);
   filter: grayscale(1) brightness(0.52) contrast(0.92);
   opacity: 0.72;
 }
@@ -3548,7 +3596,7 @@ body:has(.zoomed-page) {
   border: 0;
   background: rgba(8, 28, 48, 0.62);
   backdrop-filter: blur(4px);
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .card-focus__panel {
@@ -4449,7 +4497,7 @@ body:has(.zoomed-page) {
   border: 0;
   background: rgba(6, 20, 36, 0.78);
   backdrop-filter: blur(6px);
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .pack-opener__close {
@@ -5142,7 +5190,7 @@ body:has(.zoomed-page) {
   border: 0;
   background: transparent;
   color: inherit;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   display: grid;
   gap: 0.55rem;
   justify-items: center;
@@ -5307,7 +5355,7 @@ body:has(.zoomed-page) {
   height: var(--card-preview-h);
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .shop-direct__card .monkey-card-scene--preview > .monkey-card {
@@ -5352,7 +5400,7 @@ body:has(.zoomed-page) {
   border: 1px dashed rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   background: transparent;
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .shop-direct-focus__panel {
@@ -5764,7 +5812,7 @@ body:has(.zoomed-page) {
 }
 
 .pack-opener__arena.is-shop {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 @media (max-width: 560px) {
@@ -6780,13 +6828,13 @@ body:has(.zoomed-page) {
   font-size: clamp(0.8rem, 2.4vw, 0.98rem);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   touch-action: manipulation;
 }
 
 .bloonle-key:disabled {
   opacity: 0.55;
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .bloonle-key--wide {
@@ -6954,7 +7002,7 @@ body:has(.zoomed-page) {
   background: rgba(18, 26, 16, 0.9);
   padding: 0;
   margin: 0;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   display: grid;
   place-items: center;
   position: relative;
@@ -6968,7 +7016,7 @@ body:has(.zoomed-page) {
 }
 
 .camo-cell:disabled {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .camo-cell:not(:disabled):hover {
@@ -7193,7 +7241,7 @@ body:has(.zoomed-page) {
   font-weight: 750;
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   opacity: 0.75;
 }
 
@@ -7204,7 +7252,7 @@ body:has(.zoomed-page) {
 }
 
 .sweeper-diff__btn:disabled {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .sweeper-hud__actions {
@@ -7245,7 +7293,7 @@ body:has(.zoomed-page) {
   font-size: clamp(0.7rem, 2.4vw, 0.95rem);
   font-weight: 800;
   line-height: 1;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   color: #fff8ee;
   background: linear-gradient(160deg, #5a4a7a, #352850);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
@@ -7260,7 +7308,7 @@ body:has(.zoomed-page) {
   background: #1a1628;
   border-color: rgba(255, 255, 255, 0.06);
   box-shadow: none;
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .sweeper-cell.is-flagged {
@@ -7443,7 +7491,7 @@ body:has(.zoomed-page) {
   font-size: 1.12rem;
   padding: 0;
   margin: 0;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   text-align: left;
   text-decoration: underline;
   text-decoration-color: rgba(240, 240, 244, 0.28);
@@ -7530,7 +7578,7 @@ body:has(.zoomed-page) {
   border: 0;
   background: transparent;
   color: inherit;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   display: grid;
   gap: 0.45rem;
   justify-items: center;
@@ -7648,7 +7696,7 @@ body:has(.zoomed-page) {
   text-transform: uppercase;
   padding: 0.45rem 0.85rem;
   border-radius: 10px;
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .market-tabs__btn.is-active {
@@ -7870,7 +7918,7 @@ body:has(.zoomed-page) {
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.01em;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   text-align: left;
 }
 
@@ -7952,7 +8000,7 @@ a.market-card__seller:hover {
   color: inherit;
   padding: 0.35rem;
   border-radius: 14px;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   display: grid;
   gap: 0.4rem;
   justify-items: center;
@@ -8003,7 +8051,7 @@ a.market-card__seller:hover {
   line-height: 1;
   display: grid;
   place-items: center;
-  cursor: pointer;
+  cursor: var(--cursor-site);
   box-shadow: 0 0 0 2px rgba(8, 8, 10, 0.9);
 }
 
@@ -8258,7 +8306,7 @@ a.market-card__seller:hover {
   background: rgba(255, 255, 255, 0.03);
   color: inherit;
   text-align: left;
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 button.card-chip:hover:not(:disabled) {
@@ -8272,7 +8320,7 @@ button.card-chip:hover:not(:disabled) {
 }
 
 .card-chip.is-locked {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 .card-chip:disabled {
@@ -8514,11 +8562,11 @@ button.card-chip:hover:not(:disabled) {
   padding: 0.2rem;
   border-radius: 14px;
   color: inherit;
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .trade-offer-card.is-locked {
-  cursor: default;
+  cursor: var(--cursor-site);
 }
 
 button.trade-offer-card:hover:not(:disabled) {
@@ -8866,7 +8914,7 @@ button.trade-offer-card:hover:not(:disabled) {
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .player-showcase__row .monkey-card-scene--preview > .monkey-card {
@@ -9074,7 +9122,7 @@ button.trade-offer-card:hover:not(:disabled) {
   border: 0;
   background: rgba(4, 4, 8, 0.78);
   backdrop-filter: blur(10px);
-  cursor: pointer;
+  cursor: var(--cursor-site);
 }
 
 .pfp-editor__panel {
@@ -9413,4 +9461,32 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .avatar-crop__zoom-btn:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.featured-bonus-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 1300;
+  transform: translateX(-50%);
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 200, 74, 0.45);
+  background: rgba(18, 16, 8, 0.94);
+  color: #f0c84a;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  animation: featured-bonus-toast-in 0.28s ease both;
+}
+
+@keyframes featured-bonus-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }

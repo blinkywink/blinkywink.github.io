@@ -9,6 +9,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { useCardCollection } from "./auth/CardCollectionProvider";
+import { useAuth } from "./auth/AuthProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
@@ -28,6 +29,11 @@ import { GeoguessrGame } from "./games/geoguessr";
 import { OrderUpGame } from "./games/orderup";
 import { PriceCheckGame } from "./games/pricecheck";
 import { ZoomedGame } from "./games/zoomed";
+import { awardCoins } from "./lib/awardCoins";
+import {
+  resolveFeaturedBonusGame,
+  type FeaturedBonusGame,
+} from "./lib/featuredBonus";
 import {
   pickRewardTowerPack,
   pickRewardTowerPackChoices,
@@ -207,11 +213,25 @@ function LeaderboardPage() {
 
 function AppShell() {
   const { owned } = useCardCollection();
+  const { setCoinBalance } = useAuth();
   const navigate = useNavigate();
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
   const [pendingHighlights, setPendingHighlights] = useState<string[]>([]);
   const [pendingTower, setPendingTower] = useState<string | undefined>();
+  const [bonusToast, setBonusToast] = useState<string | null>(null);
+
+  const settleFeaturedBonus = useCallback(
+    async (game: FeaturedBonusGame, cleared: boolean) => {
+      const result = resolveFeaturedBonusGame(game, cleared);
+      if (!result.awarded || result.amount <= 0) return;
+      const balance = await awardCoins(result.amount);
+      if (balance != null) setCoinBalance(balance);
+      setBonusToast(`+${result.amount.toLocaleString()} featured clear bonus`);
+      window.setTimeout(() => setBonusToast(null), 3200);
+    },
+    [setCoinBalance],
+  );
 
   const finishRewards = useCallback(
     (highlightIds: string[], tower?: string) => {
@@ -230,27 +250,29 @@ function AppShell() {
   );
 
   const offerQuizRewards = useCallback(
-    (info: { cleared: boolean; bestStreak: number }) => {
-      const wantBonus = info.bestStreak >= QUIZ_BONUS_STREAK;
-      const free = info.cleared ? pickRewardTowerPack(owned) : null;
-      const exclude = new Set(free?.tower ? [free.tower] : []);
-      const choices = wantBonus
-        ? pickRewardTowerPackChoices(owned, 3, exclude)
-        : [];
+    (game: FeaturedBonusGame) =>
+      (info: { cleared: boolean; bestStreak: number }) => {
+        void settleFeaturedBonus(game, info.cleared);
+        const wantBonus = info.bestStreak >= QUIZ_BONUS_STREAK;
+        const free = info.cleared ? pickRewardTowerPack(owned) : null;
+        const exclude = new Set(free?.tower ? [free.tower] : []);
+        const choices = wantBonus
+          ? pickRewardTowerPackChoices(owned, 3, exclude)
+          : [];
 
-      setPendingHighlights([]);
-      setPendingTower(undefined);
+        setPendingHighlights([]);
+        setPendingTower(undefined);
 
-      if (free) {
-        setRewardPack({ pack: free, reason: "clear" });
+        if (free) {
+          setRewardPack({ pack: free, reason: "clear" });
+          setBonusChoices(choices.length ? choices : null);
+          return;
+        }
+
+        setRewardPack(null);
         setBonusChoices(choices.length ? choices : null);
-        return;
-      }
-
-      setRewardPack(null);
-      setBonusChoices(choices.length ? choices : null);
-    },
-    [owned],
+      },
+    [owned, settleFeaturedBonus],
   );
 
   const offerBloonleBonus = useCallback(
@@ -264,6 +286,20 @@ function AppShell() {
       setBonusChoices(choices);
     },
     [owned],
+  );
+
+  const onBloonleRunEnd = useCallback(
+    (info: { cleared: boolean }) => {
+      void settleFeaturedBonus("bloonle", info.cleared);
+    },
+    [settleFeaturedBonus],
+  );
+
+  const onSweeperRunEnd = useCallback(
+    (info: { cleared: boolean }) => {
+      void settleFeaturedBonus("bloonssweeper", info.cleared);
+    },
+    [settleFeaturedBonus],
   );
 
   const afterPackDone = useCallback(
@@ -308,31 +344,47 @@ function AppShell() {
           <Route
             path="/zoomed"
             element={
-              <ZoomedGame onBack={goGames} onRunEnd={offerQuizRewards} />
+              <ZoomedGame
+                onBack={goGames}
+                onRunEnd={offerQuizRewards("zoomed")}
+              />
             }
           />
           <Route
             path="/geoguessr"
             element={
-              <GeoguessrGame onBack={goGames} onRunEnd={offerQuizRewards} />
+              <GeoguessrGame
+                onBack={goGames}
+                onRunEnd={offerQuizRewards("geoguessr")}
+              />
             }
           />
           <Route
             path="/pricecheck"
             element={
-              <PriceCheckGame onBack={goGames} onRunEnd={offerQuizRewards} />
+              <PriceCheckGame
+                onBack={goGames}
+                onRunEnd={offerQuizRewards("pricecheck")}
+              />
             }
           />
           <Route
             path="/orderup"
             element={
-              <OrderUpGame onBack={goGames} onRunEnd={offerQuizRewards} />
+              <OrderUpGame
+                onBack={goGames}
+                onRunEnd={offerQuizRewards("orderup")}
+              />
             }
           />
           <Route
             path="/bloonle"
             element={
-              <BloonleGame onBack={goGames} onFastSolve={offerBloonleBonus} />
+              <BloonleGame
+                onBack={goGames}
+                onFastSolve={offerBloonleBonus}
+                onRunEnd={onBloonleRunEnd}
+              />
             }
           />
           <Route
@@ -340,17 +392,25 @@ function AppShell() {
             element={
               <CamoDetectionGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards}
+                onRunEnd={offerQuizRewards("camodetection")}
               />
             }
           />
           <Route
             path="/bloonssweeper"
-            element={<BloonsSweeperGame onBack={goGames} />}
+            element={
+              <BloonsSweeperGame onBack={goGames} onRunEnd={onSweeperRunEnd} />
+            }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+
+      {bonusToast ? (
+        <div className="featured-bonus-toast" role="status">
+          {bonusToast}
+        </div>
+      ) : null}
 
       {rewardPack ? (
         <PackOpenerTest

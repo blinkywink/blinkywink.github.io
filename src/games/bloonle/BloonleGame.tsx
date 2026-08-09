@@ -7,6 +7,8 @@ type Props = {
   onBack: () => void;
   /** Fired once when solved in ≤3 guesses. */
   onFastSolve?: (guessCount: number) => void;
+  /** Fired once when a round ends (win or lose). */
+  onRunEnd?: (info: { cleared: boolean }) => void;
 };
 
 const ROWS = [
@@ -49,7 +51,11 @@ function Tile({
   );
 }
 
-export function BloonleGame({ onBack: _onBack, onFastSolve }: Props) {
+export function BloonleGame({
+  onBack: _onBack,
+  onFastSolve,
+  onRunEnd,
+}: Props) {
   const {
     state,
     typeLetter,
@@ -67,10 +73,17 @@ export function BloonleGame({ onBack: _onBack, onFastSolve }: Props) {
   useEffect(() => {
     const was = prevStatus.current;
     prevStatus.current = state.status;
-    if (was !== "playing" || state.status !== "won") return;
-    const guesses = state.guesses.length;
-    if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
-  }, [state.status, state.guesses.length, onFastSolve]);
+    if (was !== "playing") return;
+    if (state.status === "won") {
+      const guesses = state.guesses.length;
+      if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
+      onRunEnd?.({ cleared: true });
+      return;
+    }
+    if (state.status === "lost") {
+      onRunEnd?.({ cleared: false });
+    }
+  }, [state.status, state.guesses.length, onFastSolve, onRunEnd]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

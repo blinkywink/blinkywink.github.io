@@ -1,4 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  FEATURED_BONUS_CASH,
+  getOrCreateFeaturedBonusGame,
+  type FeaturedBonusGame,
+} from "../lib/featuredBonus";
 import { preloadImage } from "../utils/imageProcessing";
 import { DailyClaimButton } from "./DailyClaimButton";
 
@@ -17,6 +22,8 @@ type Props = {
   embed?: boolean;
   /** Cap how many tiles render (home hub uses 3). */
   limit?: number;
+  /** Current gold-outline bonus mode (games hub). */
+  bonusGame?: FeaturedBonusGame | null;
 };
 
 /** Bright mid-tier art so the home crop isn't near-black silhouette. */
@@ -307,7 +314,35 @@ function MapPreview() {
 }
 
 /** Games hub — playable titles only. */
-export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
+export function ArcadeHome({
+  onPlay,
+  embed = false,
+  limit,
+  bonusGame: bonusGameProp = null,
+}: Props) {
+  const [bonusGame, setBonusGame] = useState<FeaturedBonusGame | null>(
+    () => bonusGameProp ?? getOrCreateFeaturedBonusGame(),
+  );
+
+  useEffect(() => {
+    if (bonusGameProp != null) {
+      setBonusGame(bonusGameProp);
+      return;
+    }
+    setBonusGame(getOrCreateFeaturedBonusGame());
+  }, [bonusGameProp]);
+
+  // Re-read when returning to the hub (e.g. after a run rotates the bonus).
+  useEffect(() => {
+    const sync = () => setBonusGame(getOrCreateFeaturedBonusGame());
+    window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
+
   const games = [
     {
       id: "zoomed" as const,
@@ -371,21 +406,34 @@ export function ArcadeHome({ onPlay, embed = false, limit }: Props) {
         className={`arcade__featured${embed ? " arcade__featured--hub" : ""}`}
         aria-label="Available games"
       >
-        {shown.map((g) => (
-          <button
-            key={g.id}
-            type="button"
-            className="game-card game-card--live"
-            aria-label={g.label}
-            onClick={() => onPlay(g.id)}
-          >
-            {g.preview}
-            <div className="game-card__foot">
-              <span className="game-card__title">{g.title}</span>
-              <span className="game-card__blurb">{g.blurb}</span>
-            </div>
-          </button>
-        ))}
+        {shown.map((g) => {
+          const isBonus = bonusGame === g.id;
+          return (
+            <button
+              key={g.id}
+              type="button"
+              className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}`}
+              aria-label={
+                isBonus
+                  ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash`
+                  : g.label
+              }
+              onClick={() => onPlay(g.id)}
+            >
+              {g.preview}
+              <div className="game-card__foot">
+                <span className="game-card__title">{g.title}</span>
+                {isBonus ? (
+                  <span className="game-card__bonus">
+                    +{FEATURED_BONUS_CASH.toLocaleString()} Clear bonus
+                  </span>
+                ) : (
+                  <span className="game-card__blurb">{g.blurb}</span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </section>
 
       {!embed ? (
