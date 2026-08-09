@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { avatarFromProfile } from "../lib/profileAvatar";
-import { collectionPath, profilePath } from "../lib/routes";
+import { profilePath } from "../lib/routes";
 import { CurrencyChip } from "./CurrencyChip";
 import { UserAvatar } from "./UserAvatar";
 
@@ -213,17 +213,6 @@ export function AccountBar() {
                 }}
               >
                 My profile
-              </button>
-              <button
-                type="button"
-                className="account-menu__item"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate(collectionPath());
-                }}
-              >
-                My cards
               </button>
               <button
                 type="button"

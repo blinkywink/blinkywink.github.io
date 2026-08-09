@@ -4,8 +4,9 @@ import { AccountBar } from "./AccountBar";
 import { TradeInbox } from "./TradeInbox";
 
 const NAV = [
-  { to: "/", label: "Games", end: true },
+  { to: "/games", label: "Games" },
   { to: "/shop", label: "Shop" },
+  { to: "/collection", label: "Cards" },
   { to: "/marketplace", label: "Market" },
   { to: "/leaderboard", label: "Leaderboard" },
 ] as const;
@@ -65,7 +66,6 @@ export function SiteHeader() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={"end" in item ? item.end : undefined}
               className={({ isActive }) =>
                 `site-nav__link${isActive ? " is-active" : ""}`
               }
@@ -101,7 +101,6 @@ export function SiteHeader() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    end={"end" in item ? item.end : undefined}
                     className={({ isActive }) =>
                       `site-nav-mobile__link${isActive ? " is-active" : ""}`
                     }

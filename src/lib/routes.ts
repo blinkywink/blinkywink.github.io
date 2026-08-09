@@ -35,6 +35,10 @@ export function shopPath(): string {
   return "/shop";
 }
 
+export function gamesPath(): string {
+  return "/games";
+}
+
 export function marketplacePath(): string {
   return "/marketplace";
 }

@@ -12,6 +12,7 @@ import { useCardCollection } from "./auth/CardCollectionProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
+import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
 import { Marketplace } from "./components/Marketplace";
@@ -34,6 +35,7 @@ import { fetchProfileByUsername } from "./lib/profiles";
 import {
   collectionPath,
   gamePath,
+  gamesPath,
   leaderboardPath,
   userCollectionPath,
   type GamePath,
@@ -52,6 +54,10 @@ const QUIZ_BONUS_STREAK = 4;
 const BLOONLE_BONUS_MAX_TRIES = 3;
 
 function HomePage() {
+  return <HomeHub />;
+}
+
+function GamesPage() {
   const navigate = useNavigate();
   return (
     <ArcadeHome
@@ -275,6 +281,7 @@ function AppShell() {
   );
 
   const goHome = () => navigate("/");
+  const goGames = () => navigate(gamesPath());
 
   return (
     <>
@@ -282,6 +289,7 @@ function AppShell() {
       <div className="site-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/shop" element={<ShopRoute />} />
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
@@ -296,31 +304,31 @@ function AppShell() {
           <Route
             path="/zoomed"
             element={
-              <ZoomedGame onBack={goHome} onRunEnd={offerQuizRewards} />
+              <ZoomedGame onBack={goGames} onRunEnd={offerQuizRewards} />
             }
           />
           <Route
             path="/geoguessr"
             element={
-              <GeoguessrGame onBack={goHome} onRunEnd={offerQuizRewards} />
+              <GeoguessrGame onBack={goGames} onRunEnd={offerQuizRewards} />
             }
           />
           <Route
             path="/pricecheck"
             element={
-              <PriceCheckGame onBack={goHome} onRunEnd={offerQuizRewards} />
+              <PriceCheckGame onBack={goGames} onRunEnd={offerQuizRewards} />
             }
           />
           <Route
             path="/orderup"
             element={
-              <OrderUpGame onBack={goHome} onRunEnd={offerQuizRewards} />
+              <OrderUpGame onBack={goGames} onRunEnd={offerQuizRewards} />
             }
           />
           <Route
             path="/bloonle"
             element={
-              <BloonleGame onBack={goHome} onFastSolve={offerBloonleBonus} />
+              <BloonleGame onBack={goGames} onFastSolve={offerBloonleBonus} />
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
