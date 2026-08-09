@@ -1,11 +1,10 @@
-import { useMemo, useState } from "react";
-import { towers as baseTowers } from "../data/towers";
-import {
-  allCardSpecs,
-  matchesCardQuery,
-} from "../lib/cardCatalog";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { towerEntities, towers as baseTowers } from "../data/towers";
+import type { TowerEntity } from "../data/types";
 import {
   buildTowerCardSpecs,
+  formatPathLevels,
+  sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { MonkeyCard } from "./MonkeyCard";
@@ -16,7 +15,20 @@ type TowerChoice = {
   name: string;
   category: string;
   image: string;
+  cardCount: number;
 };
+
+type View =
+  | { kind: "towers" }
+  | { kind: "all" }
+  | { kind: "tower"; name: string };
+
+function cardCountFor(tower: string): number {
+  const hasParagon = towerEntities.some(
+    (e) => e.tower === tower && e.type === "paragon",
+  );
+  return 64 + (hasParagon ? 1 : 0);
+}
 
 const TOWER_CHOICES: TowerChoice[] = baseTowers
   .slice()
@@ -30,106 +42,151 @@ const TOWER_CHOICES: TowerChoice[] = baseTowers
     name: t.tower,
     category: t.category,
     image: t.image,
+    cardCount: cardCountFor(t.tower),
   }));
 
 const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
-  TOWER_CHOICES.map((t) => [t.name, buildTowerCardSpecs(t.name)]),
+  TOWER_CHOICES.map((t) => [
+    t.name,
+    buildTowerCardSpecs(t.name).slice().sort(sortCardSpecs),
+  ]),
 );
+
+const ALL_SPECS: MonkeyCardSpec[] = TOWER_CHOICES.flatMap(
+  (t) => TOWER_SPECS[t.name] ?? [],
+);
+
+function baseEntity(tower: string): TowerEntity | null {
+  return (
+    towerEntities.find((e) => e.tower === tower && e.type === "tower") ?? null
+  );
+}
+
+function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
+  if (!q) return true;
+  const hay = [
+    card.entity.name,
+    card.tower,
+    formatPathLevels(card.pathLevels),
+    card.id,
+    card.isParagon ? "paragon" : "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(q);
+}
 
 const EMPTY_SET: ReadonlySet<string> = new Set();
 
 type Props = {
   owned: ReadonlySet<string>;
+  /** Currently committed selection. */
   selectedIds: ReadonlySet<string>;
-  onToggle: (cardId: string) => void;
-  disabled?: boolean;
+  /** Apply the draft selection (bottom bar). */
+  onConfirm: (ids: string[]) => void;
+  confirmLabel?: string;
+  multi?: boolean;
   maxSelected?: number;
-  onMaxReached?: () => void;
-  /** Cards that cannot be selected (e.g. partner already owns). */
   unavailableIds?: ReadonlySet<string>;
   unavailableLabel?: string;
+  disabled?: boolean;
+  /** Extra controls in the sticky dock (e.g. price). */
+  dockExtra?: ReactNode;
 };
 
 /**
- * Pick owned cards: tower list first, then real MonkeyCard grid.
- * Search (2+ chars) also shows real cards.
+ * Collection-identical card browser for picking.
+ * Tap cards to select; sticky bottom bar confirms.
  */
 export function OwnedCardPicker({
   owned,
   selectedIds,
-  onToggle,
-  disabled = false,
+  onConfirm,
+  confirmLabel = "Select",
+  multi = true,
   maxSelected,
-  onMaxReached,
   unavailableIds,
-  unavailableLabel = "Already owned",
+  unavailableLabel = "They own this",
+  disabled = false,
+  dockExtra,
 }: Props) {
-  const [query, setQuery] = useState("");
-  const [tower, setTower] = useState<string | null>(null);
-
-  const q = query.trim().toLowerCase();
-  const searching = q.length >= 2;
   const blocked = unavailableIds ?? EMPTY_SET;
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<View>({ kind: "towers" });
+  const [tierHighFirst, setTierHighFirst] = useState(false);
+  const [draft, setDraft] = useState<Set<string>>(() => new Set(selectedIds));
 
-  const ownedByTower = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const choice of TOWER_CHOICES) {
-      const specs = TOWER_SPECS[choice.name] ?? [];
-      let n = 0;
-      for (const c of specs) if (owned.has(c.id)) n += 1;
-      map.set(choice.name, n);
-    }
-    return map;
-  }, [owned]);
+  useEffect(() => {
+    setDraft(new Set(selectedIds));
+  }, [selectedIds]);
 
-  const towerList = useMemo(() => {
-    if (searching) return TOWER_CHOICES;
-    if (!q) return TOWER_CHOICES;
+  const filteredTowers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q || view.kind !== "towers") return TOWER_CHOICES;
     return TOWER_CHOICES.filter(
       (t) =>
         t.name.toLowerCase().includes(q) ||
         t.category.toLowerCase().includes(q),
     );
-  }, [q, searching]);
+  }, [query, view.kind]);
 
-  const searchResults = useMemo(() => {
-    if (!searching) return [] as MonkeyCardSpec[];
-    return allCardSpecs().filter(
-      (c) => owned.has(c.id) && matchesCardQuery(c, q),
-    );
-  }, [owned, q, searching]);
+  const ownedAllCards = useMemo(() => {
+    let list = ALL_SPECS.filter((c) => owned.has(c.id));
+    const q = query.trim().toLowerCase();
+    if (q) list = list.filter((c) => matchesCardQuery(c, q));
+    if (tierHighFirst) {
+      list = list.slice().sort((a, b) => sortCardSpecs(b, a));
+    }
+    return list;
+  }, [owned, query, tierHighFirst]);
 
   const towerCards = useMemo(() => {
-    if (!tower) return [] as MonkeyCardSpec[];
-    return (TOWER_SPECS[tower] ?? []).filter((c) => owned.has(c.id));
-  }, [tower, owned]);
+    if (view.kind !== "tower") return [];
+    const base = TOWER_SPECS[view.name] ?? [];
+    if (!tierHighFirst) return base;
+    return base.slice().sort((a, b) => sortCardSpecs(b, a));
+  }, [view, tierHighFirst]);
 
-  function pick(cardId: string) {
-    if (disabled || blocked.has(cardId)) return;
-    if (!selectedIds.has(cardId) && maxSelected != null) {
-      if (selectedIds.size >= maxSelected) {
-        onMaxReached?.();
-        return;
+  const selectedMeta =
+    view.kind === "tower"
+      ? (TOWER_CHOICES.find((t) => t.name === view.name) ?? null)
+      : null;
+
+  const ownedInTower = useMemo(
+    () => towerCards.reduce((n, c) => n + (owned.has(c.id) ? 1 : 0), 0),
+    [towerCards, owned],
+  );
+
+  function toggle(cardId: string) {
+    if (disabled || blocked.has(cardId) || !owned.has(cardId)) return;
+    setDraft((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+        return next;
       }
-    }
-    onToggle(cardId);
+      if (!multi) return new Set([cardId]);
+      if (maxSelected != null && next.size >= maxSelected) return prev;
+      next.add(cardId);
+      return next;
+    });
   }
 
-  function renderCardGrid(cards: MonkeyCardSpec[]) {
+  function renderOwnedGrid(cards: MonkeyCardSpec[]) {
     return (
-      <div className="owned-picker__grid">
+      <div className="card-lab__grid pick-grid">
         {cards.map((card) => {
-          const on = selectedIds.has(card.id);
+          const on = draft.has(card.id);
           const unavailable = blocked.has(card.id);
           return (
             <button
               key={card.id}
               type="button"
-              className={`owned-picker__card${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}`}
+              className={`pick-grid__card${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}`}
               disabled={disabled || unavailable}
               aria-pressed={on}
               title={unavailable ? unavailableLabel : undefined}
-              onClick={() => pick(card.id)}
+              onClick={() => toggle(card.id)}
             >
               <MonkeyCard
                 entity={card.entity}
@@ -138,13 +195,13 @@ export function OwnedCardPicker({
                 owned
                 staticArt
               />
-              <span className="owned-picker__card-tag">
-                {unavailable
-                  ? unavailableLabel
-                  : on
-                    ? "Selected"
-                    : "Select"}
-              </span>
+              {unavailable ? (
+                <span className="pick-grid__badge">{unavailableLabel}</span>
+              ) : on ? (
+                <span className="pick-grid__badge pick-grid__badge--on">
+                  Selected
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -152,79 +209,255 @@ export function OwnedCardPicker({
     );
   }
 
-  return (
-    <div className="owned-picker">
-      <label className="owned-picker__search">
-        <span>Search cards</span>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (e.target.value.trim().length >= 2) setTower(null);
-          }}
-          placeholder="Type a name… or open a tower below"
-          autoComplete="off"
-        />
-      </label>
-
-      {searching ? (
-        <div className="owned-picker__results">
-          <p className="owned-picker__hint">
-            {searchResults.length} card{searchResults.length === 1 ? "" : "s"}
-          </p>
-          {searchResults.length === 0 ? (
-            <p className="owned-picker__empty">No owned cards match.</p>
-          ) : (
-            renderCardGrid(searchResults)
-          )}
-        </div>
-      ) : tower ? (
-        <div className="owned-picker__results">
-          <div className="owned-picker__tower-bar">
+  function renderTowerGrid() {
+    return (
+      <div className="card-lab__grid pick-grid">
+        {towerCards.map((card) => {
+          const isOwned = owned.has(card.id);
+          const on = draft.has(card.id);
+          const unavailable = blocked.has(card.id);
+          const canSelect = isOwned && !unavailable && !disabled;
+          return (
             <button
+              key={card.id}
               type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => setTower(null)}
+              className={`pick-grid__card${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}${!isOwned ? " is-locked" : ""}`}
+              disabled={!canSelect}
+              aria-pressed={on}
+              title={
+                unavailable
+                  ? unavailableLabel
+                  : !isOwned
+                    ? "Locked"
+                    : undefined
+              }
+              onClick={() => {
+                if (canSelect) toggle(card.id);
+              }}
             >
-              ← Towers
-            </button>
-            <h3>{tower}</h3>
-            <span>{towerCards.length} owned</span>
-          </div>
-          {towerCards.length === 0 ? (
-            <p className="owned-picker__empty">
-              You don’t own any {tower} cards.
-            </p>
-          ) : (
-            renderCardGrid(towerCards)
-          )}
-        </div>
-      ) : (
-        <div className="owned-picker__towers" role="list">
-          {towerList.map((t) => {
-            const n = ownedByTower.get(t.name) ?? 0;
-            return (
-              <button
-                key={t.name}
-                type="button"
-                role="listitem"
-                className="owned-picker__tower"
-                disabled={n === 0 || disabled}
-                onClick={() => setTower(t.name)}
-              >
-                <img src={t.image} alt="" draggable={false} loading="lazy" />
-                <span className="owned-picker__tower-meta">
-                  <strong>{t.name}</strong>
-                  <span>
-                    {t.category} · {n} owned
-                  </span>
+              <MonkeyCard
+                entity={card.entity}
+                pathLevels={card.pathLevels}
+                mode="preview"
+                owned={isOwned}
+                staticArt
+              />
+              {unavailable && isOwned ? (
+                <span className="pick-grid__badge">{unavailableLabel}</span>
+              ) : on ? (
+                <span className="pick-grid__badge pick-grid__badge--on">
+                  Selected
                 </span>
-              </button>
-            );
-          })}
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const sortToggle = (
+    <button
+      type="button"
+      className="btn btn--ghost btn--sm card-lab__sort"
+      onClick={() => setTierHighFirst((v) => !v)}
+      aria-pressed={tierHighFirst}
+    >
+      {tierHighFirst ? "Tier · high → low" : "Tier · low → high"}
+    </button>
+  );
+
+  const draftCount = draft.size;
+  const dirty =
+    draftCount !== selectedIds.size ||
+    [...draft].some((id) => !selectedIds.has(id));
+
+  const dock = (
+    <div className="pick-dock">
+      <div className="pick-dock__meta">
+        <strong>
+          {draftCount === 0
+            ? "None selected"
+            : `${draftCount} selected`}
+        </strong>
+        {maxSelected != null ? (
+          <span>
+            {draftCount}/{maxSelected}
+          </span>
+        ) : null}
+      </div>
+      {dockExtra ? <div className="pick-dock__extra">{dockExtra}</div> : null}
+      <button
+        type="button"
+        className="btn btn--primary pick-dock__confirm"
+        disabled={disabled || draftCount === 0 || (!dirty && multi)}
+        onClick={() => onConfirm([...draft])}
+      >
+        {confirmLabel}
+      </button>
+    </div>
+  );
+
+  // ——— Towers ———
+  if (view.kind === "towers") {
+    return (
+      <div className="card-lab card-lab--picker">
+        <div className="card-lab__picker">
+          <button
+            type="button"
+            className="card-lab__all-btn"
+            onClick={() => {
+              setQuery("");
+              setView({ kind: "all" });
+            }}
+          >
+            <span className="card-lab__all-btn-title">All Cards</span>
+            <span className="card-lab__all-btn-meta">
+              {owned.size} owned · tap to select
+            </span>
+          </button>
+
+          <label className="card-lab__search">
+            <span className="card-lab__search-label">Search towers</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Dart Monkey, Ninja, Military…"
+              autoComplete="off"
+            />
+          </label>
+
+          <div className="card-lab__tower-list" role="list">
+            {filteredTowers.map((tower) => {
+              const specs = TOWER_SPECS[tower.name] ?? [];
+              const ownedN = specs.reduce(
+                (n, c) => n + (owned.has(c.id) ? 1 : 0),
+                0,
+              );
+              return (
+                <button
+                  key={tower.name}
+                  type="button"
+                  role="listitem"
+                  className="card-lab__tower-btn"
+                  disabled={ownedN === 0}
+                  onClick={() => {
+                    setQuery("");
+                    setView({ kind: "tower", name: tower.name });
+                  }}
+                >
+                  <img
+                    src={tower.image}
+                    alt=""
+                    draggable={false}
+                    loading="lazy"
+                  />
+                  <span className="card-lab__tower-text">
+                    <span className="card-lab__tower-name">{tower.name}</span>
+                    <span className="card-lab__tower-meta">
+                      {tower.category} · {ownedN}/{tower.cardCount} owned
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+            {filteredTowers.length === 0 ? (
+              <p className="card-lab__hint">No towers match “{query}”.</p>
+            ) : null}
+          </div>
         </div>
-      )}
+        {dock}
+      </div>
+    );
+  }
+
+  // ——— All owned ———
+  if (view.kind === "all") {
+    return (
+      <div className="card-lab card-lab--picker">
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => {
+              setQuery("");
+              setView({ kind: "towers" });
+            }}
+          >
+            ← Towers
+          </button>
+          <div className="card-lab__titles card-lab__titles--tower">
+            <p className="eyebrow">Owned</p>
+            <h1>All Cards</h1>
+            <p className="card-lab__blurb">
+              Tap cards to select them, then press {confirmLabel} below.
+            </p>
+          </div>
+        </header>
+
+        <div className="card-lab__toolbar">
+          <label className="card-lab__search card-lab__search--inline">
+            <span className="card-lab__search-label">Search your cards</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tower, upgrade name, 0-2-5…"
+              autoComplete="off"
+              autoFocus
+            />
+          </label>
+          {sortToggle}
+        </div>
+
+        {ownedAllCards.length === 0 ? (
+          <p className="card-lab__hint">
+            {owned.size === 0
+              ? "No cards yet."
+              : `No owned cards match “${query}”.`}
+          </p>
+        ) : (
+          renderOwnedGrid(ownedAllCards)
+        )}
+        {dock}
+      </div>
+    );
+  }
+
+  // ——— Single tower ———
+  const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;
+
+  return (
+    <div className="card-lab card-lab--picker">
+      <header className="card-lab__header">
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          onClick={() => setView({ kind: "towers" })}
+        >
+          ← Towers
+        </button>
+        <div className="card-lab__titles card-lab__titles--tower">
+          <p className="eyebrow">{selectedMeta?.category ?? "Tower"}</p>
+          <h1 className="card-lab__tower-heading">
+            {portrait ? (
+              <img src={portrait} alt="" draggable={false} />
+            ) : null}
+            {view.name}
+          </h1>
+          <p className="card-lab__blurb">
+            {ownedInTower}/{towerCards.length} owned · tap cards to select.
+          </p>
+        </div>
+      </header>
+
+      <div className="card-lab__toolbar card-lab__toolbar--end">
+        {sortToggle}
+      </div>
+
+      {renderTowerGrid()}
+      {dock}
     </div>
   );
 }

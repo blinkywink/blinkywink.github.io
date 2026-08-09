@@ -171,7 +171,11 @@ export function ProfilePage() {
                 <OwnedCardPicker
                   owned={owned}
                   selectedIds={pickSelected}
-                  onToggle={(cardId) => {
+                  multi={false}
+                  confirmLabel="Use card"
+                  onConfirm={(ids) => {
+                    const cardId = ids[0];
+                    if (!cardId) return;
                     setDraft({
                       cardId,
                       zoom: DEFAULT_AVATAR_CROP.zoom,

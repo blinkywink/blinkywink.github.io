@@ -366,8 +366,8 @@ export function TradeRoom() {
           <section className="trade-picker">
             <h3>Add from your collection</h3>
             <p className="trade-picker__note">
-              Cards they already own are greyed out (unless they’re offering that
-              same card away).
+              Same layout as your collection. Tap cards to select, then Add to
+              trade. Cards they already own are greyed out.
             </p>
             <OwnedCardPicker
               owned={owned}
@@ -376,8 +376,14 @@ export function TradeRoom() {
               unavailableLabel="They own this"
               disabled={busy}
               maxSelected={8}
-              onMaxReached={() => setError("Max 8 cards on your side.")}
-              onToggle={toggleCard}
+              confirmLabel={busy ? "Updating…" : "Add to trade"}
+              onConfirm={(ids) => {
+                if (ids.length > 8) {
+                  setError("Max 8 cards on your side.");
+                  return;
+                }
+                void syncOffer(ids);
+              }}
             />
           </section>
         ) : null}

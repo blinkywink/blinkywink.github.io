@@ -159,18 +159,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
     return mine.slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }, [listings, user]);
 
-  const selectedList = useMemo(() => [...selected], [selected]);
-
-  const toggleSelect = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const postListings = async () => {
+  const postListings = async (cardIds?: string[]) => {
     if (isGuest || !user) {
       setError("Sign in to sell cards.");
       return;
@@ -180,7 +169,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setError("Price must be at least 10 Cash.");
       return;
     }
-    if (selected.size === 0) {
+    const toList = cardIds?.length ? cardIds : [...selected];
+    if (toList.length === 0) {
       setError("Select at least one card to sell.");
       return;
     }
@@ -189,7 +179,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
     setStatus(null);
     let ok = 0;
     try {
-      for (const cardId of selected) {
+      for (const cardId of toList) {
         await listCardForSale(cardId, price);
         ok += 1;
       }
@@ -412,33 +402,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </div>
         ) : null}
 
-        {tab === "sell" ? (
-          <div className="market-sell-bar">
-            <label className="market-price">
-              <span>Price each</span>
-              <input
-                type="number"
-                min={10}
-                step={10}
-                value={priceInput}
-                onChange={(e) => setPriceInput(e.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              className="btn btn--primary"
-              disabled={busyId != null || selected.size === 0 || isGuest}
-              onClick={() => void postListings()}
-            >
-              {busyId === "sell"
-                ? "Listing…"
-                : selected.size
-                  ? `List ${selected.size}`
-                  : "List"}
-            </button>
-          </div>
-        ) : null}
-
         {loading ? (
           <p className="market-empty">Loading…</p>
         ) : tab === "browse" ? (
@@ -483,46 +446,32 @@ export function Marketplace({ onBack: _onBack }: Props) {
           )
         ) : (
           <div className="market-sell-pick">
-            {selectedList.length > 0 ? (
-              <div className="market-selected">
-                <p className="market-selected__label">
-                  Selected ({selectedList.length}) — tap to remove
-                </p>
-                <div className="owned-picker__grid owned-picker__grid--compact">
-                  {selectedList.map((id) => {
-                    const card = cardSpecById(id);
-                    if (!card) return null;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        className="owned-picker__card is-selected"
-                        disabled={busyId != null || isGuest}
-                        onClick={() => toggleSelect(id)}
-                      >
-                        <MonkeyCard
-                          entity={card.entity}
-                          pathLevels={card.pathLevels}
-                          mode="preview"
-                          owned
-                          staticArt
-                        />
-                        <span className="owned-picker__card-tag">Remove</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <p className="market-empty">
-                Open a tower or search — then list at one price.
-              </p>
-            )}
+            <p className="market-empty">
+              Same as your collection — tap cards, set a price, then List below.
+            </p>
             <OwnedCardPicker
               owned={owned}
               selectedIds={selected}
               disabled={busyId != null || isGuest}
-              onToggle={toggleSelect}
+              confirmLabel={
+                busyId === "sell" ? "Listing…" : "List selected"
+              }
+              onConfirm={(ids) => {
+                setSelected(new Set(ids));
+                void postListings(ids);
+              }}
+              dockExtra={
+                <label className="market-price market-price--dock">
+                  <span>Price each</span>
+                  <input
+                    type="number"
+                    min={10}
+                    step={10}
+                    value={priceInput}
+                    onChange={(e) => setPriceInput(e.target.value)}
+                  />
+                </label>
+              }
             />
           </div>
         )}
