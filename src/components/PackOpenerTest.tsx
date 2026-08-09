@@ -18,7 +18,6 @@ import {
 import { awardCoins } from "../lib/awardCoins";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
-import { CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
 const SLASH_NEED = 90;
@@ -917,23 +916,29 @@ export function PackOpenerTest({
 
           {phase === "shop" ? (
             <div className="pack-opener__buy">
-              <CurrencyChip amount={price} />
+              <span className="pack-shelf__label">
+                <strong>{pack.title}</strong>
+                <span className="pack-shelf__price">
+                  <img
+                    src="/images/ui/money-icon.webp"
+                    alt=""
+                    width={22}
+                    height={22}
+                  />
+                  {price.toLocaleString()}
+                </span>
+              </span>
               <button
                 type="button"
-                className="btn btn--primary btn--lg"
+                className="btn btn--primary"
                 disabled={buyBusy}
                 onClick={() => void purchase()}
               >
-                {buyBusy ? "Buying…" : "Purchase · Space"}
+                {buyBusy ? "Buying…" : "Buy"}
               </button>
               {buyError ? (
                 <p className="pack-opener__buy-error">{buyError}</p>
-              ) : (
-                <p className="pack-opener__buy-note">
-                  Balance {(profile?.coins ?? 0).toLocaleString()} · dupes scale
-                  by tier
-                </p>
-              )}
+              ) : null}
             </div>
           ) : null}
           </div>

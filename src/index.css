@@ -5959,8 +5959,20 @@ body:has(.zoomed-page) {
 .pack-opener__buy {
   display: grid;
   justify-items: center;
-  gap: 0.65rem;
-  margin-top: 0.35rem;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+}
+
+.pack-opener__buy .pack-shelf__label strong {
+  font-size: 1.05rem;
+}
+
+.pack-opener__buy .pack-shelf__price {
+  font-size: 1.15rem;
+}
+
+.pack-opener__buy .btn {
+  min-width: 7.5rem;
 }
 
 .pack-opener__buy-error {
