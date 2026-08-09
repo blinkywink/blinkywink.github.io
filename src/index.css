@@ -3556,7 +3556,8 @@ body:has(.zoomed-page) {
 
 .monkey-card-scene--preview {
   cursor: pointer;
-  touch-action: manipulation;
+  /* Allow list scrolling; .monkey-card-scene sets touch-action:none for tilt */
+  touch-action: pan-y;
 }
 
 .card-lab__grid .monkey-card-scene--preview:hover {
@@ -3719,6 +3720,12 @@ body:has(.zoomed-page) {
   /* Stable hit target — does not tilt with the card */
   touch-action: none;
   cursor: grab;
+}
+
+/* Preview thumbs must scroll with the page; keep above the tilt rule. */
+.monkey-card-scene.monkey-card-scene--preview {
+  touch-action: pan-y;
+  cursor: pointer;
 }
 
 .monkey-card {

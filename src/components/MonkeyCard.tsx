@@ -172,6 +172,12 @@ export function MonkeyCard({
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const tapGesture = useRef<{
+    x: number;
+    y: number;
+    moved: boolean;
+    pointerId: number;
+  } | null>(null);
   const [active, setActive] = useState(false);
 
   const isParagon = entity.type === "paragon";
@@ -315,13 +321,57 @@ export function MonkeyCard({
     card.style.setProperty("--opacity", "0.52");
   }, []);
 
+  const endTapGesture = useCallback(() => {
+    const g = tapGesture.current;
+    tapGesture.current = null;
+    return g;
+  }, []);
+
   const interactiveProps = isPreview
     ? {
         role: "button" as const,
         tabIndex: locked ? -1 : 0,
         "aria-disabled": locked || undefined,
+        onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+          if (locked) return;
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          tapGesture.current = {
+            x: e.clientX,
+            y: e.clientY,
+            moved: false,
+            pointerId: e.pointerId,
+          };
+          const markMoved = () => {
+            if (tapGesture.current) tapGesture.current.moved = true;
+          };
+          const cleanup = () => {
+            window.removeEventListener("scroll", markMoved, true);
+            window.removeEventListener("pointerup", cleanup, true);
+            window.removeEventListener("pointercancel", cleanup, true);
+          };
+          // Parent list scroll often won't send move events to the card.
+          window.addEventListener("scroll", markMoved, {
+            capture: true,
+            passive: true,
+          });
+          window.addEventListener("pointerup", cleanup, true);
+          window.addEventListener("pointercancel", cleanup, true);
+        },
+        onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+          const g = tapGesture.current;
+          if (!g || g.moved || g.pointerId !== e.pointerId) return;
+          const dx = e.clientX - g.x;
+          const dy = e.clientY - g.y;
+          if (dx * dx + dy * dy > 100) g.moved = true;
+        },
+        onPointerCancel: () => {
+          endTapGesture();
+        },
         onClick: () => {
           if (locked) return;
+          const g = endTapGesture();
+          // Ignore click after a finger/mouse drag (scroll / swipe).
+          if (g?.moved) return;
           onSelect?.();
         },
         onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
