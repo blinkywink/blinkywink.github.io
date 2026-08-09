@@ -28,9 +28,19 @@ const SWIPE_DEADZONE = 16;
 const CARD_ENTER_MS = 240;
 const CARD_EXIT_MS = 150;
 const SLICE_REVEAL_MS = 420;
+/** While holding Space, T4 cards force a beat so you can see them. */
+const T4_SPACE_HOLD_MS = 1500;
 
 type Phase = "shop" | "sealed" | "sliced" | "enter" | "ready" | "exit" | "done";
 type Pt = { x: number; y: number }; // % of pack box
+type SpaceHoldGate = "none" | "t4" | "rare";
+
+function spaceHoldGate(card: MonkeyCardSpec | null | undefined): SpaceHoldGate {
+  if (!card) return "none";
+  if (card.isParagon || maxPathTier(card.pathLevels) >= 5) return "rare";
+  if (maxPathTier(card.pathLevels) >= 4) return "t4";
+  return "none";
+}
 
 function buildPackPool(pack: PackDef): MonkeyCardSpec[] {
   if (pack.kind === "tower" && pack.tower) {
@@ -216,6 +226,12 @@ export function PackOpenerTest({
   const duplicateCashRef = useRef(0);
   const packRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
+  /** Space currently down (incl. held through card changes). */
+  const spaceHeldRef = useRef(false);
+  /** T5 / Paragon: ignore Space until they release and press again. */
+  const needFreshSpaceRef = useRef(false);
+  /** When the current card became ready (for T4 hold gate). */
+  const readyAtRef = useRef(0);
 
   const clearTimers = () => {
     for (const id of timers.current) window.clearTimeout(id);
@@ -253,6 +269,9 @@ export function PackOpenerTest({
     setExitDir({ x: 0, y: -1 });
     drawing.current = false;
     swipeOrigin.current = null;
+    spaceHeldRef.current = false;
+    needFreshSpaceRef.current = false;
+    readyAtRef.current = 0;
     setBuyBusy(false);
     setBuyError(null);
   }, []);
@@ -277,6 +296,8 @@ export function PackOpenerTest({
     setExitDir({ x: 0, y: -1 });
     drawing.current = false;
     swipeOrigin.current = null;
+    needFreshSpaceRef.current = false;
+    readyAtRef.current = 0;
     setBuyError(null);
     setPhaseBoth("sealed");
   }, []);
@@ -333,8 +354,32 @@ export function PackOpenerTest({
     dragRef.current = { x: 0, y: 0 };
     setPhaseBoth("enter");
     later(() => {
-      if (phaseRef.current === "enter") setPhaseBoth("ready");
+      if (phaseRef.current !== "enter") return;
+      readyAtRef.current = performance.now();
+      const gate = spaceHoldGate(pullsRef.current[i]);
+      // Holding Space through a rare pull: force a fresh press.
+      if (gate === "rare" && spaceHeldRef.current) {
+        needFreshSpaceRef.current = true;
+      }
+      setPhaseBoth("ready");
     }, CARD_ENTER_MS);
+  }, []);
+
+  const spaceCanFling = useCallback((e: KeyboardEvent): boolean => {
+    const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
+    if (gate === "rare") {
+      // No key-repeat / hold-through — must let go and press again.
+      if (e.repeat || needFreshSpaceRef.current) return false;
+      return true;
+    }
+    if (gate === "t4") {
+      // Pause auto-hold long enough to read the card, then hold can resume.
+      if (performance.now() - readyAtRef.current < T4_SPACE_HOLD_MS) {
+        return false;
+      }
+      return true;
+    }
+    return true;
   }, []);
 
   const beginDraw = useCallback(
@@ -464,21 +509,44 @@ export function PackOpenerTest({
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.code !== "Space" && e.key !== " ") return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       e.preventDefault();
+      spaceHeldRef.current = true;
       if (buyBusy) return;
       const p = phaseRef.current;
-      if (p === "shop") void purchase();
-      else if (p === "sealed") autoSlashOpen();
-      else if (p === "ready") flingAway();
-      else if (p === "done") void buyAnother();
+      if (p === "shop") {
+        if (!e.repeat) void purchase();
+      } else if (p === "sealed") {
+        if (!e.repeat) autoSlashOpen();
+      } else if (p === "ready") {
+        if (spaceCanFling(e)) flingAway();
+      } else if (p === "done") {
+        if (!e.repeat) void buyAnother();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, autoSlashOpen, flingAway, purchase, buyAnother, buyBusy]);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" && e.key !== " ") return;
+      spaceHeldRef.current = false;
+      needFreshSpaceRef.current = false;
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [
+    open,
+    autoSlashOpen,
+    flingAway,
+    purchase,
+    buyAnother,
+    buyBusy,
+    spaceCanFling,
+  ]);
 
   /** Pack-local % — not clamped, so the streak can start/end off the pack. */
   const localPoint = (e: React.PointerEvent): Pt | null => {
@@ -575,11 +643,15 @@ export function PackOpenerTest({
       ? "paragon"
       : maxPathTier(current.pathLevels) >= 5
         ? "t5"
-        : null
+        : maxPathTier(current.pathLevels) >= 4
+          ? "t4"
+          : null
     : null;
-  const showRareFx =
+  const showTierGlow =
     Boolean(currentTier) &&
     (phase === "enter" || phase === "ready" || phase === "exit");
+  const showRareFx =
+    (currentTier === "t5" || currentTier === "paragon") && showTierGlow;
   const showPack =
     phase === "shop" || phase === "sealed" || phase === "sliced";
   const showCard =
@@ -658,7 +730,11 @@ export function PackOpenerTest({
             {(phase === "enter" || phase === "ready" || phase === "exit") &&
               (godPack
                 ? `GOD PACK · ${index + 1}/${pack.cardCount}`
-                : `${index + 1}/${pack.cardCount} · swipe / Space`)}
+                : currentTier === "paragon" || currentTier === "t5"
+                  ? `${index + 1}/${pack.cardCount} · tap Space / swipe`
+                  : spaceHoldGate(current) === "t4"
+                    ? `${index + 1}/${pack.cardCount} · hold pauses · Space / swipe`
+                    : `${index + 1}/${pack.cardCount} · swipe / Space`)}
           </p>
 
           {godPack &&
@@ -763,6 +839,7 @@ export function PackOpenerTest({
                   "pack-opener__card",
                   `pack-opener__card--${phase}`,
                   currentIsDup ? "is-duplicate" : "",
+                  currentTier ? `is-glow-${currentTier}` : "",
                   currentTier === "t5" ? "is-rare-t5" : "",
                   currentTier === "paragon" ? "is-rare-paragon" : "",
                 ]
@@ -774,7 +851,13 @@ export function PackOpenerTest({
                 onPointerUpCapture={onCardPointerUp}
                 onPointerCancelCapture={onCardPointerUp}
               >
-                {showRareFx ? (
+                {showTierGlow ? (
+                  <div
+                    className={`pack-opener__card-glow pack-opener__card-glow--${currentTier}`}
+                    aria-hidden
+                  />
+                ) : null}
+                {showRareFx && currentTier !== "paragon" ? (
                   <div
                     className={`pack-opener__rare-burst pack-opener__rare-burst--${currentTier}`}
                     aria-hidden
