@@ -7279,42 +7279,81 @@ button.trade-offer-card:hover:not(:disabled) {
   position: relative;
   display: inline-block;
   flex-shrink: 0;
-  border-radius: 999px;
+  width: var(--avatar-size, 36px);
+  height: var(--avatar-size, 36px);
+  border-radius: 50%;
   overflow: hidden;
+  /* Chrome: overflow+border-radius often fails to clip transformed kids — mask fixes it. */
+  -webkit-mask-image: radial-gradient(circle closest-side at center, #000 99.5%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side at center, #000 99.5%, transparent 100%);
   background: #1a1a22;
   border: 2px solid #3a3a44;
+  box-sizing: border-box;
   vertical-align: middle;
-  contain: layout paint;
-  content-visibility: auto;
+  isolation: isolate;
+  /* Don’t paint hover/focus chrome from MonkeyCard inside PFPs */
+  pointer-events: none;
 }
 
 .user-avatar__card {
   position: absolute;
   pointer-events: none;
   user-select: none;
-  will-change: transform;
+  /* Avoid creating a sticky compositor layer that drifts under Chrome scroll/zoom */
+  will-change: auto;
+  transform-origin: center center;
 }
 
+.user-avatar__card .monkey-card-scene,
 .user-avatar__card .monkey-card-scene--preview {
-  width: var(--card-preview-w);
-  height: var(--card-preview-h);
+  width: var(--card-preview-w) !important;
+  height: var(--card-preview-h) !important;
   position: relative;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
-  cursor: default;
+  cursor: default !important;
+  perspective: none !important;
+  transform: none !important;
+  transition: none !important;
+  z-index: 0 !important;
+  touch-action: none;
+}
+
+.user-avatar__card .monkey-card-scene--preview:hover,
+.user-avatar__card .monkey-card-scene--preview:focus-visible {
+  transform: none !important;
+  outline: none !important;
+  z-index: 0 !important;
 }
 
 .user-avatar__card .monkey-card-scene--preview > .monkey-card {
+  --opacity: 0 !important;
+  position: absolute;
+  left: 0;
+  top: 0;
   width: var(--card-face-w);
   height: calc(var(--card-face-w) * 3.5 / 2.5);
   transform: scale(var(--card-preview-scale));
   transform-origin: top left;
+  transform-style: flat;
+  transition: none !important;
+  will-change: auto;
+}
+
+/* Kill foil/motion layers inside tiny PFPs — they glitch in Chrome. */
+.user-avatar__card .monkey-card__foil,
+.user-avatar__card .monkey-card__glare,
+.user-avatar__card .monkey-card__spark,
+.user-avatar__card .monkey-card__glow,
+.user-avatar__card .monkey-card__shadow {
+  display: none !important;
 }
 
 .user-avatar--fallback {
   display: inline-grid;
   place-items: center;
   color: #f0f0f4;
+  pointer-events: none;
 }
 
 .user-avatar--fallback svg {

@@ -912,7 +912,12 @@ export function CardVisualizerBg({
     };
 
     let start = performance.now();
+    let visible = true;
     const tick = (now: number) => {
+      if (!visible) {
+        rafRef.current = null;
+        return;
+      }
       const t = (now - start) / 1000;
       draw(animated ? t : 0);
       if (animated) {
@@ -921,17 +926,42 @@ export function CardVisualizerBg({
     };
 
     draw(0);
-    if (animated) {
-      rafRef.current = requestAnimationFrame(tick);
-    }
 
     const ro = new ResizeObserver(() => {
+      if (!visible) return;
       draw(animated ? (performance.now() - start) / 1000 : 0);
     });
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
+    let io: IntersectionObserver | null = null;
+    if (animated && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          const next = Boolean(entry?.isIntersecting);
+          if (next === visible) return;
+          visible = next;
+          if (visible) {
+            start = performance.now();
+            if (rafRef.current == null) {
+              rafRef.current = requestAnimationFrame(tick);
+            }
+          } else if (rafRef.current != null) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+          }
+        },
+        { rootMargin: "48px", threshold: 0.01 },
+      );
+      io.observe(canvas);
+    }
+
+    if (animated) {
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
     return () => {
       ro.disconnect();
+      io?.disconnect();
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
   }, [seed, colors, animated, intensity]);
