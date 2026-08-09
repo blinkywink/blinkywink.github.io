@@ -4,11 +4,11 @@ import {
 } from "./pathCombos";
 
 /** Chance the pack includes one T5 (replaces a filler slot when any exist). */
-export const PACK_T5_CHANCE = 1 / 10;
+export const PACK_T5_CHANCE = 1 / 40;
 /** Chance the pack includes one Paragon (replaces a filler slot when any exist). */
-export const PACK_PARAGON_CHANCE = 1 / 20;
+export const PACK_PARAGON_CHANCE = 1 / 80;
 /** Ultra-rare all-highs pack. */
-export const PACK_GOD_CHANCE = 1 / 100;
+export const PACK_GOD_CHANCE = 1 / 400;
 /** Cash paid when a pulled card is already owned. */
 export const PACK_DUPLICATE_CASH = 70;
 
@@ -237,7 +237,7 @@ function pullNormalPackCards(
 
 /**
  * Open a pack:
- * - 1% god pack (all T4+, usually with a Paragon)
+ * - 0.25% god pack (all T4+, usually with a Paragon)
  * - otherwise weighted commons + rare injects
  * - early collections heavily prefer new cards; dups ramp as you complete the pool
  * - duplicates convert to Cash in the opener

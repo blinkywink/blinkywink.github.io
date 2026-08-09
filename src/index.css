@@ -501,8 +501,9 @@ body:has(.zoomed-page) {
 }
 
 .home-hub__row--cards {
-  grid-template-columns: repeat(3, var(--card-preview-w));
-  justify-content: start;
+  width: 100%;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  justify-content: stretch;
   column-gap: var(--hub-card-gap);
 }
 
@@ -514,15 +515,21 @@ body:has(.zoomed-page) {
   display: grid;
   gap: 0.4rem;
   justify-items: center;
-  width: var(--card-preview-w);
-  min-width: var(--card-preview-w);
+  width: 100%;
+  min-width: 0;
   overflow: visible;
+  container-type: inline-size;
+  container-name: hub-card;
 }
 
 .home-hub__card-cell .monkey-card-scene--preview {
-  width: var(--card-preview-w);
-  /* A few px taller than the face so the rail isn’t flush against the clip */
-  height: calc(var(--card-preview-h) + 6px);
+  /* Fill the column so the row matches Games/Shop width */
+  --hub-local-w: 100cqi;
+  --card-preview-w: var(--hub-local-w);
+  --card-preview-scale: calc(var(--hub-local-w) / var(--card-face-w));
+  --card-preview-h: calc(var(--hub-local-w) * 3.5 / 2.5);
+  width: var(--hub-local-w);
+  height: calc(var(--hub-local-w) * 3.5 / 2.5 + 6px);
   position: relative;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
@@ -630,9 +637,11 @@ body:has(.zoomed-page) {
 
 @media (max-width: 900px) {
   .home-hub {
-    --card-preview-w: 168px;
-    --card-preview-scale: 0.42;
     gap: 1.6rem;
+  }
+
+  .home-hub__row--cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .home-hub__row--players {
@@ -646,8 +655,7 @@ body:has(.zoomed-page) {
 
 @media (max-width: 640px) {
   .home-hub {
-    --card-preview-w: 148px;
-    --card-preview-scale: 0.37;
+    gap: 1.45rem;
   }
 
   .home-hub__row--packs {
@@ -655,7 +663,7 @@ body:has(.zoomed-page) {
   }
 
   .home-hub__row--cards {
-    grid-template-columns: repeat(2, var(--card-preview-w));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .home-hub__row--players {

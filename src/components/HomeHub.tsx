@@ -49,7 +49,7 @@ export function HomeHub() {
     void (async () => {
       try {
         const rows = await fetchMarketplaceListings();
-        if (!cancelled) setListings(rows.slice(0, 3));
+        if (!cancelled) setListings(rows.slice(0, 6));
       } catch {
         if (!cancelled) setListings([]);
       }
@@ -100,8 +100,11 @@ export function HomeHub() {
 
   const sampleCards = useMemo(() => {
     const ids = [
+      "dart-monkey-0-0-0",
       "ninja-monkey-5-0-0",
       "super-monkey-0-5-0",
+      "wizard-monkey-5-0-0",
+      "bomb-shooter-0-5-0",
       "ice-monkey-paragon",
     ];
     return ids.map((id) => cardSpecById(id)).filter(Boolean);
