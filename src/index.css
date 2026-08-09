@@ -10202,6 +10202,7 @@ button.trade-offer-card:hover:not(:disabled) {
   border-radius: calc(22px * 0.42);
   overflow: hidden;
   isolation: isolate;
+  contain: paint;
   container-type: inline-size;
   border: 1px solid
     color-mix(in srgb, var(--hero-primary) 48%, rgba(255, 255, 255, 0.16));
@@ -10372,19 +10373,22 @@ button.trade-offer-card:hover:not(:disabled) {
 .hero-card--tier-0 .hero-card__holo { opacity: 0.2; }
 .hero-card--tier-1 .hero-card__holo { opacity: 0.45; }
 .hero-card--tier-2 .hero-card__holo,
-.hero-card--tier-3 .hero-card__holo { opacity: 0.65; mix-blend-mode: color-dodge; }
+.hero-card--tier-3 .hero-card__holo { opacity: 0.55; mix-blend-mode: soft-light; }
 .hero-card--tier-4 .hero-card__holo {
-  opacity: 0.85;
-  mix-blend-mode: screen;
+  opacity: 0.6;
+  mix-blend-mode: soft-light;
 }
 
-/* Shared VFX layer base — each tier enables different ones */
+/* Shared VFX layer base — animates transform/opacity only (GPU-cheap) */
 .hero-card__vfx {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0;
   z-index: 3;
+  contain: strict;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .hero-card__frame {
@@ -10397,12 +10401,11 @@ button.trade-offer-card:hover:not(:disabled) {
   box-shadow: inset 0 0 0 1px transparent;
 }
 
-/* Tier 1+: drifting light wash — fullscreen focus only */
+/* Tier 1–3: drifting light wash */
 .hero-card--live-fx.hero-card--tier-1 .hero-card__vfx--drift,
 .hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--drift,
-.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--drift,
-.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--drift {
-  opacity: 0.7;
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--drift {
+  opacity: 0.65;
   background:
     radial-gradient(
       40% 28% at 20% 30%,
@@ -10414,80 +10417,68 @@ button.trade-offer-card:hover:not(:disabled) {
       color-mix(in srgb, var(--hero-secondary) 45%, transparent),
       transparent 70%
     );
-  mix-blend-mode: screen;
-  animation: hero-vfx-drift 7.5s ease-in-out infinite alternate;
+  mix-blend-mode: soft-light;
+  animation: hero-vfx-drift 8s ease-in-out infinite alternate;
 }
 
-/* Tier 2+: diagonal energy sweep */
+/* Tier 2+: translating shine band (transform, not background-position) */
 .hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--sweep,
 .hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--sweep,
 .hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--sweep {
-  opacity: 0.85;
+  opacity: 0.7;
+  inset: -10% -40%;
   background: linear-gradient(
     118deg,
-    transparent 35%,
-    color-mix(in srgb, var(--hero-primary) 55%, white) 48%,
-    color-mix(in srgb, var(--hero-tertiary) 40%, transparent) 52%,
-    transparent 65%
+    transparent 42%,
+    color-mix(in srgb, var(--hero-primary) 50%, white) 50%,
+    transparent 58%
   );
-  background-size: 220% 220%;
   mix-blend-mode: soft-light;
-  animation: hero-vfx-sweep 3.8s linear infinite;
+  animation: hero-vfx-sweep 4.2s linear infinite;
 }
 
-/* Tier 2+: floating orb dots */
+/* Tier 2–3: floating orb dots */
 .hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--orbs,
-.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--orbs,
-.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--orbs {
-  opacity: 1;
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--orbs {
+  opacity: 0.9;
   background:
     radial-gradient(circle at 22% 28%, var(--hero-tertiary) 0 2px, transparent 3px),
     radial-gradient(circle at 74% 38%, var(--hero-primary) 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 40% 72%, var(--hero-secondary) 0 2px, transparent 3px),
     radial-gradient(circle at 82% 78%, var(--hero-tertiary) 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 55% 18%, white 0 1px, transparent 2px);
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--hero-primary) 70%, transparent));
   animation: hero-vfx-orbs 5.2s ease-in-out infinite;
 }
 
-/* Tier 3+: crackling vein network */
-.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--veins,
-.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--veins {
-  opacity: 0.75;
+/* Tier 3: static vein art + opacity flicker (no bg-position or color-dodge) */
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--veins {
+  opacity: 0.55;
   background:
     linear-gradient(
       105deg,
-      transparent 40%,
-      color-mix(in srgb, var(--hero-primary) 70%, transparent) 50%,
-      transparent 60%
+      transparent 42%,
+      color-mix(in srgb, var(--hero-primary) 55%, transparent) 50%,
+      transparent 58%
     ),
     linear-gradient(
       200deg,
-      transparent 45%,
-      color-mix(in srgb, var(--hero-secondary) 55%, transparent) 52%,
-      transparent 62%
-    ),
-    linear-gradient(
-      35deg,
-      transparent 48%,
-      color-mix(in srgb, var(--hero-tertiary) 50%, transparent) 54%,
-      transparent 64%
+      transparent 46%,
+      color-mix(in srgb, var(--hero-secondary) 45%, transparent) 52%,
+      transparent 60%
     );
-  background-size: 180% 180%, 200% 200%, 160% 160%;
-  mix-blend-mode: color-dodge;
-  animation: hero-vfx-veins 2.6s steps(6) infinite;
+  mix-blend-mode: soft-light;
+  animation: hero-vfx-veins 2.8s ease-in-out infinite;
 }
 
-/* Tier 3+: spark pulse */
-.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--spark,
-.hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--spark {
-  opacity: 0.9;
+/* Tier 3: spark opacity pulse */
+.hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--spark {
+  opacity: 0.7;
   background:
     radial-gradient(circle at 18% 62%, white 0 1px, transparent 2px),
     radial-gradient(circle at 68% 24%, var(--hero-tertiary) 0 1.5px, transparent 3px),
     radial-gradient(circle at 48% 48%, var(--hero-primary) 0 1px, transparent 2px),
     radial-gradient(circle at 86% 56%, white 0 1px, transparent 2px);
-  animation: hero-vfx-spark 1.8s ease-in-out infinite;
+  animation: hero-vfx-spark 2s ease-in-out infinite;
 }
 
 /* Tier 1+: thin inner frame accent */
@@ -10504,19 +10495,23 @@ button.trade-offer-card:hover:not(:disabled) {
     inset 0 0 18px color-mix(in srgb, var(--hero-secondary) 22%, transparent);
 }
 
-/* Tier 4 ultra overlay — focus only */
+/*
+ * Tier 4 ultra: static conic + opacity breath (no continuous rotate/scale).
+ * Spinning conics + blend modes were murdering GPU on large focus cards.
+ */
 .hero-card--live-fx.hero-card--tier-4 .hero-card__vfx--ultra {
-  opacity: 1;
+  opacity: 0.42;
+  inset: -15%;
   background:
     conic-gradient(
-      from 0deg,
-      color-mix(in srgb, var(--hero-primary) 35%, transparent),
-      color-mix(in srgb, var(--hero-secondary) 30%, transparent),
-      color-mix(in srgb, var(--hero-tertiary) 40%, transparent),
-      color-mix(in srgb, var(--hero-primary) 35%, transparent)
+      from 210deg at 50% 45%,
+      color-mix(in srgb, var(--hero-primary) 40%, transparent),
+      color-mix(in srgb, var(--hero-secondary) 32%, transparent),
+      color-mix(in srgb, var(--hero-tertiary) 38%, transparent),
+      color-mix(in srgb, var(--hero-primary) 40%, transparent)
     );
-  mix-blend-mode: overlay;
-  animation: hero-vfx-ultra-spin 8s linear infinite;
+  mix-blend-mode: soft-light;
+  animation: hero-vfx-ultra-breathe 3.6s ease-in-out infinite;
 }
 
 .hero-card--tier-4 .hero-card__frame {
@@ -10527,60 +10522,59 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .hero-card--live-fx.hero-card--tier-4 .hero-card__frame {
-  animation: hero-vfx-frame-pulse 2.4s ease-in-out infinite;
+  animation: hero-vfx-frame-breathe 2.8s ease-in-out infinite;
 }
 
 .hero-card--tier-4 .hero-card__art {
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+}
+
+.hero-card--live-fx.hero-card--tier-4 .hero-card__art {
+  /* Single cheap glow; avoid stacking drop-shadows */
   filter:
     drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--hero-primary) 45%, transparent));
+    drop-shadow(0 0 8px color-mix(in srgb, var(--hero-primary) 35%, transparent));
 }
 
 @keyframes hero-vfx-drift {
-  0% { transform: translate(-6%, -4%) scale(1); }
-  100% { transform: translate(8%, 6%) scale(1.08); }
+  0% { transform: translate3d(-4%, -3%, 0); }
+  100% { transform: translate3d(5%, 4%, 0); }
 }
 
 @keyframes hero-vfx-sweep {
-  0% { background-position: 120% 40%; }
-  100% { background-position: -40% 60%; }
+  0% { transform: translate3d(-18%, 0, 0); }
+  100% { transform: translate3d(18%, 0, 0); }
 }
 
 @keyframes hero-vfx-orbs {
   0%,
-  100% { transform: translateY(0) scale(1); opacity: 0.75; }
-  50% { transform: translateY(-6%) scale(1.05); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0); opacity: 0.7; }
+  50% { transform: translate3d(0, -4%, 0); opacity: 1; }
 }
 
 @keyframes hero-vfx-veins {
-  0% { background-position: 0% 0%, 100% 50%, 40% 80%; opacity: 0.45; }
-  50% { background-position: 40% 30%, 40% 20%, 70% 40%; opacity: 0.9; }
-  100% { background-position: 80% 70%, 0% 80%, 20% 10%; opacity: 0.55; }
+  0%,
+  100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes hero-vfx-spark {
   0%,
-  100% { opacity: 0.35; transform: scale(1); }
-  40% { opacity: 1; transform: scale(1.06); }
-  70% { opacity: 0.55; transform: scale(0.98); }
+  100% { opacity: 0.3; }
+  40% { opacity: 0.95; }
+  70% { opacity: 0.5; }
 }
 
-@keyframes hero-vfx-ultra-spin {
-  to { transform: rotate(360deg) scale(1.35); }
-}
-
-@keyframes hero-vfx-frame-pulse {
+@keyframes hero-vfx-ultra-breathe {
   0%,
-  100% {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--hero-tertiary) 70%, white),
-      inset 0 0 18px color-mix(in srgb, var(--hero-primary) 22%, transparent);
-  }
-  50% {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--hero-primary) 85%, white),
-      inset 0 0 28px color-mix(in srgb, var(--hero-tertiary) 35%, transparent);
-  }
+  100% { opacity: 0.32; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.04); }
+}
+
+@keyframes hero-vfx-frame-breathe {
+  0%,
+  100% { opacity: 0.75; }
+  50% { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

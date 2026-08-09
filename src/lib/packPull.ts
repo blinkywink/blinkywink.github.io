@@ -5,6 +5,8 @@ import {
 
 /** Ultra-rare all-highs pack (only pack-level exception). */
 export const PACK_GOD_CHANCE = 1 / 400;
+/** God packs always open this many cards (Obyn may still add +1). */
+export const PACK_GOD_SIZE = 7;
 
 /**
  * Per-card tier odds (each slot rolls independently).
@@ -299,7 +301,8 @@ export type PackPullMods = PackTierMods & {
 
 /**
  * Open a pack:
- * - 0.25% god pack (all T4+, usually with a Paragon) — pack-level only
+ * - 0.25% god pack (all T4+, usually with a Paragon) — always 7 cards
+ * - Obyn may still add +1 on god or normal packs
  * - otherwise each card rolls tier odds independently (ownership ignored)
  * - duplicates convert to Cash in the opener
  */
@@ -317,13 +320,11 @@ export function pullPackCards(
     (c) => c.isParagon || maxPathTier(c.pathLevels) >= 4,
   );
   const godPack = highEnough && Math.random() < PACK_GOD_CHANCE;
-  let n = count;
+  let n = godPack ? PACK_GOD_SIZE : count;
   let extraCard = false;
-  if (!godPack && (mods.extraCardChance ?? 0) > 0) {
-    if (Math.random() < mods.extraCardChance!) {
-      n += 1;
-      extraCard = true;
-    }
+  if ((mods.extraCardChance ?? 0) > 0 && Math.random() < mods.extraCardChance!) {
+    n += 1;
+    extraCard = true;
   }
 
   const tierMods: PackTierMods = {

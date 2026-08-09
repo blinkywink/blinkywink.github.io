@@ -297,12 +297,24 @@ export function HeroCardFace({
         <span className="hero-card__holo" aria-hidden />
         {liveFx ? (
           <>
-            <span className="hero-card__vfx hero-card__vfx--drift" aria-hidden />
-            <span className="hero-card__vfx hero-card__vfx--sweep" aria-hidden />
-            <span className="hero-card__vfx hero-card__vfx--orbs" aria-hidden />
-            <span className="hero-card__vfx hero-card__vfx--veins" aria-hidden />
-            <span className="hero-card__vfx hero-card__vfx--spark" aria-hidden />
-            <span className="hero-card__vfx hero-card__vfx--ultra" aria-hidden />
+            {tier >= 1 && tier <= 3 ? (
+              <span className="hero-card__vfx hero-card__vfx--drift" aria-hidden />
+            ) : null}
+            {tier >= 2 ? (
+              <span className="hero-card__vfx hero-card__vfx--sweep" aria-hidden />
+            ) : null}
+            {tier >= 2 && tier <= 3 ? (
+              <span className="hero-card__vfx hero-card__vfx--orbs" aria-hidden />
+            ) : null}
+            {tier === 3 ? (
+              <>
+                <span className="hero-card__vfx hero-card__vfx--veins" aria-hidden />
+                <span className="hero-card__vfx hero-card__vfx--spark" aria-hidden />
+              </>
+            ) : null}
+            {tier >= 4 ? (
+              <span className="hero-card__vfx hero-card__vfx--ultra" aria-hidden />
+            ) : null}
           </>
         ) : null}
         <span className="hero-card__frame" aria-hidden />
