@@ -1,0 +1,37 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { AuthProvider } from "./auth/AuthProvider";
+import { CardCollectionProvider } from "./auth/CardCollectionProvider";
+import App from "./App";
+import { supabaseConfigured } from "./lib/supabase";
+import "./index.css";
+
+const root = document.getElementById("root")!;
+
+if (!supabaseConfigured) {
+  root.innerHTML = `
+    <div style="min-height:100dvh;display:grid;place-items:center;padding:2rem;font-family:system-ui,sans-serif;background:#0c0c10;color:#f0f0f4;text-align:center">
+      <div style="max-width:28rem">
+        <h1 style="font-size:1.4rem;margin:0 0 0.75rem">Missing Supabase config</h1>
+        <p style="margin:0 0 0.75rem;line-height:1.5;color:rgba(240,240,244,0.75)">
+          Add these environment variables in the Vercel project settings, then redeploy:
+        </p>
+        <pre style="text-align:left;background:#16161c;padding:0.9rem 1rem;border-radius:10px;overflow:auto;font-size:0.85rem;line-height:1.5">VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY</pre>
+        <p style="margin:0.9rem 0 0;font-size:0.9rem;color:rgba(240,240,244,0.55)">
+          Use the same values as your local <code>.env.local</code>. Only the <code>VITE_</code> keys are needed for the frontend.
+        </p>
+      </div>
+    </div>
+  `;
+} else {
+  createRoot(root).render(
+    <StrictMode>
+      <AuthProvider>
+        <CardCollectionProvider>
+          <App />
+        </CardCollectionProvider>
+      </AuthProvider>
+    </StrictMode>,
+  );
+}
