@@ -87,10 +87,6 @@ export function ShopPage({ onPackFinished }: Props) {
         blurb="Buy packs with Cash. Featured tower packs rotate every day."
       />
 
-      <section className="arcade__utility" aria-label="Daily reward">
-        <DailyClaimButton />
-      </section>
-
       <section className="pack-shelf" aria-label="Shop">
         <div className="pack-shelf__head">
           <h3 className="section-label">Featured</h3>
@@ -108,6 +104,10 @@ export function ShopPage({ onPackFinished }: Props) {
         </div>
 
         <ShopDirectShelf />
+      </section>
+
+      <section className="arcade__utility" aria-label="Daily rewards">
+        <DailyClaimButton variant="hero" />
       </section>
 
       <PackOpenerTest

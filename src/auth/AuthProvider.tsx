@@ -66,7 +66,11 @@ type AuthContextValue = {
   setCoinBalance: (coins: number) => void;
   /** True when signed in and daily Cash has not been claimed today (UTC). */
   dailyClaimAvailable: boolean;
-  claimDailyCash: () => Promise<{ error: string | null; amount?: number }>;
+  claimDailyCash: () => Promise<{
+    error: string | null;
+    amount?: number;
+    coins?: number;
+  }>;
   signUp: (input: {
     username: string;
     password: string;
@@ -328,7 +332,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         : prev,
     );
-    return { error: null, amount: Number(raw.amount) || 500 };
+    return {
+      error: null,
+      amount: Number(raw.amount) || 500,
+      coins: Number(raw.coins),
+    };
   }, [session?.userId]);
 
   const displayName = useMemo(() => {
