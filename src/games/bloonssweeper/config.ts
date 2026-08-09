@@ -22,7 +22,7 @@ export const SWEEPER_DIFFICULTIES: Record<
     rows: 9,
     cols: 9,
     mines: 10,
-    winReward: 150,
+    winReward: 700,
   },
   medium: {
     id: "medium",
@@ -30,7 +30,7 @@ export const SWEEPER_DIFFICULTIES: Record<
     rows: 16,
     cols: 16,
     mines: 40,
-    winReward: 400,
+    winReward: 1500,
   },
 };
 

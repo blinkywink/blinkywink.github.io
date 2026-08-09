@@ -25,7 +25,10 @@ export function sideSizeForRound(round: number): number {
 }
 
 export function pointsForCorrect(round: number, streakAfter: number): number {
-  return rewardForCorrect({ round, streakAfter });
+  return Math.max(
+    1,
+    Math.round(rewardForCorrect({ round, streakAfter }) * 0.65),
+  );
 }
 
 /** Cash lost on a miss — more than a hit pays, so random guessing bleeds. */
