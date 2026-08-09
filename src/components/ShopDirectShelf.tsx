@@ -17,14 +17,19 @@ import { MonkeyCard } from "./MonkeyCard";
 
 const POLL_MS = 8_000;
 
+type FocusedDeal = {
+  listing: ShopDirectListing;
+  card: MonkeyCardSpec;
+};
+
 export function ShopDirectShelf() {
   const { isGuest, setCoinBalance } = useAuth();
   const { owned, refresh: refreshCards } = useCardCollection();
   const [listings, setListings] = useState<ShopDirectListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busySlot, setBusySlot] = useState<number | null>(null);
-  const [confirmRow, setConfirmRow] = useState<ShopDirectListing | null>(null);
-  const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [confirmBuy, setConfirmBuy] = useState(false);
+  const [focused, setFocused] = useState<FocusedDeal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -51,147 +56,147 @@ export function ShopDirectShelf() {
   }, [load]);
 
   useEffect(() => {
-    if (!focused && !confirmRow) return;
+    if (!focused) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (confirmRow && busySlot == null) setConfirmRow(null);
-      else if (focused) setFocused(null);
+      if (e.key !== "Escape" || busy) return;
+      closeFocus();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [focused, confirmRow, busySlot]);
+  }, [focused, busy]);
 
-  function requestBuy(row: ShopDirectListing) {
+  function closeFocus() {
+    if (busy) return;
+    setFocused(null);
+    setConfirmBuy(false);
+  }
+
+  function openFocus(listing: ShopDirectListing) {
+    const card = cardSpecById(listing.cardId);
+    if (!card) return;
+    setError(null);
+    setConfirmBuy(false);
+    setFocused({ listing, card });
+  }
+
+  async function onConfirmPurchase() {
+    if (!focused) return;
+    const { listing, card } = focused;
     if (isGuest) {
       setError("Sign in to buy shop cards.");
       return;
     }
-    if (owned.has(row.cardId)) {
+    if (owned.has(listing.cardId)) {
       setError("You already own that card.");
       return;
     }
-    setError(null);
-    setStatus(null);
-    setConfirmRow(row);
-  }
-
-  async function confirmBuy() {
-    const row = confirmRow;
-    if (!row) return;
-    setBusySlot(row.slot);
+    setBusy(true);
     setError(null);
     setStatus(null);
     try {
-      const result = await buyShopDirectCard(row.slot, row.version);
+      const result = await buyShopDirectCard(listing.slot, listing.version);
       setCoinBalance(result.coins);
       setListings(result.listings);
       await refreshCards();
-      const card = cardSpecById(result.boughtCardId);
       setStatus(
-        card
-          ? `Bought ${card.entity.name} for ${result.price.toLocaleString()} Cash.`
-          : `Bought card for ${result.price.toLocaleString()} Cash.`,
+        `Bought ${card.entity.name} for ${result.price.toLocaleString()} Cash.`,
       );
-      setConfirmRow(null);
+      setFocused(null);
+      setConfirmBuy(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Purchase failed.");
       await load(true);
-      setConfirmRow(null);
+      setFocused(null);
+      setConfirmBuy(false);
     }
-    setBusySlot(null);
+    setBusy(false);
   }
 
-  const confirmCard = confirmRow ? cardSpecById(confirmRow.cardId) : null;
+  const mineFocused = focused ? owned.has(focused.listing.cardId) : false;
 
   const focusPortal = focused
     ? createPortal(
         <div
-          className="card-focus"
+          className="card-focus shop-direct-focus"
           role="dialog"
           aria-modal="true"
-          aria-label={focused.entity.name}
+          aria-label={focused.card.entity.name}
         >
           <button
             type="button"
             className="card-focus__backdrop"
             aria-label="Close"
-            onClick={() => setFocused(null)}
+            disabled={busy}
+            onClick={closeFocus}
           />
-          <div className="card-focus__panel">
+          <div className="card-focus__panel shop-direct-focus__panel">
             <button
               type="button"
               className="btn btn--ghost btn--sm card-focus__close"
-              onClick={() => setFocused(null)}
+              disabled={busy}
+              onClick={closeFocus}
             >
               ✕ Close
             </button>
             <MonkeyCard
-              entity={focused.entity}
-              pathLevels={focused.pathLevels}
+              entity={focused.card.entity}
+              pathLevels={focused.card.pathLevels}
               mode="focus"
               owned
             />
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-
-  const confirmPortal = confirmRow
-    ? createPortal(
-        <div
-          className="shop-buy-confirm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="shop-buy-confirm-title"
-        >
-          <button
-            type="button"
-            className="shop-buy-confirm__backdrop"
-            aria-label="Cancel"
-            disabled={busySlot != null}
-            onClick={() => {
-              if (busySlot == null) setConfirmRow(null);
-            }}
-          />
-          <div className="shop-buy-confirm__panel">
-            <p className="shop-buy-confirm__eyebrow">Limited card</p>
-            <h2 id="shop-buy-confirm-title">Buy this card?</h2>
-            {confirmCard ? (
-              <p className="shop-buy-confirm__detail">
-                {confirmCard.entity.name} ·{" "}
-                {formatPathLevels(confirmCard.pathLevels)} · T
-                {confirmRow.tier}
+            <div className="shop-direct-focus__meta">
+              <p className="shop-direct-focus__name">
+                {focused.card.entity.name}
               </p>
-            ) : null}
-            <p className="shop-buy-confirm__price">
-              <CashAmount amount={confirmRow.price} size={22} />
-            </p>
-            <p className="shop-buy-confirm__warn">
-              One buy only. Once it sells, it rotates for everyone.
-            </p>
-            <div className="shop-buy-confirm__actions">
-              <button
-                type="button"
-                className="btn btn--ghost"
-                disabled={busySlot != null}
-                onClick={() => setConfirmRow(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn--primary"
-                disabled={busySlot != null}
-                onClick={() => void confirmBuy()}
-              >
-                {busySlot != null ? "Buying…" : "Confirm buy"}
-              </button>
+              <p className="shop-direct-focus__sub">
+                {formatPathLevels(focused.card.pathLevels)} ·{" "}
+                {focused.card.tower} · T{focused.listing.tier}
+              </p>
+              <CashAmount
+                amount={focused.listing.price}
+                size={24}
+                className="shop-direct-focus__price"
+              />
+            </div>
+            <div className="shop-direct-focus__actions">
+              {isGuest ? (
+                <p className="shop-direct-focus__hint">Sign in to buy.</p>
+              ) : mineFocused ? (
+                <p className="shop-direct-focus__hint">You already own this.</p>
+              ) : !confirmBuy ? (
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy}
+                  onClick={() => setConfirmBuy(true)}
+                >
+                  Buy
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busy}
+                    onClick={() => setConfirmBuy(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={busy}
+                    onClick={() => void onConfirmPurchase()}
+                  >
+                    {busy ? "Buying…" : "Confirm"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>,
@@ -221,8 +226,6 @@ export function ShopDirectShelf() {
         <div className="shop-direct__grid">
           {listings.map((row) => {
             const card = cardSpecById(row.cardId);
-            const mine = owned.has(row.cardId);
-            const busy = busySlot === row.slot;
             return (
               <article
                 key={`${row.slot}-${row.version}-${row.cardId}`}
@@ -234,38 +237,22 @@ export function ShopDirectShelf() {
                     pathLevels={card.pathLevels}
                     mode="preview"
                     owned
-                    onSelect={() => setFocused(card)}
+                    onSelect={() => openFocus(row)}
                   />
                 ) : (
-                  <div className="shop-direct__missing">{row.cardId}</div>
-                )}
-                <div className="shop-direct__meta">
-                  <span className={`shop-direct__tier is-t${row.tier}`}>
-                    T{row.tier}
-                  </span>
-                  {card ? (
-                    <p className="shop-direct__name">
-                      {card.entity.name}
-                      <span>
-                        {formatPathLevels(card.pathLevels)} · {card.tower}
-                      </span>
-                    </p>
-                  ) : null}
-                  <CashAmount amount={row.price} size={18} />
                   <button
                     type="button"
-                    className="btn btn--primary btn--sm"
-                    disabled={busy || busySlot != null || mine || isGuest}
-                    onClick={() => requestBuy(row)}
+                    className="shop-direct__missing"
+                    onClick={() => openFocus(row)}
                   >
-                    {busy
-                      ? "Buying…"
-                      : mine
-                        ? "Owned"
-                        : isGuest
-                          ? "Sign in"
-                          : "Buy"}
+                    {row.cardId}
                   </button>
+                )}
+                <div className="shop-direct__meta">
+                  <p className="shop-direct__name">
+                    {card ? card.entity.name : row.cardId}
+                  </p>
+                  <CashAmount amount={row.price} size={18} />
                 </div>
               </article>
             );
@@ -273,7 +260,6 @@ export function ShopDirectShelf() {
         </div>
       )}
       {focusPortal}
-      {confirmPortal}
     </section>
   );
 }
