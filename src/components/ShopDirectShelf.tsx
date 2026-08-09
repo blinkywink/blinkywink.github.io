@@ -14,7 +14,7 @@ import {
   shopDirectExpiresAtMs,
   type ShopDirectListing,
 } from "../lib/shopDirect";
-import { CashAmount } from "./CurrencyChip";
+import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
 const POLL_MS = 8_000;
@@ -25,13 +25,13 @@ type FocusedDeal = {
 };
 
 export function ShopDirectShelf() {
-  const { isGuest, setCoinBalance } = useAuth();
+  const { isGuest, profile, setCoinBalance } = useAuth();
   const { owned, refresh: refreshCards } = useCardCollection();
   const [listings, setListings] = useState<ShopDirectListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [confirmBuy, setConfirmBuy] = useState(false);
   const [focused, setFocused] = useState<FocusedDeal | null>(null);
+  const [buyError, setBuyError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -70,47 +70,37 @@ export function ShopDirectShelf() {
     return () => window.clearInterval(id);
   }, [listings, load]);
 
-  useEffect(() => {
-    if (!focused) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || busy) return;
-      closeFocus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [focused, busy]);
-
   function closeFocus() {
     if (busy) return;
     setFocused(null);
-    setConfirmBuy(false);
+    setBuyError(null);
   }
 
   function openFocus(listing: ShopDirectListing) {
     const card = cardSpecById(listing.cardId);
     if (!card) return;
     setError(null);
-    setConfirmBuy(false);
+    setBuyError(null);
     setFocused({ listing, card });
   }
 
-  async function onConfirmPurchase() {
-    if (!focused) return;
+  async function onPurchase() {
+    if (!focused || busy) return;
     const { listing, card } = focused;
     if (isGuest) {
-      setError("Sign in to buy shop cards.");
+      setBuyError("Sign in to buy shop cards.");
       return;
     }
     if (owned.has(listing.cardId)) {
-      setError("You already own that card.");
+      setBuyError("You already own that card.");
+      return;
+    }
+    if ((profile?.coins ?? 0) < listing.price) {
+      setBuyError("Not enough Cash.");
       return;
     }
     setBusy(true);
+    setBuyError(null);
     setError(null);
     setStatus(null);
     try {
@@ -122,15 +112,37 @@ export function ShopDirectShelf() {
         `Bought ${card.entity.name} for ${result.price.toLocaleString()} Cash.`,
       );
       setFocused(null);
-      setConfirmBuy(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Purchase failed.");
+      setBuyError(err instanceof Error ? err.message : "Purchase failed.");
       await load(true);
-      setFocused(null);
-      setConfirmBuy(false);
     }
     setBusy(false);
   }
+
+  useEffect(() => {
+    if (!focused) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (busy) return;
+        e.preventDefault();
+        closeFocus();
+        return;
+      }
+      if (e.code !== "Space" && e.key !== " ") return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if (e.repeat || busy) return;
+      void onPurchase();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  });
 
   const mineFocused = focused ? owned.has(focused.listing.cardId) : false;
 
@@ -164,52 +176,31 @@ export function ShopDirectShelf() {
               mode="focus"
               owned
             />
-            <div className="shop-direct-focus__meta">
-              <p className="shop-direct-focus__name">
-                {focused.card.entity.name}
-              </p>
-              <p className="shop-direct-focus__sub">
-                {formatPathLevels(focused.card.pathLevels)} ·{" "}
-                {focused.card.tower} · T{focused.listing.tier}
-              </p>
-              <CashAmount
-                amount={focused.listing.price}
-                size={24}
-                className="shop-direct-focus__price"
-              />
-            </div>
-            <div className="shop-direct-focus__actions">
+            <div className="pack-opener__buy shop-direct-focus__buy">
+              <CurrencyChip amount={focused.listing.price} />
               {isGuest ? (
-                <p className="shop-direct-focus__hint">Sign in to buy.</p>
+                <p className="pack-opener__buy-note">Sign in to buy.</p>
               ) : mineFocused ? (
-                <p className="shop-direct-focus__hint">You already own this.</p>
-              ) : !confirmBuy ? (
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  disabled={busy}
-                  onClick={() => setConfirmBuy(true)}
-                >
-                  Buy
-                </button>
+                <p className="pack-opener__buy-note">You already own this.</p>
               ) : (
                 <>
                   <button
                     type="button"
-                    className="btn btn--ghost"
+                    className="btn btn--primary btn--lg"
                     disabled={busy}
-                    onClick={() => setConfirmBuy(false)}
+                    onClick={() => void onPurchase()}
                   >
-                    Cancel
+                    {busy ? "Buying…" : "Purchase · Space"}
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn--primary"
-                    disabled={busy}
-                    onClick={() => void onConfirmPurchase()}
-                  >
-                    {busy ? "Buying…" : "Confirm"}
-                  </button>
+                  {buyError ? (
+                    <p className="pack-opener__buy-error">{buyError}</p>
+                  ) : (
+                    <p className="pack-opener__buy-note">
+                      Balance {(profile?.coins ?? 0).toLocaleString()} ·{" "}
+                      {formatPathLevels(focused.card.pathLevels)} ·{" "}
+                      {focused.card.tower} · T{focused.listing.tier}
+                    </p>
+                  )}
                 </>
               )}
             </div>
