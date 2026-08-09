@@ -3,8 +3,14 @@ import { useAuth } from "../auth/AuthProvider";
 import { supabase } from "../lib/supabase";
 import { GameHeader } from "./GameHeader";
 
+export type LeaderboardPlayer = {
+  userId: string;
+  username: string;
+};
+
 type Props = {
   onBack: () => void;
+  onOpenCollection: (player: LeaderboardPlayer) => void;
 };
 
 type Row = {
@@ -13,7 +19,7 @@ type Row = {
   coins_earned: number;
 };
 
-export function Leaderboard({ onBack: _onBack }: Props) {
+export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +57,7 @@ export function Leaderboard({ onBack: _onBack }: Props) {
     <div className="board-page">
       <GameHeader title="LEADERBOARD" icon="" />
       <main className="board-main">
-        <p className="board-sub">Lifetime Cash earned</p>
+        <p className="board-sub">Lifetime Cash earned · tap a player to view cards</p>
 
         {loading ? (
           <p className="board-status">Loading…</p>
@@ -74,11 +80,25 @@ export function Leaderboard({ onBack: _onBack }: Props) {
               {rows.map((row, i) => {
                 const mine = user?.id === row.id;
                 return (
-                  <tr key={row.id} className={mine ? "is-you" : undefined}>
+                  <tr
+                    key={row.id}
+                    className={`board-table__row${mine ? " is-you" : ""}`}
+                  >
                     <td>{i + 1}</td>
                     <td>
-                      {row.username}
-                      {mine ? " (you)" : ""}
+                      <button
+                        type="button"
+                        className="board-table__player"
+                        onClick={() =>
+                          onOpenCollection({
+                            userId: row.id,
+                            username: row.username,
+                          })
+                        }
+                      >
+                        {row.username}
+                        {mine ? " (you)" : ""}
+                      </button>
                     </td>
                     <td>{row.coins_earned.toLocaleString("en-US")}</td>
                   </tr>

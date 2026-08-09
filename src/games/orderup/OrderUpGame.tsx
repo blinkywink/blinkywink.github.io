@@ -15,6 +15,7 @@ import { useOrderUp } from "./useOrderUp";
 
 type Props = {
   onBack: () => void;
+  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
 };
 
 function reorder(
@@ -81,7 +82,7 @@ function OrderTile({
   );
 }
 
-export function OrderUpGame({ onBack }: Props) {
+export function OrderUpGame({ onBack, onRunEnd }: Props) {
   const {
     state,
     setOrder,
@@ -97,11 +98,23 @@ export function OrderUpGame({ onBack }: Props) {
   const { profile } = useAuth();
 
   const dragFrom = useRef<number | null>(null);
+  const runEndNotified = useRef(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
   const revealed = state.phase === "reveal";
   const playing = state.phase === "playing";
+
+  useEffect(() => {
+    if (state.phase === "results" && !runEndNotified.current) {
+      runEndNotified.current = true;
+      onRunEnd?.({
+        cleared: state.clearedRun,
+        bestStreak: state.bestStreak,
+      });
+    }
+    if (state.phase !== "results") runEndNotified.current = false;
+  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
 
   const indexFromClientX = useCallback((clientX: number) => {
     const track = trackRef.current;
@@ -185,6 +198,8 @@ export function OrderUpGame({ onBack }: Props) {
         <ResultsScreen
           coinsEarned={state.lastRun.score}
           cleared={state.clearedRun}
+          bonusPack={state.bestStreak >= 4}
+          continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}

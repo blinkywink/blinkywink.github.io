@@ -180,15 +180,14 @@ export function useBloonle() {
   const awardIfNeeded = useCallback(
     async (
       mode: BloonleMode,
-      guessCount: number,
+      _guessCount: number,
       already: boolean,
     ) => {
       if (already) return { awarded: true, reward: 0 };
-      const table =
+      const reward =
         mode === "daily"
-          ? BLOONLE_CONFIG.rewardByGuesses
-          : BLOONLE_CONFIG.practiceRewardByGuesses;
-      const reward = table[guessCount] ?? table[6] ?? 0;
+          ? BLOONLE_CONFIG.dailySolveReward
+          : BLOONLE_CONFIG.practiceSolveReward;
       if (reward <= 0) return { awarded: true, reward: 0 };
       const balance = await awardCoins(reward);
       if (balance != null) setCoinBalanceRef.current(balance);

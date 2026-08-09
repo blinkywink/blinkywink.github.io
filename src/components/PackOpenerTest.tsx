@@ -162,6 +162,11 @@ type Props = {
   }) => void;
   /** Defaults to the all-towers BTD6 pack. Pass a tower pack to preview the template. */
   pack?: PackDef;
+  /**
+   * shop — buy with Cash first (default).
+   * reward — clear-run prize; starts sealed, no purchase.
+   */
+  mode?: "shop" | "reward";
 };
 
 /** Pack shop → purchase → slash open. */
@@ -170,6 +175,7 @@ export function PackOpenerTest({
   onClose,
   onFinished,
   pack: packProp,
+  mode = "shop",
 }: Props) {
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
@@ -239,8 +245,12 @@ export function PackOpenerTest({
   useEffect(() => {
     if (!open) return;
     reset();
+    if (mode === "reward") {
+      phaseRef.current = "sealed";
+      setPhase("sealed");
+    }
     return clearTimers;
-  }, [open, pack.id, reset]);
+  }, [open, pack.id, mode, reset]);
 
   const handleClose = () => {
     reset();
@@ -522,7 +532,10 @@ export function PackOpenerTest({
         >
           <p className="pack-opener__hint">
             {phase === "shop" && `${pack.title} pack`}
-            {phase === "sealed" && "slash through the pack · space"}
+            {phase === "sealed" &&
+              (mode === "reward"
+                ? `Clear reward · ${pack.title} · slash to open`
+                : "slash through the pack · space")}
             {phase === "sliced" && "…"}
             {(phase === "enter" || phase === "ready" || phase === "exit") &&
               `${index + 1}/${pack.cardCount}, swipe for next`}

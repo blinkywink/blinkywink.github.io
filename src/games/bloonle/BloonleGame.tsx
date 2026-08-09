@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { dayNumber, type LetterMark } from "./dictionary";
 import { useBloonle } from "./useBloonle";
 
 type Props = {
   onBack: () => void;
+  /** Fired once when solved in ≤3 guesses. */
+  onFastSolve?: (guessCount: number) => void;
 };
 
 const ROWS = [
@@ -47,7 +49,7 @@ function Tile({
   );
 }
 
-export function BloonleGame({ onBack: _onBack }: Props) {
+export function BloonleGame({ onBack: _onBack, onFastSolve }: Props) {
   const {
     state,
     typeLetter,
@@ -60,6 +62,15 @@ export function BloonleGame({ onBack: _onBack }: Props) {
   const len = state.puzzle.slug.length;
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
+  const prevStatus = useRef(state.status);
+
+  useEffect(() => {
+    const was = prevStatus.current;
+    prevStatus.current = state.status;
+    if (was !== "playing" || state.status !== "won") return;
+    const guesses = state.guesses.length;
+    if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
+  }, [state.status, state.guesses.length, onFastSolve]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -157,6 +168,11 @@ export function BloonleGame({ onBack: _onBack }: Props) {
               </p>
               <h3>{state.puzzle.displayName}</h3>
               <p className="bloonle-result__slug">{state.puzzle.slug}</p>
+              {state.status === "won" && state.guesses.length <= 3 ? (
+                <p className="bloonle-result__pack">
+                  Fast solve — pick a bonus pack!
+                </p>
+              ) : null}
               {state.status === "won" && state.reward > 0 ? (
                 <p className="bloonle-result__cash">+{state.reward} Cash</p>
               ) : null}

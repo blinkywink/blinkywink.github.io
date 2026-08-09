@@ -273,7 +273,7 @@ export function useGeoguessr() {
 
   const buyContinue = useCallback(async () => {
     const s = stateRef.current;
-    if (s.phase !== "results" || s.continueBusy) return;
+    if (s.phase !== "results" || s.continueBusy || s.freePlay) return;
     const resumeRound = s.resumeRound;
     if (resumeRound == null) return;
 
@@ -432,6 +432,30 @@ export function useGeoguessr() {
     });
   }, []);
 
+  const skip = useCallback(() => {
+    const s = stateRef.current;
+    if (s.phase !== "playing" || !s.challenge) return;
+    if (missClearTimer.current != null) {
+      window.clearTimeout(missClearTimer.current);
+      missClearTimer.current = null;
+    }
+
+    const lives = Math.max(0, s.lives - 1);
+    setState({
+      ...s,
+      phase: "feedback",
+      streak: 0,
+      lives,
+      answeredCount: s.answeredCount + 1,
+      selectedId: null,
+      feedback: {
+        kind: "wrong",
+        correctName: s.challenge.correct.name,
+        guessName: "Skipped",
+      },
+    });
+  }, []);
+
   const playAgain = useCallback(() => {
     if (missClearTimer.current != null) {
       window.clearTimeout(missClearTimer.current);
@@ -443,6 +467,7 @@ export function useGeoguessr() {
   return {
     state,
     answer,
+    skip,
     goNext,
     playAgain,
     buyContinue,

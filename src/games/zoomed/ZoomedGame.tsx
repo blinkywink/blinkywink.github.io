@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { AnswerReveal } from "../../components/AnswerReveal";
 import { AnswerSearch } from "../../components/AnswerSearch";
@@ -11,13 +11,16 @@ import { useZoomedGame } from "./useZoomedGame";
 
 type Props = {
   onBack: () => void;
+  /** Fired once when results show (clear and/or streak). */
+  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
 };
 
-export function ZoomedGame({ onBack }: Props) {
+export function ZoomedGame({ onBack, onRunEnd }: Props) {
   const { profile } = useAuth();
   const {
     state,
     answer,
+    skip,
     goNext,
     playAgain,
     buyContinue,
@@ -28,6 +31,7 @@ export function ZoomedGame({ onBack }: Props) {
   const [activeTransform, setActiveTransform] =
     useState<TransformParams | null>(null);
   const [correctFlashDone, setCorrectFlashDone] = useState(false);
+  const runEndNotified = useRef(false);
 
   const handleTransformChange = useCallback((transform: TransformParams) => {
     setActiveTransform(transform);
@@ -46,12 +50,25 @@ export function ZoomedGame({ onBack }: Props) {
     return () => window.clearTimeout(t);
   }, [isCorrectPending, state.challenge?.round]);
 
+  useEffect(() => {
+    if (state.phase === "results" && !runEndNotified.current) {
+      runEndNotified.current = true;
+      onRunEnd?.({
+        cleared: state.clearedRun,
+        bestStreak: state.bestStreak,
+      });
+    }
+    if (state.phase !== "results") runEndNotified.current = false;
+  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
+
   if (state.phase === "results" && state.lastRun) {
     return (
       <div className="zoomed-page">
         <ResultsScreen
           coinsEarned={state.lastRun.score}
           cleared={state.clearedRun}
+          bonusPack={state.bestStreak >= 4}
+          continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}
@@ -159,13 +176,23 @@ export function ZoomedGame({ onBack }: Props) {
               </button>
             </div>
           ) : (
-            <AnswerSearch
-              roundKey={`${challenge.round}-${challenge.correct.id}`}
-              disabled={searchLocked}
-              status="idle"
-              eliminatedIds={state.eliminatedIds}
-              onSelect={answer}
-            />
+            <>
+              <AnswerSearch
+                roundKey={`${challenge.round}-${challenge.correct.id}`}
+                disabled={searchLocked}
+                status="idle"
+                eliminatedIds={state.eliminatedIds}
+                onSelect={answer}
+              />
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm guess-skip"
+                onClick={skip}
+                disabled={searchLocked}
+              >
+                Skip · lose a life
+              </button>
+            </>
           )}
         </div>
       </main>

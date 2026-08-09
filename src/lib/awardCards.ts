@@ -94,3 +94,21 @@ export async function fetchOwnedCardIds(): Promise<string[]> {
   saveUserLocalCards(app.userId, ids);
   return ids;
 }
+
+/** Load another player's owned card ids (public leaderboard browse). */
+export async function fetchPlayerCardIds(userId: string): Promise<string[]> {
+  const id = String(userId ?? "").trim();
+  if (!id) return [];
+
+  const { data, error } = await supabase.rpc("get_player_cards", {
+    p_user_id: id,
+  });
+
+  if (error) {
+    console.warn("get_player_cards failed", error.message);
+    throw new Error(error.message);
+  }
+
+  if (!Array.isArray(data)) return [];
+  return [...new Set(data.map(String))];
+}

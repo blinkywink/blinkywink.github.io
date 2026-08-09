@@ -5,6 +5,8 @@ export const PRICE_CHECK_CONFIG = {
   maxLives: SHARED_RUN.maxLives,
   /** Cap towers shown on each side (escalates by round). */
   maxSideSize: 5,
+  /** Seconds to pick the higher-cost side. */
+  timerSeconds: 10,
 } as const;
 
 /** How many towers each side may roll this round (grows over the run). */

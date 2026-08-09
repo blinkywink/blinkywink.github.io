@@ -1,5 +1,6 @@
 import { towerEntities } from "../../data/towers";
 import type { TowerEntity } from "../../data/types";
+import { bloonleDailyReward, bloonlePracticeReward } from "../rewards";
 
 /** Strip to lowercase a–z only (no spaces, dashes, etc.). */
 export function normalizeName(name: string): string {
@@ -53,10 +54,14 @@ export const BLOONLE_DICT = new Set(BLOONLE_POOL.map((p) => p.slug));
 
 export const BLOONLE_CONFIG = {
   maxGuesses: 6,
-  /** Cash by guess count (1-indexed). Miss → 0. Daily only. */
-  rewardByGuesses: [0, 150, 120, 100, 80, 65, 50] as const,
-  /** Smaller Cash for endless practice puzzles. */
-  practiceRewardByGuesses: [0, 60, 50, 40, 30, 25, 20] as const,
+  /** Solving the daily (any guess count ≤ 6) pays a full perfect-run. */
+  get dailySolveReward() {
+    return bloonleDailyReward();
+  },
+  /** Practice pays less than the daily. */
+  get practiceSolveReward() {
+    return bloonlePracticeReward();
+  },
 } as const;
 
 /** Local calendar day key YYYY-MM-DD. */

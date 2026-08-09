@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { spendCoins } from "../../lib/spendCoins";
@@ -21,6 +21,7 @@ export type Feedback = {
   leftTotal: number;
   rightTotal: number;
   points: number;
+  timedOut?: boolean;
 };
 
 type Phase = "playing" | "reveal" | "results";
@@ -42,10 +43,15 @@ type State = {
   clearedRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
+  timeLeftMs: number;
 };
 
 function freshRound(n: number): PriceRound {
   return createPriceRound(n);
+}
+
+function timerMs(): number {
+  return PRICE_CHECK_CONFIG.timerSeconds * 1000;
 }
 
 function initialState(): State {
@@ -66,6 +72,7 @@ function initialState(): State {
     clearedRun: false,
     continueError: null,
     continueBusy: false,
+    timeLeftMs: timerMs(),
   };
 }
 
@@ -97,6 +104,7 @@ function finishRun(
     clearedRun: opts.cleared,
     continueError: null,
     continueBusy: false,
+    timeLeftMs: 0,
   };
 }
 
@@ -107,11 +115,13 @@ export function usePriceCheck() {
   setCoinBalanceRef.current = setCoinBalance;
   const profileRef = useRef(profile);
   profileRef.current = profile;
+  const settling = useRef(false);
 
-  const guess = useCallback((side: Guess) => {
+  const settle = useCallback((side: Guess, timedOut: boolean) => {
     setState((s) => {
-      if (s.phase !== "playing") return s;
-      const ok = side === s.round.answer;
+      if (s.phase !== "playing" || settling.current) return s;
+      settling.current = true;
+      const ok = !timedOut && side === s.round.answer;
       const streak = ok ? s.streak + 1 : 0;
       const bestStreak = Math.max(s.bestStreak, streak);
       const points = ok ? pointsForCorrect(s.round.round, streak) : 0;
@@ -122,6 +132,7 @@ export function usePriceCheck() {
         leftTotal: s.round.left.total,
         rightTotal: s.round.right.total,
         points,
+        timedOut: timedOut || undefined,
       };
 
       if (ok && points > 0) {
@@ -140,9 +151,42 @@ export function usePriceCheck() {
         answered: s.answered + 1,
         lives,
         feedback,
+        timeLeftMs: 0,
       };
     });
   }, []);
+
+  const guess = useCallback(
+    (side: Guess) => {
+      settle(side, false);
+    },
+    [settle],
+  );
+
+  // Countdown while playing
+  useEffect(() => {
+    if (state.phase !== "playing") return;
+    settling.current = false;
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = now - last;
+      last = now;
+      setState((s) => {
+        if (s.phase !== "playing") return s;
+        const next = Math.max(0, s.timeLeftMs - dt);
+        if (next <= 0 && s.timeLeftMs > 0) {
+          const wrong: Guess = s.round.answer === "left" ? "right" : "left";
+          queueMicrotask(() => settle(wrong, true));
+          return { ...s, timeLeftMs: 0 };
+        }
+        return { ...s, timeLeftMs: next };
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [state.phase, state.round.round, settle]);
 
   const goNext = useCallback(() => {
     setState((s) => {
@@ -161,11 +205,13 @@ export function usePriceCheck() {
         });
       }
 
+      settling.current = false;
       return {
         ...s,
         phase: "playing",
         round: freshRound(s.round.round + 1),
         feedback: null,
+        timeLeftMs: timerMs(),
       };
     });
   }, []);
@@ -173,7 +219,12 @@ export function usePriceCheck() {
   const buyContinue = useCallback(async () => {
     let allowed = false;
     setState((s) => {
-      if (s.phase !== "results" || s.continueBusy || s.resumeRound == null) {
+      if (
+        s.phase !== "results" ||
+        s.continueBusy ||
+        s.freePlay ||
+        s.resumeRound == null
+      ) {
         return s;
       }
       allowed = true;
@@ -195,6 +246,7 @@ export function usePriceCheck() {
     }
     setCoinBalanceRef.current(balance);
 
+    settling.current = false;
     setState((s) => {
       const resumeRound = s.resumeRound ?? s.round.round + 1;
       return {
@@ -209,16 +261,19 @@ export function usePriceCheck() {
         continueBusy: false,
         continueError: null,
         lastRun: null,
+        timeLeftMs: timerMs(),
       };
     });
   }, []);
 
   const playAgain = useCallback(() => {
+    settling.current = false;
     setState(initialState());
   }, []);
 
   const roundsPerRun = PRICE_CHECK_CONFIG.roundsPerRun;
   const maxLives = PRICE_CHECK_CONFIG.maxLives;
+  const timerSeconds = PRICE_CHECK_CONFIG.timerSeconds;
 
   return useMemo(
     () => ({
@@ -230,6 +285,7 @@ export function usePriceCheck() {
       continueCost: SHARED_RUN.continueCost,
       roundsPerRun,
       maxLives,
+      timerSeconds,
     }),
     [
       state,
@@ -239,6 +295,7 @@ export function usePriceCheck() {
       buyContinue,
       roundsPerRun,
       maxLives,
+      timerSeconds,
     ],
   );
 }

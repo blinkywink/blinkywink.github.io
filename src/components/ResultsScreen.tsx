@@ -2,6 +2,10 @@ type Props = {
   /** Cash banked during this run. */
   coinsEarned: number;
   cleared?: boolean;
+  /** bestStreak ≥ 4 — bonus pick incoming. */
+  bonusPack?: boolean;
+  /** False after the one allowed continue was already used. */
+  continueAvailable?: boolean;
   continueCost: number;
   canAffordContinue: boolean;
   continueBusy?: boolean;
@@ -19,6 +23,8 @@ function formatCoins(n: number): string {
 export function ResultsScreen({
   coinsEarned,
   cleared = false,
+  bonusPack = false,
+  continueAvailable = true,
   continueCost,
   canAffordContinue,
   continueBusy = false,
@@ -40,32 +46,53 @@ export function ResultsScreen({
           <span className="results__hero-label">Cash earned</span>
         </div>
 
-        <div className="results__actions">
-          <button
-            type="button"
-            className="btn btn--primary btn--lg results__continue"
-            onClick={onContinue}
-            disabled={continueBusy || !canAffordContinue}
-          >
-            Continue
-            <span className="results__continue-cost">
-              <img
-                src="/images/ui/money-icon.webp"
-                alt=""
-                width={22}
-                height={22}
-              />
-              {continueCost}
-            </span>
-          </button>
-          <p className="results__continue-note">
-            {canAffordContinue
-              ? "Refill to 5 lives and keep playing"
-              : `Need ${continueCost} Cash for 5 more lives`}
+        {cleared ? (
+          <p className="results__pack-note">
+            Free tower pack unlocked — slash to open!
           </p>
-          {continueError ? (
-            <p className="results__continue-error">{continueError}</p>
-          ) : null}
+        ) : null}
+        {bonusPack ? (
+          <p className="results__pack-note results__pack-note--bonus">
+            {cleared
+              ? "4+ streak — bonus pack next (pick 1 of 3)!"
+              : "4+ streak — pick a bonus pack!"}
+          </p>
+        ) : null}
+
+        <div className="results__actions">
+          {continueAvailable ? (
+            <>
+              <button
+                type="button"
+                className="btn btn--primary btn--lg results__continue"
+                onClick={onContinue}
+                disabled={continueBusy || !canAffordContinue}
+              >
+                Continue
+                <span className="results__continue-cost">
+                  <img
+                    src="/images/ui/money-icon.webp"
+                    alt=""
+                    width={22}
+                    height={22}
+                  />
+                  {continueCost}
+                </span>
+              </button>
+              <p className="results__continue-note">
+                {canAffordContinue
+                  ? "One continue per run · refill to 5 lives"
+                  : `Need ${continueCost} Cash for 5 more lives`}
+              </p>
+              {continueError ? (
+                <p className="results__continue-error">{continueError}</p>
+              ) : null}
+            </>
+          ) : (
+            <p className="results__continue-note">
+              Continue already used this run
+            </p>
+          )}
 
           <button
             type="button"

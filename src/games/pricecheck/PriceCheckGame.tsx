@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { formatPathLevels } from "../../lib/pathCombos";
 import { GameHeader } from "../../components/GameHeader";
@@ -9,6 +9,7 @@ import { usePriceCheck, type Guess } from "./usePriceCheck";
 
 type Props = {
   onBack: () => void;
+  onRunEnd?: (info: { cleared: boolean; bestStreak: number }) => void;
 };
 
 function ComboTile({
@@ -91,7 +92,7 @@ function SidePanel({
   );
 }
 
-export function PriceCheckGame({ onBack }: Props) {
+export function PriceCheckGame({ onBack, onRunEnd }: Props) {
   const {
     state,
     guess,
@@ -101,8 +102,21 @@ export function PriceCheckGame({ onBack }: Props) {
     continueCost,
     roundsPerRun,
     maxLives,
+    timerSeconds,
   } = usePriceCheck();
   const { profile } = useAuth();
+  const runEndNotified = useRef(false);
+
+  useEffect(() => {
+    if (state.phase === "results" && !runEndNotified.current) {
+      runEndNotified.current = true;
+      onRunEnd?.({
+        cleared: state.clearedRun,
+        bestStreak: state.bestStreak,
+      });
+    }
+    if (state.phase !== "results") runEndNotified.current = false;
+  }, [state.phase, state.clearedRun, state.bestStreak, onRunEnd]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
@@ -137,6 +151,8 @@ export function PriceCheckGame({ onBack }: Props) {
         <ResultsScreen
           coinsEarned={state.lastRun.score}
           cleared={state.clearedRun}
+          bonusPack={state.bestStreak >= 4}
+          continueAvailable={!state.freePlay}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}
@@ -152,7 +168,14 @@ export function PriceCheckGame({ onBack }: Props) {
   }
 
   const revealed = state.phase === "reveal";
+  const playing = state.phase === "playing";
   const attemptsUsed = maxLives - state.lives;
+  const secondsLeft = Math.ceil(state.timeLeftMs / 1000);
+  const timerPct = Math.max(
+    0,
+    Math.min(100, (state.timeLeftMs / (timerSeconds * 1000)) * 100),
+  );
+  const urgent = playing && state.timeLeftMs <= 3000;
   const endLabel =
     state.lives <= 0 ||
     (!state.freePlay && state.round.round >= roundsPerRun)
@@ -177,6 +200,32 @@ export function PriceCheckGame({ onBack }: Props) {
               <LivesMeter maxAttempts={maxLives} attemptsUsed={attemptsUsed} />
             </div>
           </div>
+          {playing ? (
+            <div
+              className={`orderup-timer ${urgent ? "is-urgent" : ""}`}
+              role="timer"
+              aria-live="off"
+              aria-label={`${secondsLeft} seconds left`}
+            >
+              <div className="orderup-timer__track">
+                <div
+                  className="orderup-timer__fill"
+                  style={{ width: `${timerPct}%` }}
+                />
+              </div>
+              <span className="orderup-timer__num">{secondsLeft}</span>
+            </div>
+          ) : state.feedback ? (
+            <p
+              className={`price-result ${state.feedback.correct ? "is-win" : "is-miss"}`}
+            >
+              {state.feedback.correct
+                ? `Correct! +${state.feedback.points}`
+                : state.feedback.timedOut
+                  ? "Time’s up"
+                  : "Wrong side"}
+            </p>
+          ) : null}
         </div>
 
         <div className={`price-arena ${revealed ? "is-reveal" : ""}`}>

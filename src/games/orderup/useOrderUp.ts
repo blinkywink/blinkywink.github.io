@@ -258,7 +258,13 @@ export function useOrderUp() {
 
   const buyContinue = useCallback(async () => {
     const s = stateRef.current;
-    if (s.phase !== "results" || s.continueBusy || s.resumeRound == null) return;
+    if (
+      s.phase !== "results" ||
+      s.continueBusy ||
+      s.freePlay ||
+      s.resumeRound == null
+    )
+      return;
 
     setState((prev) => ({ ...prev, continueBusy: true, continueError: null }));
     const balance = await spendCoins(SHARED_RUN.continueCost);

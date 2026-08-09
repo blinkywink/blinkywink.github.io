@@ -1,7 +1,7 @@
 import cardAccents from "../data/cardAccents.json";
 import { towers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
-import { towerIdSlug } from "./pathCombos";
+import { buildTowerCardSpecs, towerIdSlug } from "./pathCombos";
 
 export const PACK_SIZE = 10;
 export const BTD6_PACK_ART = "/images/ui/monkey-pack.jpg";
@@ -109,6 +109,53 @@ export function towerPack(towerName: string): PackDef {
     category: null,
     cardCount: PACK_SIZE,
   };
+}
+
+/** Tower packs with at least one unowned card remaining. */
+export function incompleteTowerPacks(
+  owned: ReadonlySet<string>,
+  excludeTowers: ReadonlySet<string> = new Set(),
+): PackDef[] {
+  const out: PackDef[] = [];
+  for (const t of towers) {
+    if (excludeTowers.has(t.name)) continue;
+    const specs = buildTowerCardSpecs(t.name);
+    if (specs.some((c) => !owned.has(c.id))) {
+      out.push(towerPack(t.name));
+    }
+  }
+  return out;
+}
+
+function shuffleInPlace<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i]!;
+    arr[i] = arr[j]!;
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+/** Random tower pack the player still has cards to collect in. */
+export function pickRewardTowerPack(
+  owned: ReadonlySet<string>,
+  excludeTowers?: ReadonlySet<string>,
+): PackDef | null {
+  const bag = shuffleInPlace(incompleteTowerPacks(owned, excludeTowers));
+  return bag[0] ?? null;
+}
+
+/** Up to `count` random incomplete tower packs (for bonus pick-one). */
+export function pickRewardTowerPackChoices(
+  owned: ReadonlySet<string>,
+  count = 3,
+  excludeTowers?: ReadonlySet<string>,
+): PackDef[] {
+  return shuffleInPlace(incompleteTowerPacks(owned, excludeTowers)).slice(
+    0,
+    count,
+  );
 }
 
 export function categoryPack(category: TowerCategory): PackDef {

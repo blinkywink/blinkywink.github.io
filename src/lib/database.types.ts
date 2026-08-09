@@ -71,6 +71,10 @@ export type Database = {
         Args: { p_card_ids: string[] };
         Returns: string[];
       };
+      get_player_cards: {
+        Args: { p_user_id: string };
+        Returns: string[];
+      };
       claim_daily_cash: {
         Args: Record<string, never>;
         Returns: {

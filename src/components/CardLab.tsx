@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
+import { fetchPlayerCardIds } from "../lib/awardCards";
 import {
   buildTowerCardSpecs,
+  formatPathLevels,
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
@@ -17,10 +19,22 @@ export type CardsOpenOpts = {
   highlightIds?: string[];
 };
 
+export type CollectionViewer = {
+  userId: string;
+  username: string;
+};
+
 type Props = {
   onBack: () => void;
   initial?: CardsOpenOpts | null;
+  /** When set, show this player's collection (read-only) instead of yours. */
+  viewer?: CollectionViewer | null;
 };
+
+type View =
+  | { kind: "towers" }
+  | { kind: "all" }
+  | { kind: "tower"; name: string };
 
 const CATEGORY_ORDER = ["Primary", "Military", "Magic", "Support"];
 
@@ -60,16 +74,41 @@ const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
   ]),
 );
 
+/** Every collectible card across all towers. */
+const ALL_SPECS: MonkeyCardSpec[] = TOWER_CHOICES.flatMap(
+  (t) => TOWER_SPECS[t.name] ?? [],
+);
+
 function baseEntity(tower: string): TowerEntity | null {
-  return towerEntities.find((e) => e.tower === tower && e.type === "tower") ?? null;
+  return (
+    towerEntities.find((e) => e.tower === tower && e.type === "tower") ?? null
+  );
+}
+
+function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
+  if (!q) return true;
+  const hay = [
+    card.entity.name,
+    card.tower,
+    formatPathLevels(card.pathLevels),
+    card.id,
+  ]
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(q);
 }
 
 /** Player collection — owned cards in color, missing ones greyed out. */
-export function CardLab({ onBack: _onBack, initial }: Props) {
-  const { owned } = useCardCollection();
+export function CardLab({ onBack, initial, viewer = null }: Props) {
+  const { owned: myOwned } = useCardCollection();
+  const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
+    null,
+  );
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [selectedTower, setSelectedTower] = useState<string | null>(
-    initial?.tower ?? null,
+  const [view, setView] = useState<View>(() =>
+    initial?.tower ? { kind: "tower", name: initial.tower } : { kind: "towers" },
   );
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
@@ -77,18 +116,57 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
   );
 
   useEffect(() => {
-    if (!initial) return;
-    if (initial.tower) setSelectedTower(initial.tower);
+    if (!viewer) {
+      setRemoteOwned(null);
+      setRemoteLoading(false);
+      setRemoteError(null);
+      return;
+    }
+    let cancelled = false;
+    setRemoteLoading(true);
+    setRemoteError(null);
+    setRemoteOwned(null);
+    setView({ kind: "towers" });
+    setQuery("");
+    setFocused(null);
+    void fetchPlayerCardIds(viewer.userId)
+      .then((ids) => {
+        if (cancelled) return;
+        setRemoteOwned(new Set(ids));
+        setRemoteLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setRemoteError(
+          err instanceof Error ? err.message : "Could not load collection.",
+        );
+        setRemoteOwned(new Set());
+        setRemoteLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewer?.userId]);
+
+  const owned = viewer ? (remoteOwned ?? new Set<string>()) : myOwned;
+  const isRemote = Boolean(viewer);
+  const ownerLabel = viewer?.username ?? "You";
+
+  useEffect(() => {
+    if (!initial || isRemote) return;
+    if (initial.tower) setView({ kind: "tower", name: initial.tower });
     if (initial.highlightIds?.length) {
       setHighlightIds(new Set(initial.highlightIds));
     }
-  }, [initial]);
+  }, [initial, isRemote]);
 
   useEffect(() => {
     if (highlightIds.size === 0) return;
     const id = window.setTimeout(() => setHighlightIds(new Set()), 8000);
     return () => window.clearTimeout(id);
   }, [highlightIds]);
+
+  const totalOwned = owned.size;
 
   const filteredTowers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -100,31 +178,41 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
     );
   }, [query]);
 
-  const cards = useMemo(() => {
-    if (!selectedTower) return [];
-    return TOWER_SPECS[selectedTower] ?? [];
-  }, [selectedTower]);
+  const ownedAllCards = useMemo(() => {
+    const list = ALL_SPECS.filter((c) => owned.has(c.id));
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((c) => matchesCardQuery(c, q));
+  }, [owned, query]);
+
+  const towerCards = useMemo(() => {
+    if (view.kind !== "tower") return [];
+    return TOWER_SPECS[view.name] ?? [];
+  }, [view]);
 
   const ownedInTower = useMemo(
-    () => cards.reduce((n, c) => n + (owned.has(c.id) ? 1 : 0), 0),
-    [cards, owned],
+    () => towerCards.reduce((n, c) => n + (owned.has(c.id) ? 1 : 0), 0),
+    [towerCards, owned],
   );
 
-  const selectedMeta = useMemo(
-    () => TOWER_CHOICES.find((t) => t.name === selectedTower) ?? null,
-    [selectedTower],
-  );
+  const selectedMeta = useMemo(() => {
+    if (view.kind !== "tower") return null;
+    return TOWER_CHOICES.find((t) => t.name === view.name) ?? null;
+  }, [view]);
 
   useEffect(() => {
-    if (!focused && !selectedTower) return;
+    if (!focused && view.kind === "towers") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (focused) setFocused(null);
-      else if (selectedTower) setSelectedTower(null);
+      else if (view.kind !== "towers") {
+        setQuery("");
+        setView({ kind: "towers" });
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focused, selectedTower]);
+  }, [focused, view.kind]);
 
   useEffect(() => {
     if (!focused) return;
@@ -135,23 +223,105 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
     };
   }, [focused]);
 
+  const focusPortal = focused
+    ? createPortal(
+        <div
+          className="card-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={focused.entity.name}
+        >
+          <button
+            type="button"
+            className="card-focus__backdrop"
+            aria-label="Close"
+            onClick={() => setFocused(null)}
+          />
+          <div className="card-focus__panel">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm card-focus__close"
+              onClick={() => setFocused(null)}
+            >
+              ✕ Close
+            </button>
+            <MonkeyCard
+              entity={focused.entity}
+              pathLevels={focused.pathLevels}
+              mode="focus"
+              owned
+            />
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   // ——— Tower picker ———
-  if (!selectedTower) {
+  if (view.kind === "towers") {
+    if (isRemote && remoteLoading) {
+      return (
+        <div className="card-lab">
+          <div className="card-lab__atmosphere" aria-hidden="true" />
+          <header className="card-lab__header">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={onBack}
+            >
+              ← Leaderboard
+            </button>
+            <div className="card-lab__titles">
+              <p className="eyebrow">Collection</p>
+              <h1>{ownerLabel}</h1>
+              <p className="card-lab__blurb">Loading cards…</p>
+            </div>
+          </header>
+        </div>
+      );
+    }
+
     return (
       <div className="card-lab">
         <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
+          {isRemote ? (
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={onBack}
+            >
+              ← Leaderboard
+            </button>
+          ) : null}
           <div className="card-lab__titles">
-            <p className="eyebrow">Collection</p>
-            <h1>Card Collection</h1>
+            <p className="eyebrow">{isRemote ? "Player collection" : "Collection"}</p>
+            <h1>{isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}</h1>
             <p className="card-lab__blurb">
-              Every legal crosspath for each tower. Owned cards are colored —
-              missing ones stay grey until you pull them.
+              {remoteError
+                ? remoteError
+                : isRemote
+                  ? `${totalOwned} owned · browse by tower or open All Cards.`
+                  : "Browse by tower, or open All Cards for everything you own."}
             </p>
           </div>
         </header>
 
         <div className="card-lab__picker">
+          <button
+            type="button"
+            className="card-lab__all-btn"
+            onClick={() => {
+              setQuery("");
+              setView({ kind: "all" });
+            }}
+          >
+            <span className="card-lab__all-btn-title">All Cards</span>
+            <span className="card-lab__all-btn-meta">
+              {totalOwned} owned · no locked slots
+            </span>
+          </button>
+
           <label className="card-lab__search">
             <span className="card-lab__search-label">Search towers</span>
             <input
@@ -179,10 +349,15 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
                   className="card-lab__tower-btn"
                   onClick={() => {
                     setQuery("");
-                    setSelectedTower(tower.name);
+                    setView({ kind: "tower", name: tower.name });
                   }}
                 >
-                  <img src={tower.image} alt="" draggable={false} loading="lazy" />
+                  <img
+                    src={tower.image}
+                    alt=""
+                    draggable={false}
+                    loading="lazy"
+                  />
                   <span className="card-lab__tower-text">
                     <span className="card-lab__tower-name">{tower.name}</span>
                     <span className="card-lab__tower-meta">
@@ -201,8 +376,79 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
     );
   }
 
+  // ——— All owned cards ———
+  if (view.kind === "all") {
+    return (
+      <div className="card-lab">
+        <div className="card-lab__atmosphere" aria-hidden="true" />
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => {
+              setFocused(null);
+              setQuery("");
+              setView({ kind: "towers" });
+            }}
+          >
+            ← Towers
+          </button>
+          <div className="card-lab__titles card-lab__titles--tower">
+            <p className="eyebrow">{isRemote ? ownerLabel : "Owned"}</p>
+            <h1>All Cards</h1>
+            <p className="card-lab__blurb">
+              {totalOwned === 0
+                ? isRemote
+                  ? "No cards unlocked yet."
+                  : "You don’t own any cards yet — open packs from the shop."
+                : `${ownedAllCards.length}${query.trim() ? ` matching · ${totalOwned} total` : ""} owned · tap a card for the holo view.`}
+            </p>
+          </div>
+        </header>
+
+        <label className="card-lab__search card-lab__search--inline">
+          <span className="card-lab__search-label">
+            {isRemote ? "Search cards" : "Search your cards"}
+          </span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tower, upgrade name, 0-2-5…"
+            autoComplete="off"
+            autoFocus
+          />
+        </label>
+
+        {ownedAllCards.length === 0 ? (
+          <p className="card-lab__hint">
+            {totalOwned === 0
+              ? "No cards yet."
+              : `No owned cards match “${query}”.`}
+          </p>
+        ) : (
+          <div className="card-lab__grid">
+            {ownedAllCards.map((card) => (
+              <MonkeyCard
+                key={card.id}
+                entity={card.entity}
+                pathLevels={card.pathLevels}
+                mode="preview"
+                owned
+                highlight={highlightIds.has(card.id)}
+                onSelect={() => setFocused(card)}
+              />
+            ))}
+          </div>
+        )}
+
+        {focusPortal}
+      </div>
+    );
+  }
+
   // ——— Single tower card page ———
-  const portrait = selectedMeta?.image ?? baseEntity(selectedTower)?.image;
+  const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;
 
   return (
     <div className="card-lab">
@@ -213,7 +459,7 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
           className="btn btn--ghost btn--sm"
           onClick={() => {
             setFocused(null);
-            setSelectedTower(null);
+            setView({ kind: "towers" });
           }}
         >
           ← Towers
@@ -224,17 +470,17 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
             {portrait ? (
               <img src={portrait} alt="" draggable={false} />
             ) : null}
-            {selectedTower}
+            {view.name}
           </h1>
           <p className="card-lab__blurb">
-            {ownedInTower}/{cards.length} owned · same portrait art is grouped
-            together. Tap an unlocked card for the holo view.
+            {ownedInTower}/{towerCards.length} owned · same portrait art is
+            grouped together. Tap an unlocked card for the holo view.
           </p>
         </div>
       </header>
 
       <div className="card-lab__grid">
-        {cards.map((card) => {
+        {towerCards.map((card) => {
           const isOwned = owned.has(card.id);
           return (
             <MonkeyCard
@@ -254,42 +500,11 @@ export function CardLab({ onBack: _onBack, initial }: Props) {
       </div>
 
       <p className="card-lab__hint">
-        {ownedInTower}/{cards.length} unlocked · Escape returns to tower list
+        {ownedInTower}/{towerCards.length} unlocked · Escape returns to tower
+        list
       </p>
 
-      {focused
-        ? createPortal(
-            <div
-              className="card-focus"
-              role="dialog"
-              aria-modal="true"
-              aria-label={focused.entity.name}
-            >
-              <button
-                type="button"
-                className="card-focus__backdrop"
-                aria-label="Close"
-                onClick={() => setFocused(null)}
-              />
-              <div className="card-focus__panel">
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm card-focus__close"
-                  onClick={() => setFocused(null)}
-                >
-                  ✕ Close
-                </button>
-                <MonkeyCard
-                  entity={focused.entity}
-                  pathLevels={focused.pathLevels}
-                  mode="focus"
-                  owned
-                />
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+      {focusPortal}
     </div>
   );
 }
