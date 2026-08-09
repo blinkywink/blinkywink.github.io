@@ -8132,6 +8132,13 @@ button.card-chip:hover:not(:disabled) {
   min-height: 0;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-lab--picker .pick-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .card-lab--picker .card-lab__header {
@@ -8208,11 +8215,45 @@ button.card-chip:hover:not(:disabled) {
   box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35);
 }
 
-.card-lab--picker .pick-dock {
-  position: sticky;
-  bottom: 0;
+.card-lab--picker > .pick-dock {
+  position: relative;
+  flex: 0 0 auto;
   width: 100%;
-  margin: 1rem 0 0;
+  margin: 0.65rem 0 0;
+  border-radius: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pfp-editor__body--pick {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.pfp-editor__body--pick > .pfp-editor__hint {
+  flex: 0 0 auto;
+}
+
+.pfp-editor__body--pick .card-lab--picker {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pfp-editor__body--pick .pick-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 0.35rem;
+}
+
+.pfp-editor__body--pick .pick-dock {
+  position: relative;
+  z-index: 50;
+  margin-top: 0.45rem;
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.4);
 }
 
 .pick-dock__meta {
@@ -8262,10 +8303,6 @@ button.card-chip:hover:not(:disabled) {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #121218;
   color: #f0f0f4;
-}
-
-.pfp-editor__body--pick {
-  padding-bottom: 0.25rem;
 }
 
 .trade-picker__note {
@@ -8854,8 +8891,8 @@ button.trade-offer-card:hover:not(:disabled) {
   z-index: 1;
   width: min(920px, 100%);
   max-height: min(92dvh, 880px);
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   padding: 1.1rem 1.15rem 1rem;
   border-radius: 18px;
@@ -8953,6 +8990,7 @@ button.trade-offer-card:hover:not(:disabled) {
 
 .pfp-editor__body {
   min-height: 0;
+  flex: 1 1 auto;
   overflow: auto;
   padding-right: 0.15rem;
 }

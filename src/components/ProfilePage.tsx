@@ -420,7 +420,7 @@ export function ProfilePage() {
             <div className="pfp-editor__body pfp-editor__body--pick">
               <p className="pfp-editor__hint">
                 Slot {savedShowcase.length + 1} of {SHOWCASE_MAX}. Pick one, then
-                apply.
+                Apply at the bottom.
               </p>
               <OwnedCardPicker
                 owned={owned}
@@ -438,16 +438,6 @@ export function ProfilePage() {
                 }}
               />
             </div>
-            <footer className="pfp-editor__footer">
-              <button
-                type="button"
-                className="btn btn--ghost"
-                disabled={busy}
-                onClick={closeShowcaseEditor}
-              >
-                Cancel
-              </button>
-            </footer>
           </div>
         </div>,
         document.body,

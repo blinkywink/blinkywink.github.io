@@ -284,69 +284,71 @@ export function OwnedCardPicker({
   if (view.kind === "towers") {
     return (
       <div className="card-lab card-lab--picker">
-        <div className="card-lab__picker">
-          <button
-            type="button"
-            className="card-lab__all-btn"
-            onClick={() => {
-              setQuery("");
-              setView({ kind: "all" });
-            }}
-          >
-            <span className="card-lab__all-btn-title">All Cards</span>
-            <span className="card-lab__all-btn-meta">
-              {owned.size} owned · tap to select
-            </span>
-          </button>
+        <div className="pick-scroll">
+          <div className="card-lab__picker">
+            <button
+              type="button"
+              className="card-lab__all-btn"
+              onClick={() => {
+                setQuery("");
+                setView({ kind: "all" });
+              }}
+            >
+              <span className="card-lab__all-btn-title">All Cards</span>
+              <span className="card-lab__all-btn-meta">
+                {owned.size} owned · tap to select
+              </span>
+            </button>
 
-          <label className="card-lab__search">
-            <span className="card-lab__search-label">Search towers</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Dart Monkey, Ninja, Military…"
-              autoComplete="off"
-            />
-          </label>
+            <label className="card-lab__search">
+              <span className="card-lab__search-label">Search towers</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Dart Monkey, Ninja, Military…"
+                autoComplete="off"
+              />
+            </label>
 
-          <div className="card-lab__tower-list" role="list">
-            {filteredTowers.map((tower) => {
-              const specs = TOWER_SPECS[tower.name] ?? [];
-              const ownedN = specs.reduce(
-                (n, c) => n + (owned.has(c.id) ? 1 : 0),
-                0,
-              );
-              return (
-                <button
-                  key={tower.name}
-                  type="button"
-                  role="listitem"
-                  className="card-lab__tower-btn"
-                  disabled={ownedN === 0}
-                  onClick={() => {
-                    setQuery("");
-                    setView({ kind: "tower", name: tower.name });
-                  }}
-                >
-                  <img
-                    src={tower.image}
-                    alt=""
-                    draggable={false}
-                    loading="lazy"
-                  />
-                  <span className="card-lab__tower-text">
-                    <span className="card-lab__tower-name">{tower.name}</span>
-                    <span className="card-lab__tower-meta">
-                      {tower.category} · {ownedN}/{tower.cardCount} owned
+            <div className="card-lab__tower-list" role="list">
+              {filteredTowers.map((tower) => {
+                const specs = TOWER_SPECS[tower.name] ?? [];
+                const ownedN = specs.reduce(
+                  (n, c) => n + (owned.has(c.id) ? 1 : 0),
+                  0,
+                );
+                return (
+                  <button
+                    key={tower.name}
+                    type="button"
+                    role="listitem"
+                    className="card-lab__tower-btn"
+                    disabled={ownedN === 0}
+                    onClick={() => {
+                      setQuery("");
+                      setView({ kind: "tower", name: tower.name });
+                    }}
+                  >
+                    <img
+                      src={tower.image}
+                      alt=""
+                      draggable={false}
+                      loading="lazy"
+                    />
+                    <span className="card-lab__tower-text">
+                      <span className="card-lab__tower-name">{tower.name}</span>
+                      <span className="card-lab__tower-meta">
+                        {tower.category} · {ownedN}/{tower.cardCount} owned
+                      </span>
                     </span>
-                  </span>
-                </button>
-              );
-            })}
-            {filteredTowers.length === 0 ? (
-              <p className="card-lab__hint">No towers match “{query}”.</p>
-            ) : null}
+                  </button>
+                );
+              })}
+              {filteredTowers.length === 0 ? (
+                <p className="card-lab__hint">No towers match “{query}”.</p>
+              ) : null}
+            </div>
           </div>
         </div>
         {dock}
@@ -358,50 +360,52 @@ export function OwnedCardPicker({
   if (view.kind === "all") {
     return (
       <div className="card-lab card-lab--picker">
-        <header className="card-lab__header">
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => {
-              setQuery("");
-              setView({ kind: "towers" });
-            }}
-          >
-            ← Towers
-          </button>
-          <div className="card-lab__titles card-lab__titles--tower">
-            <p className="eyebrow">Owned</p>
-            <h1>All Cards</h1>
-            <p className="card-lab__blurb">
-              Tap cards to select them, then press {confirmLabel} below.
-            </p>
+        <div className="pick-scroll">
+          <header className="card-lab__header">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => {
+                setQuery("");
+                setView({ kind: "towers" });
+              }}
+            >
+              ← Towers
+            </button>
+            <div className="card-lab__titles card-lab__titles--tower">
+              <p className="eyebrow">Owned</p>
+              <h1>All Cards</h1>
+              <p className="card-lab__blurb">
+                Tap a card, then press {confirmLabel} below.
+              </p>
+            </div>
+          </header>
+
+          <div className="card-lab__toolbar">
+            <label className="card-lab__search card-lab__search--inline">
+              <span className="card-lab__search-label">Search your cards</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tower, upgrade name, 0-2-5…"
+                autoComplete="off"
+                autoFocus
+              />
+            </label>
+            {sortToggle}
           </div>
-        </header>
 
-        <div className="card-lab__toolbar">
-          <label className="card-lab__search card-lab__search--inline">
-            <span className="card-lab__search-label">Search your cards</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tower, upgrade name, 0-2-5…"
-              autoComplete="off"
-              autoFocus
-            />
-          </label>
-          {sortToggle}
+          {ownedAllCards.length === 0 ? (
+            <p className="card-lab__hint">
+              {owned.size === 0
+                ? "No cards yet."
+                : `No owned cards match “${query}”.`}
+            </p>
+          ) : (
+            renderCardGrid(ownedAllCards)
+          )}
         </div>
-
-        {ownedAllCards.length === 0 ? (
-          <p className="card-lab__hint">
-            {owned.size === 0
-              ? "No cards yet."
-              : `No owned cards match “${query}”.`}
-          </p>
-        ) : (
-          renderCardGrid(ownedAllCards)
-        )}
         {dock}
       </div>
     );
@@ -412,37 +416,40 @@ export function OwnedCardPicker({
 
   return (
     <div className="card-lab card-lab--picker">
-      <header className="card-lab__header">
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() => setView({ kind: "towers" })}
-        >
-          ← Towers
-        </button>
-        <div className="card-lab__titles card-lab__titles--tower">
-          <p className="eyebrow">{selectedMeta?.category ?? "Tower"}</p>
-          <h1 className="card-lab__tower-heading">
-            {portrait ? (
-              <img src={portrait} alt="" draggable={false} />
-            ) : null}
-            {view.name}
-          </h1>
-          <p className="card-lab__blurb">
-            {ownedTowerCards.length} owned · tap a card to select.
-          </p>
+      <div className="pick-scroll">
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setView({ kind: "towers" })}
+          >
+            ← Towers
+          </button>
+          <div className="card-lab__titles card-lab__titles--tower">
+            <p className="eyebrow">{selectedMeta?.category ?? "Tower"}</p>
+            <h1 className="card-lab__tower-heading">
+              {portrait ? (
+                <img src={portrait} alt="" draggable={false} />
+              ) : null}
+              {view.name}
+            </h1>
+            <p className="card-lab__blurb">
+              {ownedTowerCards.length} owned · tap a card, then{" "}
+              {confirmLabel} below.
+            </p>
+          </div>
+        </header>
+
+        <div className="card-lab__toolbar card-lab__toolbar--end">
+          {sortToggle}
         </div>
-      </header>
 
-      <div className="card-lab__toolbar card-lab__toolbar--end">
-        {sortToggle}
+        {ownedTowerCards.length === 0 ? (
+          <p className="card-lab__hint">You don’t own any {view.name} cards.</p>
+        ) : (
+          renderCardGrid(ownedTowerCards)
+        )}
       </div>
-
-      {ownedTowerCards.length === 0 ? (
-        <p className="card-lab__hint">You don’t own any {view.name} cards.</p>
-      ) : (
-        renderCardGrid(ownedTowerCards)
-      )}
       {dock}
     </div>
   );
