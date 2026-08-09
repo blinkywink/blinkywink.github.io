@@ -51,7 +51,7 @@ export function CurrencyChip({
     setPops((list) => [...list.slice(-3), { id, delta }]);
     window.setTimeout(() => {
       setPops((list) => list.filter((p) => p.id !== id));
-    }, 1500);
+    }, 1750);
   }, [amount, resetKey]);
 
   return (

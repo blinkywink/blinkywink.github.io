@@ -18,7 +18,7 @@ export function LivesMeter({ maxAttempts, attemptsUsed }: Props) {
       // Hearts render left→right; the rightmost living one is lost first.
       const lostIndex = maxAttempts - attemptsUsed;
       setShatteringIndex(lostIndex);
-      const t = window.setTimeout(() => setShatteringIndex(null), 900);
+      const t = window.setTimeout(() => setShatteringIndex(null), 720);
       prevUsed.current = attemptsUsed;
       return () => window.clearTimeout(t);
     }
