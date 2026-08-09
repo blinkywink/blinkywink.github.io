@@ -154,7 +154,10 @@ export function ListingPage() {
     try {
       await makeListingOffer(listing.id, price);
       await notifyMarketPartner(listing.sellerId);
-      setStatus(`Offer sent: ${price.toLocaleString()} Cash.`);
+      await refreshProfile();
+      setStatus(
+        `Offer sent: ${price.toLocaleString()} Cash locked until they respond.`,
+      );
       setOfferOpen(false);
       await load();
     } catch (err) {
@@ -358,8 +361,9 @@ export function ListingPage() {
                       </label>
                       <p className="listing-offer-hint">
                         Must be under{" "}
-                        <CashAmount amount={listing.price} size={14} />. Seller
-                        gets a notification to accept or decline.
+                        <CashAmount amount={listing.price} size={14} />. Your
+                        Cash is locked until they accept, decline, or you
+                        cancel.
                       </p>
                       <div className="listing-offer-form__row">
                         <button

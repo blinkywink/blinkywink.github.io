@@ -34,7 +34,9 @@ export function TradeInbox() {
   const [offers, setOffers] = useState<MarketOfferInbox>(EMPTY_OFFERS);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const prevIncoming = useRef(0);
+  const prevOutgoingIds = useRef<Set<string>>(new Set());
   const hydrated = useRef(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +51,27 @@ export function TradeInbox() {
         fetchTradeInbox({ force }),
         fetchMarketOfferInbox({ force }).catch(() => EMPTY_OFFERS),
       ]);
+
+      const nextOutgoingIds = new Set(nextOffers.outgoing.map((o) => o.id));
+      if (hydrated.current) {
+        let resolvedOutgoing = false;
+        for (const id of prevOutgoingIds.current) {
+          if (!nextOutgoingIds.has(id)) {
+            resolvedOutgoing = true;
+            break;
+          }
+        }
+        if (resolvedOutgoing) {
+          // Seller accepted/declined (or listing sold) — pull Cash + cards.
+          await Promise.all([refreshCards(), refreshProfile()]);
+          setNotice(
+            "A market offer resolved — Cash and cards were refreshed.",
+          );
+          setOpen(true);
+        }
+      }
+      prevOutgoingIds.current = nextOutgoingIds;
+
       setInbox(nextTrades);
       setOffers(nextOffers);
       setError(null);
@@ -68,15 +91,17 @@ export function TradeInbox() {
     } catch {
       // Quiet — header shouldn't spam errors while offline
     }
-  }, [user]);
+  }, [user, refreshCards, refreshProfile]);
 
   useEffect(() => {
     if (!user) {
       setInbox(EMPTY_TRADES);
       setOffers(EMPTY_OFFERS);
       prevIncoming.current = 0;
+      prevOutgoingIds.current = new Set();
       hydrated.current = false;
       setOpen(false);
+      setNotice(null);
       return;
     }
     void refresh();
@@ -161,13 +186,17 @@ export function TradeInbox() {
   async function onAcceptOffer(offer: MarketOffer) {
     setBusyId(offer.id);
     setError(null);
+    setNotice(null);
     try {
       await respondListingOffer(offer.id, true);
       await notifyMarketPartner(offer.partnerId);
       await Promise.all([refreshCards(), refreshProfile()]);
+      setNotice(
+        `Accepted offer — Cash received, card sent to ${offer.partnerUsername}.`,
+      );
       setOpen(false);
       navigate(listingPath(offer.listingId));
-      await refresh();
+      await refresh(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not accept offer.");
     }
@@ -223,6 +252,7 @@ export function TradeInbox() {
         <div className="trade-inbox__panel" role="dialog" aria-label="Inbox">
           <p className="trade-inbox__title">Inbox</p>
           {error ? <p className="trade-inbox__err">{error}</p> : null}
+          {notice ? <p className="trade-inbox__notice">{notice}</p> : null}
 
           {badge === 0 ? (
             <p className="trade-inbox__empty">Nothing waiting right now.</p>
