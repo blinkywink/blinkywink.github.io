@@ -8,27 +8,27 @@ export const PACK_GOD_CHANCE = 1 / 400;
 
 /**
  * Per-card tier odds (each slot rolls independently).
- * High tiers fixed by design; T0–T3 share the leftover ~93.2% with the
+ * High tiers fixed by design; T0–T3 share the leftover ~96.5% with the
  * peak at T2 (bell-ish from T0 → T3).
  *
  *   Paragon  0.10%
  *   T5       0.70%
- *   T4       6.00%
- *   T3      18.20%
- *   T2      36.00%   ← center
- *   T1      25.00%
- *   T0      14.00%
+ *   T4       2.70%
+ *   T3      18.84%
+ *   T2      37.27%   ← center
+ *   T1      25.89%
+ *   T0      14.50%
  *           -------
  *           100.00%
  */
 export const CARD_TIER_ODDS = {
   paragon: 0.001,
   5: 0.007,
-  4: 0.06,
-  3: 0.182,
-  2: 0.36,
-  1: 0.25,
-  0: 0.14,
+  4: 0.027,
+  3: 0.1884,
+  2: 0.3727,
+  1: 0.2589,
+  0: 0.145,
 } as const;
 
 type PullTier = "paragon" | 0 | 1 | 2 | 3 | 4 | 5;
@@ -95,25 +95,6 @@ function godTierWeight(card: MonkeyCardSpec): number {
   return 0;
 }
 
-/**
- * Owned cards start nearly banned, then ramp in as the pool fills.
- * Early: ~0–1 dup/pack. Near-complete: dups feel normal again.
- */
-function ownedPullMult(ownedRatio: number): number {
-  if (ownedRatio <= 0) return 0;
-  return Math.min(1, Math.pow(ownedRatio, 2.15) * 1.2 + 0.02);
-}
-
-function ownershipRatio(
-  pool: MonkeyCardSpec[],
-  owned: ReadonlySet<string>,
-): number {
-  if (!pool.length) return 0;
-  let n = 0;
-  for (const c of pool) if (owned.has(c.id)) n += 1;
-  return n / pool.length;
-}
-
 function takeWeighted(bag: { c: MonkeyCardSpec; weight: number }[]): MonkeyCardSpec {
   const total = bag.reduce((n, x) => n + x.weight, 0);
   let roll = Math.random() * total;
@@ -171,22 +152,16 @@ function pullGodPackCards(
   );
   const paragonPool = pool.filter((c) => c.isParagon);
   const highPool = [...t4Pool, ...t5Pool];
-  const ratio = ownershipRatio(highPool.length ? highPool : pool, owned);
-  const dupMult = ownedPullMult(ratio);
-
   const pulls: MonkeyCardSpec[] = [];
 
-  // Prefer an unowned Paragon when possible.
+  // Prefer any Paragon when the pool has one.
   if (paragonPool.length) {
-    const fresh = paragonPool.filter((c) => !owned.has(c.id));
-    const bag = fresh.length ? fresh : paragonPool;
-    pulls.push(bag[Math.floor(Math.random() * bag.length)]!);
+    pulls.push(paragonPool[Math.floor(Math.random() * paragonPool.length)]!);
   }
 
-  const t5Bag = t5Pool.map((c) => ({
-    c,
-    weight: owned.has(c.id) ? Math.max(0.001, dupMult) : 1,
-  }));
+  const t5Bag = t5Pool
+    .filter((c) => !pulls.some((p) => p.id === c.id))
+    .map((c) => ({ c, weight: 1 }));
   const t5Target = Math.min(
     t5Pool.length,
     Math.max(3, Math.ceil(count * 0.4)),
@@ -205,8 +180,7 @@ function pullGodPackCards(
     .filter((c) => !pulls.some((p) => p.id === c.id))
     .map((c) => ({
       c,
-      weight:
-        godTierWeight(c) * (owned.has(c.id) ? Math.max(0.001, dupMult) : 1),
+      weight: godTierWeight(c),
     }))
     .filter((x) => x.weight > 0);
 
@@ -214,8 +188,8 @@ function pullGodPackCards(
     pulls.push(takeWeighted(bag));
   }
 
-  if (pulls.length < count) fillFrom(pulls, highPool, count, owned, true);
-  if (pulls.length < count) fillFrom(pulls, pool, count, owned, true);
+  if (pulls.length < count) fillFrom(pulls, highPool, count, owned, false);
+  if (pulls.length < count) fillFrom(pulls, pool, count, owned, false);
 
   return shuffle(pulls);
 }
@@ -241,18 +215,13 @@ function pullNormalPackCards(
   count: number,
   owned: ReadonlySet<string>,
 ): MonkeyCardSpec[] {
-  const ratio = ownershipRatio(pool, owned);
-  const dupMult = ownedPullMult(ratio);
-
   // Bags per tier — cards removed after pick so a pack has unique IDs.
+  // Ownership does not affect weight; every card in a tier is equal.
   const bags = new Map<PullTier, { c: MonkeyCardSpec; weight: number }[]>();
   for (const tier of TIER_ROLL_ORDER) bags.set(tier, []);
 
   for (const c of pool) {
-    const tier = cardPullTier(c);
-    const weight = owned.has(c.id) ? Math.max(0.001, dupMult) : 1;
-    if (weight <= 0) continue;
-    bags.get(tier)!.push({ c, weight });
+    bags.get(cardPullTier(c))!.push({ c, weight: 1 });
   }
 
   const pulls: MonkeyCardSpec[] = [];
@@ -282,7 +251,7 @@ function pullNormalPackCards(
     pulls.push(takeWeighted(bag));
   }
 
-  if (pulls.length < count) fillFrom(pulls, pool, count, owned, true);
+  if (pulls.length < count) fillFrom(pulls, pool, count, owned, false);
 
   return shuffle(pulls);
 }
@@ -290,8 +259,7 @@ function pullNormalPackCards(
 /**
  * Open a pack:
  * - 0.25% god pack (all T4+, usually with a Paragon) — pack-level only
- * - otherwise each card rolls tier odds independently
- * - early collections heavily prefer new cards; dups ramp as you complete the pool
+ * - otherwise each card rolls tier odds independently (ownership ignored)
  * - duplicates convert to Cash in the opener
  */
 export function pullPackCards(

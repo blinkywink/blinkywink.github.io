@@ -196,6 +196,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   }, [highlightIds]);
 
   const totalOwned = owned.size;
+  const totalCards = ALL_SPECS.length;
 
   const filteredTowers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -361,8 +362,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               {remoteError
                 ? remoteError
                 : isRemote
-                  ? `${totalOwned} owned · browse by tower or open All Cards.`
-                  : "Browse by tower, or open All Cards for everything you own."}
+                  ? `${totalOwned} / ${totalCards} owned · browse by tower or open All Cards.`
+                  : `${totalOwned} / ${totalCards} owned · browse by tower, or open All Cards.`}
             </p>
             {canRequestTrade ? (
               <div className="card-lab__trade">
@@ -393,7 +394,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           >
             <span className="card-lab__all-btn-title">All Cards</span>
             <span className="card-lab__all-btn-meta">
-              {totalOwned} owned · no locked slots
+              {totalOwned} / {totalCards} owned
             </span>
           </button>
 
@@ -476,7 +477,9 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 ? isRemote
                   ? "No cards unlocked yet."
                   : "You don’t own any cards yet — open packs from the shop."
-                : `${ownedAllCards.length}${query.trim() ? ` matching · ${totalOwned} total` : ""} owned · tap a card for the holo view.`}
+                : query.trim()
+                  ? `${ownedAllCards.length} matching · ${totalOwned} / ${totalCards} owned · tap a card for the holo view.`
+                  : `${totalOwned} / ${totalCards} owned · tap a card for the holo view.`}
             </p>
           </div>
         </header>
