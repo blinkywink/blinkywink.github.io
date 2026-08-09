@@ -20,7 +20,7 @@ import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import { collectionPath, userCollectionPath } from "../lib/routes";
-import { GameHeader } from "./GameHeader";
+import { PageHeader } from "./PageHeader";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { UserAvatar } from "./UserAvatar";
 
@@ -109,7 +109,7 @@ export function ProfilePage() {
   if (!ready) {
     return (
       <div className="profile-page">
-        <GameHeader title="PROFILE" icon="" />
+        <PageHeader title="Profile" blurb="Loading…" />
         <main className="profile-main">
           <p className="profile-empty">Loading…</p>
         </main>
@@ -293,7 +293,11 @@ export function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <GameHeader title="PROFILE" icon="" />
+      <PageHeader
+        eyebrow="Account"
+        title="Profile"
+        blurb="Your picture is a cropped card. Players see it on the board and market."
+      />
       <main className="profile-main">
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
@@ -305,10 +309,6 @@ export function ProfilePage() {
           </div>
           <div className="profile-home__meta">
             <h2>{user.username}</h2>
-            <p>
-              Your profile picture is a cropped card from your collection.
-              Other players see it on the leaderboard and marketplace.
-            </p>
             <div className="profile-home__actions">
               <button
                 type="button"
@@ -327,16 +327,12 @@ export function ProfilePage() {
                   Remove
                 </button>
               ) : null}
-              <Link className="btn btn--secondary" to={collectionPath()}>
-                My cards
-              </Link>
-              <Link
-                className="btn btn--ghost"
-                to={userCollectionPath(user.username)}
-              >
-                Public page
-              </Link>
             </div>
+            <p className="profile-home__links">
+              <Link to={collectionPath()}>My cards</Link>
+              <span aria-hidden="true">·</span>
+              <Link to={userCollectionPath(user.username)}>Public page</Link>
+            </p>
           </div>
         </section>
       </main>

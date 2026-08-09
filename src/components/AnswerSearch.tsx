@@ -106,9 +106,13 @@ export function AnswerSearch({
 
   const submit = (entity: TowerEntity) => {
     if (disabled || eliminated.has(entity.id)) return;
-    setQuery(entity.name);
-    setOpen(false);
     onSelect(entity);
+    // Wrong guesses stay on this round — drop the typed pick so the next try is fresh.
+    // Correct answers leave this screen on the next render.
+    setPickedTower(null);
+    setQuery("");
+    setOpen(false);
+    window.setTimeout(() => inputRef.current?.focus(), 40);
   };
 
   const clearPicker = () => {

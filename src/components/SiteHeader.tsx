@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { AccountBar } from "./AccountBar";
 import { TradeInbox } from "./TradeInbox";
 
-/** Fixed top bar — brand + account, stays on every screen. */
+const NAV = [
+  { to: "/collection", label: "Cards" },
+  { to: "/marketplace", label: "Market" },
+  { to: "/leaderboard", label: "Board" },
+] as const;
+
+/** Fixed top bar — brand + main nav + account, stays on every screen. */
 export function SiteHeader() {
   return (
     <header className="site-header">
@@ -22,6 +28,21 @@ export function SiteHeader() {
           />
           <span>blinkywink.co</span>
         </Link>
+
+        <nav className="site-nav" aria-label="Main">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `site-nav__link${isActive ? " is-active" : ""}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
         <div className="site-header__actions">
           <TradeInbox />
           <AccountBar />

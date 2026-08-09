@@ -12,7 +12,7 @@ import {
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
 import { userCollectionPath } from "../lib/routes";
-import { GameHeader } from "./GameHeader";
+import { PageHeader } from "./PageHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { UserAvatar } from "./UserAvatar";
@@ -242,7 +242,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const renderListing = (row: MarketplaceListing, mode: "browse" | "mine") => {
     const card = cardSpecById(row.cardId);
     const mine = user?.id === row.sellerId;
-    const tier = listingTier(card);
+    const canBuy =
+      !mine &&
+      !isGuest &&
+      (profile?.coins ?? 0) >= row.price &&
+      !owned.has(row.cardId);
     return (
       <article key={row.id} className="market-card">
         {card ? (
@@ -256,27 +260,27 @@ export function Marketplace({ onBack: _onBack }: Props) {
           <div className="market-card__missing">{row.cardId}</div>
         )}
         <div className="market-card__meta">
-          <strong>{row.price.toLocaleString()} Cash</strong>
-          <span className="market-card__tags">
-            {card ? card.tower : "Unknown"}
-            {tier >= 0 ? ` · T${tier === 6 ? "P" : tier}` : ""}
-          </span>
+          <div className="market-card__price-row">
+            <strong>{row.price.toLocaleString()} Cash</strong>
+            <span className="market-card__time">
+              {formatPostedAt(row.createdAt)}
+            </span>
+          </div>
           {mode === "browse" ? (
             <Link
               className="market-card__seller"
               to={userCollectionPath(row.sellerUsername)}
             >
-              <UserAvatar crop={row.sellerAvatar} size={32} />
+              <UserAvatar crop={row.sellerAvatar} size={28} />
               <span>{row.sellerUsername}</span>
             </Link>
           ) : (
-            <span className="market-card__seller">Your listing</span>
+            <span className="market-card__yours">Your listing</span>
           )}
-          <span className="market-card__time">{formatPostedAt(row.createdAt)}</span>
           {mode === "mine" || mine ? (
             <button
               type="button"
-              className="btn btn--ghost btn--sm"
+              className="btn btn--ghost btn--sm market-card__action"
               disabled={busyId === row.id}
               onClick={() => void onCancel(row)}
             >
@@ -285,12 +289,16 @@ export function Marketplace({ onBack: _onBack }: Props) {
           ) : (
             <button
               type="button"
-              className="btn btn--primary btn--sm"
-              disabled={
-                busyId === row.id ||
-                isGuest ||
-                (profile?.coins ?? 0) < row.price ||
+              className="btn btn--primary btn--sm market-card__action"
+              disabled={busyId === row.id || !canBuy}
+              title={
                 owned.has(row.cardId)
+                  ? "You already own this card"
+                  : isGuest
+                    ? "Sign in to buy"
+                    : (profile?.coins ?? 0) < row.price
+                      ? "Not enough Cash"
+                      : undefined
               }
               onClick={() => void onBuy(row)}
             >
@@ -308,12 +316,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
 
   return (
     <div className="market-page">
-      <GameHeader title="MARKETPLACE" icon="" />
+      <PageHeader
+        title="Marketplace"
+        blurb="Buy and sell cards from other players."
+      />
       <main className="market-main">
-        <p className="market-sub">
-          Recently posted cards from players. Search towers and sort to find deals.
-        </p>
-
         <div className="market-tabs" role="tablist" aria-label="Marketplace">
           {(
             [
@@ -356,49 +363,70 @@ export function Marketplace({ onBack: _onBack }: Props) {
         ) : null}
 
         {tab !== "sell" ? (
-          <label className="market-search">
-            <span className="market-search__label">
-              {tab === "mine" ? "Search your listings" : "Search towers for sale"}
-            </span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tower name, upgrade, seller…"
-              autoComplete="off"
-            />
-          </label>
-        ) : null}
+          <div className="market-filters">
+            <label className="market-search">
+              <span className="market-search__label">
+                {tab === "mine"
+                  ? "Search your listings"
+                  : "Search towers for sale"}
+              </span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tower name, upgrade, seller…"
+                autoComplete="off"
+              />
+            </label>
 
-        {tab === "browse" ? (
-          <div className="market-toolbar">
-            <label className="market-toolbar__field">
-              <span>Tower</span>
-              <select
-                value={towerFilter}
-                onChange={(e) => setTowerFilter(e.target.value)}
+            {tab === "browse" ? (
+              <div className="market-toolbar">
+                <label className="market-toolbar__field">
+                  <span>Tower</span>
+                  <select
+                    value={towerFilter}
+                    onChange={(e) => setTowerFilter(e.target.value)}
+                  >
+                    <option value="all">All towers</option>
+                    {towersForSale.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="market-toolbar__field">
+                  <span>Sort</span>
+                  <select
+                    value={sortKey}
+                    onChange={(e) => setSortKey(e.target.value as SortKey)}
+                  >
+                    {SORT_OPTIONS.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm market-refresh"
+                  onClick={() => void load()}
+                  disabled={loading}
+                >
+                  Refresh
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm market-refresh"
+                onClick={() => void load()}
+                disabled={loading}
               >
-                <option value="all">All towers</option>
-                {towersForSale.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="market-toolbar__field">
-              <span>Sort</span>
-              <select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                Refresh
+              </button>
+            )}
           </div>
         ) : null}
 
@@ -446,9 +474,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
           )
         ) : (
           <div className="market-sell-pick">
-            <p className="market-empty">
-              Same as your collection — tap cards, set a price, then List below.
-            </p>
             <OwnedCardPicker
               owned={owned}
               selectedIds={selected}
@@ -475,15 +500,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
             />
           </div>
         )}
-
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm market-refresh"
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          Refresh
-        </button>
       </main>
     </div>
   );

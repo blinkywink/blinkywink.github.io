@@ -83,9 +83,11 @@ export function MapAnswerSearch({
 
   const submit = (entity: MapEntity) => {
     if (disabled || eliminated.has(entity.id)) return;
-    setQuery(entity.name);
-    setOpen(false);
     onSelect(entity);
+    // Wrong guesses stay on this round — clear so the next try isn't stuck on this map.
+    setQuery("");
+    setOpen(false);
+    window.setTimeout(() => inputRef.current?.focus(), 40);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

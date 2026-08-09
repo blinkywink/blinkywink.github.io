@@ -78,6 +78,15 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 const EMPTY_SET: ReadonlySet<string> = new Set();
 
+function sameIdSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  for (const id of a) {
+    if (!b.has(id)) return false;
+  }
+  return true;
+}
+
 type Props = {
   owned: ReadonlySet<string>;
   /** Currently committed selection. */
@@ -116,8 +125,12 @@ export function OwnedCardPicker({
   const [tierHighFirst, setTierHighFirst] = useState(false);
   const [draft, setDraft] = useState<Set<string>>(() => new Set(selectedIds));
 
+  // Only reset draft when the committed selection *contents* change.
+  // Parents often pass a fresh Set each poll/render with the same ids.
   useEffect(() => {
-    setDraft(new Set(selectedIds));
+    setDraft((prev) =>
+      sameIdSet(prev, selectedIds) ? prev : new Set(selectedIds),
+    );
   }, [selectedIds]);
 
   const filteredTowers = useMemo(() => {

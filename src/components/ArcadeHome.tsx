@@ -21,8 +21,6 @@ export type GameId =
 type Props = {
   onPlay: (game: GameId) => void;
   onOpenCards: () => void;
-  onOpenLeaderboard: () => void;
-  onOpenMarketplace: () => void;
   onPackFinished?: (result: {
     pack: PackDef;
     pulls: MonkeyCardSpec[];
@@ -339,8 +337,6 @@ function DailyClaimButton() {
 export function ArcadeHome({
   onPlay,
   onOpenCards,
-  onOpenLeaderboard,
-  onOpenMarketplace,
   onPackFinished,
 }: Props) {
   const [activePack, setActivePack] = useState<PackDef | null>(null);
@@ -471,22 +467,8 @@ export function ArcadeHome({
         </button>
       </section>
 
-      <section className="arcade__utility" aria-label="Arcade links">
+      <section className="arcade__utility" aria-label="Daily reward">
         <DailyClaimButton />
-        <button
-          type="button"
-          className="arcade-link-btn"
-          onClick={onOpenLeaderboard}
-        >
-          Leaderboard
-        </button>
-        <button
-          type="button"
-          className="arcade-link-btn"
-          onClick={onOpenMarketplace}
-        >
-          Marketplace
-        </button>
       </section>
 
       <section className="pack-shelf" aria-label="Shop">

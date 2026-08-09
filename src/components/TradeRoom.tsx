@@ -14,7 +14,7 @@ import {
   type TradeState,
 } from "../lib/trades";
 import { collectionPath, marketplacePath } from "../lib/routes";
-import { GameHeader } from "./GameHeader";
+import { PageHeader } from "./PageHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 
@@ -39,7 +39,24 @@ export function TradeRoom() {
     try {
       const next = await fetchTrade(tradeId);
       setTrade(next);
-      setLocalOffer(next.myOffer);
+      setLocalOffer((prev) => {
+        const incoming = next.myOffer;
+        if (
+          prev.length === incoming.length &&
+          prev.every((id, i) => id === incoming[i])
+        ) {
+          return prev;
+        }
+        const prevSet = new Set(prev);
+        const nextSet = new Set(incoming);
+        if (
+          prevSet.size === nextSet.size &&
+          [...prevSet].every((id) => nextSet.has(id))
+        ) {
+          return prev;
+        }
+        return incoming;
+      });
       setError(null);
       if (next.status === "completed") {
         void refreshCards();
@@ -213,7 +230,7 @@ export function TradeRoom() {
   if (isGuest || !user) {
     return (
       <div className="trade-page">
-        <GameHeader title="TRADE" icon="" />
+        <PageHeader title="Trade" blurb="Sign in to trade cards with other players." />
         <main className="trade-main">
           <p className="trade-banner trade-banner--err">
             Sign in to trade cards.{" "}
@@ -227,7 +244,7 @@ export function TradeRoom() {
   if (loading && !trade) {
     return (
       <div className="trade-page">
-        <GameHeader title="TRADE" icon="" />
+        <PageHeader title="Trade" blurb="Loading…" />
         <main className="trade-main">
           <p className="trade-empty">Loading trade…</p>
         </main>
@@ -238,7 +255,7 @@ export function TradeRoom() {
   if (!trade) {
     return (
       <div className="trade-page">
-        <GameHeader title="TRADE" icon="" />
+        <PageHeader title="Trade" />
         <main className="trade-main">
           <p className="trade-banner trade-banner--err">
             {error ?? "Trade not found."}
@@ -253,16 +270,18 @@ export function TradeRoom() {
 
   return (
     <div className="trade-page">
-      <GameHeader title={`TRADE · ${partnerName}`} icon="" />
-      <main className="trade-main">
-        <p className="trade-sub">
-          {done
+      <PageHeader
+        eyebrow="Live trade"
+        title={`With ${partnerName}`}
+        blurb={
+          done
             ? "Trade finished. Cards are in both collections."
             : active
-              ? "Add cards they don’t already own. Both players Ready to finish."
-              : `This trade is ${trade.status}.`}
-        </p>
-
+              ? "Pick cards below, then Ready when the offers look good."
+              : `This trade is ${trade.status}.`
+        }
+      />
+      <main className="trade-main">
         {error ? (
           <p className="trade-banner trade-banner--err">{error}</p>
         ) : null}
@@ -270,105 +289,102 @@ export function TradeRoom() {
           <p className="trade-banner trade-banner--ok">{status}</p>
         ) : null}
 
-        <div className="trade-sides">
-          <section className="trade-side">
-            <header className="trade-side__head">
-              <h2>You · {localOffer.length}/8</h2>
-              <span className={iAmReady ? "is-ready" : ""}>
-                {iAmReady ? "Ready" : "Not ready"}
-              </span>
-            </header>
-            <div className="trade-offer-grid">
-              {localOffer.length === 0 ? (
-                <p className="trade-empty">Nothing offered yet</p>
-              ) : (
-                localOffer.map((id) => {
-                  const card = cardSpecById(id);
-                  if (!card) return null;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      className="trade-offer-card"
-                      disabled={!active || busy}
-                      title="Remove from offer"
-                      onClick={() => toggleCard(id)}
-                    >
-                      <MonkeyCard
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                        staticArt
-                      />
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </section>
+        <div className="trade-summary">
+          <div className="trade-sides">
+            <section className="trade-side">
+              <header className="trade-side__head">
+                <h2>You · {localOffer.length}/8</h2>
+                <span className={iAmReady ? "is-ready" : ""}>
+                  {iAmReady ? "Ready" : "Not ready"}
+                </span>
+              </header>
+              <div className="trade-offer-grid">
+                {localOffer.length === 0 ? (
+                  <p className="trade-empty">Nothing offered yet</p>
+                ) : (
+                  localOffer.map((id) => {
+                    const card = cardSpecById(id);
+                    if (!card) return null;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className="trade-offer-card"
+                        disabled={!active || busy}
+                        title="Remove from offer"
+                        onClick={() => toggleCard(id)}
+                      >
+                        <MonkeyCard
+                          entity={card.entity}
+                          pathLevels={card.pathLevels}
+                          mode="preview"
+                          owned
+                          staticArt
+                        />
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </section>
 
-          <section className="trade-side">
-            <header className="trade-side__head">
-              <h2>
-                {partnerName} · {trade.theirOffer.length}/8
-              </h2>
-              <span className={theyReady ? "is-ready" : ""}>
-                {theyReady ? "Ready" : "Not ready"}
-              </span>
-            </header>
-            <div className="trade-offer-grid">
-              {trade.theirOffer.length === 0 ? (
-                <p className="trade-empty">Waiting for their cards…</p>
-              ) : (
-                trade.theirOffer.map((id) => {
-                  const card = cardSpecById(id);
-                  if (!card) return null;
-                  return (
-                    <div key={id} className="trade-offer-card is-locked">
-                      <MonkeyCard
-                        entity={card.entity}
-                        pathLevels={card.pathLevels}
-                        mode="preview"
-                        owned
-                        staticArt
-                      />
-                    </div>
-                  );
-                })
-              )}
+            <section className="trade-side">
+              <header className="trade-side__head">
+                <h2>
+                  {partnerName} · {trade.theirOffer.length}/8
+                </h2>
+                <span className={theyReady ? "is-ready" : ""}>
+                  {theyReady ? "Ready" : "Not ready"}
+                </span>
+              </header>
+              <div className="trade-offer-grid">
+                {trade.theirOffer.length === 0 ? (
+                  <p className="trade-empty">Waiting for their cards…</p>
+                ) : (
+                  trade.theirOffer.map((id) => {
+                    const card = cardSpecById(id);
+                    if (!card) return null;
+                    return (
+                      <div key={id} className="trade-offer-card is-locked">
+                        <MonkeyCard
+                          entity={card.entity}
+                          pathLevels={card.pathLevels}
+                          mode="preview"
+                          owned
+                          staticArt
+                        />
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </section>
+          </div>
+
+          {active ? (
+            <div className="trade-actions">
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={busy}
+                onClick={() => void onReady(!iAmReady)}
+              >
+                {iAmReady ? "Unready" : "Ready to trade"}
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                disabled={busy}
+                onClick={() => void onCancel()}
+              >
+                Cancel trade
+              </button>
             </div>
-          </section>
+          ) : null}
         </div>
 
         {active ? (
-          <div className="trade-actions">
-            <button
-              type="button"
-              className="btn btn--primary"
-              disabled={busy}
-              onClick={() => void onReady(!iAmReady)}
-            >
-              {iAmReady ? "Unready" : "Ready to trade"}
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost"
-              disabled={busy}
-              onClick={() => void onCancel()}
-            >
-              Cancel trade
-            </button>
-          </div>
-        ) : null}
-
-        {active ? (
           <section className="trade-picker">
-            <h3>Add from your collection</h3>
-            <p className="trade-picker__note">
-              Same layout as your collection. Tap cards to select, then Add to
-              trade. Cards they already own are greyed out.
-            </p>
             <OwnedCardPicker
               owned={owned}
               selectedIds={offerSet}

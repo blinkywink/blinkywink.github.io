@@ -6,7 +6,7 @@ import {
   type AvatarCrop,
 } from "../lib/avatar";
 import { supabase } from "../lib/supabase";
-import { GameHeader } from "./GameHeader";
+import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
 
 export type LeaderboardPlayer = {
@@ -70,9 +70,22 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
 
   return (
     <div className="board-page">
-      <GameHeader title="LEADERBOARD" icon="" />
+      <PageHeader
+        eyebrow="Players"
+        title="Leaderboard"
+        blurb="Lifetime Cash earned · tap a player to view cards"
+      />
       <main className="board-main">
-        <p className="board-sub">Lifetime Cash earned · tap a player to view cards</p>
+        <div className="board-toolbar">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => void load()}
+            disabled={loading}
+          >
+            Refresh
+          </button>
+        </div>
 
         {loading ? (
           <p className="board-status">Loading…</p>
@@ -125,15 +138,6 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
             </tbody>
           </table>
         )}
-
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          Refresh
-        </button>
       </main>
     </div>
   );

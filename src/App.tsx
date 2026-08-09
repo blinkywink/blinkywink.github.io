@@ -33,7 +33,6 @@ import {
   collectionPath,
   gamePath,
   leaderboardPath,
-  marketplacePath,
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
@@ -56,8 +55,6 @@ function HomePage() {
     <ArcadeHome
       onPlay={(game: GameId) => navigate(gamePath(game as GamePath))}
       onOpenCards={() => navigate(collectionPath())}
-      onOpenLeaderboard={() => navigate(leaderboardPath())}
-      onOpenMarketplace={() => navigate(marketplacePath())}
       onPackFinished={({ pack, unlocked }) => {
         navigate(collectionPath(), {
           state: {
