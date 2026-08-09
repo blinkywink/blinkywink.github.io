@@ -408,7 +408,7 @@ export function ArcadeHome({
   return (
     <div className={`arcade${embed ? " arcade--embed" : ""}`}>
       {!embed ? <div className="arcade__atmosphere" aria-hidden="true" /> : null}
-      {!embed ? <DailyClaimButton variant="hero" /> : null}
+      {!embed ? <DailyClaimButton /> : null}
 
       <section
         className={`arcade__featured${embed ? " arcade__featured--hub" : ""}`}

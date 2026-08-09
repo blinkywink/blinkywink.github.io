@@ -214,9 +214,6 @@ export function ShopDirectShelf() {
     <section className="shop-direct" aria-label="Limited cards">
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Limited cards</h3>
-        <p className="shop-direct__note">
-          Shared stock · T4 7,500 · T5 25,000 · refreshes in 24 hours if unsold
-        </p>
       </div>
 
       {error ? (

@@ -12,7 +12,6 @@ import type { MonkeyCardSpec } from "../lib/pathCombos";
 import { BoosterPack } from "./BoosterPack";
 import { DailyClaimButton } from "./DailyClaimButton";
 import { PackOpenerTest } from "./PackOpenerTest";
-import { PageHeader } from "./PageHeader";
 import { ShopDirectShelf } from "./ShopDirectShelf";
 
 type Props = {
@@ -82,11 +81,6 @@ export function ShopPage({ onPackFinished }: Props) {
 
   return (
     <div className="shop-page">
-      <PageHeader
-        title="Shop"
-        blurb="Buy packs with Cash. Featured tower packs rotate every day."
-      />
-
       <section className="pack-shelf" aria-label="Shop">
         <div className="pack-shelf__head">
           <h3 className="section-label">Featured</h3>
@@ -107,7 +101,7 @@ export function ShopPage({ onPackFinished }: Props) {
       </section>
 
       <section className="arcade__utility" aria-label="Daily rewards">
-        <DailyClaimButton variant="hero" />
+        <DailyClaimButton />
       </section>
 
       <PackOpenerTest

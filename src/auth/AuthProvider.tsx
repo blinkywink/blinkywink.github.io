@@ -33,6 +33,7 @@ function profileFromGuest(coins: number): Profile {
     coins_earned: coins,
     monkey_money: 0,
     last_daily_claim: null,
+    last_daily_card_claim: null,
     avatar_card_id: null,
     avatar_zoom: 1.25,
     avatar_x: 0.5,
@@ -66,11 +67,14 @@ type AuthContextValue = {
   setCoinBalance: (coins: number) => void;
   /** True when signed in and daily Cash has not been claimed today (UTC). */
   dailyClaimAvailable: boolean;
+  /** True when signed in and daily card has not been claimed today (UTC). */
+  dailyCardClaimAvailable: boolean;
   claimDailyCash: () => Promise<{
     error: string | null;
     amount?: number;
     coins?: number;
   }>;
+  claimDailyCard: () => Promise<{ error: string | null }>;
   signUp: (input: {
     username: string;
     password: string;
@@ -104,6 +108,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     ...data,
     last_daily_claim: data.last_daily_claim
       ? String(data.last_daily_claim).slice(0, 10)
+      : null,
+    last_daily_card_claim: data.last_daily_card_claim
+      ? String(data.last_daily_card_claim).slice(0, 10)
       : null,
     avatar_card_id: data.avatar_card_id ?? null,
     avatar_zoom: Number(data.avatar_zoom ?? 1.25),
@@ -300,6 +307,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile.last_daily_claim !== utcToday(),
   );
 
+  const dailyCardClaimAvailable = Boolean(
+    !isGuest &&
+      profile &&
+      profile.id !== GUEST_ID &&
+      profile.last_daily_card_claim !== utcToday(),
+  );
+
   const claimDailyCash = useCallback(async () => {
     if (!session?.userId) {
       return { error: "Sign in to claim daily Cash." };
@@ -339,6 +353,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [session?.userId]);
 
+  const claimDailyCard = useCallback(async () => {
+    if (!session?.userId) {
+      return { error: "Sign in to claim the daily card." };
+    }
+    const { data, error } = await supabase.rpc("claim_daily_card");
+    if (error) {
+      if (error.message.includes("ALREADY_CLAIMED")) {
+        return { error: "Already claimed today. Come back tomorrow." };
+      }
+      return { error: error.message };
+    }
+    const raw = data as { last_daily_card_claim?: string } | null;
+    const day = String(raw?.last_daily_card_claim ?? utcToday()).slice(0, 10);
+    setProfile((prev) =>
+      prev ? { ...prev, last_daily_card_claim: day } : prev,
+    );
+    return { error: null };
+  }, [session?.userId]);
+
   const displayName = useMemo(() => {
     if (isGuest) return "Guest";
     if (profile?.username && profile.id !== GUEST_ID) return profile.username;
@@ -356,7 +389,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       setCoinBalance,
       dailyClaimAvailable,
+      dailyCardClaimAvailable,
       claimDailyCash,
+      claimDailyCard,
       signUp,
       signIn,
       signOut,
@@ -371,7 +406,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       setCoinBalance,
       dailyClaimAvailable,
+      dailyCardClaimAvailable,
       claimDailyCash,
+      claimDailyCard,
       signUp,
       signIn,
       signOut,

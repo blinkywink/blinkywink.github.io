@@ -7,8 +7,10 @@ export type Profile = {
   coins_earned: number;
   /** Unused premium currency column (kept in DB; not shown in UI). */
   monkey_money: number;
-  /** UTC date (YYYY-MM-DD) of last daily claim, or null. */
+  /** UTC date (YYYY-MM-DD) of last daily Cash claim, or null. */
   last_daily_claim: string | null;
+  /** UTC date (YYYY-MM-DD) of last daily card claim, or null. */
+  last_daily_card_claim?: string | null;
   /** Owned card id used as profile picture, or null. */
   avatar_card_id: string | null;
   avatar_zoom: number;
@@ -48,6 +50,7 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
+          last_daily_card_claim?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -67,6 +70,7 @@ export type Database = {
           coins_earned?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
+          last_daily_card_claim?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -284,6 +288,12 @@ export type Database = {
           amount: number;
           coins: number;
           last_daily_claim: string;
+        };
+      };
+      claim_daily_card: {
+        Args: Record<string, never>;
+        Returns: {
+          last_daily_card_claim: string;
         };
       };
       username_signup: {
