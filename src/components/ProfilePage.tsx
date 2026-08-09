@@ -150,7 +150,7 @@ export function ProfilePage() {
       return;
     }
     if (savedShowcase.length >= SHOWCASE_MAX) {
-      setError(`You can only show ${SHOWCASE_MAX} player cards.`);
+      setError(`You can only show ${SHOWCASE_MAX} showcase cards.`);
       return;
     }
     const next = [...savedShowcase, cardId];
@@ -160,7 +160,7 @@ export function ProfilePage() {
     try {
       await setProfileShowcase(next);
       await refreshProfile();
-      setStatus("Added player card.");
+      setStatus("Added showcase card.");
       setShowcaseOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save.");
@@ -176,7 +176,7 @@ export function ProfilePage() {
     try {
       await setProfileShowcase(next);
       await refreshProfile();
-      setStatus("Removed player card.");
+      setStatus("Removed showcase card.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update.");
     }
@@ -190,7 +190,7 @@ export function ProfilePage() {
     try {
       await setProfileShowcase([]);
       await refreshProfile();
-      setStatus("Cleared player cards.");
+      setStatus("Cleared showcase cards.");
       setShowcaseOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not clear.");
@@ -401,7 +401,7 @@ export function ProfilePage() {
           <div className="pfp-editor__panel">
             <header className="pfp-editor__header">
               <div>
-                <p className="pfp-editor__eyebrow">Player cards</p>
+                <p className="pfp-editor__eyebrow">Showcase cards</p>
                 <h2 id="showcase-editor-title">Add one card</h2>
               </div>
               <button
@@ -449,7 +449,7 @@ export function ProfilePage() {
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        blurb="Your picture and player cards show on your public page."
+        blurb="Your picture and showcase cards show on your public page."
       />
       <main className="profile-main">
         {status ? (
@@ -495,7 +495,7 @@ export function ProfilePage() {
         <section className="profile-showcase-edit">
           <div className="profile-showcase-edit__head">
             <div>
-              <h3>Player cards</h3>
+              <h3>Showcase cards</h3>
               <p>
                 {savedShowcase.length}/{SHOWCASE_MAX} on your public page. Add one
                 at a time.

@@ -7,7 +7,6 @@ import type { TowerEntity } from "../data/types";
 import { fetchPlayerCardIds } from "../lib/awardCards";
 import type { AvatarCrop } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
-import { collectionStats } from "../lib/collectionStats";
 import {
   buildTowerCardSpecs,
   formatPathLevels,
@@ -200,7 +199,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
 
   const totalOwned = owned.size;
   const totalCards = ALL_SPECS.length;
-  const stats = useMemo(() => collectionStats(owned), [owned]);
   const showcaseCards = useMemo(() => {
     const ids = viewer?.showcaseCardIds ?? [];
     return ids
@@ -370,50 +368,25 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
             </h1>
             {isRemote && !remoteError ? (
               <div className="player-showcase">
-                <div className="player-showcase__cards">
-                  <p className="player-showcase__label">Player cards</p>
-                  {showcaseCards.length > 0 ? (
-                    <div className="player-showcase__row">
-                      {showcaseCards.map((card) => (
-                        <MonkeyCard
-                          key={card.id}
-                          entity={card.entity}
-                          pathLevels={card.pathLevels}
-                          mode="preview"
-                          owned
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="player-showcase__empty">
-                      No showcase cards yet.
-                    </p>
-                  )}
-                </div>
-                <ul className="player-showcase__stats" aria-label="Collection stats">
-                  <li>
-                    <span className="player-showcase__stat-val">
-                      {stats.total}
-                    </span>
-                    <span className="player-showcase__stat-key">cards</span>
-                  </li>
-                  <li>
-                    <span className="player-showcase__stat-val">
-                      {stats.uniqueTowers}
-                    </span>
-                    <span className="player-showcase__stat-key">towers</span>
-                  </li>
-                  {stats.topTower ? (
-                    <li className="player-showcase__stat--wide">
-                      <span className="player-showcase__stat-val">
-                        {stats.topTower}
-                      </span>
-                      <span className="player-showcase__stat-key">
-                        most owned · {stats.topTowerCount}
-                      </span>
-                    </li>
-                  ) : null}
-                </ul>
+                <p className="player-showcase__label">Showcase cards</p>
+                {showcaseCards.length > 0 ? (
+                  <div className="player-showcase__row">
+                    {showcaseCards.map((card) => (
+                      <MonkeyCard
+                        key={card.id}
+                        entity={card.entity}
+                        pathLevels={card.pathLevels}
+                        mode="preview"
+                        owned
+                        onSelect={() => setFocused(card)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="player-showcase__empty">
+                    No showcase cards yet.
+                  </p>
+                )}
               </div>
             ) : null}
             <p className="card-lab__blurb">
@@ -506,6 +479,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
             ) : null}
           </div>
         </div>
+        {focusPortal}
       </div>
     );
   }

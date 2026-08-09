@@ -8632,18 +8632,13 @@ button.trade-offer-card:hover:not(:disabled) {
 }
 
 .player-showcase {
-  --card-preview-w: 92px;
-  --card-preview-scale: 0.23;
+  --card-preview-w: 132px;
+  --card-preview-scale: 0.33;
   --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
   width: min(100%, 40rem);
   display: grid;
-  gap: 0.9rem;
-  margin: 0.65rem 0 0.35rem;
-}
-
-.player-showcase__cards {
-  display: grid;
   gap: 0.45rem;
+  margin: 0.75rem 0 0.45rem;
 }
 
 .player-showcase__label {
@@ -8659,7 +8654,7 @@ button.trade-offer-card:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .player-showcase__row .monkey-card-scene--preview {
@@ -8668,6 +8663,7 @@ button.trade-offer-card:hover:not(:disabled) {
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: calc(22px * var(--card-preview-scale));
+  cursor: pointer;
 }
 
 .player-showcase__row .monkey-card-scene--preview > .monkey-card {
@@ -8684,48 +8680,10 @@ button.trade-offer-card:hover:not(:disabled) {
   color: rgba(255, 248, 232, 0.55);
 }
 
-.player-showcase__stats {
-  list-style: none;
-  margin: 0;
-  padding: 0.7rem 0.8rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
-  gap: 0.65rem 0.85rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.player-showcase__stats li {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-}
-
-.player-showcase__stats .player-showcase__stat--wide {
-  grid-column: 1 / -1;
-}
-
-.player-showcase__stat-val {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #f0c84a;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
-.player-showcase__stat-key {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: rgba(255, 248, 232, 0.62);
-}
-
 @media (max-width: 520px) {
   .player-showcase {
-    --card-preview-w: 78px;
-    --card-preview-scale: 0.195;
+    --card-preview-w: 104px;
+    --card-preview-scale: 0.26;
   }
 }
 
