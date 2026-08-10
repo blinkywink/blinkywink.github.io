@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
+    "midi-file": "^1.2.4",
     "parse-sng": "^4.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

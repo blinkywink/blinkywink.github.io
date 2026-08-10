@@ -1,14 +1,25 @@
 /**
- * Minimal Clone Hero / Moonscraper `.chart` parser (ExpertSingle).
- * Frets 0–4 map to lanes D F J K L.
+ * Minimal Clone Hero / Moonscraper `.chart` parser.
+ * Frets 0–4 map to lanes D F J K L (guitar, bass, and drums treated the same).
  */
+
+import {
+  CHART_TRACK_NAMES,
+  type PlayableInstrument,
+  PLAYABLE_INSTRUMENTS,
+} from "./instruments";
 
 export type ChartNote = {
   t: number;
   lane: number;
+  /** Sustain length in seconds; 0 for taps. */
   dur: number;
   tick: number;
+  sustain: boolean;
 };
+
+/** Shorter than this is treated as a tap (no trail / hold). */
+export const MIN_SUSTAIN_S = 0.14;
 
 export type ParsedChart = {
   name: string;
@@ -17,6 +28,7 @@ export type ParsedChart = {
   offsetSec: number;
   notes: ChartNote[];
   duration: number;
+  instrument: PlayableInstrument;
 };
 
 type TempoEvent = { tick: number; bpm: number };
@@ -60,7 +72,6 @@ function parseTempos(text: string): TempoEvent[] {
   const lines = parseBlock(text, "SyncTrack");
   const tempos: TempoEvent[] = [];
   for (const line of lines) {
-    // 0 = B 120000   (BPM * 1000)
     const m = line.match(/^(\d+)\s*=\s*B\s+(\d+)/i);
     if (!m) continue;
     tempos.push({ tick: Number(m[1]), bpm: Number(m[2]) / 1000 });
@@ -93,44 +104,82 @@ function tickToSeconds(
   return time;
 }
 
-/** Prefer Expert → Hard → Medium → Easy Single (5-fret guitar). */
-function pickTrackBlock(text: string): string[] {
+function pickTrackBlock(
+  text: string,
+  instrument: PlayableInstrument,
+): string[] {
+  const suffixes = CHART_TRACK_NAMES[instrument];
   for (const diff of ["Expert", "Hard", "Medium", "Easy"]) {
-    const lines = parseBlock(text, `${diff}Single`);
-    if (lines.length) return lines;
+    for (const suffix of suffixes) {
+      const lines = parseBlock(text, `${diff}${suffix}`);
+      if (lines.length) return lines;
+    }
   }
   return [];
 }
 
-export function parseChartFile(text: string): ParsedChart {
+function trackHasPlayableNotes(lines: string[]): boolean {
+  for (const line of lines) {
+    const m = line.match(/^\d+\s*=\s*N\s+(\d+)\s+(\d+)/i);
+    if (!m) continue;
+    const fret = Number(m[1]);
+    if (fret >= 0 && fret <= 4) return true;
+  }
+  return false;
+}
+
+/** Instruments present in this .chart with at least one 0–4 fret gem. */
+export function listChartInstruments(text: string): PlayableInstrument[] {
+  const found: PlayableInstrument[] = [];
+  for (const inst of PLAYABLE_INSTRUMENTS) {
+    const lines = pickTrackBlock(text, inst);
+    if (lines.length && trackHasPlayableNotes(lines)) found.push(inst);
+  }
+  return found;
+}
+
+export function parseChartFile(
+  text: string,
+  instrument: PlayableInstrument = "guitar",
+): ParsedChart {
   const meta = parseSongMeta(text);
   const tempos = parseTempos(text);
-  const lines = pickTrackBlock(text);
+  const lines = pickTrackBlock(text, instrument);
   if (!lines.length) {
-    throw new Error("No guitar (Single) track found in chart");
+    throw new Error(`No ${instrument} track found in chart`);
   }
 
   const notes: ChartNote[] = [];
   for (const line of lines) {
-    // 960 = N 2 0   OR  960 = N 2 192 (sustain ticks)
     const m = line.match(/^(\d+)\s*=\s*N\s+(\d+)\s+(\d+)/i);
     if (!m) continue;
     const tick = Number(m[1]);
     const fret = Number(m[2]);
     const sustainTicks = Number(m[3]);
-    // Frets 0-4 = colored gems. 5 = force, 6 = tap, 7 = open — skip specials for now
+    // Frets 0-4 = gems / pads. Higher = force, tap, open, accents — skip.
     if (fret < 0 || fret > 4) continue;
     const t = tickToSeconds(tick, meta.resolution, tempos) - meta.offsetSec;
-    const dur =
+    const span =
       sustainTicks > 0
         ? tickToSeconds(tick + sustainTicks, meta.resolution, tempos) -
           tickToSeconds(tick, meta.resolution, tempos)
-        : 0.08;
+        : 0;
     if (t < -1) continue;
-    notes.push({ t, lane: fret, dur: Math.max(0.06, dur), tick });
+    const sustain = span >= MIN_SUSTAIN_S;
+    notes.push({
+      t,
+      lane: fret,
+      dur: sustain ? span : 0,
+      tick,
+      sustain,
+    });
   }
 
   notes.sort((a, b) => a.t - b.t || a.lane - b.lane);
+  if (!notes.length) {
+    throw new Error(`No playable ${instrument} notes in chart`);
+  }
+
   const duration = notes.length
     ? notes[notes.length - 1]!.t + Math.max(1, notes[notes.length - 1]!.dur)
     : 0;
@@ -142,5 +191,6 @@ export function parseChartFile(text: string): ParsedChart {
     offsetSec: meta.offsetSec,
     notes,
     duration,
+    instrument,
   };
 }
