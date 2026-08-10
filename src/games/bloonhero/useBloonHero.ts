@@ -1,32 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
-import { HeroAudio } from "./audioEngine";
 import {
   APPROACH_S,
   CASH_PER_GOOD,
   CASH_PER_GREAT,
   CASH_PER_PERFECT,
-  CHART,
   EMPTY_STREAK_KILL,
   HERO_CLEAR_BONUS,
   HERO_CLEAR_RATIO,
   HERO_LIVES,
-  HIT_LINE_Y,
-  SPAWN_Y,
+  KEY_TO_LANE,
   WINDOW_GOOD,
   judgeOffset,
   leadInSeconds,
   type Judge,
 } from "./config";
-
-export type ChartNote = {
-  t: number;
-  midi: number;
-  dur: number;
-  vel: number;
-  lane: number;
-};
+import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
+import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
+import type { ChartNote } from "./parseChartFile";
 
 export type ActiveNote = ChartNote & {
   id: number;
@@ -34,10 +26,19 @@ export type ActiveNote = ChartNote & {
   result?: Judge;
 };
 
-export type HeroPhase = "ready" | "playing" | "results";
+export type HeroPhase =
+  | "browse"
+  | "loading"
+  | "ready"
+  | "playing"
+  | "results";
 
 export type HeroState = {
   phase: HeroPhase;
+  query: string;
+  results: EnchorHit[];
+  searching: boolean;
+  error: string | null;
   songTime: number;
   combo: number;
   maxCombo: number;
@@ -52,32 +53,20 @@ export type HeroState = {
   countdown: string | null;
   pressed: number[];
   burst: { lane: number; judge: Judge; id: number } | null;
-  /** Full bar-17 loops completed after the first lap. */
-  loops: number;
-  /** Consecutive empty / wrong-key presses. */
   emptyStreak: number;
-};
-
-type Segment = {
+  title: string;
+  artist: string;
+  artUrl: string | null;
+  noteCount: number;
   duration: number;
-  notes: readonly ChartNote[];
-  accompaniment: readonly {
-    t: number;
-    midi: number;
-    dur: number;
-    vel: number;
-  }[];
 };
-
-const INTRO: Segment = CHART.intro ?? {
-  duration: CHART.duration,
-  notes: CHART.notes,
-  accompaniment: CHART.accompaniment,
-};
-const LOOP: Segment = CHART.loop ?? INTRO;
 
 const INITIAL: HeroState = {
-  phase: "ready",
+  phase: "browse",
+  query: "",
+  results: [],
+  searching: false,
+  error: null,
   songTime: 0,
   combo: 0,
   maxCombo: 0,
@@ -92,46 +81,12 @@ const INITIAL: HeroState = {
   countdown: null,
   pressed: [],
   burst: null,
-  loops: 0,
   emptyStreak: 0,
-};
-
-function countdownFromSongTime(songTime: number, bpm: number): string | null {
-  if (songTime >= 0.4) return null;
-  const beat = 60 / bpm;
-  if (songTime >= 0) return "GO";
-  const beatIndex = Math.floor(songTime / beat);
-  const n = -beatIndex;
-  if (n < 1 || n > 8) return null;
-  return String(n);
-}
-
-function noteY(songTime: number, noteT: number, approach: number): number {
-  const u = (noteT - songTime) / approach;
-  const clamped = Math.min(1, Math.max(0, u));
-  return SPAWN_Y + (1 - clamped) * (HIT_LINE_Y - SPAWN_Y);
-}
-
-/** Progress through the current lap (intro, then each bar-17 loop). */
-export function loopProgress(songTime: number): number {
-  if (songTime <= 0) return 0;
-  if (songTime < INTRO.duration) {
-    return Math.min(100, (songTime / INTRO.duration) * 100);
-  }
-  const into = (songTime - INTRO.duration) % LOOP.duration;
-  return Math.min(100, (into / LOOP.duration) * 100);
-}
-
-export function loopsCompleted(songTime: number): number {
-  if (songTime < INTRO.duration) return 0;
-  return Math.floor((songTime - INTRO.duration) / LOOP.duration);
-}
-
-const KEY_TO_LANE: Record<string, number> = {
-  d: 0,
-  f: 1,
-  j: 2,
-  k: 3,
+  title: "",
+  artist: "",
+  artUrl: null,
+  noteCount: 0,
+  duration: 0,
 };
 
 function cashFor(j: Judge): number {
@@ -139,6 +94,16 @@ function cashFor(j: Judge): number {
   if (j === "great") return CASH_PER_GREAT;
   if (j === "good") return CASH_PER_GOOD;
   return 0;
+}
+
+function countdownFromSongTime(songTime: number, bpm: number): string | null {
+  if (songTime >= 0.35) return null;
+  const beat = 60 / bpm;
+  if (songTime >= 0) return "GO";
+  const beatIndex = Math.floor(songTime / beat);
+  const n = -beatIndex;
+  if (n < 1 || n > 8) return null;
+  return String(n);
 }
 
 export function useBloonHero() {
@@ -150,15 +115,16 @@ export function useBloonHero() {
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const audioRef = useRef(new HeroAudio());
+  const songRef = useRef<LoadedSong | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const notesRef = useRef<ActiveNote[]>([]);
-  const nextIdRef = useRef(0);
-  /** Song-time when the next unscheduled segment begins. */
-  const nextSegAtRef = useRef(0);
-  const attemptedRef = useRef(0);
-  const hitsRef = useRef(0);
+  const durationRef = useRef(0);
+  const leadInRef = useRef(leadInSeconds(120));
+  const originRef = useRef(0); // performance.now when songTime 0
   const frameRef = useRef(0);
   const pendingCashRef = useRef(0);
+  const attemptedRef = useRef(0);
+  const hitsRef = useRef(0);
   const burstIdRef = useRef(0);
   const pressTimers = useRef<Record<number, number>>({});
 
@@ -170,21 +136,110 @@ export function useBloonHero() {
     if (balance != null) setCoinBalanceRef.current(balance);
   }, []);
 
-  const appendSegment = useCallback((seg: Segment, offset: number) => {
-    for (const n of seg.notes) {
-      // Keep notes whose attack is at or before the segment cut (on-boundary phrase)
-      if (n.t > seg.duration + 0.001) continue;
-      notesRef.current.push({
-        ...n,
-        t: +(n.t + offset).toFixed(4),
-        id: nextIdRef.current++,
-        resolved: false,
-      });
+  const cleanupSong = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
     }
-    const acc = seg.accompaniment.filter((n) => n.t <= seg.duration + 0.001);
-    audioRef.current.scheduleAccompaniment(acc, offset);
-    nextSegAtRef.current = +(offset + seg.duration).toFixed(4);
+    revokeLoadedSong(songRef.current);
+    songRef.current = null;
   }, []);
+
+  const setQuery = useCallback((query: string) => {
+    setState((prev) => ({ ...prev, query }));
+  }, []);
+
+  const search = useCallback(async (query?: string) => {
+    const q = (query ?? stateRef.current.query).trim();
+    if (!q) return;
+    setState((prev) => ({
+      ...prev,
+      searching: true,
+      error: null,
+      query: q,
+      phase: "browse",
+    }));
+    try {
+      const res = await searchEnchor(q);
+      setState((prev) => ({
+        ...prev,
+        searching: false,
+        results: res.data ?? [],
+        error: res.found === 0 ? "No guitar Expert charts found." : null,
+      }));
+    } catch (e) {
+      setState((prev) => ({
+        ...prev,
+        searching: false,
+        error: e instanceof Error ? e.message : "Search failed",
+      }));
+    }
+  }, []);
+
+  const pickSong = useCallback(
+    async (hit: EnchorHit) => {
+      cleanupSong();
+      setState((prev) => ({
+        ...prev,
+        phase: "loading",
+        error: null,
+        title: hit.name,
+        artist: hit.artist,
+      }));
+      try {
+        const buf = await downloadSng(hit.md5);
+        const loaded = await loadSongFromSng(buf);
+        songRef.current = loaded;
+        const audio = new Audio(loaded.audioUrl);
+        audio.preload = "auto";
+        await audio.load();
+        // wait until we can play
+        await new Promise<void>((resolve, reject) => {
+          const ok = () => {
+            cleanup();
+            resolve();
+          };
+          const fail = () => {
+            cleanup();
+            reject(new Error("Could not load song audio"));
+          };
+          const cleanup = () => {
+            audio.removeEventListener("canplaythrough", ok);
+            audio.removeEventListener("error", fail);
+          };
+          audio.addEventListener("canplaythrough", ok, { once: true });
+          audio.addEventListener("error", fail, { once: true });
+          // Opus often fires loadeddata first
+          if (audio.readyState >= 3) ok();
+        });
+        audioRef.current = audio;
+        durationRef.current = Math.max(
+          loaded.chart.duration,
+          Number.isFinite(audio.duration) ? audio.duration : 0,
+          (hit.song_length || 0) / 1000,
+        );
+        setState((prev) => ({
+          ...prev,
+          phase: "ready",
+          title: loaded.chart.name || hit.name,
+          artist: loaded.chart.artist || hit.artist,
+          artUrl: loaded.artUrl,
+          noteCount: loaded.chart.notes.length,
+          duration: durationRef.current,
+          error: null,
+        }));
+      } catch (e) {
+        cleanupSong();
+        setState((prev) => ({
+          ...prev,
+          phase: "browse",
+          error: e instanceof Error ? e.message : "Failed to load chart",
+        }));
+      }
+    },
+    [cleanupSong],
+  );
 
   const flashPress = useCallback((lane: number) => {
     setState((prev) => ({
@@ -204,36 +259,108 @@ export function useBloonHero() {
     }, 110);
   }, []);
 
+  const songTimeNow = useCallback(() => {
+    const audio = audioRef.current;
+    const song = songRef.current;
+    if (!audio || !song) return 0;
+    // During lead-in, audio hasn't started — use wall clock
+    if (audio.paused && stateRef.current.phase === "playing") {
+      const wall = (performance.now() - originRef.current) / 1000;
+      return wall - leadInRef.current;
+    }
+    const delay = (song.delayMs || 0) / 1000;
+    return audio.currentTime - delay;
+  }, []);
+
+  const finishRun = useCallback(
+    (livesAfter: number) => {
+      const attempted = Math.max(1, attemptedRef.current);
+      const ratio = hitsRef.current / attempted;
+      const cleared = ratio >= HERO_CLEAR_RATIO;
+      setState((prev) => ({
+        ...prev,
+        phase: "results",
+        lives: livesAfter,
+        cleared,
+        countdown: null,
+      }));
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      void (async () => {
+        let grant = pendingCashRef.current;
+        pendingCashRef.current = 0;
+        if (cleared) {
+          grant += HERO_CLEAR_BONUS;
+          setState((prev) =>
+            prev.phase === "results"
+              ? { ...prev, cashEarned: prev.cashEarned + HERO_CLEAR_BONUS }
+              : prev,
+          );
+        }
+        if (grant > 0) {
+          const balance = await awardCoins(grant);
+          if (balance != null) setCoinBalanceRef.current(balance);
+        }
+      })();
+    },
+    [],
+  );
+
   const start = useCallback(() => {
-    const leadIn = leadInSeconds(CHART.bpm);
+    const song = songRef.current;
+    const audio = audioRef.current;
+    if (!song || !audio) return;
     pendingCashRef.current = 0;
     attemptedRef.current = 0;
     hitsRef.current = 0;
-    nextIdRef.current = 0;
-    notesRef.current = [];
-    const audio = audioRef.current;
-    audio.ensure();
-    audio.beginSong(leadIn);
-    appendSegment(INTRO, 0);
-    audio.startCountIn(CHART.bpm);
-    setState({
+    notesRef.current = song.chart.notes.map((n, i) => ({
+      ...n,
+      id: i,
+      resolved: false,
+    }));
+    leadInRef.current = leadInSeconds(120);
+    originRef.current = performance.now();
+    audio.pause();
+    audio.currentTime = 0;
+    setState((prev) => ({
       ...INITIAL,
       phase: "playing",
-      songTime: -leadIn,
-      countdown: countdownFromSongTime(-leadIn, CHART.bpm),
-    });
-  }, [appendSegment]);
+      query: prev.query,
+      results: prev.results,
+      title: prev.title,
+      artist: prev.artist,
+      songTime: -leadInRef.current,
+      countdown: "4",
+      lives: HERO_LIVES,
+    }));
+  }, []);
+
+  const backToBrowse = useCallback(() => {
+    cancelAnimationFrame(frameRef.current);
+    cleanupSong();
+    setState((prev) => ({
+      ...INITIAL,
+      query: prev.query,
+      results: prev.results,
+      phase: "browse",
+    }));
+  }, [cleanupSong]);
 
   const restart = useCallback(() => {
-    audioRef.current.stopAll();
-    audioRef.current = new HeroAudio();
     cancelAnimationFrame(frameRef.current);
-    for (const t of Object.values(pressTimers.current)) window.clearTimeout(t);
-    pressTimers.current = {};
-    setState(INITIAL);
-    notesRef.current = [];
-    pendingCashRef.current = 0;
-    nextSegAtRef.current = 0;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setState((prev) => ({
+      ...INITIAL,
+      phase: "ready",
+      query: prev.query,
+      results: prev.results,
+      title: prev.title,
+      artist: prev.artist,
+    }));
   }, []);
 
   const applyHit = useCallback(
@@ -241,20 +368,14 @@ export function useBloonHero() {
       const s = stateRef.current;
       if (s.phase !== "playing") return;
       flashPress(lane);
-
-      const now = audioRef.current.songTime();
-      // No spam penalties during the count-in
-      if (now < 0) {
-        audioRef.current.playEmptyTap();
-        return;
-      }
+      const now = songTimeNow();
+      if (now < 0) return;
 
       let best: ActiveNote | null = null;
       let bestAbs = Infinity;
       for (const n of notesRef.current) {
         if (n.resolved || n.lane !== lane) continue;
-        const dt = now - n.t;
-        const a = Math.abs(dt);
+        const a = Math.abs(now - n.t);
         if (a > WINDOW_GOOD) continue;
         if (a < bestAbs) {
           bestAbs = a;
@@ -263,13 +384,10 @@ export function useBloonHero() {
       }
 
       const punishEmpty = () => {
-        audioRef.current.playEmptyTap();
         const streak = stateRef.current.emptyStreak + 1;
-        // First whiff breaks combo; further whiffs also burn lives
         let lives = stateRef.current.lives;
         if (streak >= 2) lives = Math.max(0, lives - 1);
         if (streak >= EMPTY_STREAK_KILL) lives = 0;
-
         burstIdRef.current += 1;
         const burstId = burstIdRef.current;
         const next = {
@@ -282,20 +400,13 @@ export function useBloonHero() {
         };
         stateRef.current = next;
         setState(next);
-        window.setTimeout(() => {
-          setState((prev) =>
-            prev.burst?.id === burstId ? { ...prev, burst: null } : prev,
-          );
-        }, 360);
       };
 
       if (!best) {
         punishEmpty();
         return;
       }
-
-      const dt = now - best.t;
-      const judge = judgeOffset(dt);
+      const judge = judgeOffset(now - best.t);
       if (!judge) {
         punishEmpty();
         return;
@@ -303,15 +414,12 @@ export function useBloonHero() {
 
       best.resolved = true;
       best.result = judge;
-      audioRef.current.playHitNote(best.midi, best.dur, best.vel, judge);
       attemptedRef.current += 1;
       hitsRef.current += 1;
-
       const pay = cashFor(judge);
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
       const burstId = burstIdRef.current;
-
       setState((prev) => {
         const combo = prev.combo + 1;
         return {
@@ -327,40 +435,43 @@ export function useBloonHero() {
           burst: { lane, judge, id: burstId },
         };
       });
-
       window.setTimeout(() => {
         setState((prev) =>
           prev.burst?.id === burstId ? { ...prev, burst: null } : prev,
         );
       }, 360);
-
       if (pendingCashRef.current >= 40) void flushCash();
     },
-    [flashPress, flushCash],
+    [flashPress, flushCash, songTimeNow],
   );
 
+  // Playback clock
   useEffect(() => {
     if (state.phase !== "playing") {
       cancelAnimationFrame(frameRef.current);
       return;
     }
 
+    let audioStarted = false;
     const tick = () => {
-      const now = audioRef.current.songTime();
-      const countdown = countdownFromSongTime(now, CHART.bpm);
+      const leadIn = leadInRef.current;
+      const wall = (performance.now() - originRef.current) / 1000;
+      let now = wall - leadIn;
 
-      // Queue the next bar-17 loop before notes need to appear
-      while (now + APPROACH_S + 0.75 >= nextSegAtRef.current) {
-        appendSegment(LOOP, nextSegAtRef.current);
+      const audio = audioRef.current;
+      if (!audioStarted && now >= 0 && audio) {
+        audioStarted = true;
+        audio.currentTime = 0;
+        void audio.play().catch(() => {
+          /* autoplay may need gesture — start() is from click so OK */
+        });
+      }
+      if (audioStarted && audio && !audio.paused) {
+        const delay = (songRef.current?.delayMs || 0) / 1000;
+        now = audio.currentTime - delay;
       }
 
-      // Drop ancient resolved notes so the list stays bounded
-      if (notesRef.current.length > 400) {
-        notesRef.current = notesRef.current.filter(
-          (n) => !n.resolved || now - n.t < 1.5,
-        );
-      }
-
+      const countdown = countdownFromSongTime(now, 120);
       let missed = 0;
       let missLane = -1;
       for (const n of notesRef.current) {
@@ -374,7 +485,6 @@ export function useBloonHero() {
         }
       }
 
-      const loops = loopsCompleted(now);
       let livesAfter = stateRef.current.lives;
       if (missed > 0) {
         livesAfter = Math.max(0, livesAfter - missed);
@@ -387,7 +497,6 @@ export function useBloonHero() {
           lastJudge: "miss" as const,
           songTime: now,
           countdown,
-          loops,
           burst:
             missLane >= 0
               ? {
@@ -400,46 +509,18 @@ export function useBloonHero() {
         stateRef.current = next;
         setState(next);
       } else {
-        setState((prev) => ({ ...prev, songTime: now, countdown, loops }));
+        setState((prev) => ({ ...prev, songTime: now, countdown }));
       }
 
-      // Endless until you pop out
-      if (livesAfter <= 0 && now >= 0) {
-        const attempted = Math.max(1, attemptedRef.current);
-        const ratio = hitsRef.current / attempted;
-        const cleared = ratio >= HERO_CLEAR_RATIO;
+      // Pull empty-streak kills from applyHit
+      livesAfter = Math.min(livesAfter, stateRef.current.lives);
 
-        setState((prev) => ({
-          ...prev,
-          phase: "results",
-          songTime: now,
-          cleared,
-          lives: livesAfter,
-          countdown: null,
-          loops,
-        }));
+      const songDone =
+        now >= durationRef.current + 0.4 ||
+        (audioStarted && !!audio?.ended);
 
-        void (async () => {
-          let grant = pendingCashRef.current;
-          pendingCashRef.current = 0;
-          if (cleared) {
-            const loopBonus = Math.round(
-              HERO_CLEAR_BONUS * (1 + loops * 0.25),
-            );
-            grant += loopBonus;
-            setState((prev) =>
-              prev.phase === "results"
-                ? { ...prev, cashEarned: prev.cashEarned + loopBonus }
-                : prev,
-            );
-          }
-          if (grant > 0) {
-            const balance = await awardCoins(grant);
-            if (balance != null) setCoinBalanceRef.current(balance);
-          }
-        })();
-
-        audioRef.current.stopAll();
+      if ((livesAfter <= 0 || songDone) && now >= 0) {
+        finishRun(livesAfter);
         return;
       }
 
@@ -448,9 +529,9 @@ export function useBloonHero() {
 
     frameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [state.phase, appendSegment]);
+  }, [state.phase, finishRun]);
 
-  useEffect(() => () => audioRef.current.stopAll(), []);
+  useEffect(() => () => cleanupSong(), [cleanupSong]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
@@ -475,12 +556,9 @@ export function useBloonHero() {
   }, [state.phase, applyHit]);
 
   const visibleNotes = (): ActiveNote[] => {
-    const now =
-      state.phase === "playing" ? audioRef.current.songTime() : state.songTime;
+    const now = state.songTime;
     return notesRef.current.filter((n) => {
-      if (n.resolved && n.result === "miss") {
-        return now - n.t < 0.25;
-      }
+      if (n.resolved && n.result === "miss") return now - n.t < 0.2;
       if (n.resolved) return false;
       return n.t - now < APPROACH_S + 0.05 && n.t - now > -WINDOW_GOOD;
     });
@@ -488,14 +566,18 @@ export function useBloonHero() {
 
   return {
     state,
-    chart: CHART,
+    song: songRef.current,
+    artUrl: state.artUrl,
+    noteCount: state.noteCount,
+    search,
+    setQuery,
+    pickSong,
     start,
     restart,
+    backToBrowse,
     applyHit,
     visibleNotes,
     approach: APPROACH_S,
-    noteY,
     maxLives: HERO_LIVES,
-    loopProgress,
   };
 }

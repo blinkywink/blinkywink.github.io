@@ -8882,6 +8882,132 @@ body:has(.zoomed-page) {
   touch-action: manipulation;
 }
 
+.hero-board--5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.28rem;
+}
+
+.hero-stage__art {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-art);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  filter: blur(10px) saturate(1.1);
+  transform: scale(1.08);
+  z-index: 0;
+}
+
+.hero-stage > .hero-progress,
+.hero-stage > .hero-board,
+.hero-stage > .hero-countdown,
+.hero-stage > .hero-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-stage > .hero-countdown,
+.hero-stage > .hero-overlay {
+  position: absolute;
+}
+
+.hero-browse {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: min(40rem, 100%);
+  margin: 0 auto;
+  padding: 0.5rem 0 1.25rem;
+}
+
+.hero-browse h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.hero-browse__sub {
+  margin: 0;
+  opacity: 0.78;
+  line-height: 1.45;
+}
+
+.hero-browse__sub a {
+  color: #8ec5ff;
+}
+
+.hero-browse__err {
+  margin: 0;
+  color: #ff8b8b;
+  font-weight: 650;
+}
+
+.hero-browse__loading {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.hero-search {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.hero-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.28);
+  color: inherit;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+}
+
+.hero-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+  max-height: min(48dvh, 26rem);
+  overflow: auto;
+}
+
+.hero-results__item {
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hero-results__item:hover,
+.hero-results__item:focus-visible {
+  border-color: rgba(240, 200, 74, 0.45);
+  background: rgba(240, 200, 74, 0.1);
+}
+
+.hero-results__item:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.hero-results__item strong {
+  font-size: 0.98rem;
+}
+
+.hero-results__item span {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
 .hero-lane {
   position: relative;
   appearance: none;

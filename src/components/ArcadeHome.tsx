@@ -312,7 +312,7 @@ function BananaCatchPreview() {
 }
 
 function BloonHeroPreview() {
-  const colors = ["#e23b4c", "#3b7dde", "#3dbf4a", "#e85aa8"];
+  const colors = ["#22c55e", "#ef4444", "#eab308", "#3b82f6", "#f97316"];
   return (
     <div className="game-preview game-preview--hero" aria-hidden>
       {colors.map((c, i) => (
@@ -323,7 +323,7 @@ function BloonHeroPreview() {
         >
           <b
             className="game-preview__hero-key"
-            style={{ ["--d" as string]: `${0.2 + i * 0.15}s` }}
+            style={{ ["--d" as string]: `${0.15 + i * 0.12}s` }}
           />
           <i />
         </span>
@@ -438,8 +438,8 @@ export function ArcadeHome({
     {
       id: "bloonhero" as const,
       title: "BLOON HERO",
-      blurb: "Four-lane rhythm — hit D F J K when the keys land.",
-      label: "Bloon Hero, Guitar Hero style piano key rhythm game",
+      blurb: "Search Encore charts, five keys D F J K L, audio packed in the chart.",
+      label: "Bloon Hero, Search Encore Clone Hero charts and play with D F J K L",
       preview: <BloonHeroPreview />,
     },
     {
