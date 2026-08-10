@@ -22,9 +22,9 @@ export const WINDOW_PERFECT = 0.07;
 export const WINDOW_GREAT = 0.12;
 export const WINDOW_GOOD = 0.18;
 
-export const HERO_LIVES = 5;
+export const HERO_LIVES = 10;
 /** Clear threshold: hit ratio among chart notes. */
-export const HERO_CLEAR_RATIO = 0.6;
+export const HERO_CLEAR_RATIO = 0.55;
 
 export const CASH_PER_PERFECT = 14;
 export const CASH_PER_GREAT = 9;

@@ -64,7 +64,7 @@ export class HeroAudio {
     this.accScheduled = false;
   }
 
-  /** Soft pad/bass bed — always plays (not player-gated). */
+  /** Quiet bass pedals only — melody is player-gated on the lead. */
   scheduleAccompaniment(
     notes: readonly { t: number; midi: number; dur: number; vel: number }[],
   ): void {
@@ -74,7 +74,7 @@ export class HeroAudio {
     for (const n of notes) {
       const when = this.startedAt + n.t;
       if (when + n.dur < c.currentTime) continue;
-      this.playSoftNote(n.midi, when, n.dur, n.vel * 0.28, "pad");
+      this.playSoftNote(n.midi, when, Math.max(0.4, n.dur), n.vel * 0.45, "pad");
     }
   }
 

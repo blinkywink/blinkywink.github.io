@@ -165,8 +165,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <div className="hero-overlay">
               <h2>BLOON HERO</h2>
               <p>
-                Party Time from bar {chart.offsetBar}. Match bloons to the
-                outlines with D F J K (or tap). Missed notes stay silent.
+                Party Time from bar {chart.offsetBar}. Hit every melody note: D F
+                J K (or tap). Miss a note and that note stays silent.
               </p>
               <button type="button" className="btn btn--primary" onClick={start}>
                 Play
