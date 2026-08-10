@@ -238,7 +238,8 @@ grant execute on function public.buy_hero(text) to anon, authenticated;
 revoke all on function public.record_hero_clear() from public;
 grant execute on function public.record_hero_clear() to anon, authenticated;
 
--- Equip owned hero. Unequip (null) free. Swap costs 1,000 Cash.
+-- Equip owned hero costs 1,000 Cash. Unequip is free.
+-- (First unlock auto-equip in buy_hero is free; manual equip always pays.)
 create or replace function public.equip_hero(p_hero_id text)
 returns json
 language plpgsql
@@ -251,7 +252,6 @@ declare
   owned text[];
   current_equip text;
   new_balance integer;
-  needs_pay boolean := false;
 begin
   if uid is null then
     raise exception 'Not authenticated';
@@ -284,12 +284,8 @@ begin
     );
   end if;
 
-  -- First equip or unequip is free; swapping from one hero to another costs 1k.
-  if current_equip is not null and hid is not null and hid is distinct from current_equip then
-    needs_pay := true;
-  end if;
-
-  if needs_pay then
+  -- Unequip free; any equip (from empty or swap) costs 1k.
+  if hid is not null then
     if new_balance < 1000 then
       raise exception 'Insufficient coins';
     end if;
@@ -304,7 +300,7 @@ begin
   else
     update public.profiles
     set
-      equipped_hero_id = hid,
+      equipped_hero_id = null,
       updated_at = now()
     where id = uid;
   end if;

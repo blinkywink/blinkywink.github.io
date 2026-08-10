@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { useAuth } from "../auth/AuthProvider";
 import {
   heroById,
   heroPortraitForLevel,
@@ -17,11 +18,14 @@ import {
 import { heroBlurb, heroLevelT } from "../lib/heroEffects";
 import { heroAccent, heroVisualTier } from "../lib/heroAccents";
 import {
+  HERO_EQUIP_SWAP_COST,
+  equipHero,
   heroLevelFromProfile,
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
+import { CashAmount } from "./CurrencyChip";
 
 type Levels = Record<string, number> | null | undefined;
 
@@ -55,7 +59,7 @@ export function EquippedHeroPanel({
   );
 }
 
-/** Owned-hero gallery for Collection — click opens view-only focus. */
+/** Owned-hero gallery for Collection — click opens focus with equip. */
 export function HeroCollectionShelf({
   ownedHeroIds,
   equippedHeroId,
@@ -67,20 +71,63 @@ export function HeroCollectionShelf({
   heroLevels?: Levels;
   className?: string;
 }) {
+  const { isGuest, profile, setCoinBalance, refreshProfile } = useAuth();
   const owned = useMemo(
     () => normalizeOwnedHeroIds(ownedHeroIds),
     [ownedHeroIds],
   );
   const levels = useMemo(() => normalizeHeroLevels(heroLevels), [heroLevels]);
-  const equipped = equippedHeroId?.trim().toLowerCase() || null;
+  const equipped =
+    (profile?.equipped_hero_id
+      ? String(profile.equipped_hero_id).toLowerCase()
+      : null) ??
+    equippedHeroId?.trim().toLowerCase() ??
+    null;
   const heroes = useMemo(
     () => shoppableHeroes().filter((h) => owned.includes(h.id)),
     [owned],
   );
   const [focused, setFocused] = useState<HeroEntity | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [equipError, setEquipError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const focusLevel = focused
     ? heroLevelFromProfile(levels, focused.id)
     : 1;
+  const focusEquipped = Boolean(focused && equipped === focused.id);
+  const focusEquipCost =
+    focused && !focusEquipped ? HERO_EQUIP_SWAP_COST : 0;
+
+  function closeFocus() {
+    if (busy) return;
+    setFocused(null);
+    setEquipError(null);
+  }
+
+  async function onEquip() {
+    if (!focused || busy || isGuest) return;
+    const already = equipped === focused.id;
+    const cost = !already ? HERO_EQUIP_SWAP_COST : 0;
+    if (cost > 0 && (profile?.coins ?? 0) < cost) {
+      setEquipError(`Need ${cost.toLocaleString()} Cash to equip a hero.`);
+      return;
+    }
+    setBusy(true);
+    setEquipError(null);
+    try {
+      const result = await equipHero(already ? null : focused.id);
+      setCoinBalance(result.coins);
+      await refreshProfile();
+      setStatus(
+        already
+          ? `${focused.name} unequipped.`
+          : `Equipped ${focused.name} (−${cost.toLocaleString()} Cash).`,
+      );
+    } catch (err) {
+      setEquipError(err instanceof Error ? err.message : "Could not equip.");
+    }
+    setBusy(false);
+  }
 
   useEffect(() => {
     if (!focused) return;
@@ -88,8 +135,9 @@ export function HeroCollectionShelf({
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (busy) return;
         e.preventDefault();
-        setFocused(null);
+        closeFocus();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -97,7 +145,7 @@ export function HeroCollectionShelf({
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [focused]);
+  }, [focused, busy]);
 
   const focusPortal = focused
     ? createPortal(
@@ -111,20 +159,21 @@ export function HeroCollectionShelf({
             type="button"
             className="card-focus__backdrop"
             aria-label="Close"
-            onClick={() => setFocused(null)}
+            disabled={busy}
+            onClick={closeFocus}
           />
           <div className="card-focus__panel shop-hero-focus__panel">
             <button
               type="button"
               className="btn btn--ghost btn--sm card-focus__close"
-              onClick={() => setFocused(null)}
+              disabled={busy}
+              onClick={closeFocus}
             >
               ✕ Close
             </button>
             <HeroCardFace
               hero={focused}
               level={focusLevel}
-              equipped={equipped === focused.id}
               size="lg"
               mode="focus"
               hideCaption
@@ -133,9 +182,43 @@ export function HeroCollectionShelf({
             <p className="shop-hero-focus__blurb">
               {heroBlurb(focused.id, focusLevel)}
             </p>
-            <p className="pack-opener__buy-note">
-              Equip / level up on Profile & Shop
-            </p>
+            <div className="pack-opener__buy shop-hero-focus__buy">
+              {isGuest ? (
+                <p className="pack-opener__buy-note">Sign in to equip.</p>
+              ) : (
+                <>
+                  <div className="shop-hero-focus__actions">
+                    <button
+                      type="button"
+                      className={`btn ${focusEquipped ? "btn--secondary" : "btn--primary"} btn--lg`}
+                      disabled={
+                        busy ||
+                        (focusEquipCost > 0 &&
+                          (profile?.coins ?? 0) < focusEquipCost)
+                      }
+                      onClick={() => void onEquip()}
+                    >
+                      {busy
+                        ? "…"
+                        : focusEquipped
+                          ? "Unequip"
+                          : "Equip"}
+                      {!focusEquipped ? (
+                        <CashAmount amount={focusEquipCost} size={16} />
+                      ) : null}
+                    </button>
+                  </div>
+                  {equipError ? (
+                    <p className="pack-opener__buy-error">{equipError}</p>
+                  ) : (
+                    <p className="pack-opener__buy-note">
+                      Balance {(profile?.coins ?? 0).toLocaleString()} Cash
+                      {focusEquipped ? " · Equipped" : ""}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>,
         document.body,
@@ -146,12 +229,10 @@ export function HeroCollectionShelf({
     <section className={`hero-shelf ${className}`.trim()} aria-label="Heroes">
       <div className="hero-shelf__head">
         <p className="hero-shelf__label">Heroes</p>
-        <p className="hero-shelf__note">
-          {heroes.length
-            ? `${heroes.length} owned · tap to view · equip in Shop`
-            : "Unlock heroes in the Shop"}
-        </p>
       </div>
+      {status ? (
+        <p className="shop-direct__banner shop-direct__banner--ok">{status}</p>
+      ) : null}
       {heroes.length === 0 ? (
         <p className="hero-shelf__empty">No heroes unlocked yet.</p>
       ) : (
@@ -165,7 +246,10 @@ export function HeroCollectionShelf({
                 level={level}
                 equipped={equipped === hero.id}
                 mode="preview"
-                onSelect={() => setFocused(hero)}
+                onSelect={() => {
+                  setEquipError(null);
+                  setFocused(hero);
+                }}
               />
             );
           })}

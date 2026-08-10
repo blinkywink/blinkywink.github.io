@@ -104,12 +104,9 @@ export function ShopHeroesShelf() {
       return;
     }
     const already = equippedId === focused.id;
-    const swapCost =
-      !already && equippedId && equippedId !== focused.id
-        ? HERO_EQUIP_SWAP_COST
-        : 0;
-    if (swapCost > 0 && (profile?.coins ?? 0) < swapCost) {
-      setBuyError(`Need ${swapCost.toLocaleString()} Cash to swap heroes.`);
+    const equipCost = !already ? HERO_EQUIP_SWAP_COST : 0;
+    if (equipCost > 0 && (profile?.coins ?? 0) < equipCost) {
+      setBuyError(`Need ${equipCost.toLocaleString()} Cash to equip a hero.`);
       return;
     }
     setBusy(true);
@@ -121,9 +118,7 @@ export function ShopHeroesShelf() {
       setStatus(
         already
           ? `${focused.name} unequipped.`
-          : swapCost > 0
-            ? `Equipped ${focused.name} (−${swapCost.toLocaleString()} Cash).`
-            : `Equipped ${focused.name}!`,
+          : `Equipped ${focused.name} (−${equipCost.toLocaleString()} Cash).`,
       );
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : "Could not equip.");
@@ -180,10 +175,8 @@ export function ShopHeroesShelf() {
       : heroUpgradeCost(1)
     : 0;
   const focusEquipped = Boolean(focused && equippedId === focused.id);
-  const focusSwapCost =
-    focusMine && !focusEquipped && equippedId
-      ? HERO_EQUIP_SWAP_COST
-      : 0;
+  const focusEquipCost =
+    focusMine && !focusEquipped ? HERO_EQUIP_SWAP_COST : 0;
   const canBuy =
     !isGuest && focused && (!focusMine || (!focusMaxed && focusReady));
 
@@ -237,8 +230,8 @@ export function ShopHeroesShelf() {
                         className={`btn ${focusEquipped ? "btn--secondary" : "btn--primary"} btn--lg`}
                         disabled={
                           busy ||
-                          (focusSwapCost > 0 &&
-                            (profile?.coins ?? 0) < focusSwapCost)
+                          (focusEquipCost > 0 &&
+                            (profile?.coins ?? 0) < focusEquipCost)
                         }
                         onClick={() => void onEquip()}
                       >
@@ -246,11 +239,9 @@ export function ShopHeroesShelf() {
                           ? "…"
                           : focusEquipped
                             ? "Unequip"
-                            : focusSwapCost > 0
-                              ? "Equip"
-                              : "Equip"}
-                        {!focusEquipped && focusSwapCost > 0 ? (
-                          <CashAmount amount={focusSwapCost} size={16} />
+                            : "Equip"}
+                        {!focusEquipped ? (
+                          <CashAmount amount={focusEquipCost} size={16} />
                         ) : null}
                       </button>
                       {!focusMaxed && focusReady ? (

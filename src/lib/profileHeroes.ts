@@ -249,7 +249,7 @@ export async function equipHero(
   if (error) {
     if (/Insufficient coins/i.test(error.message)) {
       throw new Error(
-        `Need ${HERO_EQUIP_SWAP_COST.toLocaleString()} Cash to change heroes.`,
+        `Need ${HERO_EQUIP_SWAP_COST.toLocaleString()} Cash to equip a hero.`,
       );
     }
     if (/Hero not owned/i.test(error.message)) {
