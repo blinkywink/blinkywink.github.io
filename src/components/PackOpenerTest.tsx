@@ -259,6 +259,8 @@ export function PackOpenerTest({
   const needFreshSpaceRef = useRef(false);
   /** When the current card became ready (for T4 hold gate). */
   const readyAtRef = useRef(0);
+  /** Sync lock — React buyBusy alone races on Space-hold / key-repeat. */
+  const buyLockRef = useRef(false);
 
   const clearTimers = () => {
     for (const id of timers.current) window.clearTimeout(id);
@@ -301,6 +303,7 @@ export function PackOpenerTest({
     spaceHeldRef.current = false;
     needFreshSpaceRef.current = false;
     readyAtRef.current = 0;
+    buyLockRef.current = false;
     setBuyBusy(false);
     setBuyError(null);
   }, []);
@@ -395,7 +398,9 @@ export function PackOpenerTest({
   };
 
   const purchase = useCallback(async () => {
-    if (buyBusy || mode === "reward" || phaseRef.current !== "shop") return;
+    if (buyLockRef.current || mode === "reward" || phaseRef.current !== "shop") {
+      return;
+    }
     setBuyError(null);
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
@@ -408,8 +413,10 @@ export function PackOpenerTest({
       setPhaseBoth("sealed");
       return;
     }
+    buyLockRef.current = true;
     setBuyBusy(true);
     const balance = await spendCoins(charge);
+    buyLockRef.current = false;
     setBuyBusy(false);
     if (balance == null) {
       setBuyError("Purchase failed — try again.");
@@ -419,7 +426,6 @@ export function PackOpenerTest({
     setCoinBalance(balance);
     setPhaseBoth("sealed");
   }, [
-    buyBusy,
     mode,
     pack.kind,
     price,
@@ -567,14 +573,20 @@ export function PackOpenerTest({
   }, [completeCut]);
 
   const buyAnother = useCallback(async () => {
-    if (buyBusy || mode === "reward") return;
+    if (buyLockRef.current || mode === "reward") return;
     setBuyError(null);
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
     if (charge <= 0) {
+      buyLockRef.current = true;
+      setBuyBusy(true);
       resetToSealed();
       playBuy();
-      later(() => autoSlashOpen(), 160);
+      later(() => {
+        buyLockRef.current = false;
+        setBuyBusy(false);
+        autoSlashOpen();
+      }, 160);
       return;
     }
     if ((profile?.coins ?? 0) < charge) {
@@ -582,10 +594,12 @@ export function PackOpenerTest({
       setBuyError("Not enough Cash.");
       return;
     }
+    buyLockRef.current = true;
     setBuyBusy(true);
     const balance = await spendCoins(charge);
-    setBuyBusy(false);
     if (balance == null) {
+      buyLockRef.current = false;
+      setBuyBusy(false);
       reset();
       setBuyError("Purchase failed — try again.");
       return;
@@ -593,10 +607,13 @@ export function PackOpenerTest({
     setCoinBalance(balance);
     resetToSealed();
     playBuy();
-    later(() => autoSlashOpen(), 160);
+    later(() => {
+      buyLockRef.current = false;
+      setBuyBusy(false);
+      autoSlashOpen();
+    }, 160);
   }, [
     autoSlashOpen,
-    buyBusy,
     mode,
     pack.kind,
     price,
@@ -663,8 +680,9 @@ export function PackOpenerTest({
       } else if (p === "ready") {
         if (spaceCanFling(e)) flingAway();
       } else if (p === "done") {
-        // Reward packs aren't in the shop — no buy-another.
-        if (mode !== "reward") void buyAnother();
+        // Fresh Space only. Hold-through repacks are queued in nextCard —
+        // key-repeat here was double-charging packs.
+        if (mode !== "reward" && !e.repeat) void buyAnother();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
