@@ -19,15 +19,13 @@ import {
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
-import {
-  EquippedHeroPanel,
-  HeroCollectionShelf,
-} from "./HeroCollectionStrip";
+import { EquippedHeroPanel } from "./HeroCollectionStrip";
+import { HeroesLab } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 import {
-  normalizeHeroLevels,
   normalizeOwnedHeroIds,
+  shoppableHeroes,
 } from "../lib/profileHeroes";
 
 export type CardsOpenOpts = {
@@ -57,6 +55,7 @@ type Props = {
 
 type View =
   | { kind: "towers" }
+  | { kind: "heroes" }
   | { kind: "all" }
   | { kind: "tower"; name: string };
 
@@ -239,6 +238,11 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
 
   const totalOwned = owned.size;
   const totalCards = ALL_SPECS.length;
+  const ownedHeroCount = useMemo(
+    () => normalizeOwnedHeroIds(profile?.owned_hero_ids).length,
+    [profile?.owned_hero_ids],
+  );
+  const totalHeroes = useMemo(() => shoppableHeroes().length, []);
   const showcaseCards = useMemo(() => {
     const ids = viewer?.showcaseCardIds ?? [];
     return ids
@@ -449,19 +453,13 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               </>
             ) : null}
             {!isRemote ? (
-              <HeroCollectionShelf
-                ownedHeroIds={normalizeOwnedHeroIds(profile?.owned_hero_ids)}
-                equippedHeroId={profile?.equipped_hero_id ?? null}
-                heroLevels={normalizeHeroLevels(profile?.hero_levels)}
-              />
+              <p className="card-lab__blurb">
+                {totalOwned} / {totalCards} owned · browse by tower, or open
+                Heroes / All Cards.
+              </p>
             ) : null}
             {remoteError ? (
               <p className="card-lab__blurb">{remoteError}</p>
-            ) : !isRemote ? (
-              <p className="card-lab__blurb">
-                {totalOwned} / {totalCards} owned · browse by tower, or open All
-                Cards.
-              </p>
             ) : null}
             {canRequestTrade ? (
               <div className="card-lab__trade">
@@ -482,6 +480,22 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         </header>
 
         <div className="card-lab__picker">
+          {!isRemote ? (
+            <button
+              type="button"
+              className="card-lab__all-btn card-lab__all-btn--heroes"
+              onClick={() => {
+                setQuery("");
+                setView({ kind: "heroes" });
+              }}
+            >
+              <span className="card-lab__all-btn-title">Heroes</span>
+              <span className="card-lab__all-btn-meta">
+                {ownedHeroCount} / {totalHeroes} unlocked · equip & level up
+              </span>
+            </button>
+          ) : null}
+
           <button
             type="button"
             className="card-lab__all-btn"
@@ -550,6 +564,17 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         </div>
         {focusPortal}
       </div>
+    );
+  }
+
+  // ——— Heroes manage / upgrade ———
+  if (view.kind === "heroes" && !isRemote) {
+    return (
+      <HeroesLab
+        onBack={() => {
+          setView({ kind: "towers" });
+        }}
+      />
     );
   }
 
