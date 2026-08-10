@@ -12,18 +12,9 @@ export const LEAD_IN_BEATS = 4;
 export const HIT_LINE_Y = 82;
 /** Note spawn Y (%); slightly above 0 so they enter from off-screen. */
 export const SPAWN_Y = -10;
-/** Min MIDI duration (s) before a note draws a sustain bar. */
-export const HOLD_MIN_DUR = 0.2;
 
 export function leadInSeconds(bpm: number): number {
   return (60 / bpm) * LEAD_IN_BEATS;
-}
-
-/** Sustain trail length as % of the lane height. */
-export function sustainLenPct(dur: number, approach = APPROACH_S): number {
-  if (dur < HOLD_MIN_DUR) return 0;
-  const trackSpan = HIT_LINE_Y - SPAWN_Y;
-  return Math.min(48, (dur / approach) * trackSpan * 1.15);
 }
 
 /** Judgment windows (seconds from note time). */

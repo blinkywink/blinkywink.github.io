@@ -2,7 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
-import { EMPTY_STREAK_KILL, sustainLenPct } from "./config";
+import { EMPTY_STREAK_KILL } from "./config";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -128,22 +128,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                             ? state.songTime
                             : 0;
                         const yHead = noteY(t, n.t, approach);
-                        const sustain = sustainLenPct(n.dur, approach);
                         const missed = n.result === "miss";
                         return (
                           <div
                             key={n.id}
-                            className={`hero-note${missed ? " is-miss" : ""}${sustain > 0 ? " is-hold" : ""}`}
+                            className={`hero-note${missed ? " is-miss" : ""}`}
                           >
-                            {sustain > 0 ? (
-                              <span
-                                className="hero-note__sustain"
-                                style={{
-                                  top: `${yHead - sustain}%`,
-                                  height: `${sustain}%`,
-                                }}
-                              />
-                            ) : null}
                             <span
                               className="hero-note__key"
                               style={{ top: `${yHead}%` }}

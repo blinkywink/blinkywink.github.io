@@ -172,15 +172,18 @@ export function useBloonHero() {
 
   const appendSegment = useCallback((seg: Segment, offset: number) => {
     for (const n of seg.notes) {
+      // Keep notes whose attack is at or before the segment cut (on-boundary phrase)
+      if (n.t > seg.duration + 0.001) continue;
       notesRef.current.push({
         ...n,
-        t: n.t + offset,
+        t: +(n.t + offset).toFixed(4),
         id: nextIdRef.current++,
         resolved: false,
       });
     }
-    audioRef.current.scheduleAccompaniment(seg.accompaniment, offset);
-    nextSegAtRef.current = offset + seg.duration;
+    const acc = seg.accompaniment.filter((n) => n.t <= seg.duration + 0.001);
+    audioRef.current.scheduleAccompaniment(acc, offset);
+    nextSegAtRef.current = +(offset + seg.duration).toFixed(4);
   }, []);
 
   const flashPress = useCallback((lane: number) => {

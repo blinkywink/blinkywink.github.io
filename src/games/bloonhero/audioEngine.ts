@@ -75,7 +75,7 @@ export class HeroAudio {
     }
   }
 
-  /** Player-gated lead: only call when a note is hit. */
+  /** Player-gated lead: plays the MIDI note length (no hold required). */
   playHitNote(midi: number, dur: number, vel: number, judge: string): void {
     const c = this.ensure();
     if (!c || !this.master) return;
@@ -83,7 +83,7 @@ export class HeroAudio {
     this.playSoftNote(
       midi,
       c.currentTime,
-      Math.max(0.32, dur * 1.65),
+      Math.max(0.08, dur),
       vel * gainMul,
       "lead",
     );
@@ -155,9 +155,10 @@ export class HeroAudio {
     const start = Math.max(when, c.currentTime);
     const freq = midiToHz(midi);
     const isLead = voice === "lead";
-    const attack = isLead ? 0.014 : 0.04;
-    const release = isLead ? 0.55 : 0.6;
-    const hold = Math.max(isLead ? 0.28 : 0.08, dur);
+    const attack = isLead ? 0.012 : 0.04;
+    // Short release so length tracks the MIDI dur without a floppy tail
+    const release = isLead ? 0.12 : 0.45;
+    const hold = Math.max(isLead ? 0.07 : 0.08, dur);
     const end = start + hold + release;
     const peak = Math.min(isLead ? 0.34 : 0.16, (isLead ? 0.1 : 0.05) + vel * 0.28);
 

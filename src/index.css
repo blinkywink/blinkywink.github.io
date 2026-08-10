@@ -9003,21 +9003,6 @@ body:has(.zoomed-page) {
   filter: grayscale(0.75);
 }
 
-.hero-note__sustain {
-  position: absolute;
-  left: 50%;
-  width: min(34%, 1.15rem);
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--lane) 35%, transparent),
-    color-mix(in srgb, var(--lane) 78%, white)
-  );
-  box-shadow: 0 0 8px color-mix(in srgb, var(--lane) 40%, transparent);
-  z-index: 1;
-}
-
 .hero-note__key {
   position: absolute;
   left: 50%;
