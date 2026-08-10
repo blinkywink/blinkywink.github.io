@@ -257,7 +257,6 @@ $$;
 revoke all on function public.hero_unlock_cost(text) from public;
 grant execute on function public.hero_unlock_cost(text) to anon, authenticated;
 
-revoke all on function public.hero_upgrade_cost(integer) from public;
 revoke all on function public.hero_upgrade_cost(integer, text) from public;
 grant execute on function public.hero_upgrade_cost(integer, text) to anon, authenticated;
 

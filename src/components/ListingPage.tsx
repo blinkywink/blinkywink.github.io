@@ -15,6 +15,7 @@ import {
   type MarketplaceListing,
 } from "../lib/marketplace";
 import { formatPathLevels, maxPathTier } from "../lib/pathCombos";
+import { playBuy } from "../lib/packSounds";
 import { marketplacePath, userCollectionPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
@@ -111,6 +112,7 @@ export function ListingPage() {
     setStatus(null);
     try {
       const bal = await buyListing(listing.id);
+      playBuy();
       setCoinBalance(bal);
       await Promise.all([refreshCards(), refreshProfile()]);
       setStatus("Bought — card added to your collection.");

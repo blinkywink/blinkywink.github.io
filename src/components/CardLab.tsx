@@ -18,6 +18,7 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import {
   EquippedHeroPanel,
   HeroCollectionShelf,
@@ -147,6 +148,12 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const [tierHighFirst, setTierHighFirst] = useState(
     () => !initial?.tower,
   );
+
+  useEffect(() => {
+    if (!focused) return;
+    preloadPackSounds();
+    playCardFocus();
+  }, [focused]);
 
   useEffect(() => {
     if (!viewer) {

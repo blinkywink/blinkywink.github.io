@@ -25,6 +25,7 @@ import {
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
+import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { CashAmount } from "./CurrencyChip";
 
 type Levels = Record<string, number> | null | undefined;
@@ -97,6 +98,12 @@ export function HeroCollectionShelf({
   const focusEquipped = Boolean(focused && equipped === focused.id);
   const focusEquipCost =
     focused && !focusEquipped ? HERO_EQUIP_SWAP_COST : 0;
+
+  useEffect(() => {
+    if (!focused) return;
+    preloadPackSounds();
+    playCardFocus();
+  }, [focused]);
 
   function closeFocus() {
     if (busy) return;

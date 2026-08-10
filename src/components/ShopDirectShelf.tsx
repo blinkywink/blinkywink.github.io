@@ -14,6 +14,7 @@ import {
   shopDirectExpiresAtMs,
   type ShopDirectListing,
 } from "../lib/shopDirect";
+import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
@@ -81,6 +82,8 @@ export function ShopDirectShelf() {
     if (!card) return;
     setError(null);
     setBuyError(null);
+    preloadPackSounds();
+    playCardFocus();
     setFocused({ listing, card });
   }
 
@@ -105,6 +108,7 @@ export function ShopDirectShelf() {
     setStatus(null);
     try {
       const result = await buyShopDirectCard(listing.slot, listing.version);
+      playBuy();
       setCoinBalance(result.coins);
       setListings(result.listings);
       await refreshCards();

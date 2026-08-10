@@ -17,6 +17,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
+import { playBuy, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -318,6 +319,7 @@ export function PackOpenerTest({
 
   useEffect(() => {
     if (!open) return;
+    preloadPackSounds();
     reset();
     if (mode === "reward") {
       phaseRef.current = "sealed";
@@ -392,6 +394,7 @@ export function PackOpenerTest({
       setBuyError("Purchase failed — try again.");
       return;
     }
+    playBuy();
     setCoinBalance(balance);
     setPhaseBoth("sealed");
   }, [
@@ -412,6 +415,14 @@ export function PackOpenerTest({
       dragRef.current = { x: 0, y: 0 };
       setPhaseBoth("enter");
       awardDupCashForIndex(i);
+      const card = pullsRef.current[i];
+      if (card) {
+        if (card.isParagon || maxPathTier(card.pathLevels) >= 5) {
+          playPackRare();
+        } else if (maxPathTier(card.pathLevels) === 4) {
+          playPackT4();
+        }
+      }
       later(() => {
         if (phaseRef.current !== "enter") return;
         readyAtRef.current = performance.now();
@@ -480,6 +491,7 @@ export function PackOpenerTest({
   const completeCut = useCallback(
     (pts: Pt[]) => {
       if (phaseRef.current !== "sealed" || pts.length < 2) return;
+      playPackSlice();
       const a = pts[0]!;
       const b = pts[pts.length - 1]!;
       setClips(splitClips(a, b));
@@ -537,6 +549,7 @@ export function PackOpenerTest({
     }
     setCoinBalance(balance);
     resetToSealed();
+    playBuy();
     later(() => autoSlashOpen(), 160);
   }, [
     autoSlashOpen,
@@ -653,6 +666,7 @@ export function PackOpenerTest({
     if ((e.target as HTMLElement).closest("button")) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    preloadPackSounds();
     const p = localPoint(e);
     if (!p) return;
     drawing.current = true;

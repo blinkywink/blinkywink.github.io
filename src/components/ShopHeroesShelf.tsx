@@ -18,6 +18,7 @@ import {
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
+import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
@@ -27,6 +28,12 @@ export function ShopHeroesShelf() {
   const [busy, setBusy] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!focused) return;
+    preloadPackSounds();
+    playCardFocus();
+  }, [focused]);
 
   const owned = useMemo(
     () => new Set(normalizeOwnedHeroIds(profile?.owned_hero_ids)),
@@ -82,6 +89,7 @@ export function ShopHeroesShelf() {
     setBuyError(null);
     try {
       const result = await buyHero(focused.id, { expectedCost: price });
+      playBuy();
       setCoinBalance(result.coins);
       await refreshProfile();
       const nextLevel = result.heroLevels[focused.id] ?? (mine ? level + 1 : 1);
