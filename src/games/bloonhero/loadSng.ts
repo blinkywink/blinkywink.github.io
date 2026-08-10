@@ -7,10 +7,14 @@ import {
   type ParsedChart,
 } from "./parseChartFile";
 import { listMidiInstruments, parseMidiChart } from "./parseMidiChart";
+import { isAudioStemFile } from "./stemPlayer";
 
 export type LoadedSong = {
   chart: ParsedChart;
-  audioUrl: string;
+  /** Filled after StemPlayer create — used for revoke. */
+  audioUrls: string[];
+  /** Raw stem payloads for the player. */
+  stemFiles: { name: string; data: Uint8Array }[];
   artUrl: string | null;
   delayMs: number;
   ini: Record<string, string>;
@@ -75,6 +79,23 @@ function preferInstrument(
   return "guitar";
 }
 
+function collectStemFiles(
+  files: Map<string, Uint8Array>,
+): { name: string; data: Uint8Array }[] {
+  const stems: { name: string; data: Uint8Array }[] = [];
+  for (const [name, data] of files) {
+    if (!isAudioStemFile(name)) continue;
+    stems.push({ name, data });
+  }
+  stems.sort((a, b) => {
+    const as = /^song\./i.test(a.name) ? 0 : 1;
+    const bs = /^song\./i.test(b.name) ? 0 : 1;
+    if (as !== bs) return as - bs;
+    return a.name.localeCompare(b.name);
+  });
+  return stems;
+}
+
 export async function loadSongFromSng(
   buffer: ArrayBuffer,
   preferInstrumentName?: PlayableInstrument | null,
@@ -125,7 +146,6 @@ export async function loadSongFromSng(
     files.get("notes.midi") ??
     [...files.entries()].find(([n]) => /\.mid(i)?$/i.test(n))?.[1];
 
-  // Chart + MIDI often coexist — guitar in .chart, vocals only in .mid.
   const fromChart = chartBytes
     ? listChartInstruments(new TextDecoder("utf-8").decode(chartBytes))
     : [];
@@ -143,7 +163,6 @@ export async function loadSongFromSng(
     : null;
 
   const parseFor = (instrument: PlayableInstrument): ParsedChart => {
-    // Prefer native source per instrument.
     if (instrument === "vocals") {
       if (!midBytes) throw new Error("Vocals need a notes.mid in this pack");
       const chart = parseMidiChart(midBytes, {
@@ -156,7 +175,6 @@ export async function loadSongFromSng(
       if (ini.artist) chart.artist = ini.artist;
       return chart;
     }
-    // Guitar: .chart first, then MIDI
     if (chartText && fromChart.includes("guitar")) {
       const chart = parseChartFile(chartText, "guitar");
       if (ini.name) chart.name = ini.name;
@@ -180,26 +198,8 @@ export async function loadSongFromSng(
   const chosen = preferInstrument(availableInstruments, preferInstrumentName);
   let chart = parseFor(chosen);
 
-  const audioEntry =
-    files.get("song.opus") ??
-    files.get("song.ogg") ??
-    files.get("guitar.opus") ??
-    files.get("guitar.ogg") ??
-    files.get("song.mp3") ??
-    [...files.entries()].find(([n]) =>
-      /\.(opus|ogg|mp3|wav|m4a)$/i.test(n),
-    )?.[1];
-  if (!audioEntry) throw new Error("No song audio found in chart pack");
-
-  const audioMime =
-    files.has("song.opus") || files.has("guitar.opus")
-      ? "audio/opus"
-      : files.has("song.ogg") || files.has("guitar.ogg")
-        ? "audio/ogg"
-        : "audio/mpeg";
-  const audioUrl = URL.createObjectURL(
-    new Blob([asBlobPart(audioEntry)], { type: audioMime }),
-  );
+  const stemFiles = collectStemFiles(files);
+  if (!stemFiles.length) throw new Error("No song audio found in chart pack");
 
   const artEntry =
     files.get("album.jpg") ??
@@ -212,7 +212,8 @@ export async function loadSongFromSng(
 
   const loaded: LoadedSong = {
     chart,
-    audioUrl,
+    audioUrls: [],
+    stemFiles,
     artUrl,
     delayMs,
     ini,
@@ -232,6 +233,6 @@ export async function loadSongFromSng(
 
 export function revokeLoadedSong(song: LoadedSong | null): void {
   if (!song) return;
-  URL.revokeObjectURL(song.audioUrl);
+  for (const url of song.audioUrls) URL.revokeObjectURL(url);
   if (song.artUrl) URL.revokeObjectURL(song.artUrl);
 }

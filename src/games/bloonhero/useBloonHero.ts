@@ -21,6 +21,7 @@ import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
 import type { ChartNote } from "./parseChartFile";
+import { createStemPlayer, type StemPlayer } from "./stemPlayer";
 
 export type ActiveNote = ChartNote & {
   id: number;
@@ -148,7 +149,7 @@ export function useBloonHero() {
   volumeRef.current = state.volume;
 
   const songRef = useRef<LoadedSong | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playerRef = useRef<StemPlayer | null>(null);
   const notesRef = useRef<ActiveNote[]>([]);
   const durationRef = useRef(0);
   /** Last chart note time — not used alone to end the run. */
@@ -190,10 +191,9 @@ export function useBloonHero() {
   }, []);
 
   const cleanupSong = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
-      audioRef.current = null;
+    if (playerRef.current) {
+      playerRef.current.destroy();
+      playerRef.current = null;
     }
     revokeLoadedSong(songRef.current);
     songRef.current = null;
@@ -245,7 +245,7 @@ export function useBloonHero() {
   const setVolume = useCallback((volume: number) => {
     const v = Math.min(1, Math.max(0, volume));
     volumeRef.current = v;
-    if (audioRef.current) audioRef.current.volume = v;
+    if (playerRef.current) playerRef.current.setVolume(v);
     try {
       localStorage.setItem(VOLUME_KEY, String(v));
     } catch {
@@ -298,37 +298,20 @@ export function useBloonHero() {
         const buf = await downloadSng(hit.md5);
         const loaded = await loadSongFromSng(buf);
         songRef.current = loaded;
-        const audio = new Audio(loaded.audioUrl);
-        audio.preload = "auto";
-        audio.volume = volumeRef.current;
-        await audio.load();
-        await new Promise<void>((resolve, reject) => {
-          const ok = () => {
-            cleanup();
-            resolve();
-          };
-          const fail = () => {
-            cleanup();
-            reject(new Error("Could not load song audio"));
-          };
-          const cleanup = () => {
-            audio.removeEventListener("canplaythrough", ok);
-            audio.removeEventListener("error", fail);
-          };
-          audio.addEventListener("canplaythrough", ok, { once: true });
-          audio.addEventListener("error", fail, { once: true });
-          if (audio.readyState >= 3) ok();
-        });
-        audioRef.current = audio;
+        const { player, urls } = await createStemPlayer(
+          loaded.stemFiles,
+          volumeRef.current,
+        );
+        loaded.audioUrls = urls;
+        playerRef.current = player;
         const chartEnd = loaded.chart.duration;
         chartEndRef.current = chartEnd;
         const refreshAudioLength = () => {
           const fromAudio =
-            Number.isFinite(audio.duration) && audio.duration > 0
-              ? audio.duration
+            Number.isFinite(player.duration) && player.duration > 0
+              ? player.duration
               : 0;
           const fromMeta = (hit.song_length || 0) / 1000;
-          // Prefer real audio length so we don't end at the last chart note.
           durationRef.current = Math.max(fromAudio, fromMeta, chartEnd);
           setState((prev) =>
             prev.phase === "ready" || prev.phase === "playing"
@@ -337,8 +320,8 @@ export function useBloonHero() {
           );
         };
         refreshAudioLength();
-        audio.addEventListener("loadedmetadata", refreshAudioLength);
-        audio.addEventListener("durationchange", refreshAudioLength);
+        player.master.addEventListener("loadedmetadata", refreshAudioLength);
+        player.master.addEventListener("durationchange", refreshAudioLength);
         setState((prev) => ({
           ...prev,
           phase: "ready",
@@ -371,9 +354,9 @@ export function useBloonHero() {
       const chart = song.setInstrument(instrument);
       chartEndRef.current = chart.duration;
       const fromAudio =
-        Number.isFinite(audioRef.current?.duration) &&
-        (audioRef.current?.duration ?? 0) > 0
-          ? (audioRef.current?.duration ?? 0)
+        Number.isFinite(playerRef.current?.duration) &&
+        (playerRef.current?.duration ?? 0) > 0
+          ? (playerRef.current?.duration ?? 0)
           : 0;
       durationRef.current = Math.max(
         fromAudio,
@@ -444,7 +427,7 @@ export function useBloonHero() {
       countdown: null,
       songTime: songTimeRef.current,
     }));
-    if (audioRef.current) audioRef.current.pause();
+    if (playerRef.current) playerRef.current.pause();
     void (async () => {
       let grant = pendingCashRef.current;
       pendingCashRef.current = 0;
@@ -472,8 +455,8 @@ export function useBloonHero() {
 
   const start = useCallback(() => {
     const song = songRef.current;
-    const audio = audioRef.current;
-    if (!song || !audio) return;
+    const player = playerRef.current;
+    if (!song || !player) return;
     if (!stateRef.current.instrument) {
       setState((prev) => ({
         ...prev,
@@ -506,8 +489,8 @@ export function useBloonHero() {
     keysDownRef.current.clear();
     pressedRef.current.clear();
     holdingRef.current.clear();
-    audio.pause();
-    audio.currentTime = 0;
+    player.pause();
+    player.currentTime = 0;
     resizeCanvas();
     setState((prev) => ({
       ...INITIAL,
@@ -542,9 +525,9 @@ export function useBloonHero() {
 
   const restart = useCallback(() => {
     cancelAnimationFrame(frameRef.current);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (playerRef.current) {
+      playerRef.current.pause();
+      playerRef.current.currentTime = 0;
     }
     setState((prev) => ({
       ...INITIAL,
@@ -710,21 +693,21 @@ export function useBloonHero() {
       const wall = (wallMs - originRef.current) / 1000;
       let now = wall - leadIn;
 
-      const audio = audioRef.current;
-      if (!audioStarted && now >= 0 && audio) {
+      const player = playerRef.current;
+      if (!audioStarted && now >= 0 && player) {
         audioStarted = true;
-        audio.currentTime = 0;
+        player.currentTime = 0;
         clockRef.current = {
           baseAudio: 0,
           baseWall: wallMs / 1000,
           lastAudioSample: 0,
         };
-        void audio.play().catch(() => {});
+        void player.play();
       }
 
-      if (audioStarted && audio && !audio.paused) {
+      if (audioStarted && player && !player.paused) {
         const delay = (songRef.current?.delayMs || 0) / 1000;
-        const sample = audio.currentTime - delay;
+        const sample = player.currentTime - delay;
         const clock = clockRef.current;
         const wallSec = wallMs / 1000;
         // Resync when the media clock advances; only nudge a few frames ahead
@@ -738,16 +721,30 @@ export function useBloonHero() {
           const ahead = Math.min(0.05, Math.max(0, wallSec - clock.baseWall));
           now = clock.baseAudio + ahead;
         }
+        // Keep stems locked — cheap drift correction.
+        if (player.stems.length > 1 && (wallMs | 0) % 1000 < 20) {
+          const t = player.master.currentTime;
+          for (const el of player.stems) {
+            if (el === player.master) continue;
+            if (Math.abs(el.currentTime - t) > 0.08) {
+              try {
+                el.currentTime = t;
+              } catch {
+                /* ignore */
+              }
+            }
+          }
+        }
       }
       songTimeRef.current = now;
 
       // Keep duration synced if browser learns audio length late (common for opus).
       if (
-        audio &&
-        Number.isFinite(audio.duration) &&
-        audio.duration > durationRef.current + 0.25
+        player &&
+        Number.isFinite(player.duration) &&
+        player.duration > durationRef.current + 0.25
       ) {
-        durationRef.current = audio.duration;
+        durationRef.current = player.duration;
       }
 
       const fill = progressFillRef.current;
@@ -877,16 +874,16 @@ export function useBloonHero() {
       // half-reported opus duration while Encore/ini says the track is longer.
       const declaredLen = Math.max(durationRef.current, chartEndRef.current);
       const reportedLen =
-        audio && Number.isFinite(audio.duration) && audio.duration > 0
-          ? audio.duration
+        player && Number.isFinite(player.duration) && player.duration > 0
+          ? player.duration
           : 0;
-      const audioPos = audio?.currentTime ?? 0;
+      const audioPos = player?.currentTime ?? 0;
       const trustReported =
         reportedLen > 1 && reportedLen >= Math.max(1, declaredLen) * 0.9;
       const songDone =
         audioStarted &&
-        !!audio &&
-        (audio.ended ||
+        !!player &&
+        (player.ended ||
           (trustReported && audioPos >= reportedLen - 0.12));
 
       if (livesAfter <= 0 && now >= 0) {
