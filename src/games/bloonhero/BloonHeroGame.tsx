@@ -8,6 +8,7 @@ import {
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
+import { playBloonPop } from "../../lib/packSounds";
 import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
   enchorArtUrl,
@@ -243,6 +244,27 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           </span>
         </label>
 
+        <label className="hero-settings__row">
+          <span>
+            Pop volume{" "}
+            <strong>{Math.round((settings.popVolume ?? 1) * 100)}%</strong>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={Math.round((settings.popVolume ?? 1) * 100)}
+            aria-label="Pop volume"
+            onChange={(e) => {
+              const popVolume = Number(e.target.value) / 100;
+              updateSettings({ popVolume });
+              playBloonPop(popVolume);
+            }}
+          />
+          <span className="hero-settings__hint">Hit sound when you pop a bloon</span>
+        </label>
+
         <div className="hero-settings__binds">
           <span>Keybinds</span>
           <div className="hero-settings__keys" role="group" aria-label="Lane keys">
@@ -275,6 +297,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               updateSettings({
                 trackSpeed: 1,
                 bloonScale: 1,
+                popVolume: 1,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
               })
             }

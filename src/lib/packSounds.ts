@@ -229,9 +229,11 @@ export function playCardWhoosh(): void {
   playBuffer(WHOOSH_SRC, 0.32);
 }
 
-/** BTD6-style bloon pop (Bloon Hero hits). */
-export function playBloonPop(): void {
-  playBuffer(BLOON_POP_SRC, 1.15);
+/** BTD6-style bloon pop (Bloon Hero hits). `volume` is 0–1 relative to the game's pop slider. */
+export function playBloonPop(volume = 1): void {
+  const v = Math.max(0, Math.min(1, volume));
+  if (v <= 0.001) return;
+  playBuffer(BLOON_POP_SRC, 1.15 * v);
 }
 
 /** Hero place/equip voice line (first line only). No-op if missing (e.g. Silas). */

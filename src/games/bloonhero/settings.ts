@@ -7,6 +7,8 @@ export type HeroSettings = {
   trackSpeed: number;
   /** 0.6–1.8 — note / receptor size multiplier. */
   bloonScale: number;
+  /** 0–1 — bloon pop hit SFX volume. */
+  popVolume: number;
   /** Keys for lanes 0–4. Lowercase. */
   keys: HeroKeybinds;
 };
@@ -16,6 +18,7 @@ export const DEFAULT_KEYS: HeroKeybinds = ["d", "f", "j", "k", "l"];
 export const DEFAULT_SETTINGS: HeroSettings = {
   trackSpeed: 1,
   bloonScale: 1,
+  popVolume: 1,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
 };
 
@@ -35,6 +38,7 @@ export function readHeroSettings(): HeroSettings {
       : ([...DEFAULT_KEYS] as HeroKeybinds);
     const trackSpeed = Number(parsed.trackSpeed);
     const bloonScale = Number(parsed.bloonScale);
+    const popVolume = Number(parsed.popVolume);
     return {
       trackSpeed: Number.isFinite(trackSpeed)
         ? clamp(trackSpeed, 0.6, 2)
@@ -42,6 +46,7 @@ export function readHeroSettings(): HeroSettings {
       bloonScale: Number.isFinite(bloonScale)
         ? clamp(bloonScale, 0.6, 1.8)
         : 1,
+      popVolume: Number.isFinite(popVolume) ? clamp(popVolume, 0, 1) : 1,
       keys,
     };
   } catch {

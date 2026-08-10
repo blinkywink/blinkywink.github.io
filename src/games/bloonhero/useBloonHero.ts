@@ -323,6 +323,10 @@ export function useBloonHero() {
           partial.bloonScale != null
             ? Math.min(1.8, Math.max(0.6, partial.bloonScale))
             : prev.bloonScale,
+        popVolume:
+          partial.popVolume != null
+            ? Math.min(1, Math.max(0, partial.popVolume))
+            : prev.popVolume,
         keys: partial.keys
           ? ([...partial.keys] as HeroKeybinds)
           : ([...prev.keys] as HeroKeybinds),
@@ -874,7 +878,7 @@ export function useBloonHero() {
       attemptedRef.current += 1;
       hitsRef.current += 1;
       spawnHitFlash(lane, judge);
-      playBloonPop();
+      playBloonPop(settingsRef.current.popVolume ?? 1);
       const noteCount = Math.max(
         1,
         songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
