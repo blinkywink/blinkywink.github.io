@@ -28,7 +28,6 @@ type Props = {
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const {
     state,
-    artUrl,
     noteCount,
     search,
     setQuery,
@@ -216,17 +215,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             )}
 
-            <div
-              className="hero-stage"
-              style={
-                artUrl
-                  ? ({
-                      ["--hero-art" as string]: `url(${artUrl})`,
-                    } as CSSProperties)
-                  : undefined
-              }
-            >
-              <div className="hero-stage__art" aria-hidden />
+            <div className="hero-stage">
               <div className="hero-progress" aria-hidden>
                 <span ref={setProgressFillEl} />
               </div>

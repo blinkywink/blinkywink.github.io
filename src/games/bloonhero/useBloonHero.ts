@@ -151,6 +151,8 @@ export function useBloonHero() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const notesRef = useRef<ActiveNote[]>([]);
   const durationRef = useRef(0);
+  /** Last chart note time — not used alone to end the run. */
+  const chartEndRef = useRef(0);
   const leadInRef = useRef(leadInSeconds(120));
   const originRef = useRef(0);
   const frameRef = useRef(0);
@@ -171,6 +173,7 @@ export function useBloonHero() {
   const scanFromRef = useRef(0);
   const lastCountdownRef = useRef<string | null>(null);
   const endedRef = useRef(false);
+  const missHudAccumRef = useRef({ count: 0, lane: -1, at: 0 });
   /** Smoothed audio clock (audio.currentTime is chunky). */
   const clockRef = useRef({
     baseAudio: 0,
@@ -317,11 +320,25 @@ export function useBloonHero() {
           if (audio.readyState >= 3) ok();
         });
         audioRef.current = audio;
-        durationRef.current = Math.max(
-          loaded.chart.duration,
-          Number.isFinite(audio.duration) ? audio.duration : 0,
-          (hit.song_length || 0) / 1000,
-        );
+        const chartEnd = loaded.chart.duration;
+        chartEndRef.current = chartEnd;
+        const refreshAudioLength = () => {
+          const fromAudio =
+            Number.isFinite(audio.duration) && audio.duration > 0
+              ? audio.duration
+              : 0;
+          const fromMeta = (hit.song_length || 0) / 1000;
+          // Prefer real audio length so we don't end at the last chart note.
+          durationRef.current = Math.max(fromAudio, fromMeta, chartEnd);
+          setState((prev) =>
+            prev.phase === "ready" || prev.phase === "playing"
+              ? { ...prev, duration: durationRef.current }
+              : prev,
+          );
+        };
+        refreshAudioLength();
+        audio.addEventListener("loadedmetadata", refreshAudioLength);
+        audio.addEventListener("durationchange", refreshAudioLength);
         setState((prev) => ({
           ...prev,
           phase: "ready",
@@ -353,12 +370,16 @@ export function useBloonHero() {
     if (song.chart.instrument === instrument) return;
     try {
       const chart = song.setInstrument(instrument);
-      durationRef.current = Math.max(
-        chart.duration,
-        Number.isFinite(audioRef.current?.duration)
+      chartEndRef.current = chart.duration;
+      const fromAudio =
+        Number.isFinite(audioRef.current?.duration) &&
+        (audioRef.current?.duration ?? 0) > 0
           ? (audioRef.current?.duration ?? 0)
-          : 0,
+          : 0;
+      durationRef.current = Math.max(
+        fromAudio,
         durationRef.current,
+        chart.duration,
       );
       setState((prev) => ({
         ...prev,
@@ -400,6 +421,14 @@ export function useBloonHero() {
     if (endedRef.current) return;
     endedRef.current = true;
     cancelAnimationFrame(frameRef.current);
+    // Flush any throttled miss HUD into the final totals.
+    if (missHudAccumRef.current.count > 0) {
+      stateRef.current = {
+        ...stateRef.current,
+        miss: stateRef.current.miss + missHudAccumRef.current.count,
+      };
+      missHudAccumRef.current.count = 0;
+    }
     const attempted = Math.max(1, attemptedRef.current);
     const ratio = hitsRef.current / attempted;
     // Clear = survived to the end of the song. Misses never fail you.
@@ -409,6 +438,7 @@ export function useBloonHero() {
       ...prev,
       phase: "results",
       lives: opts.died ? 0 : prev.lives,
+      miss: stateRef.current.miss,
       cleared,
       didWell,
       countdown: null,
@@ -449,6 +479,7 @@ export function useBloonHero() {
     hitsRef.current = 0;
     scanFromRef.current = 0;
     endedRef.current = false;
+    missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
@@ -685,17 +716,28 @@ export function useBloonHero() {
         const sample = audio.currentTime - delay;
         const clock = clockRef.current;
         const wallSec = wallMs / 1000;
-        // Resync when the media clock advances; otherwise extrapolate for smoothness
+        // Resync when the media clock advances; only nudge a few frames ahead
+        // so a stalled / coarse currentTime can't race past the real song.
         if (sample !== clock.lastAudioSample) {
           clock.lastAudioSample = sample;
           clock.baseAudio = sample;
           clock.baseWall = wallSec;
           now = sample;
         } else {
-          now = clock.baseAudio + (wallSec - clock.baseWall);
+          const ahead = Math.min(0.05, Math.max(0, wallSec - clock.baseWall));
+          now = clock.baseAudio + ahead;
         }
       }
       songTimeRef.current = now;
+
+      // Keep duration synced if browser learns audio length late (common for opus).
+      if (
+        audio &&
+        Number.isFinite(audio.duration) &&
+        audio.duration > durationRef.current + 0.25
+      ) {
+        durationRef.current = audio.duration;
+      }
 
       const fill = progressFillRef.current;
       if (fill) {
@@ -769,16 +811,47 @@ export function useBloonHero() {
       }
 
       if (missed > 0) {
+        const hud = missHudAccumRef.current;
+        hud.count += missed;
+        hud.lane = missLane;
+        // Dense charts miss many notes/frame — don't React-reconcile each one.
+        if (wallMs - hud.at > 80) {
+          hud.at = wallMs;
+          const add = hud.count;
+          hud.count = 0;
+          burstIdRef.current += 1;
+          const next = {
+            ...stateRef.current,
+            miss: stateRef.current.miss + add,
+            combo: 0,
+            lastJudge: "miss" as const,
+            burst:
+              hud.lane >= 0
+                ? {
+                    lane: hud.lane,
+                    judge: "miss" as const,
+                    id: burstIdRef.current,
+                  }
+                : stateRef.current.burst,
+          };
+          stateRef.current = next;
+          setState(next);
+        }
+      } else if (missHudAccumRef.current.count > 0 && wallMs - missHudAccumRef.current.at > 80) {
+        const hud = missHudAccumRef.current;
+        const add = hud.count;
+        hud.count = 0;
+        hud.at = wallMs;
         burstIdRef.current += 1;
         const next = {
           ...stateRef.current,
-          miss: stateRef.current.miss + missed,
+          miss: stateRef.current.miss + add,
           combo: 0,
           lastJudge: "miss" as const,
           burst:
-            missLane >= 0
+            hud.lane >= 0
               ? {
-                  lane: missLane,
+                  lane: hud.lane,
                   judge: "miss" as const,
                   id: burstIdRef.current,
                 }
@@ -789,8 +862,21 @@ export function useBloonHero() {
       }
 
       const livesAfter = stateRef.current.lives;
+      // End when the packed audio finishes. Never cut on last-chart-note or a
+      // half-reported opus duration while Encore/ini says the track is longer.
+      const declaredLen = Math.max(durationRef.current, chartEndRef.current);
+      const reportedLen =
+        audio && Number.isFinite(audio.duration) && audio.duration > 0
+          ? audio.duration
+          : 0;
+      const audioPos = audio?.currentTime ?? 0;
+      const trustReported =
+        reportedLen > 1 && reportedLen >= Math.max(1, declaredLen) * 0.9;
       const songDone =
-        now >= durationRef.current + 0.4 || (audioStarted && !!audio?.ended);
+        audioStarted &&
+        !!audio &&
+        (audio.ended ||
+          (trustReported && audioPos >= reportedLen - 0.12));
 
       if (livesAfter <= 0 && now >= 0) {
         finishRun({ died: true });

@@ -8879,9 +8879,7 @@ body:has(.zoomed-page) {
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(90, 140, 200, 0.2), transparent 60%),
-    linear-gradient(180deg, #1a2230 0%, #121820 100%);
+  background: #121820;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
@@ -8939,16 +8937,7 @@ body:has(.zoomed-page) {
 }
 
 .hero-stage__art {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background-image: var(--hero-art);
-  background-size: cover;
-  background-position: center;
-  opacity: 0.12;
-  /* no blur — was a major paint cost every frame */
-  transform: scale(1.04);
-  z-index: 0;
+  display: none;
 }
 
 .hero-stage > .hero-countdown,
