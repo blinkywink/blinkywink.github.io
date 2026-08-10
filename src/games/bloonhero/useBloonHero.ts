@@ -312,7 +312,7 @@ export function useBloonHero() {
             : prev.trackSpeed,
         bloonScale:
           partial.bloonScale != null
-            ? Math.min(1.4, Math.max(0.6, partial.bloonScale))
+            ? Math.min(1.8, Math.max(0.6, partial.bloonScale))
             : prev.bloonScale,
         keys: partial.keys
           ? ([...partial.keys] as HeroKeybinds)

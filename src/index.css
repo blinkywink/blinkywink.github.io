@@ -9484,6 +9484,20 @@ body:has(.zoomed-page) {
   color: #e8d48a;
 }
 
+.hero-results__diff {
+  font-size: 0.72rem !important;
+  opacity: 0.88 !important;
+  color: #b8d4ff;
+  letter-spacing: 0.01em;
+}
+
+.hero-results__diff em {
+  font-style: normal;
+  font-weight: 750;
+  color: #dce9ff;
+  margin-right: 0.2rem;
+}
+
 .hero-overlay__actions {
   display: flex;
   flex-wrap: wrap;

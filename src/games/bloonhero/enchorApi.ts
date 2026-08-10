@@ -16,11 +16,21 @@ export type EnchorHit = {
   video_start_time: number;
   hasVideoBackground: boolean;
   modchart?: boolean;
+  /** Clone Hero style score 0–6; -1 = N/A. */
+  diff_guitar?: number;
+  diff_vocals?: number;
+  diff_band?: number;
   notesData?: {
     instruments: string[];
     hasVocals?: boolean;
     hasLyrics?: boolean;
     noteCounts?: { instrument: string; difficulty: string; count: number }[];
+    maxNps?: {
+      instrument: string;
+      difficulty: string;
+      nps: number;
+      time: number;
+    }[];
   } | null;
   albumArtMd5?: string | null;
   folderIssues?: { folderIssue: string; description: string }[];
@@ -66,6 +76,30 @@ export function expertNotesFor(
     (n) => n.instrument === instrument && n.difficulty === "expert",
   );
   return expert?.count ?? null;
+}
+
+/** Song.ini difficulty score (0–6). Null when missing / -1. */
+export function diffScoreFor(
+  hit: EnchorHit,
+  instrument: PlayableInstrument,
+): number | null {
+  const raw =
+    instrument === "vocals" ? hit.diff_vocals : hit.diff_guitar;
+  if (raw == null || raw < 0) return null;
+  return Math.min(6, Math.max(0, Math.round(raw)));
+}
+
+/** Expert max notes-per-second for an instrument. */
+export function expertMaxNpsFor(
+  hit: EnchorHit,
+  instrument: PlayableInstrument,
+): number | null {
+  const rows = hit.notesData?.maxNps;
+  if (!rows?.length) return null;
+  const row = rows.find(
+    (n) => n.instrument === instrument && n.difficulty === "expert",
+  );
+  return row != null && Number.isFinite(row.nps) ? row.nps : null;
 }
 
 /** Hits that offer Guitar (and Vocals when present). */

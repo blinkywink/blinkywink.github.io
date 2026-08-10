@@ -5,7 +5,7 @@ export type HeroKeybinds = [string, string, string, string, string];
 export type HeroSettings = {
   /** 0.7–1.8 — higher = notes travel faster (shorter approach). */
   trackSpeed: number;
-  /** 0.6–1.4 — note / receptor size multiplier. */
+  /** 0.6–1.8 — note / receptor size multiplier. */
   bloonScale: number;
   /** Keys for lanes 0–4. Lowercase. */
   keys: HeroKeybinds;
@@ -40,7 +40,7 @@ export function readHeroSettings(): HeroSettings {
         ? clamp(trackSpeed, 0.6, 2)
         : 1,
       bloonScale: Number.isFinite(bloonScale)
-        ? clamp(bloonScale, 0.6, 1.4)
+        ? clamp(bloonScale, 0.6, 1.8)
         : 1,
       keys,
     };

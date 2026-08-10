@@ -11,6 +11,8 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
   enchorArtUrl,
+  diffScoreFor,
+  expertMaxNpsFor,
   expertNotesFor,
   playableInstrumentsOnHit,
 } from "./enchorApi";
@@ -31,6 +33,33 @@ function formatKey(k: string): string {
   if (k === " ") return "Space";
   if (k.length === 1) return k.toUpperCase();
   return k;
+}
+
+function formatDiffPips(score: number): string {
+  return "●".repeat(score) + "○".repeat(Math.max(0, 6 - score));
+}
+
+function DiffLine({
+  label,
+  score,
+  nps,
+  notes,
+}: {
+  label: string;
+  score: number | null;
+  nps: number | null;
+  notes: number | null;
+}) {
+  const bits: string[] = [];
+  if (score != null) bits.push(`${score}/6 ${formatDiffPips(score)}`);
+  if (nps != null) bits.push(`${nps} nps`);
+  if (notes != null) bits.push(`${notes.toLocaleString()} notes`);
+  if (!bits.length) return null;
+  return (
+    <span className="hero-results__diff">
+      <em>{label}</em> {bits.join(" · ")}
+    </span>
+  );
 }
 
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
@@ -187,7 +216,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           <input
             type="range"
             min={60}
-            max={140}
+            max={180}
             step={5}
             value={Math.round((settings.bloonScale ?? 1) * 100)}
             aria-label="Bloon size"
@@ -301,6 +330,11 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               {state.results.map((hit) => {
                 const instruments = playableInstrumentsOnHit(hit);
                 const notes = expertNotesFor(hit, "guitar");
+                const guitarDiff = diffScoreFor(hit, "guitar");
+                const guitarNps = expertMaxNpsFor(hit, "guitar");
+                const vocalsDiff = instruments.includes("vocals")
+                  ? diffScoreFor(hit, "vocals")
+                  : null;
                 const cover = enchorArtUrl(hit.albumArtMd5);
                 return (
                   <li key={`${hit.md5}-${hit.chartId}`}>
@@ -327,11 +361,24 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                         </strong>
                         <span>
                           {hit.charter ? `charter ${hit.charter}` : "charter ?"}
-                          {notes != null ? ` · ${notes} notes` : ""}
                           {hit.song_length
                             ? ` · ${Math.round(hit.song_length / 1000)}s`
                             : ""}
                         </span>
+                        <DiffLine
+                          label="Guitar"
+                          score={guitarDiff}
+                          nps={guitarNps}
+                          notes={notes}
+                        />
+                        {instruments.includes("vocals") ? (
+                          <DiffLine
+                            label="Vocals"
+                            score={vocalsDiff}
+                            nps={null}
+                            notes={null}
+                          />
+                        ) : null}
                         <span className="hero-results__inst">
                           {instruments
                             .map((i) => INSTRUMENT_LABEL[i])
