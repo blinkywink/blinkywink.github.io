@@ -27,8 +27,13 @@ import {
 import { CashAmount } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
-/** Milestone looks that shift the plate VFX (matches heroVisualTier bands). */
-const PREVIEW_LEVELS = [5, 10, 15, 20] as const;
+/**
+ * Levels where the plate actually changes look (exact in-game break points):
+ * - Art swaps at 3 / 7 / 10 / 20 (`heroPortraitForLevel`)
+ * - Palette + VFX tiers start at 6 / 11 / 16 / 20 (`heroVisualTier`)
+ * 3→7 covers the tier-1 jump; 10→11 covers the tier-2 jump.
+ */
+const LOOK_LEVELS = [3, 7, 10, 11, 16, 20] as const;
 
 type Props = {
   onBack: () => void;
@@ -245,7 +250,7 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
                   />
                   <span>Now · Lv {realLevel}</span>
                 </button>
-                {PREVIEW_LEVELS.map((lv) => (
+                {LOOK_LEVELS.map((lv) => (
                   <button
                     key={lv}
                     type="button"
