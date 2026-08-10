@@ -3,22 +3,31 @@ import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import {
   BANANA_IMAGE,
-  CATCH_GOAL,
-  CATCH_WIN_REWARD,
+  BFB_IMAGE,
+  CATCH_CLEAR_BANANAS,
+  MOAB_IMAGE,
   MONKEY_IMAGE,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   RED_BLOON_IMAGE,
 } from "./config";
-import { useBananaCatch } from "./useBananaCatch";
+import { useBananaCatch, type DropKind } from "./useBananaCatch";
 
 type Props = {
   onBack: () => void;
   onRunEnd?: (info: { cleared: boolean }) => void;
 };
 
+function dropSrc(kind: DropKind): string {
+  if (kind === "banana") return BANANA_IMAGE;
+  if (kind === "moab") return MOAB_IMAGE;
+  if (kind === "bfb") return BFB_IMAGE;
+  return RED_BLOON_IMAGE;
+}
+
 export function BananaCatchGame({ onBack, onRunEnd }: Props) {
-  const { state, goal, start, restart, aimAt, setFieldSize } = useBananaCatch();
+  const { state, clearAt, start, restart, aimAt, setFieldSize } =
+    useBananaCatch();
   const fieldRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef(state.phase);
 
@@ -38,13 +47,14 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     const was = prevPhase.current;
     prevPhase.current = state.phase;
-    if (was === "won" || was === "lost") return;
-    if (state.phase === "won") onRunEnd?.({ cleared: true });
-    else if (state.phase === "lost") onRunEnd?.({ cleared: false });
-  }, [state.phase, onRunEnd]);
+    if (was === "lost") return;
+    if (state.phase === "lost") {
+      onRunEnd?.({ cleared: state.cleared });
+    }
+  }, [state.phase, state.cleared, onRunEnd]);
 
   const playing = state.phase === "playing";
-  const done = state.phase === "won" || state.phase === "lost";
+  const done = state.phase === "lost";
 
   function pointerToAim(clientX: number) {
     const el = fieldRef.current;
@@ -60,11 +70,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
       <main className="catch-main">
         <div className="catch-hud">
           <span className="catch-stat" title="Bananas collected">
-            <img src={BANANA_IMAGE} alt="" width={26} height={26} />
-            <strong>
-              {state.bananas}
-              <span className="catch-stat__goal">/{goal}</span>
-            </strong>
+            <img src={BANANA_IMAGE} alt="" width={28} height={28} />
+            <strong>{state.bananas}</strong>
           </span>
           <span className="catch-stat" title="Lives">
             <img src={RED_BLOON_IMAGE} alt="" width={20} height={26} />
@@ -76,7 +83,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
         </div>
 
         <p className="catch-hint">
-          Slide to catch bananas · dodge red bloons
+          Catch bananas forever · dodge reds, then MOABs &amp; BFBs
         </p>
 
         <div
@@ -100,7 +107,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             <img
               key={d.id}
               className={`catch-drop catch-drop--${d.kind}`}
-              src={d.kind === "banana" ? BANANA_IMAGE : RED_BLOON_IMAGE}
+              src={dropSrc(d.kind)}
               alt=""
               draggable={false}
               style={{
@@ -108,6 +115,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 height: d.size,
                 left: d.x,
                 top: d.y,
+                transform: `translate(-50%, -50%) rotate(${d.rot}deg)`,
               }}
             />
           ))}
@@ -134,7 +142,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
               />
               <h2>Ready to harvest?</h2>
               <p>
-                Catch <strong>{CATCH_GOAL}</strong> bananas. Avoid the reds.
+                Endless run — grab bananas, dodge everything. Survive for{" "}
+                <strong>{CATCH_CLEAR_BANANAS}+</strong> bananas to clear.
               </p>
               <button type="button" className="btn btn--primary" onClick={start}>
                 Start
@@ -142,33 +151,24 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             </div>
           ) : null}
 
-          {state.phase === "won" ? (
-            <div className="catch-overlay is-win" role="status">
-              <h2>Basket full!</h2>
-              <p>
-                {state.bananas} bananas ·{" "}
-                <CashAmount amount={state.cashEarned} size={18} />
-                <span className="catch-overlay__note">
-                  {" "}
-                  (includes +{CATCH_WIN_REWARD} clear bonus)
-                </span>
-              </p>
-              <div className="catch-overlay__actions">
-                <button type="button" className="btn btn--primary" onClick={restart}>
-                  Play again
-                </button>
-                <button type="button" className="btn btn--ghost" onClick={onBack}>
-                  Games
-                </button>
-              </div>
-            </div>
-          ) : null}
-
           {state.phase === "lost" ? (
-            <div className="catch-overlay is-lose" role="status">
-              <h2>Popped!</h2>
+            <div
+              className={`catch-overlay${state.cleared ? " is-win" : " is-lose"}`}
+              role="status"
+            >
+              <h2>{state.cleared ? "Solid haul!" : "Popped!"}</h2>
               <p>
-                Caught {state.bananas}/{goal} · keep the monkey clear of bloons.
+                Caught <strong>{state.bananas}</strong> bananas ·{" "}
+                <CashAmount amount={state.cashEarned} size={18} />
+                {state.cleared ? (
+                  <span className="catch-overlay__note">
+                    Cleared ({clearAt}+ bananas) — packs unlocked.
+                  </span>
+                ) : (
+                  <span className="catch-overlay__note">
+                    Reach {clearAt} bananas in one run to clear.
+                  </span>
+                )}
               </p>
               <div className="catch-overlay__actions">
                 <button type="button" className="btn btn--primary" onClick={restart}>

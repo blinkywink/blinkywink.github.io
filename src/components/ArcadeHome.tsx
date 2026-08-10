@@ -276,19 +276,25 @@ function BananaCatchPreview() {
     <div className="game-preview game-preview--catch" aria-hidden>
       <img
         className="game-preview__catch-banana game-preview__catch-banana--a"
-        src="/images/bananas/long-life-bananas.webp"
+        src="/images/bananas/banana.webp"
         alt=""
         draggable={false}
       />
       <img
         className="game-preview__catch-banana game-preview__catch-banana--b"
-        src="/images/bananas/long-life-bananas.webp"
+        src="/images/bananas/banana.webp"
         alt=""
         draggable={false}
       />
       <img
         className="game-preview__catch-bloon"
         src="/images/bloons/red-bloon.png"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="game-preview__catch-moab"
+        src="/images/bloons/moab.webp"
         alt=""
         draggable={false}
       />
@@ -435,8 +441,8 @@ export function ArcadeHome({
     {
       id: "bananacatch" as const,
       title: "BANANA CATCH",
-      blurb: "Catch falling bananas — dodge the red bloons.",
-      label: "Banana Catch — Collect bananas and dodge red bloons",
+      blurb: "Catch falling bananas forever — dodge reds, MOABs & BFBs.",
+      label: "Banana Catch — Endless banana catch with escalating bloons",
       preview: <BananaCatchPreview />,
     },
   ];

@@ -3,23 +3,28 @@ import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import {
   BANANA_SIZE,
-  BLOON_SIZE,
-  CATCH_GOAL,
+  BFB_SIZE,
+  BFB_UNLOCK_S,
+  CATCH_CLEAR_BANANAS,
   CATCH_LIVES,
-  CATCH_WIN_REWARD,
   CASH_PER_BANANA,
   FALL_SPEED_BANANA,
-  FALL_SPEED_BLOON,
+  FALL_SPEED_BFB,
+  FALL_SPEED_MOAB,
+  FALL_SPEED_RED,
+  MOAB_SIZE,
+  MOAB_UNLOCK_S,
   PLAYER_HEIGHT,
   PLAYER_LERP,
   PLAYER_WIDTH,
+  RED_SIZE,
   SPAWN_BANANA_MS_MIN,
   SPAWN_BANANA_MS_START,
-  SPAWN_BLOON_MS_MIN,
-  SPAWN_BLOON_MS_START,
+  SPAWN_HAZARD_MS_MIN,
+  SPAWN_HAZARD_MS_START,
 } from "./config";
 
-export type DropKind = "banana" | "bloon";
+export type DropKind = "banana" | "red" | "moab" | "bfb";
 
 export type Drop = {
   id: number;
@@ -28,9 +33,14 @@ export type Drop = {
   y: number;
   vy: number;
   size: number;
+  /** Degrees — bananas (and lightly, blimps) sit at a random tilt. */
+  rot: number;
+  /** Slow spin deg/s while falling. */
+  spin: number;
+  damage: number;
 };
 
-export type CatchPhase = "ready" | "playing" | "won" | "lost";
+export type CatchPhase = "ready" | "playing" | "lost";
 
 export type CatchState = {
   phase: CatchPhase;
@@ -41,10 +51,16 @@ export type CatchState = {
   playerX: number;
   fieldW: number;
   fieldH: number;
+  /** True if this death run earned a clear (packs / hero XP). */
+  cleared: boolean;
 };
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
+}
+
+function pickSize(range: { min: number; max: number }) {
+  return rand(range.min, range.max);
 }
 
 function makeDrop(
@@ -52,19 +68,70 @@ function makeDrop(
   fieldW: number,
   nextId: () => number,
 ): Drop {
-  const size = kind === "banana" ? BANANA_SIZE : BLOON_SIZE;
-  const speed =
-    kind === "banana"
-      ? rand(FALL_SPEED_BANANA.min, FALL_SPEED_BANANA.max)
-      : rand(FALL_SPEED_BLOON.min, FALL_SPEED_BLOON.max);
+  let size: number;
+  let speed: number;
+  let damage: number;
+  let rot: number;
+  let spin: number;
+
+  if (kind === "banana") {
+    size = pickSize(BANANA_SIZE);
+    speed = rand(FALL_SPEED_BANANA.min, FALL_SPEED_BANANA.max);
+    damage = 0;
+    rot = rand(-55, 55);
+    spin = rand(-40, 40);
+  } else if (kind === "red") {
+    size = pickSize(RED_SIZE);
+    speed = rand(FALL_SPEED_RED.min, FALL_SPEED_RED.max);
+    damage = 1;
+    rot = rand(-12, 12);
+    spin = rand(-15, 15);
+  } else if (kind === "moab") {
+    size = pickSize(MOAB_SIZE);
+    speed = rand(FALL_SPEED_MOAB.min, FALL_SPEED_MOAB.max);
+    damage = 2;
+    rot = rand(-18, 18);
+    spin = rand(-20, 20);
+  } else {
+    size = pickSize(BFB_SIZE);
+    speed = rand(FALL_SPEED_BFB.min, FALL_SPEED_BFB.max);
+    damage = 3;
+    rot = rand(-14, 14);
+    spin = rand(-12, 12);
+  }
+
+  const half = size * 0.5;
   return {
     id: nextId(),
     kind,
-    x: rand(size * 0.5, Math.max(size * 0.5, fieldW - size * 0.5)),
+    x: rand(half, Math.max(half, fieldW - half)),
     y: -size,
     vy: speed,
     size,
+    rot,
+    spin,
+    damage,
   };
+}
+
+function pickHazard(elapsed: number): DropKind {
+  const roll = Math.random();
+  const bfbOpen = elapsed >= BFB_UNLOCK_S;
+  const moabOpen = elapsed >= MOAB_UNLOCK_S;
+
+  // Weight shifts hard toward big stuff as the run goes on
+  if (bfbOpen) {
+    const late = Math.min(1, (elapsed - BFB_UNLOCK_S) / 40);
+    if (roll < 0.22 + late * 0.16) return "bfb";
+    if (roll < 0.58 + late * 0.12) return "moab";
+    return "red";
+  }
+  if (moabOpen) {
+    const mid = Math.min(1, (elapsed - MOAB_UNLOCK_S) / 12);
+    if (roll < 0.38 + mid * 0.18) return "moab";
+    return "red";
+  }
+  return "red";
 }
 
 function overlaps(
@@ -76,7 +143,7 @@ function overlaps(
   by: number,
   bs: number,
 ): boolean {
-  const pad = bs * 0.18;
+  const pad = bs * 0.2;
   const left = bx - bs / 2 + pad;
   const right = bx + bs / 2 - pad;
   const top = by - bs / 2 + pad;
@@ -93,6 +160,7 @@ const INITIAL: CatchState = {
   playerX: 0.5,
   fieldW: 360,
   fieldH: 480,
+  cleared: false,
 };
 
 export function useBananaCatch() {
@@ -108,7 +176,7 @@ export function useBananaCatch() {
   const playerXRef = useRef(0.5);
   const nextIdRef = useRef(1);
   const bananaTimerRef = useRef(0);
-  const bloonTimerRef = useRef(0);
+  const hazardTimerRef = useRef(0);
   const elapsedRef = useRef(0);
   const awardedRef = useRef(false);
   const frameRef = useRef(0);
@@ -145,8 +213,8 @@ export function useBananaCatch() {
     awardedRef.current = false;
     pendingCashRef.current = 0;
     nextIdRef.current = 1;
-    bananaTimerRef.current = 400;
-    bloonTimerRef.current = 1100;
+    bananaTimerRef.current = 350;
+    hazardTimerRef.current = 700;
     elapsedRef.current = 0;
     lastTsRef.current = 0;
     targetXRef.current = 0.5;
@@ -175,7 +243,6 @@ export function useBananaCatch() {
     playerXRef.current = 0.5;
   }, []);
 
-  // Game loop
   useEffect(() => {
     if (state.phase !== "playing") {
       cancelAnimationFrame(frameRef.current);
@@ -193,26 +260,34 @@ export function useBananaCatch() {
       const { fieldW, fieldH } = s;
       const t = elapsedRef.current;
 
-      // Difficulty ramp over ~45s
-      const ramp = Math.min(1, t / 45);
+      // Difficulty ramp — peaks around ~30s, then keeps squeezing
+      const ramp = Math.min(1.6, t / 30);
       const bananaInterval =
         SPAWN_BANANA_MS_START -
-        (SPAWN_BANANA_MS_START - SPAWN_BANANA_MS_MIN) * ramp;
-      const bloonInterval =
-        SPAWN_BLOON_MS_START -
-        (SPAWN_BLOON_MS_START - SPAWN_BLOON_MS_MIN) * ramp;
+        (SPAWN_BANANA_MS_START - SPAWN_BANANA_MS_MIN) * Math.min(1, ramp);
+      const hazardInterval =
+        SPAWN_HAZARD_MS_START -
+        (SPAWN_HAZARD_MS_START - SPAWN_HAZARD_MS_MIN) * Math.min(1, ramp);
 
       bananaTimerRef.current -= dt * 1000;
-      bloonTimerRef.current -= dt * 1000;
+      hazardTimerRef.current -= dt * 1000;
 
       const spawn: Drop[] = [];
       if (bananaTimerRef.current <= 0 && fieldW > 0) {
         spawn.push(makeDrop("banana", fieldW, nextId));
         bananaTimerRef.current = bananaInterval * rand(0.75, 1.15);
       }
-      if (bloonTimerRef.current <= 0 && fieldW > 0) {
-        spawn.push(makeDrop("bloon", fieldW, nextId));
-        bloonTimerRef.current = bloonInterval * rand(0.8, 1.25);
+      if (hazardTimerRef.current <= 0 && fieldW > 0) {
+        spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
+        // Extra hazards as pressure climbs (red piles + occasional dual blimp)
+        const burstChance = 0.12 + Math.min(0.45, ramp * 0.28);
+        if (Math.random() < burstChance) {
+          spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
+        }
+        if (ramp > 0.85 && Math.random() < 0.22) {
+          spawn.push(makeDrop("red", fieldW, nextId));
+        }
+        hazardTimerRef.current = hazardInterval * rand(0.7, 1.05);
       }
 
       const lerp = 1 - Math.exp(-PLAYER_LERP * dt);
@@ -226,12 +301,12 @@ export function useBananaCatch() {
       let bananas = s.bananas;
       let lives = s.lives;
       let cashEarned = s.cashEarned;
-      let hitShake = false;
 
       const nextDrops: Drop[] = [];
       for (const d of [...s.drops, ...spawn]) {
-        const y = d.y + d.vy * dt * (1 + ramp * 0.35);
-        if (y - d.size / 2 > fieldH + 20) continue;
+        const y = d.y + d.vy * dt * (1 + Math.min(1, ramp) * 0.4);
+        const rot = d.rot + d.spin * dt;
+        if (y - d.size / 2 > fieldH + 40) continue;
 
         if (
           overlaps(
@@ -249,17 +324,16 @@ export function useBananaCatch() {
             cashEarned += CASH_PER_BANANA;
             pendingCashRef.current += CASH_PER_BANANA;
           } else {
-            lives -= 1;
-            hitShake = true;
+            lives -= d.damage;
           }
           continue;
         }
-        nextDrops.push({ ...d, y });
+        nextDrops.push({ ...d, y, rot });
       }
 
-      let phase: CatchPhase = "playing";
-      if (bananas >= CATCH_GOAL) phase = "won";
-      else if (lives <= 0) phase = "lost";
+      const dead = lives <= 0;
+      const phase: CatchPhase = dead ? "lost" : "playing";
+      const cleared = dead && bananas >= CATCH_CLEAR_BANANAS;
 
       setState({
         phase,
@@ -270,14 +344,10 @@ export function useBananaCatch() {
         playerX: playerXRef.current,
         fieldW,
         fieldH,
+        cleared,
       });
 
-      if (hitShake) {
-        // flush leftover cash occasionally so rewards feel live
-        if (pendingCashRef.current >= CASH_PER_BANANA * 3) {
-          void flushCash();
-        }
-      } else if (pendingCashRef.current >= CASH_PER_BANANA * 4) {
+      if (pendingCashRef.current >= CASH_PER_BANANA * 5) {
         void flushCash();
       }
 
@@ -290,33 +360,17 @@ export function useBananaCatch() {
     return () => cancelAnimationFrame(frameRef.current);
   }, [state.phase, flushCash, nextId]);
 
-  // Award remaining cash + clear bonus
+  // Flush leftover cash on death
   useEffect(() => {
-    if (state.phase !== "won" && state.phase !== "lost") return;
+    if (state.phase !== "lost") return;
     if (awardedRef.current) return;
     awardedRef.current = true;
-
-    void (async () => {
-      let grant = pendingCashRef.current;
-      pendingCashRef.current = 0;
-      if (state.phase === "won") grant += CATCH_WIN_REWARD;
-      if (grant > 0) {
-        const balance = await awardCoins(grant);
-        if (balance != null) setCoinBalanceRef.current(balance);
-      }
-      if (state.phase === "won") {
-        setState((s) =>
-          s.phase === "won"
-            ? { ...s, cashEarned: s.cashEarned + CATCH_WIN_REWARD }
-            : s,
-        );
-      }
-    })();
-  }, [state.phase]);
+    void flushCash();
+  }, [state.phase, flushCash]);
 
   return {
     state,
-    goal: CATCH_GOAL,
+    clearAt: CATCH_CLEAR_BANANAS,
     start,
     restart,
     aimAt,
