@@ -173,9 +173,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const needsInstrumentPick = state.availableInstruments.length > 1;
   const resuming =
     playing && state.paused && state.countdown != null;
-  const featuredSongs = state.recentPlays.slice(0, 3);
-  const recentRest = state.recentPlays.slice(3);
-  const showRecentLoading = state.recentLoading && !state.recentPlays.length;
+  const showRecent =
+    state.recentLoading || state.recentPlays.length > 0;
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -432,14 +431,14 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               })}
             </ul>
 
-            {showRecentLoading || recentRest.length > 0 ? (
+            {showRecent ? (
               <section className="hero-recent" aria-label="Recently played">
                 <h3>Recently played</h3>
-                {showRecentLoading ? (
+                {state.recentLoading && !state.recentPlays.length ? (
                   <p className="hero-browse__loading">Loading recent picks…</p>
                 ) : (
                   <ul className="hero-results hero-results--recent">
-                    {recentRest.map((row) => {
+                    {state.recentPlays.map((row) => {
                       const cover = enchorArtUrl(row.albumArtMd5);
                       return (
                         <li key={`${row.md5}-${row.id}`}>
@@ -480,53 +479,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                     })}
                   </ul>
                 )}
-              </section>
-            ) : null}
-
-            {featuredSongs.length > 0 ? (
-              <section className="hero-featured" aria-label="Featured songs">
-                <h3>Featured songs</h3>
-                <ul className="hero-results hero-results--featured">
-                  {featuredSongs.map((row) => {
-                    const cover = enchorArtUrl(row.albumArtMd5);
-                    return (
-                      <li key={`feat-${row.md5}-${row.id}`}>
-                        <button
-                          type="button"
-                          className="hero-results__item hero-results__item--featured"
-                          onClick={() => void pickSong(recentPlayToHit(row))}
-                          disabled={state.phase === "loading"}
-                        >
-                          <span
-                            className="hero-results__art"
-                            style={
-                              cover
-                                ? ({
-                                    backgroundImage: `url(${cover})`,
-                                  } as CSSProperties)
-                                : undefined
-                            }
-                            aria-hidden
-                          />
-                          <span className="hero-results__meta">
-                            <strong>
-                              {row.artist}, {row.songName}
-                            </strong>
-                            <span>
-                              played by {row.username}
-                              {row.songLength
-                                ? ` · ${Math.round(row.songLength / 1000)}s`
-                                : ""}
-                            </span>
-                            <span className="hero-results__played">
-                              {relativePlayAge(row.playedAt)}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
               </section>
             ) : null}
 

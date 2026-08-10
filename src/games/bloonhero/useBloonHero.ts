@@ -354,7 +354,8 @@ export function useBloonHero() {
       id: dartIdRef.current,
       lane,
       born: now,
-      dur: 0.11,
+      // Keep short so the shuriken meets the bloon near the hit, not after it.
+      dur: 0.06,
       judge,
     });
     if (dartsRef.current.length > 40) {

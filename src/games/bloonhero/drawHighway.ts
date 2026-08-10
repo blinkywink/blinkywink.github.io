@@ -426,20 +426,20 @@ export function drawHeroHighway(
 
   for (const d of darts) {
     const age = (wallMs - d.born) / 1000;
-    if (age < 0 || age > d.dur + 0.14) continue;
+    if (age < 0 || age > d.dur + 0.1) continue;
     const x = d.lane * (laneW + gap);
     const cx = x + laneW / 2;
     const color = JUDGE_COLOR[d.judge] ?? LANE_FILL[d.lane] ?? "#fff";
     const fly = Math.min(1, age / d.dur);
     const startY = cssH + 6;
     const y = startY + (hitY - startY) * fly;
-    // ~2.5 full clockwise spins while flying
-    const spin = fly * Math.PI * 2 * 2.5;
+    // ~2 full clockwise spins while flying
+    const spin = fly * Math.PI * 2 * 2;
     const size = Math.min(laneW * 0.55, 34);
     if (fly < 1) {
       drawShuriken(ctx, cx, y, size, spin);
     } else {
-      const pop = Math.min(1, (age - d.dur) / 0.14);
+      const pop = Math.min(1, (age - d.dur) / 0.1);
       ctx.globalAlpha = 1 - pop;
       drawShuriken(ctx, cx, hitY, size * (1 - pop * 0.35), spin);
       ctx.strokeStyle = color;
