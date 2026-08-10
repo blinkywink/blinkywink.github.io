@@ -9002,7 +9002,9 @@ body:has(.zoomed-page) {
 }
 
 .hero-lyrics--below-monkey {
-  top: clamp(5.5rem, 22vw, 8.5rem);
+  /* Sit below dart monkey (width ≈ height); stay under singer z-index. */
+  top: calc(0.15rem + clamp(7.5rem, 28vw, 11.5rem) + 0.45rem);
+  z-index: 2;
 }
 
 .hero-progress {

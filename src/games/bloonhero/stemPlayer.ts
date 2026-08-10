@@ -1,5 +1,7 @@
 /** Multi-stem Clone Hero pack audio — play song + guitar + drums + vocals together. */
 
+import { isDesktopShell } from "../../lib/desktopOnline";
+
 export type StemPlayer = {
   /** Primary clock stem (song.* when present, else longest). */
   master: HTMLAudioElement;
@@ -129,6 +131,9 @@ export async function createStemPlayer(
 ): Promise<{ player: StemPlayer; urls: string[] }> {
   if (!stems.length) throw new Error("No song audio found in chart pack");
 
+  /** WKWebView/Tauri: Web Audio + multi MediaElementSource drifts and glitches. */
+  const useSimpleAudio = isDesktopShell();
+
   const urls: string[] = [];
   const elements: HTMLAudioElement[] = [];
 
@@ -151,7 +156,9 @@ export async function createStemPlayer(
       ? songIdx
       : stems.findIndex((s) => !isVocalsStemName(s.name));
   const loudness =
-    analyzeIdx >= 0 ? await analyzeLoudness(stems[analyzeIdx]!.data) : null;
+    !useSimpleAudio && analyzeIdx >= 0
+      ? await analyzeLoudness(stems[analyzeIdx]!.data)
+      : null;
   const normGain = loudness
     ? normalizeGainFromLoudness(loudness.peak, loudness.rms)
     : 1;
@@ -180,7 +187,7 @@ export async function createStemPlayer(
   let smooth = 0;
   let userVolume = Math.min(1, Math.max(0, volume));
   let graphReady = false;
-  let graphFailed = false;
+  let graphFailed = useSimpleAudio;
 
   const applyOutputGain = () => {
     const g = userVolume * normGain;
@@ -240,9 +247,10 @@ export async function createStemPlayer(
       return master.currentTime;
     },
     set currentTime(t: number) {
+      const clamped = Math.max(0, t);
       for (const el of elements) {
         try {
-          el.currentTime = t;
+          el.currentTime = clamped;
         } catch {
           /* ignore seek race */
         }
@@ -255,7 +263,7 @@ export async function createStemPlayer(
       return master.ended;
     },
     async play() {
-      ensureGraph();
+      if (!useSimpleAudio) ensureGraph();
       if (audioCtx && audioCtx.state === "suspended") {
         try {
           await audioCtx.resume();
@@ -265,7 +273,7 @@ export async function createStemPlayer(
       }
       const t = master.currentTime;
       for (const el of elements) {
-        if (Math.abs(el.currentTime - t) > 0.04) {
+        if (Math.abs(el.currentTime - t) > 0.02) {
           try {
             el.currentTime = t;
           } catch {
@@ -273,7 +281,17 @@ export async function createStemPlayer(
           }
         }
       }
-      await Promise.all(elements.map((el) => el.play().catch(() => {})));
+      // Start together — never re-seek stems mid-playback (causes repeats on WebKit).
+      await Promise.all(
+        elements.map(async (el) => {
+          if (!el.paused && !el.ended) return;
+          try {
+            await el.play();
+          } catch {
+            /* ignore */
+          }
+        }),
+      );
     },
     pause() {
       for (const el of elements) el.pause();

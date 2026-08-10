@@ -37,6 +37,36 @@ import {
 } from "./settings";
 import { createStemPlayer, type StemPlayer } from "./stemPlayer";
 
+type AudioClock = {
+  baseAudio: number;
+  baseWall: number;
+  lastSample: number;
+};
+
+/** Smooth chart clock — WebKit only updates currentTime in coarse steps. */
+function advanceSongClock(
+  clock: AudioClock,
+  sample: number,
+  wallSec: number,
+): number {
+  if (clock.baseWall <= 0) {
+    clock.baseAudio = sample;
+    clock.baseWall = wallSec;
+    clock.lastSample = sample;
+    return sample;
+  }
+  if (sample !== clock.lastSample) {
+    clock.lastSample = sample;
+    const extrapolated = clock.baseAudio + (wallSec - clock.baseWall);
+    if (Math.abs(sample - extrapolated) > 0.35) {
+      clock.baseAudio = sample;
+      clock.baseWall = wallSec;
+      return sample;
+    }
+  }
+  return clock.baseAudio + (wallSec - clock.baseWall);
+}
+
 export type ActiveNote = ChartNote & {
   id: number;
   resolved: boolean;
@@ -248,11 +278,11 @@ export function useBloonHero() {
   const lastCountdownRef = useRef<string | null>(null);
   const endedRef = useRef(false);
   const missHudAccumRef = useRef({ count: 0, lane: -1, at: 0 });
-  /** Smoothed audio clock (audio.currentTime is chunky). */
-  const clockRef = useRef({
+  /** Audio-synced chart clock (wall extrapolation between coarse samples). */
+  const clockRef = useRef<AudioClock>({
     baseAudio: 0,
     baseWall: 0,
-    lastAudioSample: -1,
+    lastSample: -1,
   });
 
   const flushCash = useCallback(async () => {
@@ -706,7 +736,7 @@ export function useBloonHero() {
     originRef.current = performance.now();
     songTimeRef.current = -leadInRef.current;
     lastCountdownRef.current = "4";
-    clockRef.current = { baseAudio: 0, baseWall: 0, lastAudioSample: -1 };
+    clockRef.current = { baseAudio: 0, baseWall: 0, lastSample: -1 };
     keysDownRef.current.clear();
     pressedRef.current.clear();
     holdingRef.current.clear();
@@ -1024,7 +1054,7 @@ export function useBloonHero() {
             clockRef.current = {
               baseAudio: Math.max(0, frozen),
               baseWall: wallMs / 1000,
-              lastAudioSample: Math.max(0, frozen),
+              lastSample: Math.max(0, frozen),
             };
             if (frozen >= 0) {
               player.currentTime = Math.max(0, frozen + delay);
@@ -1114,7 +1144,7 @@ export function useBloonHero() {
         clockRef.current = {
           baseAudio: 0,
           baseWall: wallMs / 1000,
-          lastAudioSample: 0,
+          lastSample: 0,
         };
         void player.play();
       }
@@ -1122,33 +1152,7 @@ export function useBloonHero() {
       if (audioStarted && player && !player.paused) {
         const delay = (songRef.current?.delayMs || 0) / 1000;
         const sample = player.currentTime - delay;
-        const clock = clockRef.current;
-        const wallSec = wallMs / 1000;
-        // Resync when the media clock advances; only nudge a few frames ahead
-        // so a stalled / coarse currentTime can't race past the real song.
-        if (sample !== clock.lastAudioSample) {
-          clock.lastAudioSample = sample;
-          clock.baseAudio = sample;
-          clock.baseWall = wallSec;
-          now = sample;
-        } else {
-          const ahead = Math.min(0.05, Math.max(0, wallSec - clock.baseWall));
-          now = clock.baseAudio + ahead;
-        }
-        // Keep stems locked — cheap drift correction.
-        if (player.stems.length > 1 && (wallMs | 0) % 1000 < 20) {
-          const t = player.master.currentTime;
-          for (const el of player.stems) {
-            if (el === player.master) continue;
-            if (Math.abs(el.currentTime - t) > 0.08) {
-              try {
-                el.currentTime = t;
-              } catch {
-                /* ignore */
-              }
-            }
-          }
-        }
+        now = advanceSongClock(clockRef.current, sample, wallMs / 1000);
       }
       songTimeRef.current = now;
 
@@ -1283,7 +1287,7 @@ export function useBloonHero() {
       if (
         settingsRef.current.lyricsEnabled &&
         lyricsRef.current.length > 0 &&
-        wallMs - lyricsUiAtRef.current > 80
+        wallMs - lyricsUiAtRef.current > 35
       ) {
         lyricsUiAtRef.current = wallMs;
         const line = lyricAtTime(lyricsRef.current, now);

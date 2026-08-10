@@ -4,12 +4,16 @@
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 
-export type LyricPhrase = {
+/** One timed lyric unit — a syllable or accumulated word when hyphen-joined. */
+export type LyricCue = {
   /** Seconds from song start (after chart offset). */
   start: number;
   end: number;
   text: string;
 };
+
+/** @deprecated Alias for chart loaders — each entry is one timed cue, not a full line. */
+export type LyricPhrase = LyricCue;
 
 type TempoEvent = { tick: number; bpm: number };
 type RawEv = { tick: number; kind: "phrase_start" | "phrase_end" | "syllable"; text: string };
@@ -127,13 +131,15 @@ function parseSyllable(raw: string): Syllable | null {
   return { text: s, joinNext };
 }
 
-function assemblePhrase(syllables: Syllable[]): string {
+function wordTextAt(timed: { syl: Syllable }[], index: number): string {
+  let start = index;
+  while (start > 0 && timed[start - 1]!.syl.joinNext) start--;
   let out = "";
-  for (let i = 0; i < syllables.length; i++) {
-    const s = syllables[i]!;
+  for (let i = start; i <= index; i++) {
+    const s = timed[i]!.syl;
     if (!s.text) continue;
     if (!out) out = s.text;
-    else if (syllables[i - 1]!.joinNext) out += s.text;
+    else if (timed[i - 1]!.syl.joinNext) out += s.text;
     else out += ` ${s.text}`;
   }
   return out.replace(/\s+/g, " ").trim();
@@ -148,83 +154,57 @@ function classifyChartEvent(raw: string): RawEv["kind"] | null {
   return null;
 }
 
-function buildPhrases(
+function buildCues(
   events: RawEv[],
   tickToSec: (tick: number) => number,
   resolution: number,
-): LyricPhrase[] {
+): LyricCue[] {
   if (!events.length) return [];
   events.sort((a, b) => a.tick - b.tick);
 
-  const phrases: LyricPhrase[] = [];
-  let open = false;
-  let startTick = 0;
+  type TimedSyl = { tick: number; syl: Syllable };
+  const timed: TimedSyl[] = [];
   let lastTick = 0;
-  let syllables: Syllable[] = [];
-
-  const flush = (endTick: number) => {
-    const text = assemblePhrase(syllables);
-    syllables = [];
-    open = false;
-    if (!text) return;
-    const start = tickToSec(startTick);
-    const end = tickToSec(endTick);
-    phrases.push({
-      start,
-      end: Math.max(end, start + 0.2),
-      text,
-    });
-  };
 
   for (const ev of events) {
-    if (ev.kind === "phrase_start") {
-      if (open) flush(ev.tick);
-      open = true;
-      startTick = ev.tick;
-      lastTick = ev.tick;
-      continue;
-    }
-    if (ev.kind === "phrase_end") {
-      lastTick = ev.tick;
-      flush(ev.tick);
-      continue;
-    }
+    if (ev.kind === "phrase_start" || ev.kind === "phrase_end") continue;
 
     const syl = parseSyllable(ev.text);
     if (!syl) continue;
 
     const gapTicks = Math.max(resolution * 3, 96);
-    if (
-      open &&
-      syllables.length > 0 &&
-      lastTick > 0 &&
-      ev.tick - lastTick > gapTicks
-    ) {
-      flush(lastTick);
-      open = false;
+    if (timed.length > 0 && lastTick > 0 && ev.tick - lastTick > gapTicks) {
+      // Long gap — treat as a new phrase for word grouping only.
     }
 
-    if (!open) {
-      open = true;
-      startTick = ev.tick;
-    }
-    syllables.push(syl);
+    timed.push({ tick: ev.tick, syl });
     lastTick = ev.tick;
   }
 
-  if (open && syllables.length) {
-    flush(lastTick + Math.max(resolution, 96));
+  if (!timed.length) return [];
+
+  const cues: LyricCue[] = [];
+  for (let i = 0; i < timed.length; i++) {
+    const { tick } = timed[i]!;
+    const start = tickToSec(tick);
+    const nextTick =
+      timed[i + 1]?.tick ?? tick + Math.max(resolution * 2, 192);
+    let end = tickToSec(nextTick) - 0.02;
+    cues.push({
+      start,
+      end: Math.max(end, start + 0.06),
+      text: wordTextAt(timed, i),
+    });
   }
 
-  for (let i = 0; i < phrases.length - 1; i++) {
-    const next = phrases[i + 1]!;
-    phrases[i]!.end = Math.min(phrases[i]!.end, next.start - 0.02);
-    if (phrases[i]!.end <= phrases[i]!.start) {
-      phrases[i]!.end = next.start - 0.02;
+  for (let i = 0; i < cues.length - 1; i++) {
+    cues[i]!.end = Math.min(cues[i]!.end, cues[i + 1]!.start - 0.01);
+    if (cues[i]!.end <= cues[i]!.start) {
+      cues[i]!.end = cues[i + 1]!.start - 0.01;
     }
   }
 
-  return phrases.filter((p) => p.text.length > 0);
+  return cues.filter((c) => c.text.length > 0);
 }
 
 /** Lyric events live in the global `[Events]` block only — not instrument tracks. */
@@ -243,14 +223,14 @@ function collectChartLyricEvents(text: string): RawEv[] {
 export function parseLyricsFromChart(
   text: string,
   offsetSec = 0,
-): LyricPhrase[] {
+): LyricCue[] {
   const meta = parseSongMeta(text);
   const tempos = parseTempos(text);
   const resolution = meta.resolution;
   const offset = offsetSec || meta.offsetSec;
   const tickToSec = (tick: number) =>
     tickToSeconds(tick, resolution, tempos) - offset;
-  return buildPhrases(collectChartLyricEvents(text), tickToSec, resolution);
+  return buildCues(collectChartLyricEvents(text), tickToSec, resolution);
 }
 
 type MidiTrack = MidiEvent[];
@@ -350,7 +330,7 @@ function collectVocalsLyricEvents(track: MidiTrack): RawEv[] {
 export function parseLyricsFromMidi(
   bytes: Uint8Array,
   offsetSec = 0,
-): LyricPhrase[] {
+): LyricCue[] {
   const midi = parseMidi(bytes);
   const tpq = midi.header.ticksPerBeat;
   if (!tpq) return [];
@@ -358,7 +338,7 @@ export function parseLyricsFromMidi(
   if (!track) return [];
   const tempos = collectMidiTempos(midi.tracks);
   const tickToSec = (tick: number) => midiTickToSec(tick, tpq, tempos) - offsetSec;
-  return buildPhrases(collectVocalsLyricEvents(track), tickToSec, tpq);
+  return buildCues(collectVocalsLyricEvents(track), tickToSec, tpq);
 }
 
 /** Prefer chart `[Events]` lyrics; fall back to PART VOCALS MIDI. */
@@ -366,7 +346,7 @@ export function parseLyricsFromPack(opts: {
   chartText?: string | null;
   midBytes?: Uint8Array | null;
   offsetSec?: number;
-}): LyricPhrase[] {
+}): LyricCue[] {
   const offset = opts.offsetSec ?? 0;
   const fromChart = opts.chartText
     ? parseLyricsFromChart(opts.chartText, offset)
@@ -376,13 +356,13 @@ export function parseLyricsFromPack(opts: {
 }
 
 export function lyricAtTime(
-  phrases: LyricPhrase[],
+  cues: LyricCue[],
   songTime: number,
 ): string | null {
-  if (!phrases.length || songTime < -0.5) return null;
-  for (const p of phrases) {
-    if (songTime >= p.start - 0.05 && songTime <= p.end + 0.08) {
-      return p.text;
+  if (!cues.length || songTime < -0.5) return null;
+  for (const cue of cues) {
+    if (songTime >= cue.start - 0.04 && songTime <= cue.end + 0.06) {
+      return cue.text;
     }
   }
   return null;

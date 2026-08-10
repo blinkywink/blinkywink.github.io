@@ -287,7 +287,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             }
           />
           <span className="hero-settings__hint">
-            Karaoke-style subtitles from chart lyric events
+            Karaoke-style — one synced word or syllable at a time
           </span>
         </label>
 
