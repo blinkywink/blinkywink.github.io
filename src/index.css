@@ -5892,48 +5892,78 @@ body:has(.zoomed-page) {
   animation: pack-suspense-in 0.35s ease-out both;
 }
 
-.pack-opener__suspense-core {
-  width: 42%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 244, 200, 0.95) 0%,
-    rgba(240, 180, 60, 0.45) 38%,
-    transparent 70%
-  );
-  filter: blur(2px);
-  animation: pack-suspense-pulse 1.45s ease-in-out both;
+.pack-opener__suspense-plate {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: clamp(1rem, 2.4vw, 1.6rem);
 }
 
-.pack-opener__suspense--paragon .pack-opener__suspense-core {
-  background: radial-gradient(
-    circle,
-    rgba(255, 235, 255, 0.95) 0%,
-    rgba(180, 90, 255, 0.55) 40%,
-    transparent 72%
-  );
-}
-
-.pack-opener__suspense-ring {
+.pack-opener__suspense-outline {
   position: absolute;
-  width: 58%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 214, 110, 0.55);
-  box-shadow: 0 0 28px rgba(240, 180, 50, 0.35);
-  animation: pack-suspense-ring 1.45s ease-out both;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 214, 110, 0.28);
+  box-shadow: none;
+  background:
+    linear-gradient(165deg, rgba(255, 236, 180, 0.08), transparent 42%),
+    rgba(10, 10, 14, 0.55);
+  animation: pack-suspense-outline 1.45s ease-in-out both;
 }
 
-.pack-opener__suspense-ring--late {
-  width: 78%;
-  border-color: rgba(255, 255, 255, 0.22);
-  animation-delay: 0.12s;
+.pack-opener__suspense-outline--mid {
+  inset: 3%;
+  border-width: 2px;
+  border-color: rgba(255, 224, 140, 0.2);
+  background: transparent;
+  animation-name: pack-suspense-outline-mid;
 }
 
-.pack-opener__suspense--paragon .pack-opener__suspense-ring {
-  border-color: rgba(210, 150, 255, 0.7);
-  box-shadow: 0 0 34px rgba(160, 80, 255, 0.45);
+.pack-opener__suspense-outline--hot {
+  inset: 0;
+  border-width: 3px;
+  border-color: rgba(255, 230, 150, 0.15);
+  background: transparent;
+  animation-name: pack-suspense-outline-hot;
+}
+
+.pack-opener__suspense-shimmer {
+  position: absolute;
+  inset: 8% 12%;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 244, 200, 0.22) 48%,
+    transparent 66%
+  );
+  opacity: 0;
+  transform: translateX(-40%);
+  animation: pack-suspense-shimmer 1.45s ease-in-out both;
+}
+
+.pack-opener__suspense--paragon .pack-opener__suspense-outline {
+  border-color: rgba(210, 160, 255, 0.3);
+  background:
+    linear-gradient(165deg, rgba(230, 200, 255, 0.1), transparent 42%),
+    rgba(12, 8, 18, 0.58);
+}
+
+.pack-opener__suspense--paragon .pack-opener__suspense-outline--mid {
+  border-color: rgba(210, 150, 255, 0.22);
+}
+
+.pack-opener__suspense--paragon .pack-opener__suspense-outline--hot {
+  border-color: rgba(230, 180, 255, 0.18);
+}
+
+.pack-opener__suspense--paragon .pack-opener__suspense-shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(235, 210, 255, 0.28) 48%,
+    transparent 66%
+  );
 }
 
 .pack-opener__suspense-label {
@@ -5960,7 +5990,7 @@ body:has(.zoomed-page) {
 @keyframes pack-suspense-in {
   from {
     opacity: 0;
-    transform: scale(0.86);
+    transform: scale(0.94);
   }
   to {
     opacity: 1;
@@ -5968,32 +5998,99 @@ body:has(.zoomed-page) {
   }
 }
 
-@keyframes pack-suspense-pulse {
+@keyframes pack-suspense-outline {
   0% {
-    transform: scale(0.55);
     opacity: 0.35;
+    box-shadow: 0 0 0 0 rgba(240, 180, 50, 0);
+    border-color: rgba(255, 214, 110, 0.18);
   }
   55% {
-    transform: scale(1.15);
-    opacity: 1;
+    opacity: 0.9;
+    box-shadow:
+      0 0 18px rgba(240, 180, 50, 0.35),
+      0 0 40px rgba(240, 160, 40, 0.18);
+    border-color: rgba(255, 224, 140, 0.65);
   }
   100% {
-    transform: scale(1.55);
-    opacity: 0.75;
+    opacity: 1;
+    box-shadow:
+      0 0 26px rgba(255, 210, 100, 0.55),
+      0 0 64px rgba(240, 170, 40, 0.32),
+      inset 0 0 28px rgba(255, 220, 120, 0.12);
+    border-color: rgba(255, 236, 180, 0.95);
   }
 }
 
-@keyframes pack-suspense-ring {
+@keyframes pack-suspense-outline-mid {
   0% {
-    transform: scale(0.4);
     opacity: 0;
-  }
-  25% {
-    opacity: 1;
+    transform: scale(0.97);
+    border-color: rgba(255, 224, 140, 0.05);
   }
   100% {
-    transform: scale(1.35);
+    opacity: 1;
+    transform: scale(1);
+    border-color: rgba(255, 236, 190, 0.55);
+    box-shadow: inset 0 0 18px rgba(255, 220, 120, 0.12);
+  }
+}
+
+@keyframes pack-suspense-outline-hot {
+  0% {
     opacity: 0;
+    filter: brightness(0.8);
+    box-shadow: 0 0 0 0 rgba(255, 220, 120, 0);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1.15);
+    box-shadow:
+      0 0 0 1px rgba(255, 244, 200, 0.35),
+      0 0 34px rgba(255, 210, 90, 0.45);
+  }
+}
+
+.pack-opener__suspense--paragon .pack-opener__suspense-outline {
+  animation-name: pack-suspense-outline-para;
+}
+
+@keyframes pack-suspense-outline-para {
+  0% {
+    opacity: 0.35;
+    box-shadow: 0 0 0 0 rgba(170, 80, 255, 0);
+    border-color: rgba(210, 160, 255, 0.18);
+  }
+  55% {
+    opacity: 0.9;
+    box-shadow:
+      0 0 18px rgba(180, 90, 255, 0.4),
+      0 0 40px rgba(140, 50, 230, 0.22);
+    border-color: rgba(220, 170, 255, 0.7);
+  }
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 28px rgba(210, 150, 255, 0.6),
+      0 0 68px rgba(160, 70, 255, 0.38),
+      inset 0 0 28px rgba(220, 180, 255, 0.14);
+    border-color: rgba(240, 210, 255, 0.95);
+  }
+}
+
+@keyframes pack-suspense-shimmer {
+  0% {
+    opacity: 0;
+    transform: translateX(-45%);
+  }
+  40% {
+    opacity: 0;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(45%);
   }
 }
 

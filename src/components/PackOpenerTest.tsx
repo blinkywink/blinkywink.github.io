@@ -1005,9 +1005,12 @@ export function PackOpenerTest({
                     className={`pack-opener__suspense pack-opener__suspense--${currentTier === "paragon" ? "paragon" : "t5"}`}
                     aria-hidden
                   >
-                    <div className="pack-opener__suspense-core" />
-                    <div className="pack-opener__suspense-ring" />
-                    <div className="pack-opener__suspense-ring pack-opener__suspense-ring--late" />
+                    <div className="pack-opener__suspense-plate">
+                      <span className="pack-opener__suspense-outline" />
+                      <span className="pack-opener__suspense-outline pack-opener__suspense-outline--mid" />
+                      <span className="pack-opener__suspense-outline pack-opener__suspense-outline--hot" />
+                      <span className="pack-opener__suspense-shimmer" />
+                    </div>
                     <p className="pack-opener__suspense-label">
                       {currentTier === "paragon" ? "PARAGON" : "TIER 5"}
                     </p>
