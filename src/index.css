@@ -1846,7 +1846,7 @@ body:has(.zoomed-page) {
   position: absolute;
   left: 4%;
   right: 4%;
-  top: 70%;
+  top: 80%;
   z-index: 2;
   height: 0;
   border-top: 2px dashed rgba(255, 236, 160, 0.75);
@@ -1883,7 +1883,7 @@ body:has(.zoomed-page) {
 .game-preview__hero-receptor {
   position: absolute;
   left: 50%;
-  top: 70%;
+  top: 80%;
   z-index: 3;
   width: 62%;
   aspect-ratio: 1;
@@ -1907,7 +1907,7 @@ body:has(.zoomed-page) {
     opacity: 1;
   }
   to {
-    top: 70%;
+    top: 80%;
     opacity: 0.15;
   }
 }
