@@ -3,14 +3,14 @@ import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import {
   APPROACH_S,
-  CASH_PER_GOOD,
-  CASH_PER_GREAT,
-  CASH_PER_PERFECT,
   EMPTY_STREAK_PER_LIFE,
   HERO_BONUS_RATIO,
   HERO_CLEAR_BONUS,
   HERO_GOOD_BONUS,
+  HERO_HIT_POOL,
   HERO_LIVES,
+  HERO_MAX_CASH,
+  HIT_WEIGHT,
   WINDOW_GOOD,
   judgeOffset,
   leadInSeconds,
@@ -79,7 +79,9 @@ export type HeroState = {
   paused: boolean;
   /** Pack has vocals chart — show dart monkey. */
   hasVocals: boolean;
-  /** Monkey mouth open from vocals stem loudness. */
+  /** Vocals stem is audible — bob / talk motion. */
+  talking: boolean;
+  /** Monkey mouth open frame. */
   singing: boolean;
 };
 
@@ -129,14 +131,24 @@ const INITIAL: HeroState = {
   availableInstruments: [],
   paused: false,
   hasVocals: false,
+  talking: false,
   singing: false,
 };
 
-function cashFor(j: Judge): number {
-  if (j === "perfect") return CASH_PER_PERFECT;
-  if (j === "great") return CASH_PER_GREAT;
-  if (j === "good") return CASH_PER_GOOD;
-  return 0;
+function cashForHit(
+  j: Judge,
+  noteCount: number,
+  hitCashSoFar: number,
+): number {
+  if (j === "miss" || noteCount <= 0) return 0;
+  const weight = HIT_WEIGHT[j];
+  const ideal = (HERO_HIT_POOL / noteCount) * weight;
+  const room = Math.max(0, HERO_HIT_POOL - hitCashSoFar);
+  return Math.max(0, Math.min(room, Math.round(ideal)));
+}
+
+function clampRunCash(n: number): number {
+  return Math.max(0, Math.min(HERO_MAX_CASH, Math.round(n)));
 }
 
 function countdownFromSongTime(songTime: number, bpm: number): string | null {
@@ -179,6 +191,7 @@ export function useBloonHero() {
   /** When set, countdown before unpausing. wall ms start. */
   const resumeAtRef = useRef<number | null>(null);
   const singingRef = useRef(false);
+  const talkingRef = useRef(false);
 
   const songRef = useRef<LoadedSong | null>(null);
   const playerRef = useRef<StemPlayer | null>(null);
@@ -190,6 +203,8 @@ export function useBloonHero() {
   const originRef = useRef(0);
   const frameRef = useRef(0);
   const pendingCashRef = useRef(0);
+  /** Cash earned from note hits this run (before clear bonuses). */
+  const hitCashRef = useRef(0);
   const attemptedRef = useRef(0);
   const hitsRef = useRef(0);
   const burstIdRef = useRef(0);
@@ -437,6 +452,7 @@ export function useBloonHero() {
           instrument,
           availableInstruments: loaded.availableInstruments,
           hasVocals: loaded.availableInstruments.includes("vocals"),
+          talking: false,
           singing: false,
           error: null,
         }));
@@ -539,21 +555,23 @@ export function useBloonHero() {
     void (async () => {
       let grant = pendingCashRef.current;
       pendingCashRef.current = 0;
+      const earnedHits = hitCashRef.current;
+      let bonus = 0;
       if (cleared) {
-        grant += HERO_CLEAR_BONUS;
-        if (didWell) grant += HERO_GOOD_BONUS;
+        bonus += HERO_CLEAR_BONUS;
+        if (didWell) bonus += HERO_GOOD_BONUS;
+      }
+      // Cap clear/accuracy bonus so a full perfect run never exceeds 3k.
+      bonus = Math.min(bonus, Math.max(0, HERO_MAX_CASH - earnedHits));
+      grant += bonus;
+      if (bonus > 0) {
         setState((prev) =>
           prev.phase === "results"
-            ? {
-                ...prev,
-                cashEarned:
-                  prev.cashEarned +
-                  HERO_CLEAR_BONUS +
-                  (didWell ? HERO_GOOD_BONUS : 0),
-              }
+            ? { ...prev, cashEarned: clampRunCash(prev.cashEarned + bonus) }
             : prev,
         );
       }
+      grant = Math.max(0, Math.round(grant));
       if (grant > 0) {
         const balance = await awardCoins(grant);
         if (balance != null) setCoinBalanceRef.current(balance);
@@ -577,6 +595,7 @@ export function useBloonHero() {
       song.setInstrument(stateRef.current.instrument);
     }
     pendingCashRef.current = 0;
+    hitCashRef.current = 0;
     attemptedRef.current = 0;
     hitsRef.current = 0;
     scanFromRef.current = 0;
@@ -621,6 +640,7 @@ export function useBloonHero() {
       songTime: -leadInRef.current,
       countdown: "4",
       lives: HERO_LIVES,
+      talking: false,
       singing: false,
     }));
   }, [resizeCanvas]);
@@ -736,6 +756,8 @@ export function useBloonHero() {
       if (pausedRef.current || resumeAtRef.current != null) return;
       keysDownRef.current.add(lane);
       flashPress(lane);
+      // Always fire a projectile on tap — hit or not.
+      spawnDart(lane, "good");
       const now = songTimeNow();
       if (now < 0) return;
 
@@ -803,9 +825,13 @@ export function useBloonHero() {
       if (best.sustain) holdingRef.current.add(lane);
       attemptedRef.current += 1;
       hitsRef.current += 1;
-      spawnDart(lane, judge);
       spawnHitFlash(lane, judge);
-      const pay = cashFor(judge);
+      const noteCount = Math.max(
+        1,
+        songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
+      );
+      const pay = cashForHit(judge, noteCount, hitCashRef.current);
+      hitCashRef.current += pay;
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
       const burstId = burstIdRef.current;
@@ -818,7 +844,7 @@ export function useBloonHero() {
           perfect: prev.perfect + (judge === "perfect" ? 1 : 0),
           great: prev.great + (judge === "great" ? 1 : 0),
           good: prev.good + (judge === "good" ? 1 : 0),
-          cashEarned: prev.cashEarned + pay,
+          cashEarned: clampRunCash(prev.cashEarned + pay),
           lastJudge: judge,
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
@@ -920,10 +946,13 @@ export function useBloonHero() {
       }
 
       if (pausedRef.current) {
-        if (singingRef.current) {
+        if (singingRef.current || talkingRef.current) {
           singingRef.current = false;
+          talkingRef.current = false;
           setState((prev) =>
-            prev.singing ? { ...prev, singing: false } : prev,
+            prev.singing || prev.talking
+              ? { ...prev, singing: false, talking: false }
+              : prev,
           );
         }
         const ctx = canvasCtxRef.current;
@@ -996,19 +1025,36 @@ export function useBloonHero() {
       }
       songTimeRef.current = now;
 
-      // Dart monkey mouth from vocals stem loudness.
+      // Dart monkey: chatter while vocals are present (mostly closed, flips open briefly).
       if (stateRef.current.hasVocals && player) {
-        const open = !player.paused && player.getVocalsLevel() > 0.14;
-        if (open !== singingRef.current) {
+        const level = player.paused ? 0 : player.getVocalsLevel();
+        const talking = level > 0.06;
+        let open = false;
+        if (talking) {
+          const flap =
+            Math.sin(wallMs * 0.062) * 0.55 + Math.sin(wallMs * 0.119) * 0.45;
+          const gate = 0.42 - level * 0.22;
+          open = flap > gate;
+        }
+        if (
+          open !== singingRef.current ||
+          talking !== talkingRef.current
+        ) {
           singingRef.current = open;
+          talkingRef.current = talking;
           setState((prev) =>
-            prev.singing === open ? prev : { ...prev, singing: open },
+            prev.singing === open && prev.talking === talking
+              ? prev
+              : { ...prev, singing: open, talking },
           );
         }
-      } else if (singingRef.current) {
+      } else if (singingRef.current || talkingRef.current) {
         singingRef.current = false;
+        talkingRef.current = false;
         setState((prev) =>
-          prev.singing ? { ...prev, singing: false } : prev,
+          prev.singing || prev.talking
+            ? { ...prev, singing: false, talking: false }
+            : prev,
         );
       }
 

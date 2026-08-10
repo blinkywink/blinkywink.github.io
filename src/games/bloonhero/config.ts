@@ -19,14 +19,25 @@ export const HERO_LIVES = 5;
 export const HERO_BONUS_RATIO = 0.65;
 /** Consecutive empty taps before you lose one strike. */
 export const EMPTY_STREAK_PER_LIFE = 8;
+/** Absolute cash ceiling for one Bloon Hero run. */
+export const HERO_MAX_CASH = 3000;
+/**
+ * Max cash from note hits if every chart note is Perfect.
+ * Scaled by note count so long charts don't print money.
+ */
+export const HERO_HIT_POOL = 2200;
 /** Cash for finishing the whole song (clear). */
-export const HERO_CLEAR_BONUS = 400;
+export const HERO_CLEAR_BONUS = 500;
 /** Extra cash when you clear and hit the accuracy bonus threshold. */
-export const HERO_GOOD_BONUS = 350;
+export const HERO_GOOD_BONUS = 300;
 
-export const CASH_PER_PERFECT = 8;
-export const CASH_PER_GREAT = 5;
-export const CASH_PER_GOOD = 3;
+/** Relative hit quality vs a Perfect (used when scaling the hit pool). */
+export const HIT_WEIGHT = {
+  perfect: 1,
+  great: 5 / 8,
+  good: 3 / 8,
+  miss: 0,
+} as const;
 
 /** Lane bloon art. */
 export const BLOON_IMAGES = [

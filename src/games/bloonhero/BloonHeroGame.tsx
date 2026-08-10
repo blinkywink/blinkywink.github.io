@@ -371,7 +371,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <div className="hero-stage">
               {state.hasVocals ? (
                 <div
-                  className={`hero-singer${state.singing ? " is-singing" : ""}`}
+                  className={`hero-singer${state.talking ? " is-talking" : ""}${state.singing ? " is-open" : ""}`}
                   aria-hidden
                 >
                   <img

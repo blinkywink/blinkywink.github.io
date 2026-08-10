@@ -217,8 +217,8 @@ export async function createStemPlayer(
       }
       const rms = Math.sqrt(sum / timeData.length);
       // Typical vocal stem rms is small; scale + gate.
-      const level = Math.min(1, Math.max(0, (rms - 0.02) / 0.18));
-      smooth = smooth * 0.55 + level * 0.45;
+      const level = Math.min(1, Math.max(0, (rms - 0.015) / 0.14));
+      smooth = smooth * 0.4 + level * 0.6;
       return smooth;
     },
     destroy() {
