@@ -26,6 +26,14 @@ export type DartFx = {
   born: number;
   /** seconds to reach the hit line */
   dur: number;
+  judge: Judge;
+};
+
+export type HitFlash = {
+  id: number;
+  lane: number;
+  born: number;
+  judge: Judge;
 };
 
 export type HighwayDrawState = {
@@ -39,8 +47,30 @@ export type HighwayDrawState = {
   /** Lane key labels (defaults to D F J K L). */
   laneLabels?: readonly string[];
   darts?: readonly DartFx[];
+  hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
   wallMs?: number;
+};
+
+const JUDGE_COLOR: Record<Judge, string> = {
+  perfect: "#ffe566",
+  great: "#5eead4",
+  good: "#fb923c",
+  miss: "#f87171",
+};
+
+const JUDGE_GLOW: Record<Judge, string> = {
+  perfect: "rgba(255, 229, 102, 0.55)",
+  great: "rgba(94, 234, 212, 0.5)",
+  good: "rgba(251, 146, 60, 0.45)",
+  miss: "rgba(248, 113, 113, 0.4)",
+};
+
+const JUDGE_LABEL: Record<Judge, string> = {
+  perfect: "PERFECT",
+  great: "GREAT",
+  good: "GOOD",
+  miss: "MISS",
 };
 
 const LANE_FILL = LANES.map((l) => l.color);
@@ -55,7 +85,27 @@ type BloonSprite = {
 };
 
 const sprites: (BloonSprite | null)[] = BLOON_IMAGES.map(() => null);
-let loadStarted = false;
+let loadKey = "";
+let shurikenImg: HTMLImageElement | null = null;
+let shurikenLoadStarted = false;
+
+const SHURIKEN_SRC = "/images/bloons/shuriken.webp";
+
+function ensureShuriken(): HTMLImageElement | null {
+  if (typeof Image === "undefined") return null;
+  if (!shurikenLoadStarted) {
+    shurikenLoadStarted = true;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = SHURIKEN_SRC;
+    const finish = () => {
+      shurikenImg = img;
+    };
+    if (img.complete && img.naturalWidth) finish();
+    else img.addEventListener("load", finish, { once: true });
+  }
+  return shurikenImg?.complete && shurikenImg.naturalWidth ? shurikenImg : null;
+}
 
 function makeOutline(img: HTMLImageElement, color: string): HTMLCanvasElement {
   const pad = 6;
@@ -89,9 +139,12 @@ function makeOutline(img: HTMLImageElement, color: string): HTMLCanvasElement {
 
 /** Prefetch bloon art used by the highway canvas. */
 export function ensureBloonImages(): void {
-  if (loadStarted || typeof Image === "undefined") return;
-  loadStarted = true;
+  if (typeof Image === "undefined") return;
+  const key = BLOON_IMAGES.join("|");
+  if (loadKey === key) return;
+  loadKey = key;
   BLOON_IMAGES.forEach((src, i) => {
+    sprites[i] = null;
     const img = new Image();
     img.decoding = "async";
     img.src = src;
@@ -113,26 +166,38 @@ function yFor(now: number, t: number, height: number, approach: number): number 
   return (pct / 100) * height;
 }
 
-function drawDart(
+function drawShuriken(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  scale: number,
-  color: string,
+  size: number,
+  /** radians, clockwise positive in canvas after flip */
+  angle: number,
 ) {
+  const img = ensureShuriken();
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -13);
-  ctx.lineTo(3.5, 7);
-  ctx.lineTo(0, 3);
-  ctx.lineTo(-3.5, 7);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "rgba(244,241,230,0.9)";
-  ctx.fillRect(-1, -1, 2, 9);
+  // Canvas rotates clockwise when angle is positive in screen coords? 
+  // Positive rotate() is clockwise in canvas y-down space.
+  ctx.rotate(angle);
+  if (img) {
+    ctx.drawImage(img, -size / 2, -size / 2, size, size);
+  } else {
+    // Fallback star if image still loading
+    ctx.fillStyle = "#d4d4d8";
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      const ax = Math.cos(a) * size * 0.45;
+      const ay = Math.sin(a) * size * 0.45;
+      if (i === 0) ctx.moveTo(ax, ay);
+      else ctx.lineTo(ax, ay);
+      const b = a + Math.PI / 4;
+      ctx.lineTo(Math.cos(b) * size * 0.16, Math.sin(b) * size * 0.16);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -209,19 +274,16 @@ export function drawHeroHighway(
   state: HighwayDrawState,
 ): number {
   ensureBloonImages();
+  ensureShuriken();
   const { now, notes, pressed, holding } = state;
   const approach = state.approachSec ?? APPROACH_S;
   const labels = state.laneLabels;
   const darts = state.darts ?? [];
+  const hitFlashes = state.hitFlashes ?? [];
   const wallMs = state.wallMs ?? performance.now();
 
   ctx.clearRect(0, 0, cssW, cssH);
-
-  const bg = ctx.createLinearGradient(0, 0, 0, cssH);
-  bg.addColorStop(0, "#4eb8e0");
-  bg.addColorStop(0.45, "#6ecf8a");
-  bg.addColorStop(1, "#4a9e52");
-  ctx.fillStyle = bg;
+  ctx.fillStyle = "#0a0a0c";
   ctx.fillRect(0, 0, cssW, cssH);
 
   const laneCount = 5;
@@ -234,7 +296,7 @@ export function drawHeroHighway(
     const x = i * (laneW + gap);
     const active = pressed.has(i) || holding.has(i);
 
-    ctx.fillStyle = "rgba(20,50,30,0.18)";
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
     ctx.fillRect(x, 0, laneW, cssH);
     ctx.strokeStyle = LANE_BORDER[i]!;
     ctx.lineWidth = 1;
@@ -250,14 +312,14 @@ export function drawHeroHighway(
     );
 
     const label = (labels?.[i] ?? LANES[i]!.label).toUpperCase();
-    ctx.fillStyle = "rgba(20,40,28,0.85)";
+    ctx.fillStyle = "rgba(244,241,230,0.75)";
     ctx.font = `700 ${Math.max(11, Math.min(13, laneW * 0.2))}px system-ui,sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(label, x + laneW / 2, cssH - 14);
   }
 
-  ctx.strokeStyle = "rgba(255,236,160,0.75)";
+  ctx.strokeStyle = "rgba(255,236,160,0.55)";
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
   ctx.beginPath();
@@ -332,26 +394,78 @@ export function drawHeroHighway(
     if (age < 0 || age > d.dur + 0.14) continue;
     const x = d.lane * (laneW + gap);
     const cx = x + laneW / 2;
-    const color = LANE_FILL[d.lane] ?? "#fff";
+    const color = JUDGE_COLOR[d.judge] ?? LANE_FILL[d.lane] ?? "#fff";
     const fly = Math.min(1, age / d.dur);
     const startY = cssH + 6;
     const y = startY + (hitY - startY) * fly;
+    // ~2.5 full clockwise spins while flying
+    const spin = fly * Math.PI * 2 * 2.5;
+    const size = Math.min(laneW * 0.55, 34);
     if (fly < 1) {
-      drawDart(ctx, cx, y, 0.9 + 0.2 * (1 - fly), color);
+      drawShuriken(ctx, cx, y, size, spin);
     } else {
       const pop = Math.min(1, (age - d.dur) / 0.14);
       ctx.globalAlpha = 1 - pop;
+      drawShuriken(ctx, cx, hitY, size * (1 - pop * 0.35), spin);
       ctx.strokeStyle = color;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(cx, hitY, 6 + pop * 18, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(cx, hitY, 5 * (1 - pop), 0, Math.PI * 2);
-      ctx.fill();
       ctx.globalAlpha = 1;
     }
+  }
+
+  // Judge-colored accent on the hit line (read quality without looking up).
+  for (const flash of hitFlashes) {
+    const age = (wallMs - flash.born) / 1000;
+    if (age < 0 || age > 0.42) continue;
+    const t = age / 0.42;
+    const fade = 1 - t;
+    const x = flash.lane * (laneW + gap);
+    const cx = x + laneW / 2;
+    const color = JUDGE_COLOR[flash.judge];
+    const glow = JUDGE_GLOW[flash.judge];
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = flash.judge === "perfect" ? 18 : 12;
+    ctx.lineWidth = flash.judge === "perfect" ? 7 : flash.judge === "great" ? 5.5 : 4;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x + 4, hitY);
+    ctx.lineTo(x + laneW - 4, hitY);
+    ctx.stroke();
+
+    const ringR = bloonSize * (0.42 + t * 0.55);
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = flash.judge === "perfect" ? 3.5 : 2.5;
+    ctx.beginPath();
+    ctx.arc(cx, hitY, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    const core = ctx.createRadialGradient(cx, hitY, 2, cx, hitY, bloonSize * 0.55);
+    core.addColorStop(0, glow);
+    core.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.arc(cx, hitY, bloonSize * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = color;
+    ctx.font = `800 ${Math.max(11, Math.min(15, laneW * 0.22))}px system-ui,sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.globalAlpha = fade * (flash.judge === "miss" ? 0.9 : 1);
+    ctx.fillText(
+      JUDGE_LABEL[flash.judge],
+      cx,
+      hitY - bloonSize * 0.55 - 2 - t * 10,
+    );
+    ctx.restore();
   }
 
   return nextHint;

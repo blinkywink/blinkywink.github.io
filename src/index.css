@@ -8880,7 +8880,7 @@ body:has(.zoomed-page) {
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #121820;
+  background: #0a0a0c;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 

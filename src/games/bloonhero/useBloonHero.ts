@@ -16,7 +16,7 @@ import {
   leadInSeconds,
   type Judge,
 } from "./config";
-import { drawHeroHighway, ensureBloonImages, type DartFx } from "./drawHighway";
+import { drawHeroHighway, ensureBloonImages, type DartFx, type HitFlash } from "./drawHighway";
 import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
@@ -165,6 +165,8 @@ export function useBloonHero() {
   keyMapRef.current = keyToLaneMap(settings.keys);
   const dartsRef = useRef<DartFx[]>([]);
   const dartIdRef = useRef(0);
+  const hitFlashesRef = useRef<HitFlash[]>([]);
+  const hitFlashIdRef = useRef(0);
 
   const songRef = useRef<LoadedSong | null>(null);
   const playerRef = useRef<StemPlayer | null>(null);
@@ -295,7 +297,7 @@ export function useBloonHero() {
     return APPROACH_S / speed;
   }, []);
 
-  const spawnDart = useCallback((lane: number) => {
+  const spawnDart = useCallback((lane: number, judge: Judge) => {
     dartIdRef.current += 1;
     const now = performance.now();
     dartsRef.current.push({
@@ -303,11 +305,27 @@ export function useBloonHero() {
       lane,
       born: now,
       dur: 0.11,
+      judge,
     });
-    // Keep list short
     if (dartsRef.current.length > 40) {
       dartsRef.current = dartsRef.current.filter(
         (d) => now - d.born < (d.dur + 0.2) * 1000,
+      );
+    }
+  }, []);
+
+  const spawnHitFlash = useCallback((lane: number, judge: Judge) => {
+    hitFlashIdRef.current += 1;
+    const now = performance.now();
+    hitFlashesRef.current.push({
+      id: hitFlashIdRef.current,
+      lane,
+      born: now,
+      judge,
+    });
+    if (hitFlashesRef.current.length > 24) {
+      hitFlashesRef.current = hitFlashesRef.current.filter(
+        (f) => now - f.born < 500,
       );
     }
   }, []);
@@ -549,6 +567,7 @@ export function useBloonHero() {
     endedRef.current = false;
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     dartsRef.current = [];
+    hitFlashesRef.current = [];
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
@@ -699,6 +718,7 @@ export function useBloonHero() {
         };
         stateRef.current = next;
         setState(next);
+        spawnHitFlash(lane, "miss");
         if (lives <= 0) {
           finishRun({ died: true });
         }
@@ -720,7 +740,8 @@ export function useBloonHero() {
       if (best.sustain) holdingRef.current.add(lane);
       attemptedRef.current += 1;
       hitsRef.current += 1;
-      spawnDart(lane);
+      spawnDart(lane, judge);
+      spawnHitFlash(lane, judge);
       const pay = cashFor(judge);
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
@@ -747,7 +768,7 @@ export function useBloonHero() {
       }, 360);
       if (pendingCashRef.current >= 40) void flushCash();
     },
-    [flashPress, flushCash, songTimeNow, finishRun, spawnDart],
+    [flashPress, flushCash, songTimeNow, finishRun, spawnDart, spawnHitFlash],
   );
 
   // Playback + canvas draw loop
@@ -877,6 +898,9 @@ export function useBloonHero() {
         dartsRef.current = dartsRef.current.filter(
           (d) => wall - d.born < (d.dur + 0.2) * 1000,
         );
+        hitFlashesRef.current = hitFlashesRef.current.filter(
+          (f) => wall - f.born < 500,
+        );
         scanFromRef.current = drawHeroHighway(ctx, w, h, {
           now,
           notes,
@@ -886,6 +910,7 @@ export function useBloonHero() {
           approachSec: approachSec(),
           laneLabels: highwayLabels(),
           darts: dartsRef.current,
+          hitFlashes: hitFlashesRef.current,
           wallMs: wall,
         });
       }
@@ -1010,6 +1035,7 @@ export function useBloonHero() {
           approachSec: approachSec(),
           laneLabels: highwayLabels(),
           darts: [],
+          hitFlashes: [],
           wallMs: performance.now(),
         });
       }
