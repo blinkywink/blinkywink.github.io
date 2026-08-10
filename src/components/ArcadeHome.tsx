@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { BLOON_IMAGES, LANES } from "../games/bloonhero/config";
 import {
   FEATURED_BONUS_CASH,
   FEATURED_BONUS_CHANGED,
@@ -313,22 +314,39 @@ function BananaCatchPreview() {
 }
 
 function BloonHeroPreview() {
-  const colors = ["#22c55e", "#ef4444", "#eab308", "#3b82f6", "#f97316"];
   return (
     <div className="game-preview game-preview--hero" aria-hidden>
-      {colors.map((c, i) => (
-        <span
-          key={i}
-          className="game-preview__hero-lane"
-          style={{ ["--lane" as string]: c }}
-        >
-          <b
-            className="game-preview__hero-key"
-            style={{ ["--d" as string]: `${0.15 + i * 0.12}s` }}
-          />
-          <i />
-        </span>
-      ))}
+      <div className="game-preview__hero-highway">
+        <span className="game-preview__hero-hitline" />
+        {LANES.map((lane) => (
+          <span
+            key={lane.id}
+            className="game-preview__hero-lane"
+            style={{ ["--lane" as string]: lane.color }}
+          >
+            <img
+              className="game-preview__hero-note"
+              src={BLOON_IMAGES[lane.id]}
+              alt=""
+              draggable={false}
+              style={{ ["--d" as string]: `${0.12 + lane.id * 0.22}s` }}
+            />
+            <img
+              className="game-preview__hero-note game-preview__hero-note--b"
+              src={BLOON_IMAGES[lane.id]}
+              alt=""
+              draggable={false}
+              style={{ ["--d" as string]: `${1.05 + lane.id * 0.18}s` }}
+            />
+            <img
+              className="game-preview__hero-receptor"
+              src={BLOON_IMAGES[lane.id]}
+              alt=""
+              draggable={false}
+            />
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

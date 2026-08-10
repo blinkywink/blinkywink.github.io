@@ -22,6 +22,11 @@ import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
 import type { ChartNote } from "./parseChartFile";
 import {
+  fetchBloonHeroRecentPlays,
+  recordBloonHeroPlay,
+  type BloonHeroRecentPlay,
+} from "./recentPlays";
+import {
   keyToLaneMap,
   readHeroSettings,
   writeHeroSettings,
@@ -83,6 +88,8 @@ export type HeroState = {
   talking: boolean;
   /** Monkey mouth open frame. */
   singing: boolean;
+  recentPlays: BloonHeroRecentPlay[];
+  recentLoading: boolean;
 };
 
 const VOLUME_KEY = "bloonhero-volume";
@@ -133,6 +140,8 @@ const INITIAL: HeroState = {
   hasVocals: false,
   talking: false,
   singing: false,
+  recentPlays: [],
+  recentLoading: false,
 };
 
 function cashForHit(
@@ -401,6 +410,26 @@ export function useBloonHero() {
     }
   }, []);
 
+  const refreshRecentPlays = useCallback(async () => {
+    setState((prev) => ({ ...prev, recentLoading: true }));
+    try {
+      const recentPlays = await fetchBloonHeroRecentPlays(16);
+      setState((prev) => ({
+        ...prev,
+        recentPlays,
+        recentLoading: false,
+      }));
+    } catch {
+      setState((prev) => ({ ...prev, recentLoading: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (state.phase === "browse") {
+      void refreshRecentPlays();
+    }
+  }, [state.phase, refreshRecentPlays]);
+
   const pickSong = useCallback(
     async (hit: EnchorHit) => {
       cleanupSong();
@@ -412,6 +441,7 @@ export function useBloonHero() {
         artist: hit.artist,
       }));
       try {
+        void recordBloonHeroPlay(hit);
         const buf = await downloadSng(hit.md5);
         const loaded = await loadSongFromSng(buf);
         songRef.current = loaded;
@@ -665,6 +695,7 @@ export function useBloonHero() {
       ...INITIAL,
       query: prev.query,
       results: prev.results,
+      recentPlays: prev.recentPlays,
       volume: prev.volume,
       phase: "browse",
     }));
@@ -1339,6 +1370,7 @@ export function useBloonHero() {
     setQuery,
     setVolume,
     updateSettings,
+    refreshRecentPlays,
     pickSong,
     setInstrument,
     start,

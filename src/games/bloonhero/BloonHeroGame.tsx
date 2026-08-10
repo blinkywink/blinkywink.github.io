@@ -17,6 +17,7 @@ import {
   playableInstrumentsOnHit,
 } from "./enchorApi";
 import { INSTRUMENT_LABEL } from "./instruments";
+import { recentPlayToHit } from "./recentPlays";
 import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
 import { useBloonHero } from "./useBloonHero";
 
@@ -60,6 +61,16 @@ function DiffLine({
       <em>{label}</em> {bits.join(" · ")}
     </span>
   );
+}
+
+function relativePlayAge(iso: string): string {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  const sec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (sec < 60) return "just now";
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
 }
 
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
@@ -325,6 +336,61 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <p className="hero-browse__loading">
                 Downloading &amp; parsing chart…
               </p>
+            ) : null}
+
+            {state.recentPlays.length > 0 || state.recentLoading ? (
+              <section className="hero-recent" aria-label="Recently played">
+                <h3>Recently played</h3>
+                {state.recentLoading && !state.recentPlays.length ? (
+                  <p className="hero-browse__loading">Loading recent picks…</p>
+                ) : (
+                  <ul className="hero-results hero-results--recent">
+                    {state.recentPlays.map((row) => {
+                      const cover = enchorArtUrl(row.albumArtMd5);
+                      return (
+                        <li key={`${row.md5}-${row.id}`}>
+                          <button
+                            type="button"
+                            className="hero-results__item"
+                            onClick={() => void pickSong(recentPlayToHit(row))}
+                            disabled={state.phase === "loading"}
+                          >
+                            <span
+                              className="hero-results__art"
+                              style={
+                                cover
+                                  ? ({
+                                      backgroundImage: `url(${cover})`,
+                                    } as CSSProperties)
+                                  : undefined
+                              }
+                              aria-hidden
+                            />
+                            <span className="hero-results__meta">
+                              <strong>
+                                {row.artist}, {row.songName}
+                              </strong>
+                              <span>
+                                played by {row.username}
+                                {row.songLength
+                                  ? ` · ${Math.round(row.songLength / 1000)}s`
+                                  : ""}
+                              </span>
+                              <span className="hero-results__played">
+                                {relativePlayAge(row.playedAt)}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            ) : null}
+
+            {state.results.length > 0 ? (
+              <h3 className="hero-browse__results-title">Search results</h3>
             ) : null}
             <ul className="hero-results">
               {state.results.map((hit) => {

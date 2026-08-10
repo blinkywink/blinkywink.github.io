@@ -342,6 +342,34 @@ export type Database = {
           last_daily_card_claim: string;
         };
       };
+      record_bloonhero_play: {
+        Args: {
+          p_md5: string;
+          p_chart_id: number | null;
+          p_song_name: string;
+          p_artist: string;
+          p_album_art_md5?: string | null;
+          p_charter?: string | null;
+          p_song_length?: number | null;
+        };
+        Returns: boolean;
+      };
+      get_bloonhero_recent_plays: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: number;
+          user_id: string | null;
+          username: string;
+          md5: string;
+          chart_id: number | null;
+          song_name: string;
+          artist: string;
+          album_art_md5: string | null;
+          charter: string | null;
+          song_length: number | null;
+          played_at: string;
+        }[];
+      };
       username_signup: {
         Args: { p_username: string; p_password: string };
         Returns: {
