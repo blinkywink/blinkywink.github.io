@@ -8,6 +8,7 @@ import {
   type ParsedChart,
 } from "./parseChartFile";
 import { listMidiInstruments, parseMidiChart } from "./parseMidiChart";
+import { parseLyricsFromPack, type LyricPhrase } from "./parseLyrics";
 import { isAudioStemFile } from "./stemPlayer";
 
 export type LoadedSong = {
@@ -22,6 +23,8 @@ export type LoadedSong = {
   availableInstruments: PlayableInstrument[];
   /** Vocal chart notes for lip-sync (independent of play instrument). */
   vocalsNotes: ChartNote[] | null;
+  /** Synced lyric phrases from chart / MIDI events. */
+  lyrics: LyricPhrase[];
   setInstrument: (instrument: PlayableInstrument) => ParsedChart;
 };
 
@@ -213,6 +216,12 @@ export async function loadSongFromSng(
   const stemFiles = collectStemFiles(files);
   if (!stemFiles.length) throw new Error("No song audio found in chart pack");
 
+  const lyrics = parseLyricsFromPack({
+    chartText,
+    midBytes: midBytes ?? null,
+    offsetSec,
+  });
+
   const artEntry =
     files.get("album.jpg") ??
     files.get("album.png") ??
@@ -231,6 +240,7 @@ export async function loadSongFromSng(
     ini,
     availableInstruments,
     vocalsNotes,
+    lyrics,
     setInstrument(instrument: PlayableInstrument) {
       if (!availableInstruments.includes(instrument)) {
         throw new Error(`${instrument} not in this pack`);

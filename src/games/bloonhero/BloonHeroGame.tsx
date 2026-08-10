@@ -15,11 +15,12 @@ import {
   diffScoreFor,
   expertMaxNpsFor,
   expertNotesFor,
+  hitHasVocals,
   playableInstrumentsOnHit,
 } from "./enchorApi";
 import { INSTRUMENT_LABEL } from "./instruments";
 import { recentPlayToHit } from "./recentPlays";
-import { DEFAULT_KEYS, DEFAULT_STAR_KEY, type HeroKeybinds } from "./settings";
+import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -95,12 +96,11 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setProgressFillEl,
     setCountdownEl,
     togglePause,
-    activateStarPower,
   } = useBloonHero();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capturingLane, setCapturingLane] = useState<number | null>(null);
-  const [capturingStar, setCapturingStar] = useState(false);
+  const [vocalsOnly, setVocalsOnly] = useState(false);
   const prevPhase = useRef(state.phase);
 
   useEffect(() => {
@@ -117,13 +117,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   }, [state.phase, state.cleared, state.didWell, state.cashEarned, onRunEnd]);
 
   useEffect(() => {
-    if (capturingLane == null && !capturingStar) return;
+    if (capturingLane == null) return;
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (e.key === "Escape") {
         setCapturingLane(null);
-        setCapturingStar(false);
         return;
       }
       const next = e.key.toLowerCase();
@@ -135,24 +134,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
         next === "alt" ||
         next === "meta"
       ) {
-        return;
-      }
-
-      if (capturingStar) {
-        // Don't bind star to an existing lane key without clearing that lane.
-        const keys = [...settings.keys] as HeroKeybinds;
-        for (let i = 0; i < keys.length; i++) {
-          if (keys[i] === next) keys[i] = "";
-        }
-        const used = new Set(keys.filter(Boolean));
-        for (let i = 0; i < keys.length; i++) {
-          if (keys[i]) continue;
-          const fill = DEFAULT_KEYS.find((d) => !used.has(d) && d !== next) ?? `f${i + 1}`;
-          keys[i] = fill;
-          used.add(fill);
-        }
-        updateSettings({ starKey: next, keys });
-        setCapturingStar(false);
         return;
       }
 
@@ -169,22 +150,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
         keys[i] = fill;
         used.add(fill);
       }
-      const starKey = settings.starKey || DEFAULT_STAR_KEY;
-      updateSettings({
-        keys,
-        starKey: starKey === next ? DEFAULT_STAR_KEY : starKey,
-      });
+      updateSettings({ keys });
       setCapturingLane(null);
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [
-    capturingLane,
-    capturingStar,
-    settings.keys,
-    settings.starKey,
-    updateSettings,
-  ]);
+  }, [capturingLane, settings.keys, updateSettings]);
 
   const volumeSlider = (
     <label className="hero-volume">
@@ -213,6 +184,9 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     playing && state.paused && state.countdown != null;
   const showRecent =
     state.recentLoading || state.recentPlays.length > 0;
+  const displayedResults = vocalsOnly
+    ? state.results.filter((hit) => hitHasVocals(hit))
+    : state.results;
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -234,7 +208,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             aria-label="Close settings"
             onClick={() => {
               setCapturingLane(null);
-              setCapturingStar(false);
               setSettingsOpen(false);
             }}
           >
@@ -303,6 +276,40 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           <span className="hero-settings__hint">Hit sound when you pop a bloon</span>
         </label>
 
+        <label className="hero-settings__row hero-settings__row--check">
+          <span>Synced lyrics</span>
+          <input
+            type="checkbox"
+            checked={settings.lyricsEnabled ?? true}
+            aria-label="Show synced lyrics"
+            onChange={(e) =>
+              updateSettings({ lyricsEnabled: e.target.checked })
+            }
+          />
+          <span className="hero-settings__hint">
+            Karaoke-style subtitles from chart lyric events
+          </span>
+        </label>
+
+        <label className="hero-settings__row">
+          <span>
+            Lyric size{" "}
+            <strong>{Math.round((settings.lyricsScale ?? 1) * 100)}%</strong>
+          </span>
+          <input
+            type="range"
+            min={70}
+            max={160}
+            step={5}
+            value={Math.round((settings.lyricsScale ?? 1) * 100)}
+            aria-label="Lyric subtitle size"
+            disabled={!(settings.lyricsEnabled ?? true)}
+            onChange={(e) =>
+              updateSettings({ lyricsScale: Number(e.target.value) / 100 })
+            }
+          />
+        </label>
+
         <div className="hero-settings__binds">
           <span>Keybinds</span>
           <div className="hero-settings__keys" role="group" aria-label="Lane keys">
@@ -315,7 +322,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 }`}
                 style={{ "--lane": lane.color } as CSSProperties}
                 onClick={() => {
-                  setCapturingStar(false);
                   setCapturingLane((c) => (c === lane.id ? null : lane.id));
                 }}
               >
@@ -326,21 +332,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className={`hero-settings__key hero-settings__key--star${
-              capturingStar ? " is-listening" : ""
-            }`}
-            onClick={() => {
-              setCapturingLane(null);
-              setCapturingStar((v) => !v);
-            }}
-          >
-            Star {capturingStar ? "…" : formatKey(settings.starKey || " ")}
-          </button>
           <span className="hero-settings__hint">
-            Click a lane or Star, then press a key. Hit outlined bloons to fill
-            star power, then press Star to activate.
+            Click a lane, then press a key to rebind.
           </span>
           <button
             type="button"
@@ -350,8 +343,9 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 trackSpeed: 1,
                 bloonScale: 1,
                 popVolume: 1,
+                lyricsEnabled: true,
+                lyricsScale: 1,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
-                starKey: DEFAULT_STAR_KEY,
               })
             }
           >
@@ -408,6 +402,16 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               >
                 {state.searching ? "Searching…" : "Search"}
               </button>
+              <button
+                type="button"
+                className={`btn btn--ghost hero-search__filter${
+                  vocalsOnly ? " is-on" : ""
+                }`}
+                aria-pressed={vocalsOnly}
+                onClick={() => setVocalsOnly((v) => !v)}
+              >
+                Vocals
+              </button>
             </form>
             {volumeSlider}
             {state.error ? <p className="hero-browse__err">{state.error}</p> : null}
@@ -418,10 +422,23 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             ) : null}
 
             {state.results.length > 0 ? (
-              <h3 className="hero-browse__results-title">Search results</h3>
+              <h3 className="hero-browse__results-title">
+                Search results
+                {vocalsOnly
+                  ? ` · ${displayedResults.length} with vocals`
+                  : null}
+              </h3>
+            ) : null}
+            {vocalsOnly &&
+            state.results.length > 0 &&
+            displayedResults.length === 0 ? (
+              <p className="hero-browse__err">
+                No vocal charts in these results — try another search or turn
+                off the Vocals filter.
+              </p>
             ) : null}
             <ul className="hero-results">
-              {state.results.map((hit) => {
+              {displayedResults.map((hit) => {
                 const instruments = playableInstrumentsOnHit(hit);
                 const notes = expertNotesFor(hit, "guitar");
                 const guitarDiff = diffScoreFor(hit, "guitar");
@@ -547,37 +564,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <span className="hero-stat hero-stat--cash">
                 <CashAmount amount={state.cashEarned} size={18} />
               </span>
-              {playing || state.phase === "ready" ? (
-                <button
-                  type="button"
-                  className={`hero-star-meter${
-                    state.starActive ? " is-active" : ""
-                  }${state.starMeter >= 0.999 && !state.starActive ? " is-ready" : ""}`}
-                  aria-label={
-                    state.starActive
-                      ? "Star power active"
-                      : state.starMeter >= 0.999
-                        ? `Activate star power — ${formatKey(settings.starKey || " ")}`
-                        : "Star power meter"
-                  }
-                  disabled={!playing || state.paused || state.starMeter < 0.999 || state.starActive}
-                  onClick={() => activateStarPower()}
-                >
-                  <span
-                    className="hero-star-meter__fill"
-                    style={{
-                      transform: `scaleX(${Math.max(0, Math.min(1, state.starMeter))})`,
-                    }}
-                  />
-                  <span className="hero-star-meter__label">
-                    {state.starActive
-                      ? "STAR!"
-                      : state.starMeter >= 0.999
-                        ? formatKey(settings.starKey || " ")
-                        : "STAR"}
-                  </span>
-                </button>
-              ) : null}
               {volumeSlider}
             </div>
 
@@ -602,18 +588,14 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   : countingIn
                     ? "Get ready…"
                     : playing
-                      ? state.starActive
-                        ? "Star power — bloons pay more"
-                        : state.emptyStreak >= 2
-                          ? `Wrong taps ×${state.emptyStreak}`
-                          : `${state.artist}, ${state.title}`
+                      ? state.emptyStreak >= 2
+                        ? `Wrong taps ×${state.emptyStreak}`
+                        : `${state.artist}, ${state.title}`
                       : `${state.artist}, ${state.title}`}
               </p>
             )}
 
-            <div
-              className={`hero-stage${state.starActive ? " is-star" : ""}`}
-            >
+            <div className="hero-stage">
               {state.hasVocals ? (
                 <div
                   className={`hero-singer${state.talking ? " is-talking" : ""}${state.singing ? " is-open" : ""}`}
@@ -629,6 +611,21 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                     draggable={false}
                   />
                 </div>
+              ) : null}
+              {(settings.lyricsEnabled ?? true) &&
+              state.currentLyric &&
+              (playing || state.phase === "ready") ? (
+                <p
+                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : ""}`}
+                  style={
+                    {
+                      "--lyrics-scale": settings.lyricsScale ?? 1,
+                    } as CSSProperties
+                  }
+                  aria-live="polite"
+                >
+                  {state.currentLyric}
+                </p>
               ) : null}
               <div className="hero-progress" aria-hidden>
                 <span ref={setProgressFillEl} />

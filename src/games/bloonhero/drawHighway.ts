@@ -18,8 +18,6 @@ export type HighwayNote = {
   result?: Judge;
   holding: boolean;
   releasedEarly: boolean;
-  /** Special star-power phrase note. */
-  star?: boolean;
   /** Wall-clock ms when hit (keep visible until dart arrives). */
   hitWallMs?: number;
   /** Dart flight duration ms paired with hitWallMs. */
@@ -64,8 +62,6 @@ export type HighwayDrawState = {
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
   wallMs?: number;
-  /** Star power active — soft tint wash. */
-  starPowerActive?: boolean;
 };
 
 const JUDGE_COLOR: Record<Judge, string> = {
@@ -249,26 +245,8 @@ function drawBloonAt(
   cy: number,
   size: number,
   alpha: number,
-  star = false,
 ) {
   const spr = sprites[lane];
-  if (star) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 236, 120, 0.95)";
-    ctx.shadowColor = "rgba(255, 220, 80, 0.9)";
-    ctx.shadowBlur = 10;
-    ctx.lineWidth = Math.max(2.5, size * 0.07);
-    ctx.beginPath();
-    ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-    ctx.shadowBlur = 0;
-    ctx.lineWidth = Math.max(1.2, size * 0.035);
-    ctx.beginPath();
-    ctx.arc(cx, cy, size * 0.4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
   if (!spr?.img.complete || !spr.img.naturalWidth) {
     ctx.globalAlpha = alpha;
     ctx.fillStyle = LANE_FILL[lane] ?? "#fff";
@@ -336,10 +314,6 @@ export function drawHeroHighway(
   ctx.clearRect(0, 0, cssW, cssH);
   ctx.fillStyle = "#0a0a0c";
   ctx.fillRect(0, 0, cssW, cssH);
-  if (state.starPowerActive) {
-    ctx.fillStyle = "rgba(120, 70, 220, 0.14)";
-    ctx.fillRect(0, 0, cssW, cssH);
-  }
 
   const laneCount = 5;
   const gap = 4;
@@ -471,7 +445,6 @@ export function drawHeroHighway(
         yDraw,
         bloonSize,
         miss ? 0.35 : 1,
-        Boolean(n.star && !n.resolved),
       );
     }
   }

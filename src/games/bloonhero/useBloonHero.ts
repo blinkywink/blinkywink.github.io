@@ -10,9 +10,6 @@ import {
   HERO_LIVES,
   HIT_LINE_Y,
   HIT_WEIGHT,
-  STAR_CASH_MULT,
-  STAR_FILL_PER_HIT,
-  STAR_POWER_DURATION_S,
   WINDOW_GOOD,
   heroCashPools,
   judgeOffset,
@@ -25,13 +22,13 @@ import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
 import type { ChartNote } from "./parseChartFile";
+import { lyricAtTime, type LyricPhrase } from "./parseLyrics";
 import {
   fetchBloonHeroRecentPlays,
   recordBloonHeroPlay,
   type BloonHeroRecentPlay,
 } from "./recentPlays";
 import {
-  DEFAULT_STAR_KEY,
   keyToLaneMap,
   readHeroSettings,
   writeHeroSettings,
@@ -46,7 +43,6 @@ export type ActiveNote = ChartNote & {
   result?: Judge;
   holding: boolean;
   releasedEarly: boolean;
-  star?: boolean;
   hitWallMs?: number;
   dartDurMs?: number;
   hitY?: number;
@@ -93,16 +89,16 @@ export type HeroState = {
   paused: boolean;
   /** Pack has vocals chart — show dart monkey. */
   hasVocals: boolean;
+  /** Synced lyrics available in this pack. */
+  hasLyrics: boolean;
+  /** Current synced lyric line (when enabled in settings). */
+  currentLyric: string | null;
   /** Vocals stem is audible — bob / talk motion. */
   talking: boolean;
   /** Monkey mouth open frame. */
   singing: boolean;
   recentPlays: BloonHeroRecentPlay[];
   recentLoading: boolean;
-  /** 0–1 star power meter (fills on special notes). */
-  starMeter: number;
-  /** Star power currently boosting cash. */
-  starActive: boolean;
 };
 
 const VOLUME_KEY = "bloonhero-volume";
@@ -151,29 +147,13 @@ const INITIAL: HeroState = {
   availableInstruments: [],
   paused: false,
   hasVocals: false,
+  hasLyrics: false,
+  currentLyric: null,
   talking: false,
   singing: false,
   recentPlays: [],
   recentLoading: false,
-  starMeter: 0,
-  starActive: false,
 };
-
-/** Sprinkle clustered “star” notes for the GH-style meter. */
-function markStarNotes(notes: ActiveNote[]) {
-  let i = 0;
-  while (i < notes.length) {
-    if (Math.random() < 0.085) {
-      const len = 3 + Math.floor(Math.random() * 3); // 3–5
-      for (let j = 0; j < len && i + j < notes.length; j++) {
-        notes[i + j]!.star = true;
-      }
-      i += len + 1 + Math.floor(Math.random() * 4);
-    } else {
-      i += 1;
-    }
-  }
-}
 
 function cashForHit(
   j: Judge,
@@ -229,9 +209,8 @@ export function useBloonHero() {
   const dartIdRef = useRef(0);
   const hitFlashesRef = useRef<HitFlash[]>([]);
   const hitFlashIdRef = useRef(0);
-  const starMeterRef = useRef(0);
-  const starActiveUntilRef = useRef(0);
-  const starUiAtRef = useRef(0);
+  const lyricsRef = useRef<LyricPhrase[]>([]);
+  const lyricsUiAtRef = useRef(0);
   const pausedRef = useRef(false);
   /** When set, countdown before unpausing. wall ms start. */
   const resumeAtRef = useRef<number | null>(null);
@@ -366,10 +345,14 @@ export function useBloonHero() {
         keys: partial.keys
           ? ([...partial.keys] as HeroKeybinds)
           : ([...prev.keys] as HeroKeybinds),
-        starKey:
-          partial.starKey != null
-            ? partial.starKey.toLowerCase() || DEFAULT_STAR_KEY
-            : prev.starKey || DEFAULT_STAR_KEY,
+        lyricsEnabled:
+          partial.lyricsEnabled != null
+            ? partial.lyricsEnabled
+            : prev.lyricsEnabled,
+        lyricsScale:
+          partial.lyricsScale != null
+            ? Math.min(1.6, Math.max(0.7, partial.lyricsScale))
+            : prev.lyricsScale,
       };
       writeHeroSettings(next);
       settingsRef.current = next;
@@ -377,38 +360,6 @@ export function useBloonHero() {
       return next;
     });
   }, []);
-
-  const syncStarUi = useCallback((wallMs = performance.now()) => {
-    const active = wallMs < starActiveUntilRef.current;
-    const meter = active
-      ? Math.max(
-          0,
-          (starActiveUntilRef.current - wallMs) /
-            (STAR_POWER_DURATION_S * 1000),
-        )
-      : starMeterRef.current;
-    setState((prev) => {
-      if (
-        Math.abs(prev.starMeter - meter) < 0.02 &&
-        prev.starActive === active
-      ) {
-        return prev;
-      }
-      return { ...prev, starMeter: meter, starActive: active };
-    });
-  }, []);
-
-  const activateStarPower = useCallback(() => {
-    const s = stateRef.current;
-    if (s.phase !== "playing") return;
-    if (pausedRef.current || resumeAtRef.current != null) return;
-    const wall = performance.now();
-    if (wall < starActiveUntilRef.current) return;
-    if (starMeterRef.current < 0.999) return;
-    starMeterRef.current = 0;
-    starActiveUntilRef.current = wall + STAR_POWER_DURATION_S * 1000;
-    syncStarUi(wall);
-  }, [syncStarUi]);
 
   const spawnDart = useCallback(
     (lane: number, judge: Judge, targetY?: number): number => {
@@ -535,6 +486,7 @@ export function useBloonHero() {
         const loaded = await loadSongFromSng(buf);
         songRef.current = loaded;
         vocalsNotesRef.current = loaded.vocalsNotes;
+        lyricsRef.current = loaded.lyrics;
         vocalsScanRef.current = 0;
         const { player, urls } = await createStemPlayer(
           loaded.stemFiles,
@@ -583,6 +535,8 @@ export function useBloonHero() {
           instrument,
           availableInstruments: loaded.availableInstruments,
           hasVocals: loaded.availableInstruments.includes("vocals"),
+          hasLyrics: loaded.lyrics.length > 0,
+          currentLyric: null,
           talking: false,
           singing: false,
           error: null,
@@ -741,17 +695,13 @@ export function useBloonHero() {
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     dartsRef.current = [];
     hitFlashesRef.current = [];
-    starMeterRef.current = 0;
-    starActiveUntilRef.current = 0;
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
       resolved: false,
       holding: false,
       releasedEarly: false,
-      star: false,
     }));
-    markStarNotes(notesRef.current);
     leadInRef.current = leadInSeconds(120);
     originRef.current = performance.now();
     songTimeRef.current = -leadInRef.current;
@@ -777,6 +727,8 @@ export function useBloonHero() {
       instrument: prev.instrument,
       availableInstruments: prev.availableInstruments,
       hasVocals: prev.hasVocals,
+      hasLyrics: prev.hasLyrics,
+      currentLyric: null,
       songTime: -leadInRef.current,
       countdown: "4",
       lives: HERO_LIVES,
@@ -818,6 +770,7 @@ export function useBloonHero() {
       instrument: prev.instrument,
       availableInstruments: prev.availableInstruments,
       hasVocals: prev.hasVocals,
+      hasLyrics: prev.hasLyrics,
     }));
   }, []);
 
@@ -984,44 +937,21 @@ export function useBloonHero() {
       spawnHitFlash(lane, judge);
       playBloonPop(settingsRef.current.popVolume ?? 1);
 
-      const starBoost =
-        wallHit < starActiveUntilRef.current ? STAR_CASH_MULT : 1;
-      if (best.star) {
-        if (wallHit >= starActiveUntilRef.current) {
-          starMeterRef.current = Math.min(
-            1,
-            starMeterRef.current + STAR_FILL_PER_HIT,
-          );
-        }
-      }
-
       const noteCount = Math.max(
         1,
         songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
       );
       const pools = heroCashPools(durationRef.current);
-      let pay = cashForHit(
+      const pay = cashForHit(
         judge,
         noteCount,
         hitCashRef.current,
         pools.hitPool,
       );
-      if (starBoost > 1 && pay > 0) {
-        const room = Math.max(0, pools.max - stateRef.current.cashEarned);
-        pay = Math.min(Math.round(pay * starBoost), room);
-      }
       hitCashRef.current += pay;
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
       const burstId = burstIdRef.current;
-      const meterUi =
-        wallHit < starActiveUntilRef.current
-          ? Math.max(
-              0,
-              (starActiveUntilRef.current - wallHit) /
-                (STAR_POWER_DURATION_S * 1000),
-            )
-          : starMeterRef.current;
       setState((prev) => {
         const combo = prev.combo + 1;
         return {
@@ -1035,8 +965,6 @@ export function useBloonHero() {
           lastJudge: judge,
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
-          starMeter: meterUi,
-          starActive: wallHit < starActiveUntilRef.current,
         };
       });
       window.setTimeout(() => {
@@ -1137,7 +1065,6 @@ export function useBloonHero() {
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
             wallMs,
-            starPowerActive: wallMs < starActiveUntilRef.current,
           });
         }
         frameRef.current = requestAnimationFrame(tick);
@@ -1169,7 +1096,6 @@ export function useBloonHero() {
             darts: [],
             hitFlashes: [],
             wallMs,
-            starPowerActive: false,
           });
         }
         const cdEl = countdownElRef.current;
@@ -1318,12 +1244,6 @@ export function useBloonHero() {
           missed += 1;
           missLane = n.lane;
           attemptedRef.current += 1;
-          if (n.star && performance.now() >= starActiveUntilRef.current) {
-            starMeterRef.current = Math.max(
-              0,
-              starMeterRef.current - STAR_FILL_PER_HIT * 0.5,
-            );
-          }
           i += 1;
           continue;
         }
@@ -1357,13 +1277,19 @@ export function useBloonHero() {
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
           wallMs: wall,
-          starPowerActive: wall < starActiveUntilRef.current,
         });
       }
 
-      if (wallMs - starUiAtRef.current > 90) {
-        starUiAtRef.current = wallMs;
-        syncStarUi(wallMs);
+      if (
+        settingsRef.current.lyricsEnabled &&
+        lyricsRef.current.length > 0 &&
+        wallMs - lyricsUiAtRef.current > 80
+      ) {
+        lyricsUiAtRef.current = wallMs;
+        const line = lyricAtTime(lyricsRef.current, now);
+        setState((prev) =>
+          prev.currentLyric === line ? prev : { ...prev, currentLyric: line },
+        );
       }
 
       const countdown = countdownFromSongTime(now, 120);
@@ -1463,7 +1389,7 @@ export function useBloonHero() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", onResize);
     };
-  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels, syncStarUi]);
+  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels]);
 
   useEffect(() => () => cleanupSong(), [cleanupSong]);
 
@@ -1489,7 +1415,6 @@ export function useBloonHero() {
           darts: [],
           hitFlashes: [],
           wallMs: performance.now(),
-          starPowerActive: false,
         });
       }
     }
@@ -1508,14 +1433,6 @@ export function useBloonHero() {
       }
       if (pausedRef.current || resumeAtRef.current != null) return;
       const k = e.key.toLowerCase();
-      const starKey = (settingsRef.current.starKey || DEFAULT_STAR_KEY).toLowerCase();
-      if (k === starKey || (starKey === " " && e.code === "Space")) {
-        if (e.repeat || down.has("__star__")) return;
-        down.add("__star__");
-        e.preventDefault();
-        activateStarPower();
-        return;
-      }
       const lane = keyMapRef.current[k];
       if (lane == null) return;
       if (e.repeat || down.has(k)) return;
@@ -1525,10 +1442,6 @@ export function useBloonHero() {
     };
     const onUp = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      const starKey = (settingsRef.current.starKey || DEFAULT_STAR_KEY).toLowerCase();
-      if (k === starKey || (starKey === " " && e.code === "Space")) {
-        down.delete("__star__");
-      }
       down.delete(k);
       const lane = keyMapRef.current[k];
       if (lane != null) releaseLane(lane);
@@ -1539,7 +1452,7 @@ export function useBloonHero() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onUp);
     };
-  }, [state.phase, applyHit, releaseLane, togglePause, activateStarPower]);
+  }, [state.phase, applyHit, releaseLane, togglePause]);
 
   return {
     state,
@@ -1559,7 +1472,6 @@ export function useBloonHero() {
     applyHit,
     releaseLane,
     togglePause,
-    activateStarPower,
     maxLives: HERO_LIVES,
     setCanvasEl,
     setProgressFillEl,

@@ -26,12 +26,6 @@ export const EMPTY_STREAK_PER_LIFE = 8;
  */
 export const DART_SPEED_PX_S = 3400;
 
-/** Star-power special notes: fill meter → activate for cash boost. */
-export const STAR_FILL_PER_HIT = 0.2;
-export const STAR_POWER_DURATION_S = 7.5;
-/** Cash multiplier while star power is active. */
-export const STAR_CASH_MULT = 1.45;
-
 /** Perfect-clear cash for a 3-minute song. */
 export const HERO_CASH_AT_3MIN = 1800;
 /** Perfect-clear cash for a 6-minute song. */

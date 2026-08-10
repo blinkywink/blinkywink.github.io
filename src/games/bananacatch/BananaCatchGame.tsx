@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
+import { isDesktopShell } from "../../lib/desktopOnline";
 import { readCatchBgmVolume, writeCatchBgmVolume } from "./bgmTracks";
 import {
   BANANA_IMAGE,
@@ -24,6 +25,9 @@ type Props = {
   onBack: () => void;
   onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
 };
+
+/** WKWebView / Tauri desktop does not support pointer lock reliably. */
+const USE_POINTER_LOCK = !isDesktopShell();
 
 function dropSrc(kind: DropKind): string {
   switch (kind) {
@@ -51,6 +55,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef(state.phase);
   const [pointerLocked, setPointerLocked] = useState(false);
+  const [lockUnavailable, setLockUnavailable] = useState(!USE_POINTER_LOCK);
   const [musicVolume, setMusicVolume] = useState(() => readCatchBgmVolume());
 
   useCatchBgm(state.phase, musicVolume);
@@ -62,11 +67,17 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   }, []);
 
   const requestLock = useCallback(() => {
+    if (!USE_POINTER_LOCK || lockUnavailable) return;
     const el = fieldRef.current;
-    if (!el || typeof el.requestPointerLock !== "function") return;
+    if (!el || typeof el.requestPointerLock !== "function") {
+      setLockUnavailable(true);
+      return;
+    }
     if (document.pointerLockElement === el) return;
-    void el.requestPointerLock();
-  }, []);
+    void el.requestPointerLock().catch(() => {
+      setLockUnavailable(true);
+    });
+  }, [lockUnavailable]);
 
   const releaseLock = useCallback(() => {
     if (document.pointerLockElement && document.exitPointerLock) {
@@ -98,11 +109,20 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
 
   // Track lock state; Esc exits pointer lock natively.
   useEffect(() => {
+    if (!USE_POINTER_LOCK) return;
     const onChange = () => {
       setPointerLocked(document.pointerLockElement === fieldRef.current);
     };
+    const onError = () => {
+      setLockUnavailable(true);
+      setPointerLocked(false);
+    };
     document.addEventListener("pointerlockchange", onChange);
-    return () => document.removeEventListener("pointerlockchange", onChange);
+    document.addEventListener("pointerlockerror", onError);
+    return () => {
+      document.removeEventListener("pointerlockchange", onChange);
+      document.removeEventListener("pointerlockerror", onError);
+    };
   }, []);
 
   // Release lock when the run ends / leaves playing.
@@ -115,18 +135,32 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const playing = state.phase === "playing";
   const done = state.phase === "lost";
   const attemptsUsed = CATCH_LIVES - state.lives;
+  const useRelativeMouse = USE_POINTER_LOCK && !lockUnavailable && pointerLocked;
 
-  function pointerToAim(clientX: number) {
-    const el = fieldRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    aimAt(clientX, rect.left, rect.width);
-  }
+  const pointerToAim = useCallback(
+    (clientX: number) => {
+      const el = fieldRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      aimAt(clientX, rect.left, rect.width);
+    },
+    [aimAt],
+  );
+
+  // Without pointer lock, track the mouse anywhere over the window while playing.
+  useEffect(() => {
+    if (!playing || useRelativeMouse) return;
+    const onMove = (e: MouseEvent) => pointerToAim(e.clientX);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [playing, useRelativeMouse, pointerToAim]);
 
   function beginRun() {
     start();
-    // User gesture from Start — lock immediately.
-    queueMicrotask(() => requestLock());
+    if (USE_POINTER_LOCK && !lockUnavailable) {
+      // User gesture from Start — lock immediately.
+      queueMicrotask(() => requestLock());
+    }
   }
 
   return (
@@ -160,9 +194,11 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
 
         <p className="catch-hint">
           {playing
-            ? pointerLocked
+            ? useRelativeMouse
               ? "Move to catch · Esc frees the mouse"
-              : "Click the field to lock the mouse again"
+              : USE_POINTER_LOCK && !lockUnavailable
+                ? "Click the field to lock the mouse again"
+                : "Move mouse to catch"
             : "Catch bananas forever · dodge reds, blues, greens, pinks, then blimps"}
         </p>
 
@@ -173,25 +209,26 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
           aria-label="Banana catch playfield"
           onPointerDown={(e) => {
             if (!playing) return;
-            // Re-lock after Esc (or first lock if Start gesture missed).
-            if (document.pointerLockElement !== e.currentTarget) {
-              requestLock();
-              pointerToAim(e.clientX);
+            pointerToAim(e.clientX);
+            if (useRelativeMouse) {
+              e.currentTarget.setPointerCapture(e.pointerId);
               return;
             }
-            e.currentTarget.setPointerCapture(e.pointerId);
-            pointerToAim(e.clientX);
+            if (
+              USE_POINTER_LOCK &&
+              !lockUnavailable &&
+              document.pointerLockElement !== e.currentTarget
+            ) {
+              requestLock();
+            }
           }}
           onPointerMove={(e) => {
             if (!playing) return;
-            if (document.pointerLockElement === fieldRef.current) {
+            if (useRelativeMouse) {
               aimByDelta(e.movementX);
               return;
             }
-            // Touch / unlocked mouse still follows absolute X.
-            if (e.pointerType !== "mouse") {
-              pointerToAim(e.clientX);
-            }
+            pointerToAim(e.clientX);
           }}
         >
           <div className="catch-field__sky" aria-hidden="true" />
@@ -239,7 +276,9 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 <strong>{CATCH_CLEAR_BANANAS}+</strong> bananas to clear.
               </p>
               <p className="catch-overlay__note">
-                Mouse locks while you play · Esc to free it
+                {USE_POINTER_LOCK
+                  ? "Mouse locks while you play · Esc to free it"
+                  : "Move the mouse to slide the monkey"}
               </p>
               <button type="button" className="btn btn--primary" onClick={beginRun}>
                 Start

@@ -9,40 +9,34 @@ export type HeroSettings = {
   bloonScale: number;
   /** 0–1 — bloon pop hit SFX volume. */
   popVolume: number;
+  /** Show synced chart lyrics during play. */
+  lyricsEnabled: boolean;
+  /** 0.7–1.6 — synced lyric subtitle size. */
+  lyricsScale: number;
   /** Keys for lanes 0–4. Lowercase. */
   keys: HeroKeybinds;
-  /** Star power activate key (default space). Lowercase. */
-  starKey: string;
 };
 
 const KEY = "bloonhero-settings-v1";
 export const DEFAULT_KEYS: HeroKeybinds = ["d", "f", "j", "k", "l"];
-export const DEFAULT_STAR_KEY = " ";
 export const DEFAULT_SETTINGS: HeroSettings = {
   trackSpeed: 1,
   bloonScale: 1,
   popVolume: 1,
+  lyricsEnabled: true,
+  lyricsScale: 1,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
-  starKey: DEFAULT_STAR_KEY,
 };
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
 }
 
-function normalizeKey(k: unknown, fallback: string): string {
-  if (typeof k !== "string" || !k.length) return fallback;
-  return k.toLowerCase();
-}
-
 export function readHeroSettings(): HeroSettings {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
-      return {
-        ...DEFAULT_SETTINGS,
-        keys: [...DEFAULT_KEYS] as HeroKeybinds,
-      };
+      return { ...DEFAULT_SETTINGS, keys: [...DEFAULT_KEYS] as HeroKeybinds };
     }
     const parsed = JSON.parse(raw) as Partial<HeroSettings>;
     const keys = Array.isArray(parsed.keys)
@@ -53,7 +47,7 @@ export function readHeroSettings(): HeroSettings {
     const trackSpeed = Number(parsed.trackSpeed);
     const bloonScale = Number(parsed.bloonScale);
     const popVolume = Number(parsed.popVolume);
-    const starKey = normalizeKey(parsed.starKey, DEFAULT_STAR_KEY);
+    const lyricsScale = Number(parsed.lyricsScale);
     return {
       trackSpeed: Number.isFinite(trackSpeed)
         ? clamp(trackSpeed, 0.6, 2)
@@ -62,8 +56,12 @@ export function readHeroSettings(): HeroSettings {
         ? clamp(bloonScale, 0.6, 1.8)
         : 1,
       popVolume: Number.isFinite(popVolume) ? clamp(popVolume, 0, 1) : 1,
+      lyricsEnabled:
+        parsed.lyricsEnabled === undefined ? true : Boolean(parsed.lyricsEnabled),
+      lyricsScale: Number.isFinite(lyricsScale)
+        ? clamp(lyricsScale, 0.7, 1.6)
+        : 1,
       keys,
-      starKey,
     };
   } catch {
     return {

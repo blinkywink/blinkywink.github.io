@@ -9,6 +9,13 @@ import {
   offlineGateHtml,
 } from "./lib/desktopOnline";
 import { supabaseConfigured } from "./lib/supabase";
+import "@fontsource/fredoka/500.css";
+import "@fontsource/fredoka/600.css";
+import "@fontsource/fredoka/700.css";
+import "@fontsource/nunito/600.css";
+import "@fontsource/nunito/700.css";
+import "@fontsource/nunito/800.css";
+import "@fontsource/luckiest-guy/400.css";
 import "./index.css";
 
 const root = document.getElementById("root")!;

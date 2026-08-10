@@ -113,6 +113,10 @@ export function playableInstrumentsOnHit(
   return out;
 }
 
+export function hitHasVocals(hit: EnchorHit): boolean {
+  return playableInstrumentsOnHit(hit).includes("vocals");
+}
+
 /** Guitar Expert charts (vocals optional). */
 export function isPlayableEnchorHit(hit: EnchorHit): boolean {
   if (hit.modchart) return false;
