@@ -110,7 +110,7 @@ export function ShopPage({ onPackFinished }: Props) {
         <div className="pack-shelf__row">{featured.map(renderPackButton)}</div>
 
         <div className="pack-shelf__head pack-shelf__head--sub">
-          <h3 className="section-label">Test</h3>
+          <h3 className="section-label">SFX test</h3>
         </div>
         <div className="pack-shelf__row">{renderPackButton(sfxTest)}</div>
 
