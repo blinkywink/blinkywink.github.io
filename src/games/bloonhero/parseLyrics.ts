@@ -1,5 +1,6 @@
 /**
- * Synced lyric phrases from Clone Hero `.chart` E events and MIDI text/lyrics meta.
+ * Synced lyric phrases from Clone Hero `[Events]` (.chart) and PART VOCALS (.mid).
+ * @see https://thenathannator.github.io/GuitarGame_ChartFormats/Chart-File-Formats/chart-format/Tracks/Lyrics/
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 
@@ -11,7 +12,8 @@ export type LyricPhrase = {
 };
 
 type TempoEvent = { tick: number; bpm: number };
-type RawEv = { tick: number; text: string };
+type RawEv = { tick: number; kind: "phrase_start" | "phrase_end" | "syllable"; text: string };
+type Syllable = { text: string; joinNext: boolean };
 
 function parseBlock(text: string, name: string): string[] {
   const re = new RegExp(`\\[${name}\\]\\s*\\{([\\s\\S]*?)\\}`, "i");
@@ -75,21 +77,75 @@ function tickToSeconds(
   return time;
 }
 
-function normalizeEventText(raw: string): string {
+function normalizeQuoted(raw: string): string {
   let s = raw.trim();
   if (s.startsWith('"') && s.endsWith('"')) s = s.slice(1, -1);
   return s.trim();
 }
 
-function isSkippedEvent(lower: string): boolean {
-  return (
-    lower === "end" ||
-    lower.startsWith("section ") ||
-    lower.startsWith("section_") ||
-    lower.startsWith("prc_") ||
-    lower.startsWith("solo ") ||
-    lower.startsWith("solo_")
-  );
+/** Skip chart/MIDI markers — not sung lyric syllables. */
+function isNonLyricMarker(text: string): boolean {
+  const t = text.trim();
+  if (!t) return true;
+  const lower = t.toLowerCase();
+  if (lower === "end") return true;
+  if (lower === "phrase_start" || lower === "phrase_end") return false;
+  if (lower.startsWith("lyric ")) return false;
+  if (lower.startsWith("section ") || lower.startsWith("section_")) return true;
+  if (lower.startsWith("prc_")) return true;
+  if (lower.startsWith("solo") || lower.startsWith("solo_")) return true;
+  // [idle], [play], [music_start], etc.
+  if (/^\[[^\]]+\]$/.test(t)) return true;
+  return false;
+}
+
+/** Turn one raw syllable token into display text (Clone Hero plain-text rules). */
+function parseSyllable(raw: string): Syllable | null {
+  let s = normalizeQuoted(raw);
+  if (s.toLowerCase().startsWith("lyric ")) s = s.slice(6).trim();
+  if (isNonLyricMarker(s)) return null;
+  if (s === "+" || s === "%") return null;
+
+  // Strip leading pitch/leniency markers.
+  s = s.replace(/^[#^*]+/, "");
+
+  let joinNext = false;
+  if (s.endsWith("-")) {
+    joinNext = true;
+    s = s.slice(0, -1);
+  } else if (s.endsWith("=")) {
+    joinNext = true;
+    s = `${s.slice(0, -1)}-`;
+  }
+
+  s = s.replace(/\$$/, "");
+  s = s.replace(/_/g, " ");
+  s = s.replace(/^[#^*%]+|[#^*%]+$/g, "");
+  s = s.trim();
+
+  if (!s || s === "+") return null;
+  return { text: s, joinNext };
+}
+
+function assemblePhrase(syllables: Syllable[]): string {
+  let out = "";
+  for (let i = 0; i < syllables.length; i++) {
+    const s = syllables[i]!;
+    if (!s.text) continue;
+    if (!out) out = s.text;
+    else if (syllables[i - 1]!.joinNext) out += s.text;
+    else out += ` ${s.text}`;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function classifyChartEvent(raw: string): RawEv["kind"] | null {
+  const text = normalizeQuoted(raw);
+  const lower = text.toLowerCase();
+  if (lower === "phrase_start") return "phrase_start";
+  if (lower === "phrase_end") return "phrase_end";
+  if (lower.startsWith("lyric ")) return "syllable";
+  return null;
 }
 
 function buildPhrases(
@@ -98,84 +154,88 @@ function buildPhrases(
   resolution: number,
 ): LyricPhrase[] {
   if (!events.length) return [];
-  events.sort((a, b) => a.tick - b.tick || a.text.localeCompare(b.text));
+  events.sort((a, b) => a.tick - b.tick);
 
   const phrases: LyricPhrase[] = [];
-  let cur: { startTick: number; parts: string[]; lastTick: number } | null =
-    null;
+  let open = false;
+  let startTick = 0;
+  let lastTick = 0;
+  let syllables: Syllable[] = [];
 
   const flush = (endTick: number) => {
-    if (!cur?.parts.length) {
-      cur = null;
-      return;
-    }
-    const start = tickToSec(cur.startTick);
+    const text = assemblePhrase(syllables);
+    syllables = [];
+    open = false;
+    if (!text) return;
+    const start = tickToSec(startTick);
     const end = tickToSec(endTick);
     phrases.push({
       start,
-      end: Math.max(end, start + 0.25),
-      text: cur.parts.join(" ").replace(/\s+/g, " ").trim(),
+      end: Math.max(end, start + 0.2),
+      text,
     });
-    cur = null;
   };
 
-  for (let i = 0; i < events.length; i++) {
-    const ev = events[i]!;
-    const text = normalizeEventText(ev.text);
-    const lower = text.toLowerCase();
-    if (!text || isSkippedEvent(lower)) continue;
-
-    if (lower === "phrase_start") {
-      if (cur) flush(ev.tick);
-      cur = { startTick: ev.tick, parts: [], lastTick: ev.tick };
+  for (const ev of events) {
+    if (ev.kind === "phrase_start") {
+      if (open) flush(ev.tick);
+      open = true;
+      startTick = ev.tick;
+      lastTick = ev.tick;
       continue;
     }
-    if (lower === "phrase_end") {
+    if (ev.kind === "phrase_end") {
+      lastTick = ev.tick;
       flush(ev.tick);
       continue;
     }
 
-    let syllable = "";
-    if (lower.startsWith("lyric ")) {
-      syllable = text.slice(6).trim();
-    } else if (
-      !lower.includes(" ") &&
-      lower !== "phrase_start" &&
-      lower !== "phrase_end"
+    const syl = parseSyllable(ev.text);
+    if (!syl) continue;
+
+    const gapTicks = Math.max(resolution * 3, 96);
+    if (
+      open &&
+      syllables.length > 0 &&
+      lastTick > 0 &&
+      ev.tick - lastTick > gapTicks
     ) {
-      // Bare syllable on a vocals track local event.
-      syllable = text;
+      flush(lastTick);
+      open = false;
     }
 
-    if (!syllable) continue;
-    if (!cur) cur = { startTick: ev.tick, parts: [], lastTick: ev.tick };
-    cur.parts.push(syllable);
-    cur.lastTick = ev.tick;
+    if (!open) {
+      open = true;
+      startTick = ev.tick;
+    }
+    syllables.push(syl);
+    lastTick = ev.tick;
   }
 
-  if (cur) {
-    flush(cur.lastTick + Math.max(resolution, 96));
+  if (open && syllables.length) {
+    flush(lastTick + Math.max(resolution, 96));
   }
 
-  // Extend phrase end until the next phrase starts so subtitles linger naturally.
   for (let i = 0; i < phrases.length - 1; i++) {
     const next = phrases[i + 1]!;
-    phrases[i]!.end = Math.max(phrases[i]!.end, next.start - 0.02);
+    phrases[i]!.end = Math.min(phrases[i]!.end, next.start - 0.02);
+    if (phrases[i]!.end <= phrases[i]!.start) {
+      phrases[i]!.end = next.start - 0.02;
+    }
   }
+
   return phrases.filter((p) => p.text.length > 0);
 }
 
-function collectChartEvents(text: string): RawEv[] {
+/** Lyric events live in the global `[Events]` block only — not instrument tracks. */
+function collectChartLyricEvents(text: string): RawEv[] {
   const out: RawEv[] = [];
-  const blockRe = /\[[^\]]+\]\s*\{([\s\S]*?)\}/gi;
-  let block: RegExpExecArray | null;
-  while ((block = blockRe.exec(text))) {
-    for (const raw of block[1]!.split("\n")) {
-      const line = raw.trim();
-      const m = line.match(/^(\d+)\s*=\s*E\s+(.*)$/i);
-      if (!m) continue;
-      out.push({ tick: Number(m[1]), text: m[2]!.trim() });
-    }
+  for (const line of parseBlock(text, "Events")) {
+    const m = line.match(/^(\d+)\s*=\s*E\s+(.*)$/i);
+    if (!m) continue;
+    const kind = classifyChartEvent(m[2]!.trim());
+    if (!kind) continue;
+    out.push({ tick: Number(m[1]), kind, text: m[2]!.trim() });
   }
   return out;
 }
@@ -190,12 +250,32 @@ export function parseLyricsFromChart(
   const offset = offsetSec || meta.offsetSec;
   const tickToSec = (tick: number) =>
     tickToSeconds(tick, resolution, tempos) - offset;
-  return buildPhrases(collectChartEvents(text), tickToSec, resolution);
+  return buildPhrases(collectChartLyricEvents(text), tickToSec, resolution);
 }
 
+type MidiTrack = MidiEvent[];
 type MidiTempoEv = { tick: number; usPerBeat: number };
 
-function collectMidiTempos(tracks: MidiEvent[][]): MidiTempoEv[] {
+function trackName(track: MidiTrack): string {
+  for (const e of track) {
+    if (e.type === "trackName") return e.text.trim();
+  }
+  return "";
+}
+
+function findVocalsTrack(tracks: MidiTrack[]): MidiTrack | null {
+  for (const name of ["PART VOCALS", "HARM1", "HARM2", "HARM3"]) {
+    const tr = tracks.find((t) => trackName(t).toUpperCase() === name);
+    if (tr) return tr;
+  }
+  return (
+    tracks.find((t) => /^PART VOCALS$/i.test(trackName(t))) ??
+    tracks.find((t) => /VOCAL/i.test(trackName(t))) ??
+    null
+  );
+}
+
+function collectMidiTempos(tracks: MidiTrack[]): MidiTempoEv[] {
   const tempos: MidiTempoEv[] = [];
   for (const track of tracks) {
     let tick = 0;
@@ -240,19 +320,28 @@ function midiTickToSec(
   return time;
 }
 
-function collectMidiEvents(tracks: MidiEvent[][]): RawEv[] {
+function classifyMidiText(text: string): RawEv["kind"] | null {
+  const t = normalizeQuoted(text);
+  const lower = t.toLowerCase();
+  if (lower === "phrase_start") return "phrase_start";
+  if (lower === "phrase_end") return "phrase_end";
+  if (lower.startsWith("lyric ")) return "syllable";
+  return null;
+}
+
+/** PART VOCALS only — ignore [idle]/[play] markers on other tracks. */
+function collectVocalsLyricEvents(track: MidiTrack): RawEv[] {
   const out: RawEv[] = [];
-  for (const track of tracks) {
-    let tick = 0;
-    for (const e of track) {
-      tick += e.deltaTime;
-      if (e.type === "lyrics" && "text" in e && e.text) {
-        out.push({ tick, text: `lyric ${e.text}` });
-        continue;
-      }
-      if (e.type === "text" && "text" in e && e.text) {
-        out.push({ tick, text: e.text });
-      }
+  let tick = 0;
+  for (const e of track) {
+    tick += e.deltaTime;
+    if (e.type === "lyrics" && "text" in e && e.text) {
+      out.push({ tick, kind: "syllable", text: e.text });
+      continue;
+    }
+    if (e.type === "text" && "text" in e && e.text) {
+      const kind = classifyMidiText(e.text);
+      if (kind) out.push({ tick, kind, text: e.text });
     }
   }
   return out;
@@ -265,12 +354,14 @@ export function parseLyricsFromMidi(
   const midi = parseMidi(bytes);
   const tpq = midi.header.ticksPerBeat;
   if (!tpq) return [];
+  const track = findVocalsTrack(midi.tracks);
+  if (!track) return [];
   const tempos = collectMidiTempos(midi.tracks);
   const tickToSec = (tick: number) => midiTickToSec(tick, tpq, tempos) - offsetSec;
-  return buildPhrases(collectMidiEvents(midi.tracks), tickToSec, tpq);
+  return buildPhrases(collectVocalsLyricEvents(track), tickToSec, tpq);
 }
 
-/** Pick the richest lyric list available. */
+/** Prefer chart `[Events]` lyrics; fall back to PART VOCALS MIDI. */
 export function parseLyricsFromPack(opts: {
   chartText?: string | null;
   midBytes?: Uint8Array | null;
@@ -280,9 +371,8 @@ export function parseLyricsFromPack(opts: {
   const fromChart = opts.chartText
     ? parseLyricsFromChart(opts.chartText, offset)
     : [];
-  const fromMid = opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
-  if (fromChart.length >= fromMid.length) return fromChart;
-  return fromMid;
+  if (fromChart.length) return fromChart;
+  return opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
 }
 
 export function lyricAtTime(
@@ -291,7 +381,7 @@ export function lyricAtTime(
 ): string | null {
   if (!phrases.length || songTime < -0.5) return null;
   for (const p of phrases) {
-    if (songTime >= p.start - 0.08 && songTime <= p.end + 0.12) {
+    if (songTime >= p.start - 0.05 && songTime <= p.end + 0.08) {
       return p.text;
     }
   }
