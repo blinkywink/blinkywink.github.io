@@ -19,17 +19,46 @@ export const HERO_LIVES = 5;
 export const HERO_BONUS_RATIO = 0.65;
 /** Consecutive empty taps before you lose one strike. */
 export const EMPTY_STREAK_PER_LIFE = 8;
-/** Absolute cash ceiling for one Bloon Hero run. */
-export const HERO_MAX_CASH = 3000;
+
+/** Perfect-clear cash for a 3-minute song. */
+export const HERO_CASH_AT_3MIN = 1800;
+/** Perfect-clear cash for a 6-minute song. */
+export const HERO_CASH_AT_6MIN = 4000;
+/** Soft floor / ceiling so tiny intros and marathon charts stay sane. */
+export const HERO_CASH_MIN = 400;
+export const HERO_CASH_MAX = 8000;
+
+/** Share of the duration pool earned from note hits (perfect run). */
+const HERO_HIT_SHARE = 2200 / 3000;
+/** Share for finishing the song. */
+const HERO_CLEAR_SHARE = 500 / 3000;
+
+export type HeroCashPools = {
+  max: number;
+  hitPool: number;
+  clearBonus: number;
+  goodBonus: number;
+};
+
 /**
- * Max cash from note hits if every chart note is Perfect.
- * Scaled by note count so long charts don't print money.
+ * Max cash for a perfect clear, scaled by song length.
+ * Anchors: 3 min → 1800, 6 min → 4000 (linear between / beyond).
  */
-export const HERO_HIT_POOL = 2200;
-/** Cash for finishing the whole song (clear). */
-export const HERO_CLEAR_BONUS = 500;
-/** Extra cash when you clear and hit the accuracy bonus threshold. */
-export const HERO_GOOD_BONUS = 300;
+export function heroMaxCashForDuration(durationSec: number): number {
+  const minutes = Math.max(0, durationSec) / 60;
+  const slope = (HERO_CASH_AT_6MIN - HERO_CASH_AT_3MIN) / 3; // per minute
+  const intercept = HERO_CASH_AT_3MIN - slope * 3;
+  const raw = intercept + slope * minutes;
+  return Math.round(Math.min(HERO_CASH_MAX, Math.max(HERO_CASH_MIN, raw)));
+}
+
+export function heroCashPools(durationSec: number): HeroCashPools {
+  const max = heroMaxCashForDuration(durationSec);
+  const hitPool = Math.round(max * HERO_HIT_SHARE);
+  const clearBonus = Math.round(max * HERO_CLEAR_SHARE);
+  const goodBonus = Math.max(0, max - hitPool - clearBonus);
+  return { max, hitPool, clearBonus, goodBonus };
+}
 
 /** Relative hit quality vs a Perfect (used when scaling the hit pool). */
 export const HIT_WEIGHT = {

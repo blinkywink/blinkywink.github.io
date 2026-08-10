@@ -5,13 +5,10 @@ import {
   APPROACH_S,
   EMPTY_STREAK_PER_LIFE,
   HERO_BONUS_RATIO,
-  HERO_CLEAR_BONUS,
-  HERO_GOOD_BONUS,
-  HERO_HIT_POOL,
   HERO_LIVES,
-  HERO_MAX_CASH,
   HIT_WEIGHT,
   WINDOW_GOOD,
+  heroCashPools,
   judgeOffset,
   leadInSeconds,
   type Judge,
@@ -148,16 +145,17 @@ function cashForHit(
   j: Judge,
   noteCount: number,
   hitCashSoFar: number,
+  hitPool: number,
 ): number {
-  if (j === "miss" || noteCount <= 0) return 0;
+  if (j === "miss" || noteCount <= 0 || hitPool <= 0) return 0;
   const weight = HIT_WEIGHT[j];
-  const ideal = (HERO_HIT_POOL / noteCount) * weight;
-  const room = Math.max(0, HERO_HIT_POOL - hitCashSoFar);
+  const ideal = (hitPool / noteCount) * weight;
+  const room = Math.max(0, hitPool - hitCashSoFar);
   return Math.max(0, Math.min(room, Math.round(ideal)));
 }
 
-function clampRunCash(n: number): number {
-  return Math.max(0, Math.min(HERO_MAX_CASH, Math.round(n)));
+function clampRunCash(n: number, maxCash: number): number {
+  return Math.max(0, Math.min(maxCash, Math.round(n)));
 }
 
 function countdownFromSongTime(songTime: number, bpm: number): string | null {
@@ -598,18 +596,22 @@ export function useBloonHero() {
       let grant = pendingCashRef.current;
       pendingCashRef.current = 0;
       const earnedHits = hitCashRef.current;
+      const pools = heroCashPools(durationRef.current);
       let bonus = 0;
       if (cleared) {
-        bonus += HERO_CLEAR_BONUS;
-        if (didWell) bonus += HERO_GOOD_BONUS;
+        bonus += pools.clearBonus;
+        if (didWell) bonus += pools.goodBonus;
       }
-      // Cap clear/accuracy bonus so a full perfect run never exceeds 3k.
-      bonus = Math.min(bonus, Math.max(0, HERO_MAX_CASH - earnedHits));
+      // Cap clear/accuracy bonus so a full perfect run never exceeds the length pool.
+      bonus = Math.min(bonus, Math.max(0, pools.max - earnedHits));
       grant += bonus;
       if (bonus > 0) {
         setState((prev) =>
           prev.phase === "results"
-            ? { ...prev, cashEarned: clampRunCash(prev.cashEarned + bonus) }
+            ? {
+                ...prev,
+                cashEarned: clampRunCash(prev.cashEarned + bonus, pools.max),
+              }
             : prev,
         );
       }
@@ -874,7 +876,13 @@ export function useBloonHero() {
         1,
         songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
       );
-      const pay = cashForHit(judge, noteCount, hitCashRef.current);
+      const pools = heroCashPools(durationRef.current);
+      const pay = cashForHit(
+        judge,
+        noteCount,
+        hitCashRef.current,
+        pools.hitPool,
+      );
       hitCashRef.current += pay;
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
@@ -888,7 +896,7 @@ export function useBloonHero() {
           perfect: prev.perfect + (judge === "perfect" ? 1 : 0),
           great: prev.great + (judge === "great" ? 1 : 0),
           good: prev.good + (judge === "good" ? 1 : 0),
-          cashEarned: clampRunCash(prev.cashEarned + pay),
+          cashEarned: clampRunCash(prev.cashEarned + pay, pools.max),
           lastJudge: judge,
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
