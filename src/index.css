@@ -8897,7 +8897,7 @@ body:has(.zoomed-page) {
 }
 
 .hero-singer.is-talking {
-  animation: hero-singer-talk 0.22s ease-in-out infinite;
+  animation: hero-singer-talk 0.48s ease-in-out infinite;
 }
 
 .hero-singer.is-open {

@@ -1032,8 +1032,9 @@ export function useBloonHero() {
         let open = false;
         if (talking) {
           const flap =
-            Math.sin(wallMs * 0.062) * 0.55 + Math.sin(wallMs * 0.119) * 0.45;
-          const gate = 0.42 - level * 0.22;
+            Math.sin(wallMs * 0.016) * 0.6 + Math.sin(wallMs * 0.027) * 0.4;
+          // Prefer closed — only open on slower peaks so it reads as talking.
+          const gate = 0.55 - level * 0.18;
           open = flap > gate;
         }
         if (

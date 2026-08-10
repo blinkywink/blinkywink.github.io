@@ -294,7 +294,6 @@ export function drawHeroHighway(
   ensureShuriken();
   const { now, notes, pressed, holding } = state;
   const approach = state.approachSec ?? APPROACH_S;
-  const labels = state.laneLabels;
   const darts = state.darts ?? [];
   const hitFlashes = state.hitFlashes ?? [];
   const wallMs = state.wallMs ?? performance.now();
@@ -350,13 +349,6 @@ export function drawHeroHighway(
       bloonSize,
       active,
     );
-
-    const label = (labels?.[i] ?? LANES[i]!.label).toUpperCase();
-    ctx.fillStyle = "rgba(244,241,230,0.75)";
-    ctx.font = `700 ${Math.max(11, Math.min(13, laneW * 0.2))}px system-ui,sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, x + laneW / 2, cssH - 14);
   }
 
   ctx.strokeStyle = "rgba(255,236,160,0.55)";
