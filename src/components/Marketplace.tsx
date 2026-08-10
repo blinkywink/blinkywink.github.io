@@ -70,6 +70,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [towerFilter, setTowerFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("newest");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sellStep, setSellStep] = useState<"pick" | "price">("pick");
   const [priceInput, setPriceInput] = useState("100");
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -162,6 +163,9 @@ export function Marketplace({ onBack: _onBack }: Props) {
     return mine.slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }, [listings, user]);
 
+  const sellCardId = [...selected][0] ?? null;
+  const sellCard = sellCardId ? cardSpecById(sellCardId) : null;
+
   const postListings = async (cardIds?: string[]) => {
     if (isGuest || !user) {
       setError("Sign in to sell cards.");
@@ -188,6 +192,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
     try {
       await listCardForSale(cardId, price);
       setSelected(new Set());
+      setSellStep("pick");
       setStatus(`Listed for ${price.toLocaleString()} Cash.`);
       await Promise.all([refreshCards(), load()]);
       setTab("mine");
@@ -283,6 +288,10 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 setQuery("");
                 setError(null);
                 setStatus(null);
+                if (id === "sell") {
+                  setSellStep("pick");
+                  setSelected(new Set());
+                }
               }}
             >
               {label}
@@ -417,30 +426,75 @@ export function Marketplace({ onBack: _onBack }: Props) {
           )
         ) : (
           <div className="market-sell-pick">
-            <OwnedCardPicker
-              owned={owned}
-              selectedIds={selected}
-              multi={false}
-              disabled={busyId != null || isGuest}
-              confirmLabel={busyId === "sell" ? "Listing…" : "List card"}
-              onConfirm={(ids) => {
-                setSelected(new Set(ids.slice(0, 1)));
-                void postListings(ids.slice(0, 1));
-              }}
-              dockExtra={
-                <label className="market-price market-price--dock">
-                  <span>Price</span>
-                  <input
-                    type="number"
-                    min={10}
-                    max={1000000}
-                    step={10}
-                    value={priceInput}
-                    onChange={(e) => setPriceInput(e.target.value)}
-                  />
-                </label>
-              }
-            />
+            {sellStep === "pick" ? (
+              <OwnedCardPicker
+                owned={owned}
+                selectedIds={selected}
+                multi={false}
+                disabled={busyId != null || isGuest}
+                confirmLabel="Next"
+                onConfirm={(ids) => {
+                  const id = ids[0];
+                  if (!id) return;
+                  setSelected(new Set([id]));
+                  setError(null);
+                  setStatus(null);
+                  setSellStep("price");
+                  window.scrollTo(0, 0);
+                }}
+              />
+            ) : (
+              <div className="market-sell-price">
+                {sellCard ? (
+                  <div className="market-sell-price__card">
+                    <MonkeyCard
+                      entity={sellCard.entity}
+                      pathLevels={sellCard.pathLevels}
+                      mode="preview"
+                      owned
+                    />
+                  </div>
+                ) : null}
+                <div className="market-sell-price__form">
+                  <h3>Set a price</h3>
+                  <label className="market-price">
+                    <span>Asking price (Cash)</span>
+                    <input
+                      type="number"
+                      min={10}
+                      max={1000000}
+                      step={10}
+                      value={priceInput}
+                      onChange={(e) => setPriceInput(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                </div>
+                <div className="market-sell-price__dock">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busyId != null}
+                    onClick={() => {
+                      setSellStep("pick");
+                      setError(null);
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={busyId != null || isGuest || !sellCardId}
+                    onClick={() =>
+                      void postListings(sellCardId ? [sellCardId] : [])
+                    }
+                  >
+                    {busyId === "sell" ? "Posting…" : "Post"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

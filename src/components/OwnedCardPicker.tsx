@@ -378,7 +378,7 @@ export function OwnedCardPicker({
               <p className="eyebrow">Owned</p>
               <h1>All Cards</h1>
               <p className="card-lab__blurb">
-                Tap a card, then press {confirmLabel} below.
+                Tap a card, then press {confirmLabel}.
               </p>
             </div>
           </header>
@@ -436,8 +436,7 @@ export function OwnedCardPicker({
               {view.name}
             </h1>
             <p className="card-lab__blurb">
-              {ownedTowerCards.length} owned · tap a card, then{" "}
-              {confirmLabel} below.
+              {ownedTowerCards.length} owned · tap a card, then {confirmLabel}.
             </p>
           </div>
         </header>

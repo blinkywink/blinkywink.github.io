@@ -12,20 +12,48 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists hero_clear_progress jsonb not null default '{}'::jsonb;
 
--- Unlock = 5000; level-ups ~30% cheaper. Keep in sync with heroUpgradeCost().
-create or replace function public.hero_upgrade_cost(p_to_level integer)
+-- Unlock prices vary by hero; level-ups scale from that base (~30% cheaper curve).
+-- Keep in sync with heroUnlockCost() / heroUpgradeCost() in src/lib/profileHeroes.ts.
+create or replace function public.hero_unlock_cost(p_hero_id text)
+returns integer
+language sql
+immutable
+as $$
+  select case lower(trim(coalesce(p_hero_id, '')))
+    when 'quincy' then 3500
+    when 'gwendolin' then 4000
+    when 'obyn-greenfoot' then 4500
+    when 'benjamin' then 5000
+    when 'ezili' then 5500
+    when 'sauda' then 6000
+    when 'psi' then 6500
+    when 'silas' then 7500
+    else 5000
+  end;
+$$;
+
+drop function if exists public.hero_upgrade_cost(integer);
+
+create or replace function public.hero_upgrade_cost(
+  p_to_level integer,
+  p_hero_id text default null
+)
 returns integer
 language sql
 immutable
 as $$
   select case
-    when greatest(1, least(20, coalesce(p_to_level, 1))) <= 1 then 5000
+    when greatest(1, least(20, coalesce(p_to_level, 1))) <= 1 then
+      public.hero_unlock_cost(p_hero_id)
     else greatest(
       2500,
       (
         round(
-          (5000 * power(1.118::numeric, greatest(1, least(20, p_to_level)) - 1) * 0.7)
-          / 250.0
+          (
+            public.hero_unlock_cost(p_hero_id)
+            * power(1.118::numeric, greatest(1, least(20, p_to_level)) - 1)
+            * 0.7
+          ) / 250.0
         ) * 250
       )::integer
     )
@@ -95,7 +123,7 @@ begin
     if progress < needed then
       raise exception 'Not enough clears';
     end if;
-    price := public.hero_upgrade_cost(next_level);
+    price := public.hero_upgrade_cost(next_level, hid);
 
     if new_balance < price then
       raise exception 'Insufficient coins';
@@ -112,7 +140,7 @@ begin
     returning coins, owned_hero_ids, hero_levels, hero_clear_progress
       into new_balance, owned, levels, clears;
   else
-    price := public.hero_upgrade_cost(1);
+    price := public.hero_upgrade_cost(1, hid);
 
     if new_balance < price then
       raise exception 'Insufficient coins';
@@ -226,8 +254,12 @@ begin
 end;
 $$;
 
+revoke all on function public.hero_unlock_cost(text) from public;
+grant execute on function public.hero_unlock_cost(text) to anon, authenticated;
+
 revoke all on function public.hero_upgrade_cost(integer) from public;
-grant execute on function public.hero_upgrade_cost(integer) to anon, authenticated;
+revoke all on function public.hero_upgrade_cost(integer, text) from public;
+grant execute on function public.hero_upgrade_cost(integer, text) to anon, authenticated;
 
 revoke all on function public.hero_clears_required(integer) from public;
 grant execute on function public.hero_clears_required(integer) to anon, authenticated;

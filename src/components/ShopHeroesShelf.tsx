@@ -6,7 +6,6 @@ import { heroBlurb } from "../lib/heroEffects";
 import {
   HERO_EQUIP_SWAP_COST,
   HERO_MAX_LEVEL,
-  HERO_UNLOCK_COST,
   buyHero,
   equipHero,
   heroClearProgressFromProfile,
@@ -72,7 +71,9 @@ export function ShopHeroesShelf() {
       );
       return;
     }
-    const price = mine ? heroUpgradeCost(level + 1) : heroUpgradeCost(1);
+    const price = mine
+      ? heroUpgradeCost(level + 1, focused.id)
+      : heroUpgradeCost(1, focused.id);
     if ((profile?.coins ?? 0) < price) {
       setBuyError("Not enough Cash.");
       return;
@@ -171,8 +172,8 @@ export function ShopHeroesShelf() {
     ? focusMine
       ? focusMaxed
         ? 0
-        : heroUpgradeCost(focusLevel + 1)
-      : heroUpgradeCost(1)
+        : heroUpgradeCost(focusLevel + 1, focused.id)
+      : heroUpgradeCost(1, focused.id)
     : 0;
   const focusEquipped = Boolean(focused && equippedId === focused.id);
   const focusEquipCost =
@@ -299,10 +300,6 @@ export function ShopHeroesShelf() {
     <div className="shop-heroes">
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Heroes</h3>
-        <p className="shop-heroes__note">
-          <CashAmount amount={HERO_UNLOCK_COST} /> unlock · first unlock
-          auto-equips · equip here · clear games to level up
-        </p>
       </div>
       {status ? (
         <p className="shop-direct__banner shop-direct__banner--ok">{status}</p>
@@ -320,8 +317,8 @@ export function ShopHeroesShelf() {
           const price = mine
             ? maxed
               ? 0
-              : heroUpgradeCost(level + 1)
-            : heroUpgradeCost(1);
+              : heroUpgradeCost(level + 1, hero.id)
+            : heroUpgradeCost(1, hero.id);
           return (
             <button
               key={hero.id}

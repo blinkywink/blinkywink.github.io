@@ -7,15 +7,47 @@ export const HERO_UNLOCK_COST = 5_000;
 export const HERO_MAX_LEVEL = 20;
 export const HERO_EQUIP_SWAP_COST = 1_000;
 
+/** Heroes available for purchase in the shop. */
+export const SHOPPABLE_HERO_IDS = [
+  "quincy",
+  "gwendolin",
+  "obyn-greenfoot",
+  "benjamin",
+  "ezili",
+  "sauda",
+  "psi",
+  "silas",
+] as const;
+
+export type ShoppableHeroId = (typeof SHOPPABLE_HERO_IDS)[number];
+
+/** Per-hero unlock Cash. Keep in sync with public.hero_unlock_cost. */
+export const HERO_UNLOCK_COSTS: Record<ShoppableHeroId, number> = {
+  quincy: 3_500,
+  gwendolin: 4_000,
+  "obyn-greenfoot": 4_500,
+  benjamin: 5_000,
+  ezili: 5_500,
+  sauda: 6_000,
+  psi: 6_500,
+  silas: 7_500,
+};
+
+export function heroUnlockCost(heroId: string): number {
+  if (isShoppableHeroId(heroId)) return HERO_UNLOCK_COSTS[heroId];
+  return HERO_UNLOCK_COST;
+}
+
 /**
  * Cash to unlock (toLevel 1) or buy into `toLevel` (2..20).
- * Unlock stays 5k; levels are ~30% cheaper than the old curve.
+ * Unlock varies by hero; levels scale from that base (~30% cheaper curve).
  * Server: public.hero_upgrade_cost — keep in sync.
  */
-export function heroUpgradeCost(toLevel: number): number {
+export function heroUpgradeCost(toLevel: number, heroId?: string): number {
+  const base = heroId ? heroUnlockCost(heroId) : HERO_UNLOCK_COST;
   const L = Math.max(1, Math.min(HERO_MAX_LEVEL, Math.floor(toLevel) || 1));
-  if (L === 1) return HERO_UNLOCK_COST;
-  const raw = HERO_UNLOCK_COST * Math.pow(1.118, L - 1) * 0.7;
+  if (L === 1) return base;
+  const raw = base * Math.pow(1.118, L - 1) * 0.7;
   const snapped = Math.round(raw / 250) * 250;
   return Math.max(2_500, snapped);
 }
@@ -34,20 +66,6 @@ export function heroClearsRequiredForNextLevel(currentLevel: number): number {
 
 /** @deprecated use heroUpgradeCost — unlock floor only */
 export const HERO_LEVEL_COST = HERO_UNLOCK_COST;
-
-/** Heroes available for purchase in the shop. */
-export const SHOPPABLE_HERO_IDS = [
-  "quincy",
-  "gwendolin",
-  "obyn-greenfoot",
-  "benjamin",
-  "ezili",
-  "sauda",
-  "psi",
-  "silas",
-] as const;
-
-export type ShoppableHeroId = (typeof SHOPPABLE_HERO_IDS)[number];
 
 export function isShoppableHeroId(id: string): id is ShoppableHeroId {
   return (SHOPPABLE_HERO_IDS as readonly string[]).includes(id);

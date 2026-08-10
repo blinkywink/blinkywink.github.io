@@ -32,8 +32,6 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
   const { dupCashMods } = useQuizHeroFx();
   const [cashBusy, setCashBusy] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
-  const [cashNote, setCashNote] = useState<string | null>(null);
-  const [cardNote, setCardNote] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(() => msUntilDailyRefresh());
   const [dayKey, setDayKey] = useState(() => todaysDailyCard().dayKey);
 
@@ -57,24 +55,17 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
 
   async function onClaimCash() {
     setCashBusy(true);
-    setCashNote(null);
     const result = await claimDailyCash();
     setCashBusy(false);
-    if (result.error) {
-      setCashNote(result.error);
-      return;
-    }
+    if (result.error) return;
     if (typeof result.coins === "number") setCoinBalance(result.coins);
-    setCashNote(`+${(result.amount ?? DAILY_CASH_AMOUNT).toLocaleString()} Cash`);
   }
 
   async function onClaimCard() {
     setCardBusy(true);
-    setCardNote(null);
     const result = await claimDailyCard();
     if (result.error) {
       setCardBusy(false);
-      setCardNote(result.error);
       return;
     }
 
@@ -82,10 +73,8 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
       const dup = duplicateCashForCard(reward.card, dupCashMods());
       const bal = await awardCoins(dup);
       if (bal != null) setCoinBalance(bal);
-      setCardNote(`+${dup.toLocaleString()} Cash`);
     } else {
       await awardCards([reward.card.id]);
-      setCardNote(`${reward.card.entity.name} unlocked`);
     }
     setCardBusy(false);
   }
@@ -125,7 +114,6 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
           >
             {cashBusy ? "Claiming…" : cashClaimed ? "Claimed" : "Claim"}
           </button>
-          {cashNote ? <p className="daily-rewards__note">{cashNote}</p> : null}
         </article>
 
         <article
@@ -150,7 +138,6 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
           >
             {cardBusy ? "Claiming…" : cardClaimed ? "Claimed" : "Claim"}
           </button>
-          {cardNote ? <p className="daily-rewards__note">{cardNote}</p> : null}
         </article>
       </div>
     </section>
