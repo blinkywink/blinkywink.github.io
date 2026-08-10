@@ -9,10 +9,11 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
-import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
+import { pullPackCards, pullSfxDemoCards, duplicateCashForCard } from "../lib/packPull";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
 import {
   btd6Pack,
+  isSfxTestPack,
   packPrice,
   type PackDef,
 } from "../lib/packTheme";
@@ -383,8 +384,13 @@ export function PackOpenerTest({
     setBuyError(null);
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
-    if ((profile?.coins ?? 0) < charge) {
+    if (charge > 0 && (profile?.coins ?? 0) < charge) {
       setBuyError("Not enough Cash.");
+      return;
+    }
+    if (charge <= 0) {
+      playBuy();
+      setPhaseBoth("sealed");
       return;
     }
     setBuyBusy(true);
@@ -493,12 +499,14 @@ export function PackOpenerTest({
       setClips(splitClips(a, b));
       setPhaseBoth("sliced");
       const mods = packPullMods();
-      const result = pullPackCards(pool, pack.cardCount, owned, mods);
+      const result = isSfxTestPack(pack)
+        ? pullSfxDemoCards()
+        : pullPackCards(pool, pack.cardCount, owned, mods);
       if (result.extraCard) onObynExtra();
       setGodPack(result.godPack);
       later(() => beginDraw(result.cards, result.godPack), SLICE_REVEAL_MS);
     },
-    [beginDraw, onObynExtra, packPullMods, pool, pack.cardCount, owned],
+    [beginDraw, onObynExtra, packPullMods, pool, pack, pack.cardCount, owned],
   );
 
   const autoSlashOpen = useCallback(() => {
@@ -530,6 +538,12 @@ export function PackOpenerTest({
     setBuyError(null);
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
+    if (charge <= 0) {
+      resetToSealed();
+      playBuy();
+      later(() => autoSlashOpen(), 160);
+      return;
+    }
     if ((profile?.coins ?? 0) < charge) {
       reset();
       setBuyError("Not enough Cash.");
@@ -960,14 +974,18 @@ export function PackOpenerTest({
 
           {phase === "shop" ? (
             <div className="pack-opener__buy">
-              <CurrencyChip amount={price} />
+              {price > 0 ? <CurrencyChip amount={price} /> : <span>Free</span>}
               <button
                 type="button"
                 className="btn btn--primary btn--lg"
                 disabled={buyBusy}
                 onClick={() => void purchase()}
               >
-                {buyBusy ? "Buying…" : "Purchase · Space"}
+                {buyBusy
+                  ? "Buying…"
+                  : price <= 0
+                    ? "Open · Space"
+                    : "Purchase · Space"}
               </button>
               {buyError ? (
                 <p className="pack-opener__buy-error">{buyError}</p>

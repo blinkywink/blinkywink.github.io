@@ -6,6 +6,7 @@ import {
   formatShopCountdown,
   msUntilShopRotation,
   packPrice,
+  sfxTestPack,
   type PackDef,
 } from "../lib/packTheme";
 import type { MonkeyCardSpec } from "../lib/pathCombos";
@@ -14,6 +15,7 @@ import { DailyClaimButton } from "./DailyClaimButton";
 import { PackOpenerTest } from "./PackOpenerTest";
 import { ShopDirectShelf } from "./ShopDirectShelf";
 import { ShopHeroesShelf } from "./ShopHeroesShelf";
+import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 
 type Props = {
   onPackFinished?: (result: {
@@ -49,15 +51,25 @@ export function ShopPage({ onPackFinished }: Props) {
   const { remaining, shopDay } = useShopClock();
   const featured = useMemo(() => featuredShopPacks(shopDay), [shopDay]);
   const categories = useMemo(() => allCategoryPacks(), []);
+  const sfxTest = useMemo(() => sfxTestPack(), []);
+
+  useEffect(() => {
+    preloadPackSounds();
+  }, []);
 
   const renderPackButton = (pack: PackDef) => {
     const price = packPrice(pack);
+    const free = price <= 0;
     return (
       <button
         key={pack.id}
         type="button"
         className="pack-shelf__item"
-        onClick={() => setActivePack(pack)}
+        onClick={() => {
+          preloadPackSounds();
+          playCardFocus();
+          setActivePack(pack);
+        }}
       >
         <BoosterPack
           pack={pack}
@@ -67,13 +79,19 @@ export function ShopPage({ onPackFinished }: Props) {
         <span className="pack-shelf__label">
           <strong>{pack.title}</strong>
           <span className="pack-shelf__price">
-            <img
-              src="/images/ui/money-icon.webp"
-              alt=""
-              width={22}
-              height={22}
-            />
-            {price.toLocaleString()}
+            {free ? (
+              "Free"
+            ) : (
+              <>
+                <img
+                  src="/images/ui/money-icon.webp"
+                  alt=""
+                  width={22}
+                  height={22}
+                />
+                {price.toLocaleString()}
+              </>
+            )}
           </span>
         </span>
       </button>
@@ -90,6 +108,11 @@ export function ShopPage({ onPackFinished }: Props) {
           </p>
         </div>
         <div className="pack-shelf__row">{featured.map(renderPackButton)}</div>
+
+        <div className="pack-shelf__head pack-shelf__head--sub">
+          <h3 className="section-label">Test</h3>
+        </div>
+        <div className="pack-shelf__row">{renderPackButton(sfxTest)}</div>
 
         <div className="pack-shelf__head pack-shelf__head--sub">
           <h3 className="section-label">Categories</h3>

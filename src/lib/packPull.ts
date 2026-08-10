@@ -2,6 +2,7 @@ import {
   maxPathTier,
   type MonkeyCardSpec,
 } from "./pathCombos";
+import { allCardSpecs } from "./cardCatalog";
 
 /** Ultra-rare all-highs pack (only pack-level exception). */
 export const PACK_GOD_CHANCE = 1 / 400;
@@ -320,4 +321,24 @@ export function pullPackCards(
       ? pullGodPackCards(pool, n, owned)
       : pullNormalPackCards(pool, n, owned, tierMods),
   };
+}
+
+/**
+ * Fixed demo pulls: one card each of T0–T5 + Paragon (in that order).
+ * Used by the free SFX test pack so every reveal/fling sound can be heard.
+ */
+export function pullSfxDemoCards(): PackPullResult {
+  const all = allCardSpecs();
+  const pick = (pred: (c: MonkeyCardSpec) => boolean) =>
+    all.find(pred) ?? null;
+  const cards: MonkeyCardSpec[] = [];
+  for (const tier of [0, 1, 2, 3, 4, 5] as const) {
+    const hit = pick(
+      (c) => !c.isParagon && maxPathTier(c.pathLevels) === tier,
+    );
+    if (hit) cards.push(hit);
+  }
+  const para = pick((c) => c.isParagon);
+  if (para) cards.push(para);
+  return { cards, godPack: false };
 }

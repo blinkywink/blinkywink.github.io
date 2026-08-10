@@ -103,7 +103,6 @@ export function HeroCollectionShelf({
     if (!focused) return;
     preloadPackSounds();
     preloadHeroEquipVo(focused.id);
-    playCardFocus();
   }, [focused]);
 
   function closeFocus() {
@@ -257,6 +256,7 @@ export function HeroCollectionShelf({
                 mode="preview"
                 onSelect={() => {
                   setEquipError(null);
+                  playCardFocus();
                   setFocused(hero);
                 }}
               />

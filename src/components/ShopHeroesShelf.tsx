@@ -33,7 +33,6 @@ export function ShopHeroesShelf() {
     if (!focused) return;
     preloadPackSounds();
     preloadHeroEquipVo(focused.id);
-    playCardFocus();
   }, [focused]);
 
   const owned = useMemo(
@@ -338,6 +337,7 @@ export function ShopHeroesShelf() {
               className={`pack-shelf__item${isEquipped ? " is-equipped-hero" : ""}`}
               onClick={() => {
                 setBuyError(null);
+                playCardFocus();
                 setFocused(hero);
               }}
             >

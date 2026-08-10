@@ -1,4 +1,4 @@
-/** Short UI / pack / hero SFX (trimmed BTD6-style clips). */
+/** Short UI / pack / hero SFX — Web Audio for low-latency play. */
 
 const SLICE_SRC = "/sounds/pack-slice.wav";
 const CARD_FOCUS_SRC = "/sounds/card-focus.wav";
@@ -20,8 +20,10 @@ const HERO_EQUIP_VO = new Set([
   "psi",
 ]);
 
-const primed = new Map<string, HTMLAudioElement>();
-let heroVoPlaying: HTMLAudioElement | null = null;
+const buffers = new Map<string, AudioBuffer>();
+const loading = new Map<string, Promise<AudioBuffer | null>>();
+let audioCtx: AudioContext | null = null;
+let heroVoSource: AudioBufferSourceNode | null = null;
 let masterVolume = loadVolume();
 const volumeListeners = new Set<(v: number) => void>();
 
@@ -68,105 +70,151 @@ function level(gain = 1): number {
   return masterVolume * clamp01(gain);
 }
 
-function ensure(src: string): HTMLAudioElement {
-  let el = primed.get(src);
-  if (!el) {
-    el = new Audio(src);
-    el.preload = "auto";
-    primed.set(src, el);
+function ctx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (!audioCtx) {
+      const AC =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") void audioCtx.resume();
+    return audioCtx;
+  } catch {
+    return null;
   }
-  return el;
 }
 
-function play(src: string, gain = 1): void {
+function decode(src: string): Promise<AudioBuffer | null> {
+  const hit = buffers.get(src);
+  if (hit) return Promise.resolve(hit);
+  const pending = loading.get(src);
+  if (pending) return pending;
+  const ac = ctx();
+  if (!ac) return Promise.resolve(null);
+  const job = fetch(src)
+    .then((r) => r.arrayBuffer())
+    .then((raw) => ac.decodeAudioData(raw.slice(0)))
+    .then((buf) => {
+      buffers.set(src, buf);
+      loading.delete(src);
+      return buf;
+    })
+    .catch(() => {
+      loading.delete(src);
+      return null;
+    });
+  loading.set(src, job);
+  return job;
+}
+
+function playBuffer(
+  src: string,
+  gain = 1,
+  opts?: { replaceHero?: boolean },
+): void {
   if (typeof window === "undefined") return;
   const vol = level(gain);
   if (vol <= 0.001) return;
-  try {
-    const base = ensure(src);
-    const a = base.cloneNode(true) as HTMLAudioElement;
-    a.volume = vol;
-    a.currentTime = 0;
-    void a.play().catch(() => {
-      /* autoplay / gesture policy */
-    });
-  } catch {
-    /* ignore */
+  const ac = ctx();
+  if (!ac) return;
+
+  const start = (buf: AudioBuffer) => {
+    try {
+      if (opts?.replaceHero && heroVoSource) {
+        try {
+          heroVoSource.stop();
+        } catch {
+          /* already stopped */
+        }
+        heroVoSource = null;
+      }
+      const node = ac.createBufferSource();
+      const g = ac.createGain();
+      g.gain.value = vol;
+      node.buffer = buf;
+      node.connect(g);
+      g.connect(ac.destination);
+      if (opts?.replaceHero) {
+        heroVoSource = node;
+        node.onended = () => {
+          if (heroVoSource === node) heroVoSource = null;
+        };
+      }
+      node.start(0);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const buf = buffers.get(src);
+  if (buf) {
+    start(buf);
+    return;
   }
+  // First hit may wait one decode — kick it now; subsequent plays are instant.
+  void decode(src).then((decoded) => {
+    if (decoded) start(decoded);
+  });
+}
+
+function warm(src: string): void {
+  void decode(src);
 }
 
 /** Warm buffers so first play isn't delayed. */
 export function preloadPackSounds(): void {
   if (typeof window === "undefined") return;
-  ensure(SLICE_SRC);
-  ensure(CARD_FOCUS_SRC);
-  ensure(PACK_RARE_SRC);
-  ensure(BUY_SRC);
-  ensure(WHOOSH_SRC);
+  ctx();
+  warm(SLICE_SRC);
+  warm(CARD_FOCUS_SRC);
+  warm(PACK_RARE_SRC);
+  warm(BUY_SRC);
+  warm(WHOOSH_SRC);
 }
 
 export function preloadHeroEquipVo(heroId?: string): void {
   if (typeof window === "undefined") return;
+  ctx();
   if (heroId) {
     const id = heroId.toLowerCase();
-    if (HERO_EQUIP_VO.has(id)) ensure(`/sounds/heroes/${id}.wav`);
+    if (HERO_EQUIP_VO.has(id)) warm(`/sounds/heroes/${id}.wav`);
     return;
   }
-  for (const id of HERO_EQUIP_VO) {
-    ensure(`/sounds/heroes/${id}.wav`);
-  }
+  for (const id of HERO_EQUIP_VO) warm(`/sounds/heroes/${id}.wav`);
 }
 
 /** Pack-cut / open slash. */
 export function playPackSlice(): void {
-  play(SLICE_SRC, 1);
+  playBuffer(SLICE_SRC, 1);
 }
 
-/** Monkey / hero card opening into fullscreen focus. */
+/** Monkey / hero / shop-pack opening into focus. */
 export function playCardFocus(): void {
-  play(CARD_FOCUS_SRC, 1);
+  playBuffer(CARD_FOCUS_SRC, 1);
 }
 
 /** T5 / Paragon revealed in a pack pull. */
 export function playPackRare(): void {
-  play(PACK_RARE_SRC, 1);
+  playBuffer(PACK_RARE_SRC, 1);
 }
 
 /** Successful Cash purchase (packs, shop, marketplace, heroes). */
 export function playBuy(): void {
-  play(BUY_SRC, 1);
+  playBuffer(BUY_SRC, 1);
 }
 
 /** Whoosh when flinging a revealed pack card away. */
 export function playCardWhoosh(): void {
-  play(WHOOSH_SRC, 1);
+  playBuffer(WHOOSH_SRC, 1);
 }
 
 /** Hero place/equip voice line (first line only). No-op if missing (e.g. Silas). */
 export function playHeroEquip(heroId: string): void {
-  if (typeof window === "undefined") return;
   const id = heroId.trim().toLowerCase();
   if (!HERO_EQUIP_VO.has(id)) return;
-  const src = `/sounds/heroes/${id}.wav`;
-  const vol = level(1);
-  if (vol <= 0.001) return;
-  try {
-    if (heroVoPlaying) {
-      heroVoPlaying.pause();
-      heroVoPlaying = null;
-    }
-    const base = ensure(src);
-    const a = base.cloneNode(true) as HTMLAudioElement;
-    a.volume = vol;
-    a.currentTime = 0;
-    heroVoPlaying = a;
-    a.addEventListener("ended", () => {
-      if (heroVoPlaying === a) heroVoPlaying = null;
-    });
-    void a.play().catch(() => {
-      /* ignore */
-    });
-  } catch {
-    /* ignore */
-  }
+  playBuffer(`/sounds/heroes/${id}.wav`, 1, { replaceHero: true });
 }

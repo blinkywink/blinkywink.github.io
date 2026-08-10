@@ -1,4 +1,5 @@
 import type { PackDef } from "../lib/packTheme";
+import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { BoosterPack } from "./BoosterPack";
 
 type Props = {
@@ -23,7 +24,11 @@ export function BonusPackPicker({ open, options, onPick }: Props) {
               key={pack.id}
               type="button"
               className="bonus-pick__item"
-              onClick={() => onPick(pack)}
+              onClick={() => {
+                preloadPackSounds();
+                playCardFocus();
+                onPick(pack);
+              }}
             >
               <BoosterPack
                 pack={pack}

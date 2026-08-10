@@ -152,7 +152,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   useEffect(() => {
     if (!focused) return;
     preloadPackSounds();
-    playCardFocus();
   }, [focused]);
 
   useEffect(() => {
@@ -430,7 +429,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
-                          onSelect={() => setFocused(card)}
+                          onSelect={() => {
+                            playCardFocus();
+                            setFocused(card);
+                          }}
                         />
                       ))}
                     </div>
@@ -619,7 +621,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 mode="preview"
                 owned
                 highlight={highlightIds.has(card.id)}
-                onSelect={() => setFocused(card)}
+                onSelect={() => {
+                  playCardFocus();
+                  setFocused(card);
+                }}
               />
             ))}
           </div>
@@ -682,6 +687,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               highlight={highlightIds.has(card.id)}
               onSelect={() => {
                 if (!isOwned) return;
+                playCardFocus();
                 setFocused(card);
               }}
             />
