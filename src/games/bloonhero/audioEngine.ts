@@ -92,6 +92,25 @@ export class HeroAudio {
     );
   }
 
+  /** Soft tick when pressing a lane with no note in window. */
+  playEmptyTap(): void {
+    const c = this.ensure();
+    const master = this.master;
+    if (!c || !master) return;
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = 180;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.06, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t);
+    osc.stop(t + 0.07);
+  }
+
   startDrums(bpm: number): void {
     const c = this.ensure();
     if (!c || !this.master) return;
