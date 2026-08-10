@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "download-assets": "tsx scripts/download-btd6-assets.ts",
     "download-assets:force": "tsx scripts/download-btd6-assets.ts --force",
-  "download-heroes": "tsx scripts/download-btd6-heroes.ts",
-  "download-heroes:force": "tsx scripts/download-btd6-heroes.ts --force",
+    "download-heroes": "tsx scripts/download-btd6-heroes.ts",
+    "download-heroes:force": "tsx scripts/download-btd6-heroes.ts --force",
     "fetch-tower-costs": "tsx scripts/fetch-tower-costs.ts",
     "prepare-card-assets": "tsx scripts/prepare-card-assets.ts",
     "prepare-card-assets:all": "tsx scripts/prepare-card-assets.ts all"
@@ -24,6 +24,7 @@
     "sharp": "^0.35.3"
   },
   "devDependencies": {
+    "@tonejs/midi": "^2.0.28",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

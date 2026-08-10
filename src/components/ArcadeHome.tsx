@@ -14,7 +14,8 @@ export type GameId =
   | "bloonle"
   | "camodetection"
   | "bloonssweeper"
-  | "bananacatch";
+  | "bananacatch"
+  | "bloonhero";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -310,6 +311,31 @@ function BananaCatchPreview() {
   );
 }
 
+function BloonHeroPreview() {
+  return (
+    <div className="game-preview game-preview--hero" aria-hidden>
+      {[0, 1, 2, 3].map((i) => (
+        <span key={i} className="game-preview__hero-lane">
+          <img
+            src={
+              [
+                "/images/bloons/red-bloon.webp",
+                "/images/bloons/blue-bloon.webp",
+                "/images/bloons/green-bloon.webp",
+                "/images/bloons/pink-bloon.webp",
+              ][i]
+            }
+            alt=""
+            draggable={false}
+            style={{ ["--d" as string]: `${0.2 + i * 0.15}s` }}
+          />
+          <i />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function MapPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -412,6 +438,13 @@ export function ArcadeHome({
       blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
       label: "Banana Catch, Endless banana catch with escalating bloons",
       preview: <BananaCatchPreview />,
+    },
+    {
+      id: "bloonhero" as const,
+      title: "BLOON HERO",
+      blurb: "Four-lane rhythm — hit D F J K when the bloons land.",
+      label: "Bloon Hero, Guitar Hero style bloon rhythm game",
+      preview: <BloonHeroPreview />,
     },
     {
       id: "bloonssweeper" as const,
