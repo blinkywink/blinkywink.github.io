@@ -338,57 +338,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             ) : null}
 
-            {state.recentPlays.length > 0 || state.recentLoading ? (
-              <section className="hero-recent" aria-label="Recently played">
-                <h3>Recently played</h3>
-                {state.recentLoading && !state.recentPlays.length ? (
-                  <p className="hero-browse__loading">Loading recent picks…</p>
-                ) : (
-                  <ul className="hero-results hero-results--recent">
-                    {state.recentPlays.map((row) => {
-                      const cover = enchorArtUrl(row.albumArtMd5);
-                      return (
-                        <li key={`${row.md5}-${row.id}`}>
-                          <button
-                            type="button"
-                            className="hero-results__item"
-                            onClick={() => void pickSong(recentPlayToHit(row))}
-                            disabled={state.phase === "loading"}
-                          >
-                            <span
-                              className="hero-results__art"
-                              style={
-                                cover
-                                  ? ({
-                                      backgroundImage: `url(${cover})`,
-                                    } as CSSProperties)
-                                  : undefined
-                              }
-                              aria-hidden
-                            />
-                            <span className="hero-results__meta">
-                              <strong>
-                                {row.artist}, {row.songName}
-                              </strong>
-                              <span>
-                                played by {row.username}
-                                {row.songLength
-                                  ? ` · ${Math.round(row.songLength / 1000)}s`
-                                  : ""}
-                              </span>
-                              <span className="hero-results__played">
-                                {relativePlayAge(row.playedAt)}
-                              </span>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            ) : null}
-
             {state.results.length > 0 ? (
               <h3 className="hero-browse__results-title">Search results</h3>
             ) : null}
@@ -456,6 +405,58 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 );
               })}
             </ul>
+
+            {state.recentPlays.length > 0 || state.recentLoading ? (
+              <section className="hero-recent" aria-label="Recently played">
+                <h3>Recently played</h3>
+                {state.recentLoading && !state.recentPlays.length ? (
+                  <p className="hero-browse__loading">Loading recent picks…</p>
+                ) : (
+                  <ul className="hero-results hero-results--recent">
+                    {state.recentPlays.map((row) => {
+                      const cover = enchorArtUrl(row.albumArtMd5);
+                      return (
+                        <li key={`${row.md5}-${row.id}`}>
+                          <button
+                            type="button"
+                            className="hero-results__item"
+                            onClick={() => void pickSong(recentPlayToHit(row))}
+                            disabled={state.phase === "loading"}
+                          >
+                            <span
+                              className="hero-results__art"
+                              style={
+                                cover
+                                  ? ({
+                                      backgroundImage: `url(${cover})`,
+                                    } as CSSProperties)
+                                  : undefined
+                              }
+                              aria-hidden
+                            />
+                            <span className="hero-results__meta">
+                              <strong>
+                                {row.artist}, {row.songName}
+                              </strong>
+                              <span>
+                                played by {row.username}
+                                {row.songLength
+                                  ? ` · ${Math.round(row.songLength / 1000)}s`
+                                  : ""}
+                              </span>
+                              <span className="hero-results__played">
+                                {relativePlayAge(row.playedAt)}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            ) : null}
+
             <button type="button" className="btn btn--ghost" onClick={onBack}>
               Games
             </button>
