@@ -207,7 +207,7 @@ export function playPackRare(): void {
 
 /** Paragon revealed in a pack pull (Dark Knight upgrade sting). */
 export function playPackParagon(): void {
-  playBuffer(PACK_PARAGON_SRC, 1);
+  playBuffer(PACK_PARAGON_SRC, 1.2);
 }
 
 /** Successful Cash purchase (packs, shop, marketplace, heroes). */
