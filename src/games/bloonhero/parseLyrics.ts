@@ -280,7 +280,7 @@ function buildCues(
 
   /** If the next syllable is far away, don't hold this word until it lands. */
   const BREAK_GAP_SEC = 1.0;
-  const HOLD_AFTER_WORD_SEC = 2.2;
+  const HOLD_AFTER_WORD_SEC = 3.0;
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i]!;
     const next = cues[i + 1];

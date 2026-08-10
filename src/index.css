@@ -803,6 +803,7 @@ body:has(.zoomed-page) {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #f0f0f4;
+  text-decoration: none;
   background: rgba(255, 255, 255, 0.06);
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.22);
   cursor: pointer;
