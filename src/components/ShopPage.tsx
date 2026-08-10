@@ -6,7 +6,6 @@ import {
   formatShopCountdown,
   msUntilShopRotation,
   packPrice,
-  sfxTestPack,
   type PackDef,
 } from "../lib/packTheme";
 import type { MonkeyCardSpec } from "../lib/pathCombos";
@@ -51,7 +50,6 @@ export function ShopPage({ onPackFinished }: Props) {
   const { remaining, shopDay } = useShopClock();
   const featured = useMemo(() => featuredShopPacks(shopDay), [shopDay]);
   const categories = useMemo(() => allCategoryPacks(), []);
-  const sfxTest = useMemo(() => sfxTestPack(), []);
 
   useEffect(() => {
     preloadPackSounds();
@@ -108,11 +106,6 @@ export function ShopPage({ onPackFinished }: Props) {
           </p>
         </div>
         <div className="pack-shelf__row">{featured.map(renderPackButton)}</div>
-
-        <div className="pack-shelf__head pack-shelf__head--sub">
-          <h3 className="section-label">SFX test</h3>
-        </div>
-        <div className="pack-shelf__row">{renderPackButton(sfxTest)}</div>
 
         <div className="pack-shelf__head pack-shelf__head--sub">
           <h3 className="section-label">Categories</h3>

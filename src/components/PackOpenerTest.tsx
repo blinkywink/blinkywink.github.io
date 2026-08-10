@@ -9,11 +9,10 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
-import { pullPackCards, pullSfxDemoCards, duplicateCashForCard } from "../lib/packPull";
+import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
 import {
   btd6Pack,
-  isSfxTestPack,
   packPrice,
   type PackDef,
 } from "../lib/packTheme";
@@ -535,9 +534,7 @@ export function PackOpenerTest({
       setClips(splitClips(a, b));
       setPhaseBoth("sliced");
       const mods = packPullMods();
-      const result = isSfxTestPack(pack)
-        ? pullSfxDemoCards()
-        : pullPackCards(pool, pack.cardCount, owned, mods);
+      const result = pullPackCards(pool, pack.cardCount, owned, mods);
       if (result.extraCard) onObynExtra();
       setGodPack(result.godPack);
       later(() => beginDraw(result.cards, result.godPack), SLICE_REVEAL_MS);

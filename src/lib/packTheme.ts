@@ -81,26 +81,6 @@ export const PACK_PRICES = {
   category: 1200,
 } as const;
 
-/** Free shop pack that always pulls one card of each tier (SFX debugging). */
-export const SFX_TEST_PACK_ID = "sfx-test";
-
-export function sfxTestPack(): PackDef {
-  return {
-    id: SFX_TEST_PACK_ID,
-    kind: "btd6",
-    title: "SFX TEST",
-    subtitle: "FREE · 1 OF EACH",
-    tower: null,
-    category: null,
-    cardCount: 7,
-    coverArt: BTD6_PACK_ART,
-  };
-}
-
-export function isSfxTestPack(pack: PackDef): boolean {
-  return pack.id === SFX_TEST_PACK_ID;
-}
-
 export function btd6Pack(): PackDef {
   return {
     id: "btd6",
@@ -116,7 +96,6 @@ export function btd6Pack(): PackDef {
 
 /** Cash price in the shop. */
 export function packPrice(pack: PackDef): number {
-  if (isSfxTestPack(pack)) return 0;
   return PACK_PRICES[pack.kind];
 }
 
