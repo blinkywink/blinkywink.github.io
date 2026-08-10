@@ -10,14 +10,14 @@ export const BFB_IMAGE = "/images/bloons/bfb.webp";
 /** Starting lives, each bloon hit costs one. */
 export const CATCH_LIVES = 3;
 
-/** Cash awarded per banana collected during play. */
-export const CASH_PER_BANANA = 8;
+/** Fewer bananas, each one pays more. */
+export const CASH_PER_BANANA = 35;
 
 /**
  * Endless run, dying after this many bananas still counts as a “clear”
  * for packs / hero XP / featured bonus.
  */
-export const CATCH_CLEAR_BANANAS = 40;
+export const CATCH_CLEAR_BANANAS = 25;
 
 export const PLAYER_WIDTH = 100;
 export const PLAYER_HEIGHT = 100;
@@ -40,37 +40,36 @@ export const KIND_ASPECT: Record<DropKind, number> = {
   blue: 53 / 68,
   green: 57 / 72,
   pink: 63 / 80,
+  // Landscape source art; rendered rotated 90° CW so the nose points down.
   moab: 230 / 150,
   bfb: 340 / 240,
 };
 
 /**
- * Max display dimension (px). Ordinary bloons share one scale so they read as
- * the same size class; MOAB/BFB are clearly bigger.
+ * Max display dimension (px). Ordinary bloons are small; blimps dominate.
  */
 export const KIND_SCALE: Record<DropKind, number> = {
-  banana: 54,
-  red: 76,
-  blue: 76,
-  green: 76,
-  pink: 76,
-  moab: 132,
-  bfb: 170,
+  banana: 44,
+  red: 22,
+  blue: 22,
+  green: 22,
+  pink: 22,
+  moab: 240,
+  bfb: 300,
 };
 
 /**
- * Fixed fall speed (px/s) per kind. Ordinary bloons follow relative BTD6
- * ranking (red < blue < green < pink), compressed so pink stays playable.
- * MOAB/BFB are slower tanks.
+ * Fixed fall speed (px/s) per kind. Easier pacing than the arcade peak.
+ * Rank: red < blue < green < pink; blimps drift.
  */
 export const KIND_SPEED: Record<DropKind, number> = {
-  banana: 188,
-  red: 165,
-  blue: 230,
-  green: 295,
-  pink: 390,
-  moab: 148,
-  bfb: 118,
+  banana: 155,
+  red: 115,
+  blue: 150,
+  green: 185,
+  pink: 235,
+  moab: 95,
+  bfb: 78,
 };
 
 /** Damage to hearts on contact. */
@@ -87,6 +86,7 @@ export const KIND_DAMAGE: Record<DropKind, number> = {
 /**
  * Hit ellipse radii as a fraction of half the drawn width/height
  * (1 = touches the image box edge). Tuned to opaque balloon/blimp bodies.
+ * For moab/bfb, hit axes use the post-90° visual box (see hitsPlayer).
  */
 export const KIND_HIT: Record<
   DropKind,
@@ -97,27 +97,36 @@ export const KIND_HIT: Record<
   blue: { shape: "circle", rx: 0.9, ry: 0.9 },
   green: { shape: "circle", rx: 0.9, ry: 0.9 },
   pink: { shape: "circle", rx: 0.9, ry: 0.9 },
-  moab: { shape: "ellipse", rx: 0.92, ry: 0.78 },
-  bfb: { shape: "ellipse", rx: 0.92, ry: 0.8 },
+  moab: { shape: "ellipse", rx: 0.78, ry: 0.92 },
+  bfb: { shape: "ellipse", rx: 0.8, ry: 0.92 },
 };
+
+/** Blimps face nose-down (wiki art is sideways). */
+export const BLIMP_BASE_ROT = 90;
 
 export const PLAYER_LERP = 14;
 
-export const SPAWN_BANANA_MS_START = 780;
-export const SPAWN_BANANA_MS_MIN = 400;
-export const SPAWN_HAZARD_MS_START = 980;
-export const SPAWN_HAZARD_MS_MIN = 280;
+/** Scarcer bananas. */
+export const SPAWN_BANANA_MS_START = 1200;
+export const SPAWN_BANANA_MS_MIN = 720;
+/** Gentler hazard pressure. */
+export const SPAWN_HAZARD_MS_START = 1300;
+export const SPAWN_HAZARD_MS_MIN = 480;
 
 /** Seconds until each hazard tier can start spawning. */
-export const BLUE_UNLOCK_S = 6;
-export const GREEN_UNLOCK_S = 14;
-export const PINK_UNLOCK_S = 24;
-export const MOAB_UNLOCK_S = 32;
-export const BFB_UNLOCK_S = 44;
+export const BLUE_UNLOCK_S = 10;
+export const GREEN_UNLOCK_S = 20;
+export const PINK_UNLOCK_S = 32;
+export const MOAB_UNLOCK_S = 42;
+export const BFB_UNLOCK_S = 58;
 
 export function drawSizeFor(kind: DropKind): { w: number; h: number } {
   const scale = KIND_SCALE[kind];
   const aspect = KIND_ASPECT[kind];
   if (aspect >= 1) return { w: scale, h: scale / aspect };
   return { w: scale * aspect, h: scale };
+}
+
+export function isBlimp(kind: DropKind): boolean {
+  return kind === "moab" || kind === "bfb";
 }

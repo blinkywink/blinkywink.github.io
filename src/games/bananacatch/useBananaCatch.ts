@@ -4,6 +4,7 @@ import { awardCoins } from "../../lib/awardCoins";
 import {
   BFB_UNLOCK_S,
   BLUE_UNLOCK_S,
+  BLIMP_BASE_ROT,
   CATCH_CLEAR_BANANAS,
   CATCH_LIVES,
   CASH_PER_BANANA,
@@ -22,6 +23,7 @@ import {
   SPAWN_HAZARD_MS_MIN,
   SPAWN_HAZARD_MS_START,
   drawSizeFor,
+  isBlimp,
   type DropKind,
 } from "./config";
 
@@ -72,17 +74,20 @@ function makeDrop(
   if (kind === "banana") {
     rot = rand(-55, 55);
     spin = rand(-40, 40);
-  } else if (kind === "moab" || kind === "bfb") {
-    rot = rand(-10, 10);
-    spin = rand(-8, 8);
+  } else if (isBlimp(kind)) {
+    // Wiki sprites face sideways; 90° CW puts the nose pointing down.
+    rot = BLIMP_BASE_ROT;
+    spin = 0;
   }
 
-  const halfW = w * 0.5;
+  // After 90° CW the visual AABB is swapped; keep them inside the field.
+  const spanW = isBlimp(kind) ? h : w;
+  const halfW = spanW * 0.5;
   return {
     id: nextId(),
     kind,
     x: rand(halfW, Math.max(halfW, fieldW - halfW)),
-    y: -h,
+    y: -(isBlimp(kind) ? w : h),
     vy,
     w,
     h,
@@ -100,14 +105,14 @@ function pickHazard(elapsed: number): DropKind {
   if (elapsed >= MOAB_UNLOCK_S) unlocked.push("moab");
   if (elapsed >= BFB_UNLOCK_S) unlocked.push("bfb");
 
-  // Weight toward scarier stuff as more tiers unlock
+  // Weight toward mid tiers; blimps stay rarer
   const weights = unlocked.map((k) => {
-    if (k === "bfb") return 1.4;
-    if (k === "moab") return 1.8;
-    if (k === "pink") return 1.6;
-    if (k === "green") return 1.35;
+    if (k === "bfb") return 0.7;
+    if (k === "moab") return 0.95;
+    if (k === "pink") return 1.15;
+    if (k === "green") return 1.25;
     if (k === "blue") return 1.2;
-    return 1;
+    return 1.35;
   });
   const total = weights.reduce((a, b) => a + b, 0);
   let roll = Math.random() * total;
@@ -127,17 +132,19 @@ function hitsPlayer(
   d: Drop,
 ): boolean {
   const hit = KIND_HIT[d.kind];
+  // Blimps are drawn landscape then rotated 90° CW → swap axes for the hit.
+  const boxW = isBlimp(d.kind) ? d.h : d.w;
+  const boxH = isBlimp(d.kind) ? d.w : d.h;
   let rx: number;
   let ry: number;
   if (hit.shape === "circle") {
-    const r = (Math.min(d.w, d.h) / 2) * hit.rx;
+    const r = (Math.min(boxW, boxH) / 2) * hit.rx;
     rx = r;
     ry = r;
   } else {
-    rx = (d.w / 2) * hit.rx;
-    ry = (d.h / 2) * hit.ry;
+    rx = (boxW / 2) * hit.rx;
+    ry = (boxH / 2) * hit.ry;
   }
-  // Closest point on player AABB to drop center
   const cx = d.x;
   const cy = d.y;
   const nearestX = Math.max(playerLeft, Math.min(cx, playerLeft + playerW));
@@ -275,14 +282,11 @@ export function useBananaCatch() {
       }
       if (hazardTimerRef.current <= 0 && fieldW > 0) {
         spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
-        const burstChance = 0.12 + Math.min(0.45, ramp * 0.28);
+        const burstChance = 0.06 + Math.min(0.22, ramp * 0.14);
         if (Math.random() < burstChance) {
           spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
         }
-        if (ramp > 0.85 && Math.random() < 0.22) {
-          spawn.push(makeDrop("red", fieldW, nextId));
-        }
-        hazardTimerRef.current = hazardInterval * rand(0.7, 1.05);
+        hazardTimerRef.current = hazardInterval * rand(0.85, 1.15);
       }
 
       const lerp = 1 - Math.exp(-PLAYER_LERP * dt);
@@ -304,7 +308,8 @@ export function useBananaCatch() {
       for (const d of [...s.drops, ...spawn]) {
         const y = d.y + d.vy * dt;
         const rot = d.rot + d.spin * dt;
-        if (y - d.h / 2 > fieldH + 40) continue;
+        const visualH = isBlimp(d.kind) ? d.w : d.h;
+        if (y - visualH / 2 > fieldH + 40) continue;
 
         if (hitsPlayer(playerLeft, playerTop, hitW, hitH, { ...d, y })) {
           if (d.kind === "banana") {
