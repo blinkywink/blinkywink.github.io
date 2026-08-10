@@ -18,7 +18,7 @@ import {
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
-import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardFocus, playHeroEquip, preloadHeroEquipVo, preloadPackSounds } from "../lib/packSounds";
 import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
@@ -32,6 +32,7 @@ export function ShopHeroesShelf() {
   useEffect(() => {
     if (!focused) return;
     preloadPackSounds();
+    preloadHeroEquipVo(focused.id);
     playCardFocus();
   }, [focused]);
 
@@ -90,6 +91,8 @@ export function ShopHeroesShelf() {
     try {
       const result = await buyHero(focused.id, { expectedCost: price });
       playBuy();
+      // First unlock auto-equips — play place line then too.
+      if (!mine && owned.size === 0) playHeroEquip(focused.id);
       setCoinBalance(result.coins);
       await refreshProfile();
       const nextLevel = result.heroLevels[focused.id] ?? (mine ? level + 1 : 1);
@@ -124,6 +127,7 @@ export function ShopHeroesShelf() {
       const result = await equipHero(already ? null : focused.id);
       setCoinBalance(result.coins);
       await refreshProfile();
+      if (!already) playHeroEquip(focused.id);
       setStatus(
         already
           ? `${focused.name} unequipped.`

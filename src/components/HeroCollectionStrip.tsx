@@ -25,7 +25,7 @@ import {
   normalizeOwnedHeroIds,
   shoppableHeroes,
 } from "../lib/profileHeroes";
-import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
+import { playCardFocus, playHeroEquip, preloadHeroEquipVo, preloadPackSounds } from "../lib/packSounds";
 import { CashAmount } from "./CurrencyChip";
 
 type Levels = Record<string, number> | null | undefined;
@@ -102,6 +102,7 @@ export function HeroCollectionShelf({
   useEffect(() => {
     if (!focused) return;
     preloadPackSounds();
+    preloadHeroEquipVo(focused.id);
     playCardFocus();
   }, [focused]);
 
@@ -125,6 +126,7 @@ export function HeroCollectionShelf({
       const result = await equipHero(already ? null : focused.id);
       setCoinBalance(result.coins);
       await refreshProfile();
+      if (!already) playHeroEquip(focused.id);
       setStatus(
         already
           ? `${focused.name} unequipped.`

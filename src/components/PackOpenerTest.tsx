@@ -17,7 +17,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
-import { playBuy, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -416,12 +416,8 @@ export function PackOpenerTest({
       setPhaseBoth("enter");
       awardDupCashForIndex(i);
       const card = pullsRef.current[i];
-      if (card) {
-        if (card.isParagon || maxPathTier(card.pathLevels) >= 5) {
-          playPackRare();
-        } else if (maxPathTier(card.pathLevels) === 4) {
-          playPackT4();
-        }
+      if (card && (card.isParagon || maxPathTier(card.pathLevels) >= 5)) {
+        playPackRare();
       }
       later(() => {
         if (phaseRef.current !== "enter") return;
