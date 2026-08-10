@@ -1,9 +1,6 @@
 /** Chorus Encore (enchor.us) search + chart download. */
 
-import {
-  PLAYABLE_INSTRUMENTS,
-  type PlayableInstrument,
-} from "./instruments";
+import type { PlayableInstrument } from "./instruments";
 
 export type EnchorHit = {
   name: string;
@@ -21,6 +18,8 @@ export type EnchorHit = {
   modchart?: boolean;
   notesData?: {
     instruments: string[];
+    hasVocals?: boolean;
+    hasLyrics?: boolean;
     noteCounts?: { instrument: string; difficulty: string; count: number }[];
   } | null;
   albumArtMd5?: string | null;
@@ -57,6 +56,10 @@ export function expertNotesFor(
   hit: EnchorHit,
   instrument: PlayableInstrument,
 ): number | null {
+  if (instrument === "vocals") {
+    // Encore usually flags vocals with hasVocals, not noteCounts.
+    return hit.notesData?.hasVocals ? 1 : null;
+  }
   const counts = hit.notesData?.noteCounts;
   if (!counts?.length) return null;
   const expert = counts.find(
@@ -65,27 +68,25 @@ export function expertNotesFor(
   return expert?.count ?? null;
 }
 
-/** @deprecated use expertNotesFor(hit, "guitar") */
-export function expertGuitarNotes(hit: EnchorHit): number | null {
-  return expertNotesFor(hit, "guitar");
-}
-
+/** Hits that offer Guitar + Vocals. */
 export function playableInstrumentsOnHit(
   hit: EnchorHit,
 ): PlayableInstrument[] {
   const out: PlayableInstrument[] = [];
-  for (const inst of PLAYABLE_INSTRUMENTS) {
-    const n = expertNotesFor(hit, inst);
-    if (n != null && n > 0) out.push(inst);
-  }
+  const guitar = expertNotesFor(hit, "guitar");
+  if (guitar != null && guitar > 0) out.push("guitar");
+  if (hit.notesData?.hasVocals) out.push("vocals");
   return out;
 }
 
-/** Keep packs we can play on guitar, bass, or drums Expert. */
+/** Only guitar charts that also have a vocal track. */
 export function isPlayableEnchorHit(hit: EnchorHit): boolean {
   if (hit.modchart) return false;
   if (!hit.notesData) return false;
-  if (!playableInstrumentsOnHit(hit).length) return false;
+  const instruments = playableInstrumentsOnHit(hit);
+  if (!instruments.includes("guitar") || !instruments.includes("vocals")) {
+    return false;
+  }
   for (const issue of hit.folderIssues ?? []) {
     if (BLOCKED_FOLDER_ISSUES.has(issue.folderIssue)) return false;
   }
@@ -96,12 +97,13 @@ export async function searchEnchor(
   query: string,
   opts?: { page?: number; perPage?: number },
 ): Promise<EnchorSearchResponse> {
+  // Over-fetch then filter — Encore doesn't always expose hasVocals as a query flag.
   const body = {
     search: query.trim(),
-    instrument: null,
+    instrument: "guitar",
     difficulty: "expert",
     page: opts?.page ?? 1,
-    per_page: opts?.perPage ?? 40,
+    per_page: opts?.perPage ?? 60,
   };
   const res = await fetch(`${API}/search`, {
     method: "POST",

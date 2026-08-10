@@ -438,8 +438,8 @@ export function ArcadeHome({
     {
       id: "bloonhero" as const,
       title: "BLOON HERO",
-      blurb: "Search Encore charts, five keys D F J K L, audio packed in the chart.",
-      label: "Bloon Hero, Search Encore Clone Hero charts and play with D F J K L",
+      blurb: "Encore charts with Guitar + Vocals — pick one, play D F J K L.",
+      label: "Bloon Hero, Search Encore charts with Guitar and Vocals, play with D F J K L",
       preview: <BloonHeroPreview />,
     },
     {

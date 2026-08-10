@@ -66,7 +66,7 @@ export type HeroState = {
   /** Sparse UI clock — not used for note motion. */
   songTime: number;
   volume: number;
-  instrument: PlayableInstrument;
+  instrument: PlayableInstrument | null;
   availableInstruments: PlayableInstrument[];
 };
 
@@ -112,7 +112,7 @@ const INITIAL: HeroState = {
   duration: 0,
   songTime: 0,
   volume: DEFAULT_VOLUME,
-  instrument: "guitar",
+  instrument: null,
   availableInstruments: [],
 };
 
@@ -272,7 +272,7 @@ export function useBloonHero() {
         results: res.data ?? [],
         error:
           res.data.length === 0
-            ? "No playable guitar Expert charts found."
+            ? "No charts with both Guitar and Vocals found."
             : null,
       }));
     } catch (e) {
@@ -347,7 +347,7 @@ export function useBloonHero() {
           artUrl: loaded.artUrl,
           noteCount: loaded.chart.notes.length,
           duration: durationRef.current,
-          instrument: loaded.chart.instrument,
+          instrument: null,
           availableInstruments: loaded.availableInstruments,
           error: null,
         }));
@@ -367,7 +367,6 @@ export function useBloonHero() {
     const song = songRef.current;
     if (!song || stateRef.current.phase !== "ready") return;
     if (!song.availableInstruments.includes(instrument)) return;
-    if (song.chart.instrument === instrument) return;
     try {
       const chart = song.setInstrument(instrument);
       chartEndRef.current = chart.duration;
@@ -386,6 +385,7 @@ export function useBloonHero() {
         instrument: chart.instrument,
         noteCount: chart.notes.length,
         duration: durationRef.current,
+        error: null,
       }));
     } catch (e) {
       setState((prev) => ({
@@ -474,6 +474,17 @@ export function useBloonHero() {
     const song = songRef.current;
     const audio = audioRef.current;
     if (!song || !audio) return;
+    if (!stateRef.current.instrument) {
+      setState((prev) => ({
+        ...prev,
+        error: "Pick Guitar or Vocals first",
+      }));
+      return;
+    }
+    // Ensure chart matches selection
+    if (song.chart.instrument !== stateRef.current.instrument) {
+      song.setInstrument(stateRef.current.instrument);
+    }
     pendingCashRef.current = 0;
     attemptedRef.current = 0;
     hitsRef.current = 0;

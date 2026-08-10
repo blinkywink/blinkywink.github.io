@@ -10,14 +10,11 @@ import { listMidiInstruments, parseMidiChart } from "./parseMidiChart";
 
 export type LoadedSong = {
   chart: ParsedChart;
-  /** Object URL for song audio (opus/ogg/mp3). Revoke when done. */
   audioUrl: string;
-  /** Object URL for album art if present. */
   artUrl: string | null;
   delayMs: number;
   ini: Record<string, string>;
   availableInstruments: PlayableInstrument[];
-  /** Re-parse notes for another instrument without re-downloading. */
   setInstrument: (instrument: PlayableInstrument) => ParsedChart;
 };
 
@@ -55,9 +52,7 @@ function parseIni(text: string): Record<string, string> {
       continue;
     const eq = line.indexOf("=");
     if (eq < 0) continue;
-    const key = line.slice(0, eq).trim().toLowerCase();
-    const val = line.slice(eq + 1).trim();
-    out[key] = val;
+    out[line.slice(0, eq).trim().toLowerCase()] = line.slice(eq + 1).trim();
   }
   return out;
 }
@@ -130,38 +125,57 @@ export async function loadSongFromSng(
     files.get("notes.midi") ??
     [...files.entries()].find(([n]) => /\.mid(i)?$/i.test(n))?.[1];
 
-  let availableInstruments: PlayableInstrument[] = [];
-  let parseFor: (instrument: PlayableInstrument) => ParsedChart;
+  // Chart + MIDI often coexist — guitar in .chart, vocals only in .mid.
+  const fromChart = chartBytes
+    ? listChartInstruments(new TextDecoder("utf-8").decode(chartBytes))
+    : [];
+  const fromMid = midBytes ? listMidiInstruments(midBytes) : [];
+  const availableInstruments = PLAYABLE_INSTRUMENTS.filter(
+    (inst) => fromChart.includes(inst) || fromMid.includes(inst),
+  );
 
-  if (chartBytes) {
-    const chartText = new TextDecoder("utf-8").decode(chartBytes);
-    availableInstruments = listChartInstruments(chartText);
-    parseFor = (instrument) => {
-      const chart = parseChartFile(chartText, instrument);
-      if (ini.name) chart.name = ini.name;
-      if (ini.artist) chart.artist = ini.artist;
-      return chart;
-    };
-  } else if (midBytes) {
-    availableInstruments = listMidiInstruments(midBytes);
-    parseFor = (instrument) => {
+  if (!availableInstruments.length) {
+    throw new Error("No guitar or vocals track found in this pack");
+  }
+
+  const chartText = chartBytes
+    ? new TextDecoder("utf-8").decode(chartBytes)
+    : null;
+
+  const parseFor = (instrument: PlayableInstrument): ParsedChart => {
+    // Prefer native source per instrument.
+    if (instrument === "vocals") {
+      if (!midBytes) throw new Error("Vocals need a notes.mid in this pack");
       const chart = parseMidiChart(midBytes, {
         name: ini.name,
         artist: ini.artist,
         offsetSec,
-        instrument,
+        instrument: "vocals",
       });
       if (ini.name) chart.name = ini.name;
       if (ini.artist) chart.artist = ini.artist;
       return chart;
-    };
-  } else {
-    throw new Error("No notes.chart or notes.mid in this pack");
-  }
-
-  if (!availableInstruments.length) {
-    throw new Error("No guitar, bass, or drums track found");
-  }
+    }
+    // Guitar: .chart first, then MIDI
+    if (chartText && fromChart.includes("guitar")) {
+      const chart = parseChartFile(chartText, "guitar");
+      if (ini.name) chart.name = ini.name;
+      if (ini.artist) chart.artist = ini.artist;
+      return chart;
+    }
+    if (midBytes && fromMid.includes("guitar")) {
+      const chart = parseMidiChart(midBytes, {
+        name: ini.name,
+        artist: ini.artist,
+        offsetSec,
+        instrument: "guitar",
+      });
+      if (ini.name) chart.name = ini.name;
+      if (ini.artist) chart.artist = ini.artist;
+      return chart;
+    }
+    throw new Error(`No ${instrument} chart in this pack`);
+  };
 
   const chosen = preferInstrument(availableInstruments, preferInstrumentName);
   let chart = parseFor(chosen);

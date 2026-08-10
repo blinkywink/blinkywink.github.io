@@ -96,9 +96,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <a href="https://www.enchor.us/" target="_blank" rel="noreferrer">
                 enchor.us
               </a>
-              . Packed audio stays in sync. Controls: D F J K L — hold for
-              sustains. Multi-instrument charts let you pick guitar, bass, or
-              drums.
+              . Packed audio stays in sync. Only charts with Guitar + Vocals.
+              Pick which to play — same D F J K L (hold for sustains).
             </p>
             <form className="hero-search" onSubmit={onSearch}>
               <input
@@ -125,10 +124,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <ul className="hero-results">
               {state.results.map((hit) => {
                 const instruments = playableInstrumentsOnHit(hit);
-                const primary = instruments.includes("guitar")
-                  ? "guitar"
-                  : (instruments[0] ?? "guitar");
-                const notes = expertNotesFor(hit, primary);
+                const notes = expertNotesFor(hit, "guitar");
                 const cover = enchorArtUrl(hit.albumArtMd5);
                 return (
                   <li key={`${hit.md5}-${hit.chartId}`}>
@@ -160,13 +156,11 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                             ? ` · ${Math.round(hit.song_length / 1000)}s`
                             : ""}
                         </span>
-                        {instruments.length > 1 ? (
-                          <span className="hero-results__inst">
-                            {instruments
-                              .map((i) => INSTRUMENT_LABEL[i])
-                              .join(" · ")}
-                          </span>
-                        ) : null}
+                        <span className="hero-results__inst">
+                          {instruments
+                            .map((i) => INSTRUMENT_LABEL[i])
+                            .join(" · ")}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -274,35 +268,39 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 <div className="hero-overlay">
                   <h2>{state.title}</h2>
                   <p>{state.artist}</p>
-                  {state.availableInstruments.length > 1 ? (
-                    <div
-                      className="hero-instrument-pick"
-                      role="group"
-                      aria-label="Instrument"
-                    >
-                      {state.availableInstruments.map((inst) => (
-                        <button
-                          key={inst}
-                          type="button"
-                          className={`hero-instrument-pick__btn${
-                            state.instrument === inst ? " is-active" : ""
-                          }`}
-                          onClick={() => setInstrument(inst)}
-                        >
-                          {INSTRUMENT_LABEL[inst]}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+                  <p className="hero-overlay__detail">Choose your instrument</p>
+                  <div
+                    className="hero-instrument-pick"
+                    role="group"
+                    aria-label="Instrument"
+                  >
+                    {state.availableInstruments.map((inst) => (
+                      <button
+                        key={inst}
+                        type="button"
+                        className={`hero-instrument-pick__btn${
+                          state.instrument === inst ? " is-active" : ""
+                        }`}
+                        onClick={() => setInstrument(inst)}
+                      >
+                        {INSTRUMENT_LABEL[inst]}
+                      </button>
+                    ))}
+                  </div>
                   <p className="hero-overlay__detail">
-                    {INSTRUMENT_LABEL[state.instrument]} ·{" "}
-                    {noteCount.toLocaleString()} notes · D F J K L
+                    {state.instrument
+                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · D F J K L`
+                      : "Guitar or Vocals — same D F J K L controls"}
                   </p>
+                  {state.error ? (
+                    <p className="hero-browse__err">{state.error}</p>
+                  ) : null}
                   <div className="hero-overlay__actions">
                     <button
                       type="button"
                       className="btn btn--primary"
                       onClick={start}
+                      disabled={!state.instrument}
                     >
                       Play
                     </button>

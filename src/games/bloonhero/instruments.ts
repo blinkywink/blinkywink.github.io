@@ -1,29 +1,26 @@
-/** Shared instrument ids for Bloon Hero / Clone Hero charts. */
+/** Shared instrument ids for Bloon Hero. */
 
-export type PlayableInstrument = "guitar" | "bass" | "drums";
+export type PlayableInstrument = "guitar" | "vocals";
 
 export const PLAYABLE_INSTRUMENTS: PlayableInstrument[] = [
   "guitar",
-  "bass",
-  "drums",
+  "vocals",
 ];
 
 export const INSTRUMENT_LABEL: Record<PlayableInstrument, string> = {
   guitar: "Guitar",
-  bass: "Bass",
-  drums: "Drums",
+  vocals: "Vocals",
 };
 
 /** .chart Expert (then Hard/Med/Easy) track section names. */
 export const CHART_TRACK_NAMES: Record<PlayableInstrument, string[]> = {
   guitar: ["Single"],
-  bass: ["DoubleBass"],
-  drums: ["Drums"],
+  // Vocals are almost always MIDI-only in CH packs.
+  vocals: ["Vocals"],
 };
 
 /** MIDI PART track names (uppercase match). */
 export const MIDI_TRACK_NAMES: Record<PlayableInstrument, string[]> = {
   guitar: ["PART GUITAR", "PART GUITAR COOP", "T1 GEMS"],
-  bass: ["PART BASS", "PART RHYTHM"],
-  drums: ["PART DRUMS"],
+  vocals: ["PART VOCALS", "HARM1"],
 };

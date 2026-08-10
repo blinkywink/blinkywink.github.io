@@ -1,6 +1,6 @@
 /**
  * Clone Hero / Rock Band `notes.mid` → Expert 5-lane notes.
- * Expert frets/pads are MIDI pitches 96–100 for guitar, bass, and drums.
+ * Guitar: frets 96–100. Vocals: sung pitches mapped onto the same 5 lanes.
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 import {
@@ -11,8 +11,11 @@ import {
 import type { ChartNote, ParsedChart } from "./parseChartFile";
 
 const EXPERT_BASE = 96;
-type MidiTrack = MidiEvent[];
+/** Typical sung pitch window (exclude percussion / markers ≥ 96). */
+const VOCAL_PITCH_MIN = 36;
+const VOCAL_PITCH_MAX = 84;
 
+type MidiTrack = MidiEvent[];
 type TempoEv = { tick: number; usPerBeat: number };
 
 function trackName(track: MidiTrack): string {
@@ -75,23 +78,48 @@ function findInstrumentTrack(
   if (instrument === "guitar") {
     return tracks.find((t) => /GUITAR/i.test(trackName(t))) ?? null;
   }
-  if (instrument === "bass") {
-    return tracks.find((t) => /BASS|RHYTHM/i.test(trackName(t))) ?? null;
-  }
-  if (instrument === "drums") {
-    return tracks.find((t) => /DRUMS/i.test(trackName(t))) ?? null;
+  if (instrument === "vocals") {
+    return (
+      tracks.find((t) => /^PART VOCALS$/i.test(trackName(t))) ??
+      tracks.find((t) => /VOCAL/i.test(trackName(t))) ??
+      null
+    );
   }
   return null;
 }
 
-function expertNoteCount(track: MidiTrack): number {
+function isPlayableMidiPitch(
+  instrument: PlayableInstrument,
+  noteNumber: number,
+): boolean {
+  if (instrument === "guitar") {
+    return noteNumber >= EXPERT_BASE && noteNumber <= EXPERT_BASE + 4;
+  }
+  // Vocals: sung pitches only (not percussion / phrase markers).
+  return noteNumber >= VOCAL_PITCH_MIN && noteNumber <= VOCAL_PITCH_MAX;
+}
+
+function midiPitchToLane(
+  instrument: PlayableInstrument,
+  noteNumber: number,
+): number {
+  if (instrument === "guitar") return noteNumber - EXPERT_BASE;
+  // Spread sung pitches across D F J K L.
+  const span = VOCAL_PITCH_MAX - VOCAL_PITCH_MIN;
+  const u = (noteNumber - VOCAL_PITCH_MIN) / span;
+  return Math.min(4, Math.max(0, Math.round(u * 4)));
+}
+
+function expertNoteCount(
+  track: MidiTrack,
+  instrument: PlayableInstrument,
+): number {
   let n = 0;
   for (const e of track) {
     if (
       e.type === "noteOn" &&
       e.velocity > 0 &&
-      e.noteNumber >= EXPERT_BASE &&
-      e.noteNumber <= EXPERT_BASE + 4
+      isPlayableMidiPitch(instrument, e.noteNumber)
     ) {
       n += 1;
     }
@@ -104,7 +132,7 @@ export function listMidiInstruments(bytes: Uint8Array): PlayableInstrument[] {
   const found: PlayableInstrument[] = [];
   for (const inst of PLAYABLE_INSTRUMENTS) {
     const tr = findInstrumentTrack(midi.tracks, inst);
-    if (tr && expertNoteCount(tr) > 0) found.push(inst);
+    if (tr && expertNoteCount(tr, inst) > 0) found.push(inst);
   }
   return found;
 }
@@ -123,9 +151,7 @@ export function parseMidiChart(
   const tpq = midi.header.ticksPerBeat;
   if (!tpq) throw new Error("MIDI uses SMPTE timing (unsupported)");
 
-  // CH default: sustains shorter than 1/12 of a 4/4 measure are taps.
   const sustainCutoffTicks = Math.floor((tpq * 4) / 12);
-
   const tempos = collectTempos(midi.tracks);
   const track = findInstrumentTrack(midi.tracks, instrument);
   if (!track) throw new Error(`No ${instrument} MIDI track found`);
@@ -138,7 +164,7 @@ export function parseMidiChart(
     tick += e.deltaTime;
     if (e.type === "noteOn" && e.velocity > 0) {
       const n = e.noteNumber;
-      if (n < EXPERT_BASE || n > EXPERT_BASE + 4) continue;
+      if (!isPlayableMidiPitch(instrument, n)) continue;
       open.set(n, tick);
     } else if (
       e.type === "noteOff" ||
@@ -148,10 +174,10 @@ export function parseMidiChart(
       const start = open.get(n);
       if (start == null) continue;
       open.delete(n);
-      if (n < EXPERT_BASE || n > EXPERT_BASE + 4) continue;
+      if (!isPlayableMidiPitch(instrument, n)) continue;
       raw.push({
         tick: start,
-        lane: n - EXPERT_BASE,
+        lane: midiPitchToLane(instrument, n),
         endTick: Math.max(start, tick),
       });
     }
@@ -173,7 +199,7 @@ export function parseMidiChart(
   });
 
   notes.sort((a, b) => a.t - b.t || a.lane - b.lane);
-  if (!notes.length) throw new Error(`No Expert ${instrument} notes in MIDI`);
+  if (!notes.length) throw new Error(`No playable ${instrument} notes in MIDI`);
 
   const last = notes[notes.length - 1]!;
   const duration = last.t + Math.max(1, last.dur);
