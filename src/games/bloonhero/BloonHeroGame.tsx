@@ -653,14 +653,18 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   }
                   aria-live="polite"
                 >
-                  <span className="hero-lyrics__visible">
-                    {state.currentLyric.visible}
-                  </span>
                   {state.currentLyric.pending ? (
-                    <span className="hero-lyrics__pending" aria-hidden="true">
-                      {state.currentLyric.pending}
+                    <span className="hero-lyrics__word">
+                      <span className="hero-lyrics__visible">
+                        {state.currentLyric.visible}
+                      </span>
+                      <span className="hero-lyrics__pending" aria-hidden="true">
+                        {state.currentLyric.pending}
+                      </span>
                     </span>
-                  ) : null}
+                  ) : (
+                    state.currentLyric.visible
+                  )}
                 </p>
               ) : null}
               <div className="hero-progress" aria-hidden>

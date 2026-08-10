@@ -9123,6 +9123,8 @@ body:has(.zoomed-page) {
   position: absolute;
   left: 50%;
   z-index: 4;
+  display: flex;
+  justify-content: center;
   width: min(92%, 36rem);
   margin: 0;
   transform: translateX(-50%);
@@ -9137,11 +9139,15 @@ body:has(.zoomed-page) {
     0 0 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   user-select: none;
-  white-space: pre-wrap;
 }
 
 .hero-lyrics--solo {
   top: calc(2.75rem + var(--lyrics-offset-y, 0px));
+}
+
+.hero-lyrics__word {
+  display: inline-block;
+  text-align: center;
 }
 
 .hero-lyrics__pending {

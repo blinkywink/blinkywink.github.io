@@ -149,21 +149,56 @@ function wordBounds(timed: TimedSyl[], index: number): { start: number; end: num
   while (start > 0 && timed[start - 1]!.syl.joinNext) start--;
   let end = index;
   while (end < timed.length - 1 && timed[end]!.syl.joinNext) end++;
-  // Charts sometimes send "ev" then "everybody" without a hyphen join.
-  while (end < timed.length - 1) {
-    const current = assembleSyllables(timed, start, end);
-    const withNext = assembleSyllables(timed, start, end + 1);
-    if (
-      !timed[end]!.syl.joinNext &&
-      withNext.length > current.length &&
-      withNext.toLowerCase().startsWith(current.toLowerCase())
-    ) {
-      end++;
-      continue;
-    }
-    break;
+
+  // "ev" then "everybody" — same word, no hyphen (pair only, never whole phrases).
+  if (
+    index > 0 &&
+    isPrefixPair(timed, index - 1, index) &&
+    !timed[index - 1]!.syl.joinNext
+  ) {
+    start = index - 1;
+    end = index;
+  } else if (
+    end === start &&
+    start + 1 < timed.length &&
+    isPrefixPair(timed, start, start + 1)
+  ) {
+    end = start + 1;
   }
+
   return { start, end };
+}
+
+/** Next syllable completes the same word (e.g. "ev" → "everybody"). */
+function isPrefixPair(timed: TimedSyl[], start: number, end: number): boolean {
+  if (end !== start + 1) return false;
+  const first = timed[start]!.syl.text;
+  const last = timed[end]!.syl.text;
+  return (
+    !timed[start]!.syl.joinNext &&
+    first.length > 0 &&
+    !first.includes(" ") &&
+    !last.includes(" ") &&
+    last.length > first.length &&
+    last.toLowerCase().startsWith(first.toLowerCase())
+  );
+}
+
+function fullWordForGroup(timed: TimedSyl[], start: number, end: number): string {
+  if (isPrefixPair(timed, start, end)) return timed[end]!.syl.text;
+  return assembleSyllables(timed, start, end);
+}
+
+function revealedAt(
+  timed: TimedSyl[],
+  start: number,
+  index: number,
+  end: number,
+): string {
+  if (isPrefixPair(timed, start, end)) {
+    return index === start ? timed[start]!.syl.text : timed[end]!.syl.text;
+  }
+  return assembleSyllables(timed, start, index);
 }
 
 function assembleSyllables(timed: TimedSyl[], from: number, to: number): string {
@@ -223,8 +258,8 @@ function buildCues(
       timed[i + 1]?.tick ?? tick + Math.max(resolution * 2, 192);
     let end = tickToSec(nextTick) - 0.02;
     const { start: wordStart, end: wordEnd } = wordBounds(timed, i);
-    const fullWord = assembleSyllables(timed, wordStart, wordEnd);
-    const revealed = assembleSyllables(timed, wordStart, i);
+    const fullWord = fullWordForGroup(timed, wordStart, wordEnd);
+    const revealed = revealedAt(timed, wordStart, i, wordEnd);
     cues.push({
       start,
       end: Math.max(end, start + 0.06),

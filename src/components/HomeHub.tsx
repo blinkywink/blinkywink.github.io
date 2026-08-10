@@ -281,8 +281,11 @@ export function HomeHub() {
                 className="home-hub__download-btn home-hub__download-btn--win"
                 aria-label="Download for Windows (coming soon)"
               >
-                <svg viewBox="0 0 24 24" aria-hidden focusable="false">
-                  <path d="M3 5.5 10.5 4.2v7.4H3V5.5zm0 13V12.8h7.5v7.5L3 18.5zm9-11.3L21 3.8v8.9H12V7.2zm0 13.3V12.8H21v8.4l-9 1.3z" />
+                <svg viewBox="0 0 16 16" aria-hidden focusable="false">
+                  <rect x="0" y="0" width="7" height="7" />
+                  <rect x="9" y="0" width="7" height="7" />
+                  <rect x="0" y="9" width="7" height="7" />
+                  <rect x="9" y="9" width="7" height="7" />
                 </svg>
                 Windows
               </button>
