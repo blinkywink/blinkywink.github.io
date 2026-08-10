@@ -86,7 +86,7 @@ export class HeroAudio {
     this.playSoftNote(
       midi,
       c.currentTime,
-      Math.max(0.18, dur * 1.15),
+      Math.max(0.32, dur * 1.65),
       vel * gainMul,
       "lead",
     );
@@ -111,38 +111,33 @@ export class HeroAudio {
     osc.stop(t + 0.07);
   }
 
-  startDrums(bpm: number): void {
+  /** Quiet quarter-note clicks during the count-in only (no kit during the song). */
+  startCountIn(bpm: number): void {
     const c = this.ensure();
     if (!c || !this.master) return;
     if (this.drumTimer != null) window.clearInterval(this.drumTimer);
 
     const beat = 60 / bpm;
-    const stepDur = beat / 2;
-    // Start on the current 8th (works for negative count-in songTime)
-    let nextStep = Math.floor(this.songTime() / stepDur);
+    let nextBeat = Math.floor(this.songTime() / beat);
 
-    const kickOff = () => {
+    const tick = () => {
       const t = this.songTime();
-      const expected = Math.floor(t / stepDur);
-      if (expected < nextStep) return;
-      while (nextStep <= expected) {
-        const mod = ((nextStep % 8) + 8) % 8;
-        const isDownbeat = mod % 2 === 0;
-        const beatInBar = Math.floor(mod / 2) % 4;
-        const stepTime = nextStep * stepDur;
-        const countIn = stepTime < 0;
-        const accent = countIn ? 1.25 : 1;
-
-        if (isDownbeat) {
-          if (beatInBar === 0 || beatInBar === 2) this.kick(accent);
-          if (beatInBar === 1 || beatInBar === 3) this.snare(accent);
-          if (countIn) this.countClick(beatInBar === 0 ? 1 : 0.75);
+      if (t >= 0.02) {
+        if (this.drumTimer != null) {
+          window.clearInterval(this.drumTimer);
+          this.drumTimer = null;
         }
-        this.hat((isDownbeat ? 0.05 : 0.03) * (countIn ? 1.15 : 1));
-        nextStep += 1;
+        return;
+      }
+      const expected = Math.floor(t / beat);
+      if (expected < nextBeat) return;
+      while (nextBeat <= expected && nextBeat * beat < 0) {
+        const beatInBar = ((nextBeat % 4) + 4) % 4;
+        this.countClick(beatInBar === 0 ? 1 : 0.7);
+        nextBeat += 1;
       }
     };
-    this.drumTimer = window.setInterval(kickOff, 16);
+    this.drumTimer = window.setInterval(tick, 16);
   }
 
   /**
@@ -163,9 +158,9 @@ export class HeroAudio {
     const start = Math.max(when, c.currentTime);
     const freq = midiToHz(midi);
     const isLead = voice === "lead";
-    const attack = isLead ? 0.012 : 0.04;
-    const release = isLead ? 0.35 : 0.55;
-    const hold = Math.max(0.08, dur);
+    const attack = isLead ? 0.014 : 0.04;
+    const release = isLead ? 0.55 : 0.6;
+    const hold = Math.max(isLead ? 0.28 : 0.08, dur);
     const end = start + hold + release;
     const peak = Math.min(isLead ? 0.34 : 0.16, (isLead ? 0.1 : 0.05) + vel * 0.28);
 

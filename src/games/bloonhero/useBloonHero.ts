@@ -153,7 +153,7 @@ export function useBloonHero() {
     audio.ensure();
     audio.beginSong(leadIn);
     audio.scheduleAccompaniment(CHART.accompaniment);
-    audio.startDrums(CHART.bpm);
+    audio.startCountIn(CHART.bpm);
     setState({
       ...INITIAL,
       phase: "playing",
