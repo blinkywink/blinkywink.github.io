@@ -17,6 +17,7 @@ import {
   RED_BLOON_IMAGE,
 } from "./config";
 import { useBananaCatch, type DropKind } from "./useBananaCatch";
+import { useCatchBgm } from "./useCatchBgm";
 
 type Props = {
   onBack: () => void;
@@ -49,6 +50,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef(state.phase);
   const [pointerLocked, setPointerLocked] = useState(false);
+
+  useCatchBgm(state.phase);
 
   const requestLock = useCallback(() => {
     const el = fieldRef.current;
