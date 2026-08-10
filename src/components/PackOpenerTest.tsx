@@ -17,7 +17,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
-import { playBuy, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardWhoosh, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -581,6 +581,7 @@ export function PackOpenerTest({
   const flingAway = useCallback(
     (dir?: { x: number; y: number }) => {
       if (phaseRef.current !== "ready") return;
+      playCardWhoosh();
       const angle = Math.random() * Math.PI * 2;
       const nextDir = dir ?? { x: Math.cos(angle), y: Math.sin(angle) };
       setExitDir(nextDir);

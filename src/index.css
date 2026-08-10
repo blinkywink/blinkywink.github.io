@@ -9403,6 +9403,60 @@ button.trade-offer-card:hover:not(:disabled) {
   overflow: hidden;
 }
 
+.profile-settings {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.profile-settings__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.profile-settings__head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.profile-settings__head p {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.62);
+}
+
+.profile-settings__pct {
+  font-variant-numeric: tabular-nums;
+  color: #f0c84a;
+  font-size: 1.05rem;
+}
+
+.profile-settings__volume {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.profile-settings__volume-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.profile-settings__volume input[type="range"] {
+  width: min(100%, 28rem);
+  accent-color: #f0c84a;
+  cursor: pointer;
+}
+
 .profile-cosmetics {
   display: grid;
   gap: 0.85rem;

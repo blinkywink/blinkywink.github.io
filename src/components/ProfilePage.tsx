@@ -44,6 +44,12 @@ import {
   shoppableHeroes,
 } from "../lib/profileHeroes";
 import { heroBlurb } from "../lib/heroEffects";
+import {
+  getSfxVolume,
+  playCardFocus,
+  setSfxVolume,
+  subscribeSfxVolume,
+} from "../lib/packSounds";
 import { collectionPath, shopPath, userCollectionPath } from "../lib/routes";
 import { HeroCardFace } from "./HeroCollectionStrip";
 import { PageHeader } from "./PageHeader";
@@ -64,9 +70,12 @@ export function ProfilePage() {
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
   const [colorDraft, setColorDraft] = useState("#F0C84A");
+  const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => subscribeSfxVolume(setSfxVolumeState), []);
 
   const saved = useMemo(
     () => (profile ? avatarFromProfile(profile) : DEFAULT_AVATAR_CROP),
@@ -616,6 +625,35 @@ export function ProfilePage() {
               <Link to={userCollectionPath(user.username)}>Public page</Link>
             </p>
           </div>
+        </section>
+
+        <section className="profile-settings" aria-label="Sound">
+          <div className="profile-settings__head">
+            <div>
+              <h3>Sound</h3>
+              <p>Master volume for packs, shop, and hero voice lines.</p>
+            </div>
+            <strong className="profile-settings__pct">
+              {Math.round(sfxVolume * 100)}%
+            </strong>
+          </div>
+          <label className="profile-settings__volume">
+            <span className="profile-settings__volume-label">Volume</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(sfxVolume * 100)}
+              onChange={(e) => {
+                const next = Number(e.target.value) / 100;
+                setSfxVolume(next);
+              }}
+              onPointerUp={() => {
+                if (getSfxVolume() > 0) playCardFocus();
+              }}
+            />
+          </label>
         </section>
 
         <section className="profile-cosmetics">
