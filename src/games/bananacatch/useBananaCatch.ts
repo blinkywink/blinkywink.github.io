@@ -344,6 +344,16 @@ export function useBananaCatch() {
     targetXRef.current = Math.min(1, Math.max(0, local));
   }, []);
 
+  /** Relative aim for pointer-lock (movementX deltas). */
+  const aimByDelta = useCallback((dxPx: number) => {
+    const fieldW = stateRef.current.fieldW;
+    if (fieldW <= 0 || !dxPx) return;
+    targetXRef.current = Math.min(
+      1,
+      Math.max(0, targetXRef.current + dxPx / fieldW),
+    );
+  }, []);
+
   const start = useCallback(() => {
     awardedRef.current = false;
     pendingCashRef.current = 0;
@@ -543,6 +553,7 @@ export function useBananaCatch() {
     start,
     restart,
     aimAt,
+    aimByDelta,
     setFieldSize,
   };
 }

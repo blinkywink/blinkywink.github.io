@@ -17,7 +17,6 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
     toggleCell,
     submit,
     goNext,
-    playAgain,
     buyContinue,
     continueCost,
     roundsPerRun,
@@ -77,7 +76,6 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
           onContinue={() => {
             void buyContinue();
           }}
-          onPlayAgain={playAgain}
           onBack={onBack}
         />
       </div>

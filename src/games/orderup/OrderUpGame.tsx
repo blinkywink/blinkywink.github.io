@@ -88,7 +88,6 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
     setOrder,
     lockIn,
     goNext,
-    playAgain,
     buyContinue,
     continueCost,
     roundsPerRun,
@@ -209,7 +208,6 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
           onContinue={() => {
             void buyContinue();
           }}
-          onPlayAgain={playAgain}
           onBack={onBack}
         />
       </div>

@@ -21,7 +21,6 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
     answer,
     skip,
     goNext,
-    playAgain,
     buyContinue,
     continueCost,
     roundsPerRun,
@@ -77,7 +76,6 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
           onContinue={() => {
             void buyContinue();
           }}
-          onPlayAgain={playAgain}
           onBack={onBack}
         />
       </div>

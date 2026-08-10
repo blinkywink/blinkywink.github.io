@@ -22,7 +22,6 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
     answer,
     skip,
     goNext,
-    playAgain,
     buyContinue,
     continueCost,
     roundsPerRun,
@@ -78,7 +77,6 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
           onContinue={() => {
             void buyContinue();
           }}
-          onPlayAgain={playAgain}
           onBack={onBack}
         />
       </div>

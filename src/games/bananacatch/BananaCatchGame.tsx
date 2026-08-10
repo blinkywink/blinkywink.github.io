@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
@@ -44,10 +44,24 @@ function dropSrc(kind: DropKind): string {
 }
 
 export function BananaCatchGame({ onBack, onRunEnd }: Props) {
-  const { state, clearAt, start, restart, aimAt, setFieldSize } =
+  const { state, clearAt, start, aimAt, aimByDelta, setFieldSize } =
     useBananaCatch();
   const fieldRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef(state.phase);
+  const [pointerLocked, setPointerLocked] = useState(false);
+
+  const requestLock = useCallback(() => {
+    const el = fieldRef.current;
+    if (!el || typeof el.requestPointerLock !== "function") return;
+    if (document.pointerLockElement === el) return;
+    void el.requestPointerLock();
+  }, []);
+
+  const releaseLock = useCallback(() => {
+    if (document.pointerLockElement && document.exitPointerLock) {
+      document.exitPointerLock();
+    }
+  }, []);
 
   useEffect(() => {
     const el = fieldRef.current;
@@ -71,6 +85,22 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     }
   }, [state.phase, state.cleared, onRunEnd]);
 
+  // Track lock state; Esc exits pointer lock natively.
+  useEffect(() => {
+    const onChange = () => {
+      setPointerLocked(document.pointerLockElement === fieldRef.current);
+    };
+    document.addEventListener("pointerlockchange", onChange);
+    return () => document.removeEventListener("pointerlockchange", onChange);
+  }, []);
+
+  // Release lock when the run ends / leaves playing.
+  useEffect(() => {
+    if (state.phase !== "playing") releaseLock();
+  }, [state.phase, releaseLock]);
+
+  useEffect(() => () => releaseLock(), [releaseLock]);
+
   const playing = state.phase === "playing";
   const done = state.phase === "lost";
   const attemptsUsed = CATCH_LIVES - state.lives;
@@ -80,6 +110,12 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     if (!el) return;
     const rect = el.getBoundingClientRect();
     aimAt(clientX, rect.left, rect.width);
+  }
+
+  function beginRun() {
+    start();
+    // User gesture from Start — lock immediately.
+    queueMicrotask(() => requestLock());
   }
 
   return (
@@ -99,22 +135,39 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
         </div>
 
         <p className="catch-hint">
-          Catch bananas forever · dodge reds, blues, greens, pinks, then blimps
+          {playing
+            ? pointerLocked
+              ? "Move to catch · Esc frees the mouse"
+              : "Click the field to lock the mouse again"
+            : "Catch bananas forever · dodge reds, blues, greens, pinks, then blimps"}
         </p>
 
         <div
           ref={fieldRef}
-          className={`catch-field${playing ? " is-playing" : ""}`}
+          className={`catch-field${playing ? " is-playing" : ""}${pointerLocked ? " is-locked" : ""}`}
           role="application"
           aria-label="Banana catch playfield"
           onPointerDown={(e) => {
             if (!playing) return;
+            // Re-lock after Esc (or first lock if Start gesture missed).
+            if (document.pointerLockElement !== e.currentTarget) {
+              requestLock();
+              pointerToAim(e.clientX);
+              return;
+            }
             e.currentTarget.setPointerCapture(e.pointerId);
             pointerToAim(e.clientX);
           }}
           onPointerMove={(e) => {
             if (!playing) return;
-            pointerToAim(e.clientX);
+            if (document.pointerLockElement === fieldRef.current) {
+              aimByDelta(e.movementX);
+              return;
+            }
+            // Touch / unlocked mouse still follows absolute X.
+            if (e.pointerType !== "mouse") {
+              pointerToAim(e.clientX);
+            }
           }}
         >
           <div className="catch-field__sky" aria-hidden="true" />
@@ -161,7 +214,10 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 Endless run, grab bananas, dodge everything. Survive for{" "}
                 <strong>{CATCH_CLEAR_BANANAS}+</strong> bananas to clear.
               </p>
-              <button type="button" className="btn btn--primary" onClick={start}>
+              <p className="catch-overlay__note">
+                Mouse locks while you play · Esc to free it
+              </p>
+              <button type="button" className="btn btn--primary" onClick={beginRun}>
                 Start
               </button>
             </div>
@@ -187,7 +243,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 )}
               </p>
               <div className="catch-overlay__actions">
-                <button type="button" className="btn btn--primary" onClick={restart}>
+                <button type="button" className="btn btn--primary" onClick={beginRun}>
                   Try again
                 </button>
                 <button type="button" className="btn btn--ghost" onClick={onBack}>

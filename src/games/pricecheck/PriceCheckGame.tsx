@@ -97,7 +97,6 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
     state,
     guess,
     goNext,
-    playAgain,
     buyContinue,
     continueCost,
     roundsPerRun,
@@ -162,7 +161,6 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
           onContinue={() => {
             void buyContinue();
           }}
-          onPlayAgain={playAgain}
           onBack={onBack}
         />
       </div>

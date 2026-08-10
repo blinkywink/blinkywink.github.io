@@ -233,6 +233,7 @@ function AppShell() {
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
   const [bonusToast, setBonusToast] = useState<string | null>(null);
+  const [showBackToGames, setShowBackToGames] = useState(false);
 
   const creditHeroClear = useCallback(
     async (cleared: boolean) => {
@@ -294,9 +295,8 @@ function AppShell() {
   const finishRewards = useCallback(() => {
     setRewardPack(null);
     setBonusChoices(null);
-    // Packs finished — soft land on the games hub (not mid-results yank).
-    navigate(gamesPath());
-  }, [navigate]);
+    setShowBackToGames(true);
+  }, []);
 
   const queueClearAndBonusPacks = useCallback(
     (opts: { cleared: boolean; wantBonus: boolean }) => {
@@ -305,6 +305,8 @@ function AppShell() {
       const choices = opts.wantBonus
         ? pickRewardTowerPackChoices(owned, 3, exclude)
         : [];
+
+      setShowBackToGames(false);
 
       // Stay on the game route. Pack / picker overlays cover the results UI.
       // Failures with no packs leave the results panel alone.
@@ -348,6 +350,7 @@ function AppShell() {
       if (guesses > BLOONLE_BONUS_MAX_TRIES) return;
       const choices = pickRewardTowerPackChoices(owned, 3);
       if (!choices.length) return;
+      setShowBackToGames(false);
       setRewardPack(null);
       setBonusChoices(choices);
     },
@@ -523,6 +526,25 @@ function AppShell() {
             setRewardPack({ pack, reason: "bonus" });
           }}
         />
+      ) : null}
+
+      {showBackToGames && !rewardPack && !bonusChoices ? (
+        <div className="rewards-done" role="dialog" aria-label="Rewards claimed">
+          <div className="rewards-done__card">
+            <p className="eyebrow">Rewards claimed</p>
+            <h2>Nice haul</h2>
+            <button
+              type="button"
+              className="btn btn--primary btn--lg"
+              onClick={() => {
+                setShowBackToGames(false);
+                navigate(gamesPath());
+              }}
+            >
+              Back to Games
+            </button>
+          </div>
+        </div>
       ) : null}
     </>
   );
