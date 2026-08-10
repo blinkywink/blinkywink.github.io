@@ -8,6 +8,7 @@ import {
   CASH_PER_GREAT,
   CASH_PER_PERFECT,
   CHART,
+  EMPTY_STREAK_KILL,
   HERO_CLEAR_BONUS,
   HERO_CLEAR_RATIO,
   HERO_LIVES,
@@ -19,7 +20,13 @@ import {
   type Judge,
 } from "./config";
 
-export type ChartNote = (typeof CHART.notes)[number];
+export type ChartNote = {
+  t: number;
+  midi: number;
+  dur: number;
+  vel: number;
+  lane: number;
+};
 
 export type ActiveNote = ChartNote & {
   id: number;
@@ -43,11 +50,31 @@ export type HeroState = {
   lastJudge: Judge | null;
   cleared: boolean;
   countdown: string | null;
-  /** Lane indices currently flashing from a press. */
   pressed: number[];
-  /** Brief hit burst on a lane (lane id), keyed for remount. */
   burst: { lane: number; judge: Judge; id: number } | null;
+  /** Full bar-17 loops completed after the first lap. */
+  loops: number;
+  /** Consecutive empty / wrong-key presses. */
+  emptyStreak: number;
 };
+
+type Segment = {
+  duration: number;
+  notes: readonly ChartNote[];
+  accompaniment: readonly {
+    t: number;
+    midi: number;
+    dur: number;
+    vel: number;
+  }[];
+};
+
+const INTRO: Segment = CHART.intro ?? {
+  duration: CHART.duration,
+  notes: CHART.notes,
+  accompaniment: CHART.accompaniment,
+};
+const LOOP: Segment = CHART.loop ?? INTRO;
 
 const INITIAL: HeroState = {
   phase: "ready",
@@ -65,6 +92,8 @@ const INITIAL: HeroState = {
   countdown: null,
   pressed: [],
   burst: null,
+  loops: 0,
+  emptyStreak: 0,
 };
 
 function countdownFromSongTime(songTime: number, bpm: number): string | null {
@@ -81,6 +110,21 @@ function noteY(songTime: number, noteT: number, approach: number): number {
   const u = (noteT - songTime) / approach;
   const clamped = Math.min(1, Math.max(0, u));
   return SPAWN_Y + (1 - clamped) * (HIT_LINE_Y - SPAWN_Y);
+}
+
+/** Progress through the current lap (intro, then each bar-17 loop). */
+export function loopProgress(songTime: number): number {
+  if (songTime <= 0) return 0;
+  if (songTime < INTRO.duration) {
+    return Math.min(100, (songTime / INTRO.duration) * 100);
+  }
+  const into = (songTime - INTRO.duration) % LOOP.duration;
+  return Math.min(100, (into / LOOP.duration) * 100);
+}
+
+export function loopsCompleted(songTime: number): number {
+  if (songTime < INTRO.duration) return 0;
+  return Math.floor((songTime - INTRO.duration) / LOOP.duration);
 }
 
 const KEY_TO_LANE: Record<string, number> = {
@@ -108,7 +152,11 @@ export function useBloonHero() {
 
   const audioRef = useRef(new HeroAudio());
   const notesRef = useRef<ActiveNote[]>([]);
-  const chartLenRef = useRef(0);
+  const nextIdRef = useRef(0);
+  /** Song-time when the next unscheduled segment begins. */
+  const nextSegAtRef = useRef(0);
+  const attemptedRef = useRef(0);
+  const hitsRef = useRef(0);
   const frameRef = useRef(0);
   const pendingCashRef = useRef(0);
   const burstIdRef = useRef(0);
@@ -120,6 +168,19 @@ export function useBloonHero() {
     pendingCashRef.current = 0;
     const balance = await awardCoins(amount);
     if (balance != null) setCoinBalanceRef.current(balance);
+  }, []);
+
+  const appendSegment = useCallback((seg: Segment, offset: number) => {
+    for (const n of seg.notes) {
+      notesRef.current.push({
+        ...n,
+        t: n.t + offset,
+        id: nextIdRef.current++,
+        resolved: false,
+      });
+    }
+    audioRef.current.scheduleAccompaniment(seg.accompaniment, offset);
+    nextSegAtRef.current = offset + seg.duration;
   }, []);
 
   const flashPress = useCallback((lane: number) => {
@@ -143,16 +204,14 @@ export function useBloonHero() {
   const start = useCallback(() => {
     const leadIn = leadInSeconds(CHART.bpm);
     pendingCashRef.current = 0;
-    chartLenRef.current = CHART.notes.length;
-    notesRef.current = CHART.notes.map((n, i) => ({
-      ...n,
-      id: i,
-      resolved: false,
-    }));
+    attemptedRef.current = 0;
+    hitsRef.current = 0;
+    nextIdRef.current = 0;
+    notesRef.current = [];
     const audio = audioRef.current;
     audio.ensure();
     audio.beginSong(leadIn);
-    audio.scheduleAccompaniment(CHART.accompaniment);
+    appendSegment(INTRO, 0);
     audio.startCountIn(CHART.bpm);
     setState({
       ...INITIAL,
@@ -160,7 +219,7 @@ export function useBloonHero() {
       songTime: -leadIn,
       countdown: countdownFromSongTime(-leadIn, CHART.bpm),
     });
-  }, []);
+  }, [appendSegment]);
 
   const restart = useCallback(() => {
     audioRef.current.stopAll();
@@ -171,6 +230,7 @@ export function useBloonHero() {
     setState(INITIAL);
     notesRef.current = [];
     pendingCashRef.current = 0;
+    nextSegAtRef.current = 0;
   }, []);
 
   const applyHit = useCallback(
@@ -180,6 +240,12 @@ export function useBloonHero() {
       flashPress(lane);
 
       const now = audioRef.current.songTime();
+      // No spam penalties during the count-in
+      if (now < 0) {
+        audioRef.current.playEmptyTap();
+        return;
+      }
+
       let best: ActiveNote | null = null;
       let bestAbs = Infinity;
       for (const n of notesRef.current) {
@@ -193,21 +259,50 @@ export function useBloonHero() {
         }
       }
 
-      if (!best) {
+      const punishEmpty = () => {
         audioRef.current.playEmptyTap();
+        const streak = stateRef.current.emptyStreak + 1;
+        // First whiff breaks combo; further whiffs also burn lives
+        let lives = stateRef.current.lives;
+        if (streak >= 2) lives = Math.max(0, lives - 1);
+        if (streak >= EMPTY_STREAK_KILL) lives = 0;
+
+        burstIdRef.current += 1;
+        const burstId = burstIdRef.current;
+        const next = {
+          ...stateRef.current,
+          combo: 0,
+          lives,
+          emptyStreak: streak,
+          lastJudge: "miss" as const,
+          burst: { lane, judge: "miss" as const, id: burstId },
+        };
+        stateRef.current = next;
+        setState(next);
+        window.setTimeout(() => {
+          setState((prev) =>
+            prev.burst?.id === burstId ? { ...prev, burst: null } : prev,
+          );
+        }, 360);
+      };
+
+      if (!best) {
+        punishEmpty();
         return;
       }
 
       const dt = now - best.t;
       const judge = judgeOffset(dt);
       if (!judge) {
-        audioRef.current.playEmptyTap();
+        punishEmpty();
         return;
       }
 
       best.resolved = true;
       best.result = judge;
       audioRef.current.playHitNote(best.midi, best.dur, best.vel, judge);
+      attemptedRef.current += 1;
+      hitsRef.current += 1;
 
       const pay = cashFor(judge);
       pendingCashRef.current += pay;
@@ -225,6 +320,7 @@ export function useBloonHero() {
           good: prev.good + (judge === "good" ? 1 : 0),
           cashEarned: prev.cashEarned + pay,
           lastJudge: judge,
+          emptyStreak: 0,
           burst: { lane, judge, id: burstId },
         };
       });
@@ -249,6 +345,19 @@ export function useBloonHero() {
     const tick = () => {
       const now = audioRef.current.songTime();
       const countdown = countdownFromSongTime(now, CHART.bpm);
+
+      // Queue the next bar-17 loop before notes need to appear
+      while (now + APPROACH_S + 0.75 >= nextSegAtRef.current) {
+        appendSegment(LOOP, nextSegAtRef.current);
+      }
+
+      // Drop ancient resolved notes so the list stays bounded
+      if (notesRef.current.length > 400) {
+        notesRef.current = notesRef.current.filter(
+          (n) => !n.resolved || now - n.t < 1.5,
+        );
+      }
+
       let missed = 0;
       let missLane = -1;
       for (const n of notesRef.current) {
@@ -258,9 +367,11 @@ export function useBloonHero() {
           n.result = "miss";
           missed += 1;
           missLane = n.lane;
+          attemptedRef.current += 1;
         }
       }
 
+      const loops = loopsCompleted(now);
       let livesAfter = stateRef.current.lives;
       if (missed > 0) {
         livesAfter = Math.max(0, livesAfter - missed);
@@ -273,6 +384,7 @@ export function useBloonHero() {
           lastJudge: "miss" as const,
           songTime: now,
           countdown,
+          loops,
           burst:
             missLane >= 0
               ? {
@@ -285,20 +397,13 @@ export function useBloonHero() {
         stateRef.current = next;
         setState(next);
       } else {
-        setState((prev) => ({ ...prev, songTime: now, countdown }));
+        setState((prev) => ({ ...prev, songTime: now, countdown, loops }));
       }
 
-      const total = chartLenRef.current;
-      const resolved = notesRef.current.filter((n) => n.resolved).length;
-      const songDone =
-        now >= CHART.duration || (total > 0 && resolved >= total);
-      const dead = livesAfter <= 0;
-
-      if ((dead || songDone) && now >= 0) {
-        const hitCount = notesRef.current.filter(
-          (n) => n.result && n.result !== "miss",
-        ).length;
-        const ratio = hitCount / Math.max(1, total);
+      // Endless until you pop out
+      if (livesAfter <= 0 && now >= 0) {
+        const attempted = Math.max(1, attemptedRef.current);
+        const ratio = hitsRef.current / attempted;
         const cleared = ratio >= HERO_CLEAR_RATIO;
 
         setState((prev) => ({
@@ -308,16 +413,20 @@ export function useBloonHero() {
           cleared,
           lives: livesAfter,
           countdown: null,
+          loops,
         }));
 
         void (async () => {
           let grant = pendingCashRef.current;
           pendingCashRef.current = 0;
           if (cleared) {
-            grant += HERO_CLEAR_BONUS;
+            const loopBonus = Math.round(
+              HERO_CLEAR_BONUS * (1 + loops * 0.25),
+            );
+            grant += loopBonus;
             setState((prev) =>
               prev.phase === "results"
-                ? { ...prev, cashEarned: prev.cashEarned + HERO_CLEAR_BONUS }
+                ? { ...prev, cashEarned: prev.cashEarned + loopBonus }
                 : prev,
             );
           }
@@ -336,7 +445,7 @@ export function useBloonHero() {
 
     frameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [state.phase]);
+  }, [state.phase, appendSegment]);
 
   useEffect(() => () => audioRef.current.stopAll(), []);
 
@@ -384,5 +493,6 @@ export function useBloonHero() {
     approach: APPROACH_S,
     noteY,
     maxLives: HERO_LIVES,
+    loopProgress,
   };
 }

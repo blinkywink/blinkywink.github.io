@@ -2,7 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
-import { BLOON_IMAGES, HOLD_STACK_STEP, holdStackCount } from "./config";
+import { EMPTY_STREAK_KILL, sustainLenPct } from "./config";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -21,6 +21,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     approach,
     noteY,
     maxLives,
+    loopProgress,
   } = useBloonHero();
   const prevPhase = useRef(state.phase);
   const notes = visibleNotes();
@@ -37,10 +38,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const playing = state.phase === "playing";
   const countingIn = playing && state.songTime < 0;
   const attemptsUsed = maxLives - state.lives;
-  const progress = Math.min(
-    100,
-    Math.max(0, (state.songTime / chart.duration) * 100),
-  );
+  const progress = loopProgress(state.songTime);
   const scrollPx = state.phase === "ready" ? 0 : state.songTime * 168;
 
   return (
@@ -54,6 +52,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <span>combo</span>
           </span>
           <LivesMeter maxAttempts={maxLives} attemptsUsed={attemptsUsed} />
+          <span className="hero-stat">
+            <strong>{state.loops}</strong>
+            <span>loops</span>
+          </span>
           <span className="hero-stat hero-stat--cash">
             <CashAmount amount={state.cashEarned} size={18} />
           </span>
@@ -62,17 +64,23 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
         {playing && state.lastJudge && !countingIn ? (
           <p
             className={`hero-judge is-${state.lastJudge}`}
-            key={`${state.perfect}-${state.great}-${state.good}-${state.miss}-${state.burst?.id ?? 0}`}
+            key={`${state.perfect}-${state.great}-${state.good}-${state.miss}-${state.emptyStreak}-${state.burst?.id ?? 0}`}
           >
-            {state.lastJudge.toUpperCase()}
+            {state.lastJudge === "miss" && state.emptyStreak > 0
+              ? state.emptyStreak >= EMPTY_STREAK_KILL - 1
+                ? "DON'T SPAM"
+                : "WHIFF"
+              : state.lastJudge.toUpperCase()}
           </p>
         ) : (
           <p className="hero-hint">
             {countingIn
               ? "Feel the beat…"
               : playing
-                ? "Tap when a bloon covers its outline"
-                : `${chart.title} · from bar ${chart.offsetBar}`}
+                ? state.emptyStreak >= 2
+                  ? `Wrong taps ×${state.emptyStreak} — stop spamming`
+                  : "Hit when a key meets the receptor"
+                : `${chart.title} · bar ${chart.offsetBar}, then loops bar ${chart.loopBar}`}
           </p>
         )}
 
@@ -120,43 +128,32 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                             ? state.songTime
                             : 0;
                         const yHead = noteY(t, n.t, approach);
-                        const stacks = holdStackCount(n.dur, approach);
+                        const sustain = sustainLenPct(n.dur, approach);
                         const missed = n.result === "miss";
                         return (
                           <div
                             key={n.id}
-                            className={`hero-note-stack${missed ? " is-miss" : ""}${stacks > 1 ? " is-hold" : ""}`}
+                            className={`hero-note${missed ? " is-miss" : ""}${sustain > 0 ? " is-hold" : ""}`}
                           >
-                            {Array.from({ length: stacks }, (_, i) => {
-                              // Head at hit time; trail stacks toward the top of the highway
-                              const y = yHead - i * HOLD_STACK_STEP;
-                              const isHead = i === 0;
-                              return (
-                                <img
-                                  key={i}
-                                  className={`hero-note${isHead ? " is-head" : " is-trail"}`}
-                                  src={BLOON_IMAGES[lane.id]}
-                                  alt=""
-                                  draggable={false}
-                                  style={{
-                                    top: `${y}%`,
-                                    zIndex: stacks - i,
-                                  }}
-                                />
-                              );
-                            })}
+                            {sustain > 0 ? (
+                              <span
+                                className="hero-note__sustain"
+                                style={{
+                                  top: `${yHead - sustain}%`,
+                                  height: `${sustain}%`,
+                                }}
+                              />
+                            ) : null}
+                            <span
+                              className="hero-note__key"
+                              style={{ top: `${yHead}%` }}
+                            />
                           </div>
                         );
                       })}
                   </div>
                   <div className="hero-target" aria-hidden>
-                    <img
-                      className="hero-target__fill"
-                      src={BLOON_IMAGES[lane.id]}
-                      alt=""
-                      draggable={false}
-                    />
-                    <span className="hero-target__ring" />
+                    <span className="hero-target__key" />
                   </div>
                   {burst ? (
                     <span
@@ -182,8 +179,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <div className="hero-overlay">
               <h2>BLOON HERO</h2>
               <p>
-                Party Time from bar {chart.offsetBar}. Hit every melody note: D F
-                J K (or tap). Miss a note and that note stays silent.
+                Starts at bar {chart.offsetBar}, then loops from bar{" "}
+                {chart.loopBar} forever. Match falling piano keys to the
+                receptors. Wrong taps burn lives — spam and you pop out. D F J K
+                (or tap).
               </p>
               <button type="button" className="btn btn--primary" onClick={start}>
                 Play
@@ -196,11 +195,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               className={`hero-overlay${state.cleared ? " is-win" : " is-lose"}`}
               role="status"
             >
-              <h2>{state.cleared ? "Track cleared!" : "Popped out"}</h2>
+              <h2>{state.cleared ? "Nice run!" : "Popped out"}</h2>
               <p className="hero-overlay__score">
                 <CashAmount amount={state.cashEarned} size={22} />
               </p>
               <p className="hero-overlay__detail">
+                {state.loops} loop{state.loops === 1 ? "" : "s"} ·{" "}
                 {state.perfect} perfect · {state.great} great · {state.good}{" "}
                 good · {state.miss} miss · max combo {state.maxCombo}
               </p>

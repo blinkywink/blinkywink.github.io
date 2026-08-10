@@ -9,7 +9,6 @@ export class HeroAudio {
   private master: GainNode | null = null;
   private startedAt = 0;
   private drumTimer: number | null = null;
-  private accScheduled = false;
 
   ensure(): AudioContext | null {
     if (typeof window === "undefined") return null;
@@ -47,7 +46,6 @@ export class HeroAudio {
     const c = this.ensure();
     if (!c || !this.master) return;
     this.startedAt = c.currentTime + Math.max(0, leadInS);
-    this.accScheduled = false;
   }
 
   stopAll(): void {
@@ -61,18 +59,17 @@ export class HeroAudio {
       this.master = null;
     }
     this.startedAt = 0;
-    this.accScheduled = false;
   }
 
   /** Quiet bass pedals only — melody is player-gated on the lead. */
   scheduleAccompaniment(
     notes: readonly { t: number; midi: number; dur: number; vel: number }[],
+    timeOffset = 0,
   ): void {
     const c = this.ensure();
-    if (!c || !this.master || this.accScheduled) return;
-    this.accScheduled = true;
+    if (!c || !this.master) return;
     for (const n of notes) {
-      const when = this.startedAt + n.t;
+      const when = this.startedAt + timeOffset + n.t;
       if (when + n.dur < c.currentTime) continue;
       this.playSoftNote(n.midi, when, Math.max(0.4, n.dur), n.vel * 0.45, "pad");
     }

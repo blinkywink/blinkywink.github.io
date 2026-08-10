@@ -312,21 +312,17 @@ function BananaCatchPreview() {
 }
 
 function BloonHeroPreview() {
+  const colors = ["#e23b4c", "#3b7dde", "#3dbf4a", "#e85aa8"];
   return (
     <div className="game-preview game-preview--hero" aria-hidden>
-      {[0, 1, 2, 3].map((i) => (
-        <span key={i} className="game-preview__hero-lane">
-          <img
-            src={
-              [
-                "/images/bloons/red-bloon.webp",
-                "/images/bloons/blue-bloon.webp",
-                "/images/bloons/green-bloon.webp",
-                "/images/bloons/pink-bloon.webp",
-              ][i]
-            }
-            alt=""
-            draggable={false}
+      {colors.map((c, i) => (
+        <span
+          key={i}
+          className="game-preview__hero-lane"
+          style={{ ["--lane" as string]: c }}
+        >
+          <b
+            className="game-preview__hero-key"
             style={{ ["--d" as string]: `${0.2 + i * 0.15}s` }}
           />
           <i />
@@ -442,8 +438,8 @@ export function ArcadeHome({
     {
       id: "bloonhero" as const,
       title: "BLOON HERO",
-      blurb: "Four-lane rhythm — hit D F J K when the bloons land.",
-      label: "Bloon Hero, Guitar Hero style bloon rhythm game",
+      blurb: "Four-lane rhythm — hit D F J K when the keys land.",
+      label: "Bloon Hero, Guitar Hero style piano key rhythm game",
       preview: <BloonHeroPreview />,
     },
     {
