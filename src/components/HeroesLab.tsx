@@ -311,8 +311,6 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
                 {!maxed && !ready ? (
                   <p className="heroes-lab__hint">
                     Clear games with {selected.name} equipped to fill the bar.
-                    Level-up costs{" "}
-                    <CashAmount amount={upgradePrice} size={14} />.
                   </p>
                 ) : null}
 
@@ -331,21 +329,17 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
                       <CashAmount amount={equipCost} size={16} />
                     ) : null}
                   </button>
-                  {!maxed ? (
+                  {ready ? (
                     <button
                       type="button"
                       className="btn btn--primary btn--lg"
                       disabled={
-                        busy ||
-                        !ready ||
-                        (profile?.coins ?? 0) < upgradePrice
+                        busy || (profile?.coins ?? 0) < upgradePrice
                       }
                       onClick={() => void onLevelUp()}
                     >
                       {busy ? "Leveling…" : "Level up"}
-                      {ready ? (
-                        <CashAmount amount={upgradePrice} size={16} />
-                      ) : null}
+                      <CashAmount amount={upgradePrice} size={16} />
                     </button>
                   ) : null}
                 </div>
