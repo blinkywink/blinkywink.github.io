@@ -661,6 +661,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   }
 
   // ——— Single tower card page ———
+  if (view.kind !== "tower") return null;
+
   const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;
 
   return (
