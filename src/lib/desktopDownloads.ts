@@ -1,3 +1,5 @@
-/** Stable public paths for desktop installers (see scripts/stage-desktop-downloads.ts). */
-export const DESKTOP_MAC_DMG = "/downloads/blinkywink-mac.dmg";
-export const DESKTOP_WINDOWS_SETUP = "/downloads/blinkywink-windows-setup.exe";
+/** Hosted desktop installers (GitHub Releases). */
+export const DESKTOP_MAC_DMG =
+  "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta/blinkywink-mac.dmg";
+export const DESKTOP_WINDOWS_SETUP =
+  "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta/blinkywink-windows-setup.exe";
