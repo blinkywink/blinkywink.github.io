@@ -7,6 +7,7 @@ const PACK_T4_SRC = "/sounds/pack-t4.ogg";
 const PACK_PARAGON_SRC = "/sounds/pack-paragon.wav";
 const BUY_SRC = "/sounds/buy.wav";
 const WHOOSH_SRC = "/sounds/whoosh-2.wav";
+const BLOON_POP_SRC = "/sounds/bloon-pop.wav";
 
 const VOLUME_KEY = "bloon.sfxVolume";
 const DEFAULT_VOLUME = 0.5;
@@ -179,6 +180,7 @@ export function preloadPackSounds(): void {
   warm(PACK_PARAGON_SRC);
   warm(BUY_SRC);
   warm(WHOOSH_SRC);
+  warm(BLOON_POP_SRC);
 }
 
 export function preloadHeroEquipVo(heroId?: string): void {
@@ -225,6 +227,11 @@ export function playBuy(): void {
 /** Whoosh when flinging a revealed pack card away. */
 export function playCardWhoosh(): void {
   playBuffer(WHOOSH_SRC, 0.32);
+}
+
+/** Quiet BTD6-style bloon pop (Bloon Hero hits). */
+export function playBloonPop(): void {
+  playBuffer(BLOON_POP_SRC, 0.22);
 }
 
 /** Hero place/equip voice line (first line only). No-op if missing (e.g. Silas). */

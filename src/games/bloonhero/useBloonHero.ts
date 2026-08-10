@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { playBloonPop, preloadPackSounds } from "../../lib/packSounds";
 import {
   APPROACH_S,
   EMPTY_STREAK_PER_LIFE,
@@ -175,6 +176,7 @@ export function useBloonHero() {
 
   useEffect(() => {
     ensureBloonImages();
+    preloadPackSounds();
   }, []);
 
   const [state, setState] = useState<HeroState>(() => ({
@@ -872,6 +874,7 @@ export function useBloonHero() {
       attemptedRef.current += 1;
       hitsRef.current += 1;
       spawnHitFlash(lane, judge);
+      playBloonPop();
       const noteCount = Math.max(
         1,
         songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
