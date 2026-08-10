@@ -20,7 +20,7 @@ import { useBananaCatch, type DropKind } from "./useBananaCatch";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean }) => void;
+  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
 };
 
 function dropSrc(kind: DropKind): string {
@@ -81,9 +81,9 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     prevPhase.current = state.phase;
     if (was === "lost") return;
     if (state.phase === "lost") {
-      onRunEnd?.({ cleared: state.cleared });
+      onRunEnd?.({ cleared: state.cleared, coinsEarned: state.cashEarned });
     }
-  }, [state.phase, state.cleared, onRunEnd]);
+  }, [state.phase, state.cleared, state.cashEarned, onRunEnd]);
 
   // Track lock state; Esc exits pointer lock natively.
   useEffect(() => {

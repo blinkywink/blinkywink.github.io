@@ -11,7 +11,7 @@ import { useGeoguessr } from "./useGeoguessr";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number; coinsEarned: number }) => void;
 };
 
 export function GeoguessrGame({ onBack, onRunEnd }: Props) {
@@ -54,10 +54,12 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
       onRunEnd?.({
         cleared: state.clearedRun,
         correctCount: state.correctCount,
+        coinsEarned:
+          (state.lastRun?.score ?? 0) * (state.perfectRun ? 2 : 1),
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.correctCount, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correctCount, state.lastRun, state.perfectRun, onRunEnd]);
 
   if (state.phase === "results" && state.lastRun) {
     return (

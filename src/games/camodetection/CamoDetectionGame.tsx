@@ -8,7 +8,7 @@ import { useCamoDetection } from "./useCamoDetection";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number; coinsEarned: number }) => void;
 };
 
 export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
@@ -32,10 +32,12 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
       onRunEnd?.({
         cleared: state.clearedRun,
         correctCount: state.correct,
+        coinsEarned:
+          (state.lastRun?.score ?? 0) * (state.perfectRun ? 2 : 1),
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.correct, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correct, state.lastRun, state.perfectRun, onRunEnd]);
 
   useEffect(() => {
     if (state.phase !== "recalling") return;

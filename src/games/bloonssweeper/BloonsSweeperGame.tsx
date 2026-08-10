@@ -11,7 +11,7 @@ import { useBloonsSweeper } from "./useBloonsSweeper";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean }) => void;
+  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
 };
 
 export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
@@ -23,9 +23,11 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
     const was = prevStatus.current;
     prevStatus.current = state.status;
     if (was === "won" || was === "lost") return;
-    if (state.status === "won") onRunEnd?.({ cleared: true });
-    else if (state.status === "lost") onRunEnd?.({ cleared: false });
-  }, [state.status, onRunEnd]);
+    if (state.status === "won")
+      onRunEnd?.({ cleared: true, coinsEarned: state.reward });
+    else if (state.status === "lost")
+      onRunEnd?.({ cleared: false, coinsEarned: 0 });
+  }, [state.status, state.reward, onRunEnd]);
 
   const done = state.status === "won" || state.status === "lost";
 

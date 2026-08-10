@@ -12,7 +12,7 @@ import { useZoomedGame } from "./useZoomedGame";
 type Props = {
   onBack: () => void;
   /** Fired once when results show (clear and/or accuracy). */
-  onRunEnd?: (info: { cleared: boolean; correctCount: number }) => void;
+  onRunEnd?: (info: { cleared: boolean; correctCount: number; coinsEarned: number }) => void;
 };
 
 export function ZoomedGame({ onBack, onRunEnd }: Props) {
@@ -55,10 +55,12 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
       onRunEnd?.({
         cleared: state.clearedRun,
         correctCount: state.correctCount,
+        coinsEarned:
+          (state.lastRun?.score ?? 0) * (state.perfectRun ? 2 : 1),
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.correctCount, onRunEnd]);
+  }, [state.phase, state.clearedRun, state.correctCount, state.lastRun, state.perfectRun, onRunEnd]);
 
   if (state.phase === "results" && state.lastRun) {
     return (

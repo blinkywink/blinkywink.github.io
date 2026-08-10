@@ -14,6 +14,7 @@ import { useHeroFx } from "./auth/HeroFxProvider";
 import { HeroFxProvider } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
+import { CashAmount } from "./components/CurrencyChip";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
@@ -234,6 +235,7 @@ function AppShell() {
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
   const [bonusToast, setBonusToast] = useState<string | null>(null);
   const [showBackToGames, setShowBackToGames] = useState(false);
+  const [runCashEarned, setRunCashEarned] = useState(0);
 
   const creditHeroClear = useCallback(
     async (cleared: boolean) => {
@@ -327,7 +329,12 @@ function AppShell() {
   const quizRewardHandlers = useMemo(() => {
     const make =
       (game: FeaturedBonusGame) =>
-      (info: { cleared: boolean; correctCount: number }) => {
+      (info: {
+        cleared: boolean;
+        correctCount: number;
+        coinsEarned: number;
+      }) => {
+        setRunCashEarned(info.coinsEarned);
         // Packs / fail state first so we never flash results then yank the route.
         queueClearAndBonusPacks({
           cleared: info.cleared,
@@ -368,7 +375,8 @@ function AppShell() {
   );
 
   const onSweeperRunEnd = useCallback(
-    (info: { cleared: boolean }) => {
+    (info: { cleared: boolean; coinsEarned: number }) => {
+      setRunCashEarned(info.coinsEarned);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
@@ -380,7 +388,8 @@ function AppShell() {
   );
 
   const onBananaCatchRunEnd = useCallback(
-    (info: { cleared: boolean }) => {
+    (info: { cleared: boolean; coinsEarned: number }) => {
+      setRunCashEarned(info.coinsEarned);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
@@ -533,6 +542,10 @@ function AppShell() {
           <div className="rewards-done__card">
             <p className="eyebrow">Rewards claimed</p>
             <h2>Nice haul</h2>
+            <div className="rewards-done__cash">
+              <CashAmount amount={runCashEarned} size={28} />
+              <span className="rewards-done__cash-label">Cash earned</span>
+            </div>
             <button
               type="button"
               className="btn btn--primary btn--lg"
