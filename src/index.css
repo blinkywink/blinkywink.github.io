@@ -9139,6 +9139,7 @@ body:has(.zoomed-page) {
     0 0 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   user-select: none;
+  transition: opacity 0.08s linear;
 }
 
 .hero-lyrics--solo {
@@ -9809,7 +9810,7 @@ body:has(.zoomed-page) {
   height: 2.25rem;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
-  background: rgba(12, 22, 18, 0.55);
+  background: rgba(18, 18, 24, 0.72);
   color: #f4f1e6;
   cursor: pointer;
 }
@@ -9827,7 +9828,8 @@ body:has(.zoomed-page) {
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(6, 12, 10, 0.62);
+  background: rgba(8, 10, 16, 0.72);
+  backdrop-filter: blur(6px);
 }
 
 .hero-settings__card {
@@ -9837,9 +9839,9 @@ body:has(.zoomed-page) {
   gap: 1rem;
   padding: 1rem 1.1rem 1.15rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(165deg, #2d6b3a 0%, #1a3d28 55%, #142820 100%);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(165deg, #1c2430 0%, #121218 55%, #101018 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
 
 .hero-settings__head {

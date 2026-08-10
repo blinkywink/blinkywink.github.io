@@ -649,6 +649,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                     {
                       "--lyrics-scale": settings.lyricsScale ?? 1,
                       "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
+                      opacity: state.currentLyric.opacity,
                     } as CSSProperties
                   }
                   aria-live="polite"

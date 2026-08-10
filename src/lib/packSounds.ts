@@ -1,13 +1,13 @@
 /** Short UI / pack / hero SFX — Web Audio for low-latency play. */
 
-const SLICE_SRC = "/sounds/pack-slice.wav";
-const CARD_FOCUS_SRC = "/sounds/card-focus.wav";
-const PACK_RARE_SRC = "/sounds/pack-rare.wav";
+const SLICE_SRC = "/sounds/pack-slice.mp3";
+const CARD_FOCUS_SRC = "/sounds/card-focus.mp3";
+const PACK_RARE_SRC = "/sounds/pack-rare.mp3";
 const PACK_T4_SRC = "/sounds/pack-t4.ogg";
-const PACK_PARAGON_SRC = "/sounds/pack-paragon.wav";
-const BUY_SRC = "/sounds/buy.wav";
-const WHOOSH_SRC = "/sounds/whoosh-2.wav";
-const BLOON_POP_SRC = "/sounds/bloon-pop.wav";
+const PACK_PARAGON_SRC = "/sounds/pack-paragon.mp3";
+const BUY_SRC = "/sounds/buy.mp3";
+const WHOOSH_SRC = "/sounds/whoosh-2.mp3";
+const BLOON_POP_SRC = "/sounds/bloon-pop.mp3";
 
 const VOLUME_KEY = "bloon.sfxVolume";
 const DEFAULT_VOLUME = 0.5;
@@ -188,10 +188,10 @@ export function preloadHeroEquipVo(heroId?: string): void {
   ctx();
   if (heroId) {
     const id = heroId.toLowerCase();
-    if (HERO_EQUIP_VO.has(id)) warm(`/sounds/heroes/${id}.wav`);
+    if (HERO_EQUIP_VO.has(id)) warm(`/sounds/heroes/${id}.mp3`);
     return;
   }
-  for (const id of HERO_EQUIP_VO) warm(`/sounds/heroes/${id}.wav`);
+  for (const id of HERO_EQUIP_VO) warm(`/sounds/heroes/${id}.mp3`);
 }
 
 /** Pack-cut / open slash. */
@@ -240,5 +240,5 @@ export function playBloonPop(volume = 1): void {
 export function playHeroEquip(heroId: string): void {
   const id = heroId.trim().toLowerCase();
   if (!HERO_EQUIP_VO.has(id)) return;
-  playBuffer(`/sounds/heroes/${id}.wav`, 1, { replaceHero: true });
+  playBuffer(`/sounds/heroes/${id}.mp3`, 1, { replaceHero: true });
 }

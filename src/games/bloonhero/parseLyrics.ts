@@ -21,6 +21,8 @@ export type LyricDisplay = {
   fullWord: string;
   visible: string;
   pending: string;
+  /** 0–1 — fades out after hold when the next word is far away. */
+  opacity: number;
 };
 
 /** @deprecated Alias for chart loaders — each entry is one timed cue, not a full line. */
@@ -276,6 +278,22 @@ function buildCues(
     }
   }
 
+  /** If the next syllable is far away, don't hold this word until it lands. */
+  const BREAK_GAP_SEC = 1.0;
+  const HOLD_AFTER_WORD_SEC = 2.2;
+  for (let i = 0; i < cues.length; i++) {
+    const cue = cues[i]!;
+    const next = cues[i + 1];
+    const holdEnd = cue.start + HOLD_AFTER_WORD_SEC;
+    if (!next) {
+      cue.end = Math.min(cue.end, holdEnd);
+      continue;
+    }
+    if (next.start - cue.start > BREAK_GAP_SEC) {
+      cue.end = Math.min(cue.end, holdEnd);
+    }
+  }
+
   return cues.filter((c) => c.text.length > 0);
 }
 
@@ -432,12 +450,17 @@ export function lyricDisplayAtTime(
   songTime: number,
 ): LyricDisplay | null {
   if (!cues.length || songTime < -0.5) return null;
+  const FADE_SEC = 0.45;
   for (const cue of cues) {
-    if (songTime >= cue.start - 0.04 && songTime <= cue.end + 0.06) {
-      const visible = cue.fullWord.slice(0, cue.revealedChars);
-      const pending = cue.fullWord.slice(cue.revealedChars);
-      return { fullWord: cue.fullWord, visible, pending };
+    if (songTime < cue.start - 0.04) continue;
+    if (songTime > cue.end + FADE_SEC) continue;
+    const visible = cue.fullWord.slice(0, cue.revealedChars);
+    const pending = cue.fullWord.slice(cue.revealedChars);
+    let opacity = 1;
+    if (songTime > cue.end) {
+      opacity = Math.max(0, 1 - (songTime - cue.end) / FADE_SEC);
     }
+    return { fullWord: cue.fullWord, visible, pending, opacity };
   }
   return null;
 }
@@ -451,6 +474,7 @@ export function lyricDisplaysEqual(
   return (
     a.fullWord === b.fullWord &&
     a.visible === b.visible &&
-    a.pending === b.pending
+    a.pending === b.pending &&
+    Math.abs(a.opacity - b.opacity) < 0.04
   );
 }
