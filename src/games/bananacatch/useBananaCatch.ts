@@ -460,7 +460,9 @@ export function useBananaCatch() {
       if (blimpTimerRef.current <= 0 && fieldW > 0) {
         const kind = pickBlimp(t);
         const gapOk = t - lastBlimpAtRef.current >= BLIMP_MIN_GAP_S;
-        const blimpAlive = [...s.drops, ...spawn].some((d) => isBlimp(d.kind));
+        const blimpAlive = [...dropsRef.current, ...spawn].some((d) =>
+          isBlimp(d.kind),
+        );
         if (kind && gapOk && !blimpAlive) {
           spawn.push(
             makeDropAt(kind, fieldW, nextId, {
@@ -491,7 +493,7 @@ export function useBananaCatch() {
       let cashEarned = s.cashEarned;
 
       const nextDrops: Drop[] = [];
-      for (const d of [...s.drops, ...spawn]) {
+      for (const d of [...dropsRef.current, ...spawn]) {
         const y = d.y + d.vy * dt;
         const rot = d.rot + d.spin * dt;
         const visualH = heightFor(d.kind, d.w, d.h);
