@@ -8476,18 +8476,20 @@ body:has(.zoomed-page) {
 
 .catch-field__sky {
   position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
+  inset: -18%;
+  width: 136%;
+  height: 136%;
   pointer-events: none;
   z-index: 0;
   background-image: url("/images/bananas/monkey-meadow-bg.webp");
-  /* Zoomed crop of the meadow, tiled so the drift can loop forever */
-  background-size: 2200px auto;
+  /* Heavy zoom + blur so path edges/tile seams melt into grass texture */
+  background-size: 3600px auto;
   background-repeat: repeat;
   background-position: 0 0;
-  animation: catch-meadow-drift 70s linear infinite;
-  filter: saturate(1.05) brightness(0.96);
+  animation: catch-meadow-drift 140s linear infinite;
+  filter: blur(14px) saturate(1.08) brightness(0.97);
+  transform: scale(1.08);
+  transform-origin: center;
 }
 
 .catch-field__sky::after {
@@ -8496,8 +8498,8 @@ body:has(.zoomed-page) {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 40%, rgba(10, 28, 14, 0.28) 100%),
-    linear-gradient(180deg, rgba(140, 200, 255, 0.12) 0%, transparent 28%);
+    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 40%, rgba(10, 28, 14, 0.3) 100%),
+    linear-gradient(180deg, rgba(140, 200, 255, 0.1) 0%, transparent 28%);
 }
 
 @keyframes catch-meadow-drift {
@@ -8505,8 +8507,8 @@ body:has(.zoomed-page) {
     background-position: 0 0;
   }
   to {
-    /* One full tile in each axis so the loop is seamless */
-    background-position: 2200px 1417px;
+    /* One full tile in each axis so the loop is seamless (3600 × 532/826) */
+    background-position: 3600px 2318px;
   }
 }
 

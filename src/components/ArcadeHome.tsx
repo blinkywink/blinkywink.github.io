@@ -393,39 +393,11 @@ export function ArcadeHome({
 
   const games = [
     {
-      id: "bananacatch" as const,
-      title: "BANANA CATCH",
-      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
-      label: "Banana Catch, Endless banana catch with escalating bloons",
-      preview: <BananaCatchPreview />,
-    },
-    {
-      id: "pricecheck" as const,
-      title: "PRICE CHECK",
-      blurb: "Which tower costs more?",
-      label: "Price Check, Which tower costs more?",
-      preview: <PricePreview />,
-    },
-    {
-      id: "bloonssweeper" as const,
-      title: "BLOONS SWEEPER",
-      blurb: "Minesweeper, red bloons are the mines.",
-      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
-      preview: <SweeperPreview />,
-    },
-    {
-      id: "camodetection" as const,
-      title: "CAMO DETECTION",
-      blurb: "Remember where the camo bloons flashed.",
-      label: "Camo Detection, Remember where the camo bloons flashed",
-      preview: <CamoPreview />,
-    },
-    {
-      id: "geoguessr" as const,
-      title: "GEOGUESSR",
-      blurb: "Guess the map from a zoomed crop.",
-      label: "Geoguessr, Guess the map from a zoomed crop",
-      preview: <MapPreview />,
+      id: "zoomed" as const,
+      title: "ZOOMED",
+      blurb: "Guess the tower from the image.",
+      label: "Zoomed, Guess the tower from the image",
+      preview: <ZoomedPreview />,
     },
     {
       id: "bloonle" as const,
@@ -435,6 +407,34 @@ export function ArcadeHome({
       preview: <BloonlePreview />,
     },
     {
+      id: "bananacatch" as const,
+      title: "BANANA CATCH",
+      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
+      label: "Banana Catch, Endless banana catch with escalating bloons",
+      preview: <BananaCatchPreview />,
+    },
+    {
+      id: "bloonssweeper" as const,
+      title: "BLOONS SWEEPER",
+      blurb: "Minesweeper, red bloons are the mines.",
+      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
+      preview: <SweeperPreview />,
+    },
+    {
+      id: "pricecheck" as const,
+      title: "PRICE CHECK",
+      blurb: "Which tower costs more?",
+      label: "Price Check, Which tower costs more?",
+      preview: <PricePreview />,
+    },
+    {
+      id: "camodetection" as const,
+      title: "CAMO DETECTION",
+      blurb: "Remember where the camo bloons flashed.",
+      label: "Camo Detection, Remember where the camo bloons flashed",
+      preview: <CamoPreview />,
+    },
+    {
       id: "orderup" as const,
       title: "ORDER UP",
       blurb: "Drag towers cheap to pricey before time runs out.",
@@ -442,11 +442,11 @@ export function ArcadeHome({
       preview: <OrderPreview />,
     },
     {
-      id: "zoomed" as const,
-      title: "ZOOMED",
-      blurb: "Guess the tower from the image.",
-      label: "Zoomed, Guess the tower from the image",
-      preview: <ZoomedPreview />,
+      id: "geoguessr" as const,
+      title: "GEOGUESSR",
+      blurb: "Guess the map from a zoomed crop.",
+      label: "Geoguessr, Guess the map from a zoomed crop",
+      preview: <MapPreview />,
     },
   ];
   const shown = pick?.length

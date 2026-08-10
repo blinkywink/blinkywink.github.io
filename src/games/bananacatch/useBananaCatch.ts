@@ -5,6 +5,7 @@ import {
   BFB_UNLOCK_S,
   BLUE_UNLOCK_S,
   BLIMP_BASE_ROT,
+  BLIMP_MIN_GAP_S,
   CATCH_CLEAR_BANANAS,
   CATCH_LIVES,
   CASH_PER_BANANA,
@@ -20,8 +21,10 @@ import {
   PLAYER_WIDTH,
   SPAWN_BANANA_MS_MIN,
   SPAWN_BANANA_MS_START,
-  SPAWN_HAZARD_MS_MIN,
-  SPAWN_HAZARD_MS_START,
+  SPAWN_BLIMP_MS_MIN,
+  SPAWN_BLIMP_MS_START,
+  SPAWN_BLOON_MS_MIN,
+  SPAWN_BLOON_MS_START,
   drawSizeFor,
   isBlimp,
   type DropKind,
@@ -41,6 +44,11 @@ export type Drop = {
   rot: number;
   spin: number;
   damage: number;
+  /** Horizontal rest position; sway offsets from this. */
+  anchorX: number;
+  swayAmp: number;
+  swayFreq: number;
+  swayPhase: number;
 };
 
 export type CatchPhase = "ready" | "playing" | "lost";
@@ -57,62 +65,77 @@ export type CatchState = {
   cleared: boolean;
 };
 
+type OrdinaryKind = "red" | "blue" | "green" | "pink";
+
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
-function makeDrop(
+function clamp(n: number, lo: number, hi: number) {
+  return Math.min(hi, Math.max(lo, n));
+}
+
+function spanFor(kind: DropKind, w: number, h: number) {
+  return isBlimp(kind) ? h : w;
+}
+
+function heightFor(kind: DropKind, w: number, h: number) {
+  return isBlimp(kind) ? w : h;
+}
+
+function makeDropAt(
   kind: DropKind,
   fieldW: number,
   nextId: () => number,
+  opts: {
+    x: number;
+    y?: number;
+    swayAmp?: number;
+    swayFreq?: number;
+    swayPhase?: number;
+  },
 ): Drop {
   const { w, h } = drawSizeFor(kind);
-  const damage = KIND_DAMAGE[kind];
-  const vy = KIND_SPEED[kind];
+  const spanW = spanFor(kind, w, h);
+  const half = spanW * 0.5;
+  const anchorX = clamp(opts.x, half, Math.max(half, fieldW - half));
   let rot = 0;
   let spin = 0;
   if (kind === "banana") {
     rot = rand(-55, 55);
     spin = rand(-40, 40);
   } else if (isBlimp(kind)) {
-    // Wiki sprites face sideways; 90° CW puts the nose pointing down.
     rot = BLIMP_BASE_ROT;
-    spin = 0;
   }
 
-  // After 90° CW the visual AABB is swapped; keep them inside the field.
-  const spanW = isBlimp(kind) ? h : w;
-  const halfW = spanW * 0.5;
   return {
     id: nextId(),
     kind,
-    x: rand(halfW, Math.max(halfW, fieldW - halfW)),
-    y: -(isBlimp(kind) ? w : h),
-    vy,
+    x: anchorX,
+    y: opts.y ?? -heightFor(kind, w, h),
+    vy: KIND_SPEED[kind],
     w,
     h,
     rot,
     spin,
-    damage,
+    damage: KIND_DAMAGE[kind],
+    anchorX,
+    swayAmp: opts.swayAmp ?? 0,
+    swayFreq: opts.swayFreq ?? 0,
+    swayPhase: opts.swayPhase ?? 0,
   };
 }
 
-function pickHazard(elapsed: number): DropKind {
-  const unlocked: DropKind[] = ["red"];
+function pickOrdinary(elapsed: number): OrdinaryKind {
+  const unlocked: OrdinaryKind[] = ["red"];
   if (elapsed >= BLUE_UNLOCK_S) unlocked.push("blue");
   if (elapsed >= GREEN_UNLOCK_S) unlocked.push("green");
   if (elapsed >= PINK_UNLOCK_S) unlocked.push("pink");
-  if (elapsed >= MOAB_UNLOCK_S) unlocked.push("moab");
-  if (elapsed >= BFB_UNLOCK_S) unlocked.push("bfb");
-
-  // Weight toward mid tiers; blimps stay rarer
   const weights = unlocked.map((k) => {
-    if (k === "bfb") return 0.7;
-    if (k === "moab") return 0.95;
-    if (k === "pink") return 1.15;
-    if (k === "green") return 1.25;
-    if (k === "blue") return 1.2;
-    return 1.35;
+    if (k === "pink") return 1.1;
+    if (k === "green") return 1.2;
+    if (k === "blue") return 1.25;
+    return 1.4;
   });
   const total = weights.reduce((a, b) => a + b, 0);
   let roll = Math.random() * total;
@@ -120,7 +143,115 @@ function pickHazard(elapsed: number): DropKind {
     roll -= weights[i]!;
     if (roll <= 0) return unlocked[i]!;
   }
-  return unlocked[unlocked.length - 1]!;
+  return unlocked[0]!;
+}
+
+function pickBlimp(elapsed: number): "moab" | "bfb" | null {
+  if (elapsed < MOAB_UNLOCK_S) return null;
+  if (elapsed >= BFB_UNLOCK_S && Math.random() < 0.32) return "bfb";
+  return "moab";
+}
+
+/** Horizontal / double / thick / column / sway patterns for ordinary bloons. */
+function spawnFormation(
+  fieldW: number,
+  elapsed: number,
+  nextId: () => number,
+): Drop[] {
+  const kind = pickOrdinary(elapsed);
+  const { w, h } = drawSizeFor(kind);
+  const gap = w * 1.35;
+  const patternRoll = Math.random();
+
+  // ~40% stay as a lone float (sometimes with a little sway)
+  if (patternRoll < 0.38) {
+    return [
+      makeDropAt(kind, fieldW, nextId, {
+        x: rand(w, Math.max(w, fieldW - w)),
+        swayAmp: Math.random() < 0.45 ? rand(18, 42) : 0,
+        swayFreq: rand(1.6, 2.6),
+        swayPhase: rand(0, Math.PI * 2),
+      }),
+    ];
+  }
+
+  const swayAmp = rand(28, 56);
+  const swayFreq = rand(1.4, 2.4);
+  const phase = rand(0, Math.PI * 2);
+  const sharedSway = {
+    swayAmp,
+    swayFreq,
+    swayPhase: phase,
+  };
+
+  // Single thick horizontal line (4–6)
+  if (patternRoll < 0.58) {
+    const count = 4 + Math.floor(Math.random() * 3);
+    const totalW = (count - 1) * gap;
+    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+    return Array.from({ length: count }, (_, i) =>
+      makeDropAt(kind, fieldW, nextId, {
+        x: startX + i * gap,
+        ...sharedSway,
+      }),
+    );
+  }
+
+  // Double line (2 rows)
+  if (patternRoll < 0.74) {
+    const count = 3 + Math.floor(Math.random() * 3);
+    const totalW = (count - 1) * gap;
+    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+    const rowGap = h * 1.15;
+    const out: Drop[] = [];
+    for (let row = 0; row < 2; row++) {
+      for (let i = 0; i < count; i++) {
+        out.push(
+          makeDropAt(kind, fieldW, nextId, {
+            x: startX + i * gap + (row === 1 ? gap * 0.35 : 0),
+            y: -h - row * rowGap,
+            ...sharedSway,
+            swayPhase: phase + row * 0.35,
+          }),
+        );
+      }
+    }
+    return out;
+  }
+
+  // Thick packed bar (2 deep, tight)
+  if (patternRoll < 0.88) {
+    const count = 5 + Math.floor(Math.random() * 2);
+    const tight = gap * 0.78;
+    const totalW = (count - 1) * tight;
+    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+    const out: Drop[] = [];
+    for (let row = 0; row < 2; row++) {
+      for (let i = 0; i < count; i++) {
+        out.push(
+          makeDropAt(kind, fieldW, nextId, {
+            x: startX + i * tight,
+            y: -h - row * (h * 0.85),
+            ...sharedSway,
+          }),
+        );
+      }
+    }
+    return out;
+  }
+
+  // Vertical column with staggered snake sway
+  const count = 4 + Math.floor(Math.random() * 3);
+  const x = rand(w, Math.max(w, fieldW - w));
+  return Array.from({ length: count }, (_, i) =>
+    makeDropAt(kind, fieldW, nextId, {
+      x,
+      y: -h - i * (h * 1.1),
+      swayAmp: swayAmp * 0.85,
+      swayFreq,
+      swayPhase: phase + i * 0.55,
+    }),
+  );
 }
 
 /** Axis-aligned player catch body vs elliptical/circular drop body. */
@@ -132,7 +263,6 @@ function hitsPlayer(
   d: Drop,
 ): boolean {
   const hit = KIND_HIT[d.kind];
-  // Blimps are drawn landscape then rotated 90° CW → swap axes for the hit.
   const boxW = isBlimp(d.kind) ? d.h : d.w;
   const boxH = isBlimp(d.kind) ? d.w : d.h;
   let rx: number;
@@ -179,7 +309,9 @@ export function useBananaCatch() {
   const playerXRef = useRef(0.5);
   const nextIdRef = useRef(1);
   const bananaTimerRef = useRef(0);
-  const hazardTimerRef = useRef(0);
+  const bloonTimerRef = useRef(0);
+  const blimpTimerRef = useRef(0);
+  const lastBlimpAtRef = useRef(-999);
   const elapsedRef = useRef(0);
   const awardedRef = useRef(false);
   const frameRef = useRef(0);
@@ -217,7 +349,9 @@ export function useBananaCatch() {
     pendingCashRef.current = 0;
     nextIdRef.current = 1;
     bananaTimerRef.current = 350;
-    hazardTimerRef.current = 700;
+    bloonTimerRef.current = 900;
+    blimpTimerRef.current = MOAB_UNLOCK_S * 1000;
+    lastBlimpAtRef.current = -999;
     elapsedRef.current = 0;
     lastTsRef.current = 0;
     targetXRef.current = 0.5;
@@ -263,30 +397,59 @@ export function useBananaCatch() {
       const { fieldW, fieldH } = s;
       const t = elapsedRef.current;
 
-      // Spawn pressure only, speeds stay fixed per kind
-      const ramp = Math.min(1.6, t / 30);
+      const ramp = Math.min(1.4, t / 40);
       const bananaInterval =
         SPAWN_BANANA_MS_START -
         (SPAWN_BANANA_MS_START - SPAWN_BANANA_MS_MIN) * Math.min(1, ramp);
-      const hazardInterval =
-        SPAWN_HAZARD_MS_START -
-        (SPAWN_HAZARD_MS_START - SPAWN_HAZARD_MS_MIN) * Math.min(1, ramp);
+      const bloonInterval =
+        SPAWN_BLOON_MS_START -
+        (SPAWN_BLOON_MS_START - SPAWN_BLOON_MS_MIN) * Math.min(1, ramp);
+      const blimpInterval =
+        SPAWN_BLIMP_MS_START -
+        (SPAWN_BLIMP_MS_START - SPAWN_BLIMP_MS_MIN) * Math.min(1, ramp * 0.55);
 
       bananaTimerRef.current -= dt * 1000;
-      hazardTimerRef.current -= dt * 1000;
+      bloonTimerRef.current -= dt * 1000;
+      blimpTimerRef.current -= dt * 1000;
 
       const spawn: Drop[] = [];
+
       if (bananaTimerRef.current <= 0 && fieldW > 0) {
-        spawn.push(makeDrop("banana", fieldW, nextId));
+        spawn.push(
+          makeDropAt("banana", fieldW, nextId, {
+            x: rand(40, Math.max(40, fieldW - 40)),
+            swayAmp: rand(10, 28),
+            swayFreq: rand(1.2, 2),
+            swayPhase: rand(0, Math.PI * 2),
+          }),
+        );
         bananaTimerRef.current = bananaInterval * rand(0.75, 1.15);
       }
-      if (hazardTimerRef.current <= 0 && fieldW > 0) {
-        spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
-        const burstChance = 0.06 + Math.min(0.22, ramp * 0.14);
-        if (Math.random() < burstChance) {
-          spawn.push(makeDrop(pickHazard(t), fieldW, nextId));
+
+      if (bloonTimerRef.current <= 0 && fieldW > 0) {
+        spawn.push(...spawnFormation(fieldW, t, nextId));
+        // Extra pause after a big formation so the screen can breathe
+        const justBig = spawn.length >= 6;
+        bloonTimerRef.current =
+          bloonInterval * (justBig ? rand(1.35, 1.8) : rand(0.85, 1.2));
+      }
+
+      if (blimpTimerRef.current <= 0 && fieldW > 0) {
+        const kind = pickBlimp(t);
+        const gapOk = t - lastBlimpAtRef.current >= BLIMP_MIN_GAP_S;
+        const blimpAlive = [...s.drops, ...spawn].some((d) => isBlimp(d.kind));
+        if (kind && gapOk && !blimpAlive) {
+          spawn.push(
+            makeDropAt(kind, fieldW, nextId, {
+              x: rand(fieldW * 0.2, fieldW * 0.8),
+            }),
+          );
+          lastBlimpAtRef.current = t;
+          blimpTimerRef.current = blimpInterval * rand(0.95, 1.25);
+        } else {
+          // Retry soon if locked out, or full wait if not unlocked yet
+          blimpTimerRef.current = kind ? 900 : 2000;
         }
-        hazardTimerRef.current = hazardInterval * rand(0.85, 1.15);
       }
 
       const lerp = 1 - Math.exp(-PLAYER_LERP * dt);
@@ -308,10 +471,24 @@ export function useBananaCatch() {
       for (const d of [...s.drops, ...spawn]) {
         const y = d.y + d.vy * dt;
         const rot = d.rot + d.spin * dt;
-        const visualH = isBlimp(d.kind) ? d.w : d.h;
+        const visualH = heightFor(d.kind, d.w, d.h);
+        const spanW = spanFor(d.kind, d.w, d.h);
+        const half = spanW * 0.5;
+        const x =
+          d.swayAmp > 0
+            ? clamp(
+                d.anchorX +
+                  Math.sin(elapsedRef.current * d.swayFreq + d.swayPhase) *
+                    d.swayAmp,
+                half,
+                Math.max(half, fieldW - half),
+              )
+            : d.anchorX;
+
         if (y - visualH / 2 > fieldH + 40) continue;
 
-        if (hitsPlayer(playerLeft, playerTop, hitW, hitH, { ...d, y })) {
+        const moved = { ...d, x, y, rot };
+        if (hitsPlayer(playerLeft, playerTop, hitW, hitH, moved)) {
           if (d.kind === "banana") {
             bananas += 1;
             cashEarned += CASH_PER_BANANA;
@@ -321,7 +498,7 @@ export function useBananaCatch() {
           }
           continue;
         }
-        nextDrops.push({ ...d, y, rot });
+        nextDrops.push(moved);
       }
 
       const dead = lives <= 0;

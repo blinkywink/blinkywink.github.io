@@ -17,7 +17,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
-import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -472,6 +472,10 @@ export function PackOpenerTest({
           later(finishEnter, CARD_ENTER_MS);
         }, suspenseMs);
         return;
+      }
+
+      if (card && maxPathTier(card.pathLevels) >= 4) {
+        playPackT4();
       }
 
       setPhaseBoth("enter");

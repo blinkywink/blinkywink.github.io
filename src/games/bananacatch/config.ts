@@ -110,16 +110,21 @@ export const PLAYER_LERP = 14;
 /** Scarcer bananas. */
 export const SPAWN_BANANA_MS_START = 1200;
 export const SPAWN_BANANA_MS_MIN = 720;
-/** Gentler hazard pressure. */
-export const SPAWN_HAZARD_MS_START = 1300;
-export const SPAWN_HAZARD_MS_MIN = 480;
+/** Ordinary bloons (singles + formations). */
+export const SPAWN_BLOON_MS_START = 1100;
+export const SPAWN_BLOON_MS_MIN = 520;
+/** Blimps on their own slow clock so they never stack. */
+export const SPAWN_BLIMP_MS_START = 11000;
+export const SPAWN_BLIMP_MS_MIN = 7500;
+/** Hard floor between any two blimps. */
+export const BLIMP_MIN_GAP_S = 8;
 
 /** Seconds until each hazard tier can start spawning. */
 export const BLUE_UNLOCK_S = 10;
 export const GREEN_UNLOCK_S = 20;
 export const PINK_UNLOCK_S = 32;
-export const MOAB_UNLOCK_S = 42;
-export const BFB_UNLOCK_S = 58;
+export const MOAB_UNLOCK_S = 48;
+export const BFB_UNLOCK_S = 70;
 
 export function drawSizeFor(kind: DropKind): { w: number; h: number } {
   const scale = KIND_SCALE[kind];

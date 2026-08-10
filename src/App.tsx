@@ -294,6 +294,7 @@ function AppShell() {
   const finishRewards = useCallback(() => {
     setRewardPack(null);
     setBonusChoices(null);
+    // Packs finished — soft land on the games hub (not mid-results yank).
     navigate(gamesPath());
   }, [navigate]);
 
@@ -305,35 +306,33 @@ function AppShell() {
         ? pickRewardTowerPackChoices(owned, 3, exclude)
         : [];
 
-      const hasReward = Boolean(free) || choices.length > 0;
+      // Stay on the game route. Pack / picker overlays cover the results UI.
+      // Failures with no packs leave the results panel alone.
       if (free) {
         setRewardPack({ pack: free, reason: "clear" });
         setBonusChoices(choices.length ? choices : null);
+      } else if (choices.length) {
+        setRewardPack(null);
+        setBonusChoices(choices);
       } else {
         setRewardPack(null);
-        setBonusChoices(choices.length ? choices : null);
+        setBonusChoices(null);
       }
-
-      // Leave the results screen — pack UI lives at App shell level.
-      if (hasReward) navigate(gamesPath());
     },
-    [owned, navigate],
+    [owned],
   );
 
   const quizRewardHandlers = useMemo(() => {
     const make =
       (game: FeaturedBonusGame) =>
       (info: { cleared: boolean; correctCount: number }) => {
-        void (async () => {
-          // Credit hero clear before pack UI so progress can't get skipped
-          // behind reward-pack state churn.
-          await creditHeroClear(info.cleared);
-          void settleFeaturedBonus(game, info.cleared);
-          queueClearAndBonusPacks({
-            cleared: info.cleared,
-            wantBonus: earnsQuizBonusPack(info.correctCount),
-          });
-        })();
+        // Packs / fail state first so we never flash results then yank the route.
+        queueClearAndBonusPacks({
+          cleared: info.cleared,
+          wantBonus: earnsQuizBonusPack(info.correctCount),
+        });
+        void creditHeroClear(info.cleared);
+        void settleFeaturedBonus(game, info.cleared);
       };
     return {
       zoomed: make("zoomed"),
@@ -351,9 +350,8 @@ function AppShell() {
       if (!choices.length) return;
       setRewardPack(null);
       setBonusChoices(choices);
-      navigate(gamesPath());
     },
-    [owned, navigate],
+    [owned],
   );
 
   const onBloonleRunEnd = useCallback(
@@ -368,29 +366,24 @@ function AppShell() {
 
   const onSweeperRunEnd = useCallback(
     (info: { cleared: boolean }) => {
-      void (async () => {
-        await creditHeroClear(info.cleared);
-        void settleFeaturedBonus("bloonssweeper", info.cleared);
-        // Win = clear pack + bonus pick (Sweeper has no 7/10 score).
-        queueClearAndBonusPacks({
-          cleared: info.cleared,
-          wantBonus: info.cleared,
-        });
-      })();
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("bloonssweeper", info.cleared);
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
   const onBananaCatchRunEnd = useCallback(
     (info: { cleared: boolean }) => {
-      void (async () => {
-        await creditHeroClear(info.cleared);
-        void settleFeaturedBonus("bananacatch", info.cleared);
-        queueClearAndBonusPacks({
-          cleared: info.cleared,
-          wantBonus: info.cleared,
-        });
-      })();
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("bananacatch", info.cleared);
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
