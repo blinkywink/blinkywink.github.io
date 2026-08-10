@@ -289,7 +289,7 @@ export function usePriceCheck() {
         continueError:
           (profileRef.current?.coins ?? 0) < SHARED_RUN.continueCost
             ? "Not enough Cash."
-            : "Purchase failed — try again.",
+            : "Purchase failed, try again.",
       }));
       return;
     }

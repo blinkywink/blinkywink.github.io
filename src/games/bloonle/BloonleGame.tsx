@@ -183,12 +183,12 @@ export function BloonleGame({
               <p className="bloonle-result__slug">{state.puzzle.slug}</p>
               {state.status === "won" && state.guesses.length === 1 ? (
                 <p className="bloonle-result__pack">
-                  First try — Cash doubled!
+                  First try, Cash doubled!
                 </p>
               ) : null}
               {state.status === "won" && state.guesses.length <= 3 ? (
                 <p className="bloonle-result__pack">
-                  Fast solve — pick a bonus pack!
+                  Fast solve, pick a bonus pack!
                 </p>
               ) : null}
               {state.status === "won" && state.reward > 0 ? (
@@ -196,7 +196,7 @@ export function BloonleGame({
               ) : null}
               {isDaily ? (
                 <p className="bloonle-result__next">
-                  Next daily in {formatCountdown(state.msUntilNext)} — or keep
+                  Next daily in {formatCountdown(state.msUntilNext)}, or keep
                   playing practice below
                 </p>
               ) : null}

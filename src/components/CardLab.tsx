@@ -618,7 +618,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               {totalOwned === 0
                 ? isRemote
                   ? "No cards unlocked yet."
-                  : "You don’t own any cards yet — open packs from the shop."
+                  : "You don’t own any cards yet, open packs from the shop."
                 : query.trim()
                   ? `${ownedAllCards.length} matching · ${totalOwned} / ${totalCards} owned · tap a card for the holo view.`
                   : `${totalOwned} / ${totalCards} owned · tap a card for the holo view.`}

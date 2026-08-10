@@ -56,7 +56,7 @@ export function ResultsScreen({
 
         {perfect ? (
           <p className="results__pack-note results__pack-note--perfect">
-            All correct — Cash doubled!
+            All correct, Cash doubled!
           </p>
         ) : null}
 

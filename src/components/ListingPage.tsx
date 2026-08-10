@@ -115,7 +115,7 @@ export function ListingPage() {
       playBuy();
       setCoinBalance(bal);
       await Promise.all([refreshCards(), refreshProfile()]);
-      setStatus("Bought — card added to your collection.");
+      setStatus("Bought, card added to your collection.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Purchase failed.");
@@ -188,7 +188,7 @@ export function ListingPage() {
         setStatus(
           mine
             ? `Accepted ${offer.offerPrice.toLocaleString()} Cash from ${offer.buyerUsername}.`
-            : "Offer accepted — card is yours!",
+            : "Offer accepted, card is yours!",
         );
       } else if (mine) {
         setStatus("Offer declined.");

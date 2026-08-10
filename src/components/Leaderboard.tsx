@@ -250,7 +250,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                       }
                     >
                       <span className="board-card__rank">
-                        {row.rank ?? "—"}
+                        {row.rank ?? "-"}
                       </span>
                       <UserAvatar crop={row.avatar} size={56} />
                       <span className="board-card__name">

@@ -65,7 +65,7 @@ export function TradeInbox() {
           // Seller accepted/declined (or listing sold) — pull Cash + cards.
           await Promise.all([refreshCards(), refreshProfile()]);
           setNotice(
-            "A market offer resolved — Cash and cards were refreshed.",
+            "A market offer resolved, Cash and cards were refreshed.",
           );
           setOpen(true);
         }
@@ -192,7 +192,7 @@ export function TradeInbox() {
       await notifyMarketPartner(offer.partnerId);
       await Promise.all([refreshCards(), refreshProfile()]);
       setNotice(
-        `Accepted offer — Cash received, card sent to ${offer.partnerUsername}.`,
+        `Accepted offer, Cash received, card sent to ${offer.partnerUsername}.`,
       );
       setOpen(false);
       navigate(listingPath(offer.listingId));

@@ -75,7 +75,7 @@ function SidePanel({
       className={`price-side price-side--n${n} ${tone}`}
       disabled={disabled}
       onClick={() => onPick(sideKey)}
-      aria-label={`Pick ${label} — ${side.combos.length} tower${side.combos.length === 1 ? "" : "s"}`}
+      aria-label={`Pick ${label}, ${side.combos.length} tower${side.combos.length === 1 ? "" : "s"}`}
     >
       <span className="price-side__label">{label}</span>
       <div className="price-side__art">

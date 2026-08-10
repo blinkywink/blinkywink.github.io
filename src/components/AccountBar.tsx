@@ -109,7 +109,7 @@ export function AccountBar() {
           <p className="auth-modal__blurb">
             {mode === "signup"
               ? "Create an account to save progress. New players start with 5,000 Cash."
-              : "Username + password only — no email. Sign in to sync Cash and cards."}
+              : "Username + password only, no email. Sign in to sync Cash and cards."}
           </p>
 
           <div className="auth-modal__tabs">

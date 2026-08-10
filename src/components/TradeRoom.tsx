@@ -204,7 +204,7 @@ export function TradeRoom() {
       setLocalOffer(next.myOffer);
       await pingTrade(tradeId);
       if (next.status === "completed") {
-        setStatus("Trade complete — cards swapped!");
+        setStatus("Trade complete, cards swapped!");
         void refreshCards();
       }
     } catch (err) {

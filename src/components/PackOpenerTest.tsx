@@ -419,7 +419,7 @@ export function PackOpenerTest({
     buyLockRef.current = false;
     setBuyBusy(false);
     if (balance == null) {
-      setBuyError("Purchase failed — try again.");
+      setBuyError("Purchase failed, try again.");
       return;
     }
     playBuy();
@@ -601,7 +601,7 @@ export function PackOpenerTest({
       buyLockRef.current = false;
       setBuyBusy(false);
       reset();
-      setBuyError("Purchase failed — try again.");
+      setBuyError("Purchase failed, try again.");
       return;
     }
     setCoinBalance(balance);

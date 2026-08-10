@@ -159,7 +159,7 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
         {state.status === "lost" ? (
           <div className="sweeper-result is-lose" role="status">
             <h2>Popped a red bloon</h2>
-            <p>Flag the reds next time — try another board.</p>
+            <p>Flag the reds next time, try another board.</p>
             <div className="sweeper-result__actions">
               <button type="button" className="btn btn--primary" onClick={restart}>
                 Try again

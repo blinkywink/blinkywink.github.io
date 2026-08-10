@@ -135,7 +135,7 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
       const name = heroById(id)?.name ?? "Hero";
       notifyHeroProc({
         heroId: id,
-        message: `${name}: ready to level up — tap`,
+        message: `${name}: ready to level up, tap`,
         openHeroes: true,
       });
       break;

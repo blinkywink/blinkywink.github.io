@@ -1,12 +1,17 @@
 import { useEffect, useRef } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
+import { LivesMeter } from "../../components/LivesMeter";
 import {
   BANANA_IMAGE,
   BFB_IMAGE,
+  BLUE_BLOON_IMAGE,
   CATCH_CLEAR_BANANAS,
+  CATCH_LIVES,
+  GREEN_BLOON_IMAGE,
   MOAB_IMAGE,
   MONKEY_IMAGE,
+  PINK_BLOON_IMAGE,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   RED_BLOON_IMAGE,
@@ -19,10 +24,23 @@ type Props = {
 };
 
 function dropSrc(kind: DropKind): string {
-  if (kind === "banana") return BANANA_IMAGE;
-  if (kind === "moab") return MOAB_IMAGE;
-  if (kind === "bfb") return BFB_IMAGE;
-  return RED_BLOON_IMAGE;
+  switch (kind) {
+    case "banana":
+      return BANANA_IMAGE;
+    case "blue":
+      return BLUE_BLOON_IMAGE;
+    case "green":
+      return GREEN_BLOON_IMAGE;
+    case "pink":
+      return PINK_BLOON_IMAGE;
+    case "moab":
+      return MOAB_IMAGE;
+    case "bfb":
+      return BFB_IMAGE;
+    case "red":
+    default:
+      return RED_BLOON_IMAGE;
+  }
 }
 
 export function BananaCatchGame({ onBack, onRunEnd }: Props) {
@@ -55,6 +73,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
 
   const playing = state.phase === "playing";
   const done = state.phase === "lost";
+  const attemptsUsed = CATCH_LIVES - state.lives;
 
   function pointerToAim(clientX: number) {
     const el = fieldRef.current;
@@ -73,17 +92,14 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             <img src={BANANA_IMAGE} alt="" width={28} height={28} />
             <strong>{state.bananas}</strong>
           </span>
-          <span className="catch-stat" title="Lives">
-            <img src={RED_BLOON_IMAGE} alt="" width={20} height={26} />
-            <strong>{state.lives}</strong>
-          </span>
+          <LivesMeter maxAttempts={CATCH_LIVES} attemptsUsed={attemptsUsed} />
           <span className="catch-stat catch-stat--cash">
             <CashAmount amount={state.cashEarned} size={18} />
           </span>
         </div>
 
         <p className="catch-hint">
-          Catch bananas forever · dodge reds, then MOABs &amp; BFBs
+          Catch bananas forever · dodge reds, blues, greens, pinks, then blimps
         </p>
 
         <div
@@ -111,8 +127,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
               alt=""
               draggable={false}
               style={{
-                width: d.size,
-                height: d.size,
+                width: d.w,
+                height: d.h,
                 left: d.x,
                 top: d.y,
                 transform: `translate(-50%, -50%) rotate(${d.rot}deg)`,
@@ -142,7 +158,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
               />
               <h2>Ready to harvest?</h2>
               <p>
-                Endless run — grab bananas, dodge everything. Survive for{" "}
+                Endless run, grab bananas, dodge everything. Survive for{" "}
                 <strong>{CATCH_CLEAR_BANANAS}+</strong> bananas to clear.
               </p>
               <button type="button" className="btn btn--primary" onClick={start}>
@@ -162,7 +178,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 <CashAmount amount={state.cashEarned} size={18} />
                 {state.cleared ? (
                   <span className="catch-overlay__note">
-                    Cleared ({clearAt}+ bananas) — packs unlocked.
+                    Cleared ({clearAt}+ bananas), packs unlocked.
                   </span>
                 ) : (
                   <span className="catch-overlay__note">
