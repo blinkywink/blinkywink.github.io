@@ -16,7 +16,7 @@ import {
   leadInSeconds,
   type Judge,
 } from "./config";
-import { drawHeroHighway, type DartFx } from "./drawHighway";
+import { drawHeroHighway, ensureBloonImages, type DartFx } from "./drawHighway";
 import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
@@ -145,6 +145,10 @@ export function useBloonHero() {
   const { setCoinBalance } = useAuth();
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
+
+  useEffect(() => {
+    ensureBloonImages();
+  }, []);
 
   const [state, setState] = useState<HeroState>(() => ({
     ...INITIAL,

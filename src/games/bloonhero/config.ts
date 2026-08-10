@@ -28,13 +28,22 @@ export const CASH_PER_PERFECT = 8;
 export const CASH_PER_GREAT = 5;
 export const CASH_PER_GOOD = 3;
 
+/** Lane bloon art (Closest match to GH frets among available assets). */
+export const BLOON_IMAGES = [
+  "/images/bloons/green-bloon.webp",
+  "/images/bloons/red-bloon.webp",
+  "/images/bloons/pink-bloon.webp",
+  "/images/bloons/blue-bloon.webp",
+  "/images/bloons/camo-bloon.webp",
+] as const;
+
 /** 5 frets: D F J K L */
 export const LANES = [
   { id: 0, key: "d", label: "D", color: "#22c55e" },
   { id: 1, key: "f", label: "F", color: "#ef4444" },
-  { id: 2, key: "j", label: "J", color: "#eab308" },
+  { id: 2, key: "j", label: "J", color: "#f472b6" },
   { id: 3, key: "k", label: "K", color: "#3b82f6" },
-  { id: 4, key: "l", label: "L", color: "#f97316" },
+  { id: 4, key: "l", label: "L", color: "#84cc16" },
 ] as const;
 
 export const KEY_TO_LANE: Record<string, number> = {

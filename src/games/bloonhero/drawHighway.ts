@@ -1,5 +1,6 @@
 import {
   APPROACH_S,
+  BLOON_IMAGES,
   HIT_LINE_Y,
   LANES,
   SPAWN_Y,
@@ -43,13 +44,67 @@ export type HighwayDrawState = {
 };
 
 const LANE_FILL = LANES.map((l) => l.color);
-const LANE_DIM = LANES.map((l) => hexAlpha(l.color, 0.14));
-const LANE_HOT = LANES.map((l) => hexAlpha(l.color, 0.28));
-const LANE_BORDER = LANES.map((l) => hexAlpha(l.color, 0.4));
-const LANE_BORDER_HOT = LANES.map((l) => hexAlpha(l.color, 0.85));
-const LANE_TRAIL = LANES.map((l) => hexAlpha(l.color, 0.55));
-const LANE_TRAIL_HOT = LANES.map((l) => hexAlpha(l.color, 0.9));
-const LANE_TRAIL_DROP = LANES.map((l) => hexAlpha(l.color, 0.2));
+const LANE_TRAIL = LANES.map((l) => hexAlpha(l.color, 0.7));
+const LANE_TRAIL_HOT = LANES.map((l) => hexAlpha(l.color, 0.95));
+const LANE_TRAIL_DROP = LANES.map((l) => hexAlpha(l.color, 0.28));
+const LANE_BORDER = LANES.map((l) => hexAlpha(l.color, 0.35));
+
+type BloonSprite = {
+  img: HTMLImageElement;
+  outline: HTMLCanvasElement | null;
+};
+
+const sprites: (BloonSprite | null)[] = BLOON_IMAGES.map(() => null);
+let loadStarted = false;
+
+function makeOutline(img: HTMLImageElement, color: string): HTMLCanvasElement {
+  const pad = 6;
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  const c = document.createElement("canvas");
+  c.width = w + pad * 2;
+  c.height = h + pad * 2;
+  const ctx = c.getContext("2d");
+  if (!ctx) return c;
+  const offsets = [
+    [2.4, 0],
+    [-2.4, 0],
+    [0, 2.4],
+    [0, -2.4],
+    [1.8, 1.8],
+    [-1.8, 1.8],
+    [1.8, -1.8],
+    [-1.8, -1.8],
+  ];
+  for (const [dx, dy] of offsets) {
+    ctx.drawImage(img, pad + dx, pad + dy, w, h);
+  }
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.drawImage(img, pad, pad, w, h);
+  return c;
+}
+
+/** Prefetch bloon art used by the highway canvas. */
+export function ensureBloonImages(): void {
+  if (loadStarted || typeof Image === "undefined") return;
+  loadStarted = true;
+  BLOON_IMAGES.forEach((src, i) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+    const finish = () => {
+      sprites[i] = {
+        img,
+        outline: makeOutline(img, LANES[i]!.color),
+      };
+    };
+    if (img.complete && img.naturalWidth) finish();
+    else img.addEventListener("load", finish, { once: true });
+  });
+}
 
 function yFor(now: number, t: number, height: number, approach: number): number {
   const u = (t - now) / approach;
@@ -81,13 +136,79 @@ function drawDart(
   ctx.restore();
 }
 
-/** Lean canvas highway — solid fills, approach-aware, dart pop FX. */
+function drawBloonAt(
+  ctx: CanvasRenderingContext2D,
+  lane: number,
+  cx: number,
+  cy: number,
+  size: number,
+  alpha: number,
+) {
+  const spr = sprites[lane];
+  if (!spr?.img.complete || !spr.img.naturalWidth) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = LANE_FILL[lane] ?? "#fff";
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    return;
+  }
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(spr.img, cx - size / 2, cy - size / 2, size, size);
+  ctx.globalAlpha = 1;
+}
+
+function drawReceptor(
+  ctx: CanvasRenderingContext2D,
+  lane: number,
+  cx: number,
+  cy: number,
+  size: number,
+  pressed: boolean,
+) {
+  const spr = sprites[lane];
+  const push = pressed ? 3 : 0;
+  const scale = pressed ? 0.9 : 1;
+  const s = size * scale;
+  const y = cy + push;
+
+  ctx.save();
+  // Ghost fill
+  if (spr?.img.complete && spr.img.naturalWidth) {
+    ctx.globalAlpha = pressed ? 0.42 : 0.26;
+    ctx.drawImage(spr.img, cx - s / 2, y - s / 2, s, s);
+    ctx.globalAlpha = 1;
+    if (spr.outline) {
+      const os = s * 1.12;
+      ctx.globalAlpha = pressed ? 1 : 0.88;
+      ctx.drawImage(spr.outline, cx - os / 2, y - os / 2, os, os);
+      ctx.globalAlpha = 1;
+    }
+  } else {
+    ctx.globalAlpha = pressed ? 0.35 : 0.18;
+    ctx.fillStyle = LANE_FILL[lane]!;
+    ctx.beginPath();
+    ctx.arc(cx, y, s * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = LANE_FILL[lane]!;
+    ctx.lineWidth = pressed ? 3 : 2.5;
+    ctx.beginPath();
+    ctx.arc(cx, y, s * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/** Lean canvas highway — bloon notes + outline receptors. */
 export function drawHeroHighway(
   ctx: CanvasRenderingContext2D,
   cssW: number,
   cssH: number,
   state: HighwayDrawState,
 ): number {
+  ensureBloonImages();
   const { now, notes, pressed, holding } = state;
   const approach = state.approachSec ?? APPROACH_S;
   const labels = state.laneLabels;
@@ -96,7 +217,6 @@ export function drawHeroHighway(
 
   ctx.clearRect(0, 0, cssW, cssH);
 
-  // Soft BTD-ish sky wash (still lean — one fill)
   const bg = ctx.createLinearGradient(0, 0, 0, cssH);
   bg.addColorStop(0, "#4eb8e0");
   bg.addColorStop(0.45, "#6ecf8a");
@@ -108,28 +228,26 @@ export function drawHeroHighway(
   const gap = 3;
   const laneW = (cssW - gap * (laneCount - 1)) / laneCount;
   const hitY = (HIT_LINE_Y / 100) * cssH;
-  const noteH = Math.max(10, Math.min(16, laneW * 0.26));
-  const noteW = Math.min(laneW * 0.7, 48);
-  const r = 4;
+  const bloonSize = Math.min(laneW * 0.78, 56);
 
   for (let i = 0; i < laneCount; i++) {
     const x = i * (laneW + gap);
     const active = pressed.has(i) || holding.has(i);
 
-    ctx.fillStyle = active ? LANE_HOT[i]! : "rgba(20,50,30,0.22)";
+    ctx.fillStyle = "rgba(20,50,30,0.18)";
     ctx.fillRect(x, 0, laneW, cssH);
-
-    ctx.strokeStyle = active ? LANE_BORDER_HOT[i]! : LANE_BORDER[i]!;
-    ctx.lineWidth = active ? 2 : 1;
+    ctx.strokeStyle = LANE_BORDER[i]!;
+    ctx.lineWidth = 1;
     ctx.strokeRect(x + 0.5, 0.5, laneW - 1, cssH - 1);
 
-    const rx = x + (laneW - noteW) / 2;
-    const ry = hitY - noteH / 2;
-    ctx.fillStyle = active ? LANE_HOT[i]! : LANE_DIM[i]!;
-    ctx.strokeStyle = LANE_BORDER_HOT[i]!;
-    ctx.lineWidth = 2;
-    fillRoundRect(ctx, rx, ry, noteW, noteH, r);
-    ctx.stroke();
+    drawReceptor(
+      ctx,
+      i,
+      x + laneW / 2,
+      hitY,
+      bloonSize,
+      active,
+    );
 
     const label = (labels?.[i] ?? LANES[i]!.label).toUpperCase();
     ctx.fillStyle = "rgba(20,40,28,0.85)";
@@ -139,7 +257,7 @@ export function drawHeroHighway(
     ctx.fillText(label, x + laneW / 2, cssH - 14);
   }
 
-  ctx.strokeStyle = "rgba(255,236,160,0.9)";
+  ctx.strokeStyle = "rgba(255,236,160,0.75)";
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
   ctx.beginPath();
@@ -182,32 +300,33 @@ export function drawHeroHighway(
     const cx = x + laneW / 2;
     const yHead = yFor(now, n.t, cssH, approach);
 
+    // Sustain line sits behind the bloon.
     if (n.sustain && n.dur > 0) {
       const yEnd = yFor(now, n.t + n.dur, cssH, approach);
       const top = Math.min(yHead, yEnd);
       const bot = Math.max(yHead, yEnd);
-      const tw = Math.min(laneW * 0.2, 10);
-      ctx.fillStyle = n.releasedEarly
+      const tw = Math.max(4, Math.min(laneW * 0.12, 8));
+      ctx.strokeStyle = n.releasedEarly
         ? LANE_TRAIL_DROP[lane]!
         : n.holding
           ? LANE_TRAIL_HOT[lane]!
           : LANE_TRAIL[lane]!;
-      ctx.fillRect(cx - tw / 2, top, tw, Math.max(2, bot - top));
+      ctx.lineWidth = tw;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx, top);
+      ctx.lineTo(cx, bot);
+      ctx.stroke();
+      ctx.lineCap = "butt";
     }
 
     const miss = n.result === "miss";
-    const nx = cx - noteW / 2;
-    const ny = yHead - noteH / 2;
-    ctx.globalAlpha = miss ? 0.35 : 1;
-    ctx.fillStyle = LANE_FILL[lane]!;
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.lineWidth = n.holding && !n.releasedEarly ? 2.5 : 1.5;
-    fillRoundRect(ctx, nx, ny, noteW, noteH, r);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+    // Hide head once hit unless still holding a sustain.
+    if (!(n.resolved && n.result !== "miss" && !n.holding)) {
+      drawBloonAt(ctx, lane, cx, yHead, bloonSize, miss ? 0.35 : 1);
+    }
   }
 
-  // Darts fire from bottom toward hit line, then pop.
   for (const d of darts) {
     const age = (wallMs - d.born) / 1000;
     if (age < 0 || age > d.dur + 0.14) continue;
@@ -236,25 +355,6 @@ export function drawHeroHighway(
   }
 
   return nextHint;
-}
-
-function fillRoundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  rad: number,
-) {
-  const rr = Math.min(rad, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + rr, y);
-  ctx.arcTo(x + w, y, x + w, y + h, rr);
-  ctx.arcTo(x + w, y + h, x, y + h, rr);
-  ctx.arcTo(x, y + h, x, y, rr);
-  ctx.arcTo(x, y, x + w, y, rr);
-  ctx.closePath();
-  ctx.fill();
 }
 
 function hexAlpha(hex: string, a: number): string {

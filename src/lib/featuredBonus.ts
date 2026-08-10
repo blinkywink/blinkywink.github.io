@@ -3,6 +3,8 @@ import { GAME_PATHS, type GamePath } from "./routes";
 export const FEATURED_BONUS_CASH = 500;
 
 const LS_KEY = "bloon-arcade:featured-bonus-game";
+/** Fired whenever the featured bonus game id changes (same tab). */
+export const FEATURED_BONUS_CHANGED = "bloon-arcade:featured-bonus-changed";
 
 export type FeaturedBonusGame = GamePath;
 
@@ -36,6 +38,13 @@ function writeFeaturedBonusGame(game: FeaturedBonusGame): void {
   } catch {
     // ignore
   }
+  try {
+    window.dispatchEvent(
+      new CustomEvent(FEATURED_BONUS_CHANGED, { detail: game }),
+    );
+  } catch {
+    // ignore
+  }
 }
 
 /** Current glowing bonus game — creates one if missing. */
@@ -48,12 +57,9 @@ export function getOrCreateFeaturedBonusGame(): FeaturedBonusGame {
 }
 
 /**
- * Resolve playing the featured game.
- * Win → pay +500 and rotate. Lose → rotate with no bonus.
- * Playing a different game does nothing.
- *
- * Silas: whenever featured would rotate, `silasHoldChance` chance to keep
- * the current featured game instead.
+ * Resolve after any finished run.
+ * Always rotates the featured glow (unless Silas holds it).
+ * Awards +500 only when the run cleared the current featured game.
  */
 export function resolveFeaturedBonusGame(
   played: FeaturedBonusGame,
@@ -68,16 +74,14 @@ export function resolveFeaturedBonusGame(
   silasFroze?: boolean;
 } {
   const featured = getOrCreateFeaturedBonusGame();
-  if (played !== featured) {
-    return { awarded: false, amount: 0, next: featured };
-  }
+  const wasFeaturedClear = cleared && played === featured;
 
   const holdChance = opts.silasHoldChance ?? opts.silasFreezeChance ?? 0;
   const held = holdChance > 0 && Math.random() < holdChance;
   const next = held ? featured : pickRandom(featured);
   if (!held) writeFeaturedBonusGame(next);
 
-  if (!cleared) {
+  if (!wasFeaturedClear) {
     return {
       awarded: false,
       amount: 0,

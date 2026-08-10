@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   FEATURED_BONUS_CASH,
+  FEATURED_BONUS_CHANGED,
   getOrCreateFeaturedBonusGame,
   type FeaturedBonusGame,
 } from "../lib/featuredBonus";
@@ -407,10 +408,17 @@ export function ArcadeHome({
     const sync = () => setBonusGame(getOrCreateFeaturedBonusGame());
     window.addEventListener("focus", sync);
     document.addEventListener("visibilitychange", sync);
+    window.addEventListener(FEATURED_BONUS_CHANGED, sync);
     return () => {
       window.removeEventListener("focus", sync);
       document.removeEventListener("visibilitychange", sync);
+      window.removeEventListener(FEATURED_BONUS_CHANGED, sync);
     };
+  }, []);
+
+  // Hub remount / path back from a game.
+  useEffect(() => {
+    setBonusGame(getOrCreateFeaturedBonusGame());
   }, []);
 
   const games = [
