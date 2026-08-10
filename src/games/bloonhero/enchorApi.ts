@@ -68,7 +68,7 @@ export function expertNotesFor(
   return expert?.count ?? null;
 }
 
-/** Hits that offer Guitar + Vocals. */
+/** Hits that offer Guitar (and Vocals when present). */
 export function playableInstrumentsOnHit(
   hit: EnchorHit,
 ): PlayableInstrument[] {
@@ -79,14 +79,12 @@ export function playableInstrumentsOnHit(
   return out;
 }
 
-/** Only guitar charts that also have a vocal track. */
+/** Guitar Expert charts (vocals optional). */
 export function isPlayableEnchorHit(hit: EnchorHit): boolean {
   if (hit.modchart) return false;
   if (!hit.notesData) return false;
   const instruments = playableInstrumentsOnHit(hit);
-  if (!instruments.includes("guitar") || !instruments.includes("vocals")) {
-    return false;
-  }
+  if (!instruments.includes("guitar")) return false;
   for (const issue of hit.folderIssues ?? []) {
     if (BLOCKED_FOLDER_ISSUES.has(issue.folderIssue)) return false;
   }

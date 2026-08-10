@@ -3,9 +3,10 @@ import type { ChartNote } from "./parseChartFile";
 export type { ChartNote };
 export type Judge = "perfect" | "great" | "good" | "miss";
 
-/** Travel time from top of highway to the hit line. */
+/** Travel time from top of highway to the hit line at 1× speed. */
 export const APPROACH_S = 1.85;
-export const HIT_LINE_Y = 82;
+/** Hit line height (%). Raised so darts have room to fly up from below. */
+export const HIT_LINE_Y = 70;
 export const SPAWN_Y = -8;
 export const LEAD_IN_BEATS = 4;
 

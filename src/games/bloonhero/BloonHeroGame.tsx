@@ -1,6 +1,7 @@
 import {
   useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type FormEvent,
 } from "react";
@@ -14,6 +15,7 @@ import {
   playableInstrumentsOnHit,
 } from "./enchorApi";
 import { INSTRUMENT_LABEL } from "./instruments";
+import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -25,13 +27,21 @@ type Props = {
   }) => void;
 };
 
+function formatKey(k: string): string {
+  if (k === " ") return "Space";
+  if (k.length === 1) return k.toUpperCase();
+  return k;
+}
+
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const {
     state,
+    settings,
     noteCount,
     search,
     setQuery,
     setVolume,
+    updateSettings,
     pickSong,
     setInstrument,
     start,
@@ -45,20 +55,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setCountdownEl,
   } = useBloonHero();
 
-  const volumeSlider = (
-    <label className="hero-volume">
-      <span>Vol {Math.round(state.volume * 100)}</span>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        step={1}
-        value={Math.round(state.volume * 100)}
-        aria-label="Bloon Hero volume"
-        onChange={(e) => setVolume(Number(e.target.value) / 100)}
-      />
-    </label>
-  );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [capturingLane, setCapturingLane] = useState<number | null>(null);
   const prevPhase = useRef(state.phase);
 
   useEffect(() => {
@@ -74,18 +72,169 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     }
   }, [state.phase, state.cleared, state.didWell, state.cashEarned, onRunEnd]);
 
+  useEffect(() => {
+    if (capturingLane == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        setCapturingLane(null);
+        return;
+      }
+      const next = e.key.toLowerCase();
+      if (!next || next === "tab" || next === "shift" || next === "control" || next === "alt" || next === "meta") {
+        return;
+      }
+      const keys = [...settings.keys] as HeroKeybinds;
+      // Clear duplicates
+      for (let i = 0; i < keys.length; i++) {
+        if (i !== capturingLane && keys[i] === next) keys[i] = "";
+      }
+      keys[capturingLane] = next;
+      // Fill blanks with defaults that aren't used
+      const used = new Set(keys.filter(Boolean));
+      for (let i = 0; i < keys.length; i++) {
+        if (keys[i]) continue;
+        const fill = DEFAULT_KEYS.find((d) => !used.has(d)) ?? `f${i + 1}`;
+        keys[i] = fill;
+        used.add(fill);
+      }
+      updateSettings({ keys });
+      setCapturingLane(null);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [capturingLane, settings.keys, updateSettings]);
+
+  const volumeSlider = (
+    <label className="hero-volume">
+      <span>Vol {Math.round(state.volume * 100)}</span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={Math.round(state.volume * 100)}
+        aria-label="Bloon Hero volume"
+        onChange={(e) => setVolume(Number(e.target.value) / 100)}
+      />
+    </label>
+  );
+
   const playing = state.phase === "playing";
   const countingIn = playing && (state.countdown != null || state.songTime < 0);
   const attemptsUsed = maxLives - state.lives;
+  const keyHint = settings.keys.map((k) => formatKey(k)).join(" ");
+  const needsInstrumentPick = state.availableInstruments.length > 1;
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
     void search();
   };
 
+  const settingsPanel = settingsOpen ? (
+    <div
+      className="hero-settings"
+      role="dialog"
+      aria-label="Bloon Hero settings"
+    >
+      <div className="hero-settings__card">
+        <header className="hero-settings__head">
+          <h3>Settings</h3>
+          <button
+            type="button"
+            className="hero-settings__close"
+            aria-label="Close settings"
+            onClick={() => {
+              setCapturingLane(null);
+              setSettingsOpen(false);
+            }}
+          >
+            ×
+          </button>
+        </header>
+
+        <label className="hero-settings__row">
+          <span>
+            Track speed <strong>{settings.trackSpeed.toFixed(2)}×</strong>
+          </span>
+          <input
+            type="range"
+            min={60}
+            max={180}
+            step={5}
+            value={Math.round(settings.trackSpeed * 100)}
+            aria-label="Track speed"
+            onChange={(e) =>
+              updateSettings({ trackSpeed: Number(e.target.value) / 100 })
+            }
+          />
+          <span className="hero-settings__hint">
+            Higher = notes arrive sooner
+          </span>
+        </label>
+
+        <div className="hero-settings__binds">
+          <span>Keybinds</span>
+          <div className="hero-settings__keys" role="group" aria-label="Lane keys">
+            {LANES.map((lane) => (
+              <button
+                key={lane.id}
+                type="button"
+                className={`hero-settings__key${
+                  capturingLane === lane.id ? " is-listening" : ""
+                }`}
+                style={{ "--lane": lane.color } as CSSProperties}
+                onClick={() =>
+                  setCapturingLane((c) => (c === lane.id ? null : lane.id))
+                }
+              >
+                <i style={{ background: lane.color }} aria-hidden />
+                {capturingLane === lane.id
+                  ? "…"
+                  : formatKey(settings.keys[lane.id] ?? "?")}
+              </button>
+            ))}
+          </div>
+          <span className="hero-settings__hint">
+            Click a lane, then press a key
+          </span>
+          <button
+            type="button"
+            className="btn btn--ghost hero-settings__reset"
+            onClick={() =>
+              updateSettings({
+                trackSpeed: 1,
+                keys: [...DEFAULT_KEYS] as HeroKeybinds,
+              })
+            }
+          >
+            Reset defaults
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className={`hero-page${state.phase === "results" ? " is-done" : ""}`}>
       <GameHeader title="BLOON HERO" icon="" />
+
+      <button
+        type="button"
+        className="hero-gear"
+        aria-label="Open settings"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
+          <path
+            fill="currentColor"
+            d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.69.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.26.12.55.02.69-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+          />
+        </svg>
+      </button>
+
+      {settingsPanel}
 
       <main className="hero-main">
         {state.phase === "browse" || state.phase === "loading" ? (
@@ -96,8 +245,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <a href="https://www.enchor.us/" target="_blank" rel="noreferrer">
                 enchor.us
               </a>
-              . Packed audio stays in sync. Only charts with Guitar + Vocals.
-              Pick which to play — same D F J K L (hold for sustains).
+              . Expert Guitar charts — Vocals when the pack has them. Defaults{" "}
+              {keyHint} (hold for sustains).
             </p>
             <form className="hero-search" onSubmit={onSearch}>
               <input
@@ -230,7 +379,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                       key={lane.id}
                       type="button"
                       className="hero-lane-hit"
-                      aria-label={`Lane ${lane.label}`}
+                      aria-label={`Lane ${formatKey(settings.keys[lane.id] ?? "")}`}
                       onPointerDown={(e) => {
                         e.preventDefault();
                         if (!playing) return;
@@ -268,29 +417,35 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 <div className="hero-overlay">
                   <h2>{state.title}</h2>
                   <p>{state.artist}</p>
-                  <p className="hero-overlay__detail">Choose your instrument</p>
-                  <div
-                    className="hero-instrument-pick"
-                    role="group"
-                    aria-label="Instrument"
-                  >
-                    {state.availableInstruments.map((inst) => (
-                      <button
-                        key={inst}
-                        type="button"
-                        className={`hero-instrument-pick__btn${
-                          state.instrument === inst ? " is-active" : ""
-                        }`}
-                        onClick={() => setInstrument(inst)}
+                  {needsInstrumentPick ? (
+                    <>
+                      <p className="hero-overlay__detail">
+                        Choose your instrument
+                      </p>
+                      <div
+                        className="hero-instrument-pick"
+                        role="group"
+                        aria-label="Instrument"
                       >
-                        {INSTRUMENT_LABEL[inst]}
-                      </button>
-                    ))}
-                  </div>
+                        {state.availableInstruments.map((inst) => (
+                          <button
+                            key={inst}
+                            type="button"
+                            className={`hero-instrument-pick__btn${
+                              state.instrument === inst ? " is-active" : ""
+                            }`}
+                            onClick={() => setInstrument(inst)}
+                          >
+                            {INSTRUMENT_LABEL[inst]}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
                   <p className="hero-overlay__detail">
                     {state.instrument
-                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · D F J K L`
-                      : "Guitar or Vocals — same D F J K L controls"}
+                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · ${keyHint}`
+                      : "Pick Guitar or Vocals"}
                   </p>
                   {state.error ? (
                     <p className="hero-browse__err">{state.error}</p>

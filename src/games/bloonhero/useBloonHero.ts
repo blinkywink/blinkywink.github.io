@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import {
+  APPROACH_S,
   CASH_PER_GOOD,
   CASH_PER_GREAT,
   CASH_PER_PERFECT,
@@ -10,17 +11,23 @@ import {
   HERO_CLEAR_BONUS,
   HERO_GOOD_BONUS,
   HERO_LIVES,
-  KEY_TO_LANE,
   WINDOW_GOOD,
   judgeOffset,
   leadInSeconds,
   type Judge,
 } from "./config";
-import { drawHeroHighway } from "./drawHighway";
+import { drawHeroHighway, type DartFx } from "./drawHighway";
 import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
 import type { ChartNote } from "./parseChartFile";
+import {
+  keyToLaneMap,
+  readHeroSettings,
+  writeHeroSettings,
+  type HeroKeybinds,
+  type HeroSettings,
+} from "./settings";
 import { createStemPlayer, type StemPlayer } from "./stemPlayer";
 
 export type ActiveNote = ChartNote & {
@@ -143,10 +150,17 @@ export function useBloonHero() {
     ...INITIAL,
     volume: readStoredVolume(),
   }));
+  const [settings, setSettings] = useState<HeroSettings>(() => readHeroSettings());
   const stateRef = useRef(state);
   stateRef.current = state;
   const volumeRef = useRef(state.volume);
   volumeRef.current = state.volume;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  const keyMapRef = useRef(keyToLaneMap(settings.keys));
+  keyMapRef.current = keyToLaneMap(settings.keys);
+  const dartsRef = useRef<DartFx[]>([]);
+  const dartIdRef = useRef(0);
 
   const songRef = useRef<LoadedSong | null>(null);
   const playerRef = useRef<StemPlayer | null>(null);
@@ -254,6 +268,50 @@ export function useBloonHero() {
     setState((prev) => (prev.volume === v ? prev : { ...prev, volume: v }));
   }, []);
 
+  const updateSettings = useCallback((partial: Partial<HeroSettings>) => {
+    setSettings((prev) => {
+      const next: HeroSettings = {
+        trackSpeed:
+          partial.trackSpeed != null
+            ? Math.min(2, Math.max(0.6, partial.trackSpeed))
+            : prev.trackSpeed,
+        keys: partial.keys
+          ? ([...partial.keys] as HeroKeybinds)
+          : ([...prev.keys] as HeroKeybinds),
+      };
+      writeHeroSettings(next);
+      settingsRef.current = next;
+      keyMapRef.current = keyToLaneMap(next.keys);
+      return next;
+    });
+  }, []);
+
+  const approachSec = useCallback(() => {
+    const speed = settingsRef.current.trackSpeed || 1;
+    return APPROACH_S / speed;
+  }, []);
+
+  const spawnDart = useCallback((lane: number) => {
+    dartIdRef.current += 1;
+    const now = performance.now();
+    dartsRef.current.push({
+      id: dartIdRef.current,
+      lane,
+      born: now,
+      dur: 0.11,
+    });
+    // Keep list short
+    if (dartsRef.current.length > 40) {
+      dartsRef.current = dartsRef.current.filter(
+        (d) => now - d.born < (d.dur + 0.2) * 1000,
+      );
+    }
+  }, []);
+
+  const highwayLabels = useCallback((): string[] => {
+    return settingsRef.current.keys.map((k) => k.toUpperCase());
+  }, []);
+
   const search = useCallback(async (query?: string) => {
     const q = (query ?? stateRef.current.query).trim();
     if (!q) return;
@@ -272,7 +330,7 @@ export function useBloonHero() {
         results: res.data ?? [],
         error:
           res.data.length === 0
-            ? "No charts with both Guitar and Vocals found."
+            ? "No Expert Guitar charts found."
             : null,
       }));
     } catch (e) {
@@ -322,15 +380,27 @@ export function useBloonHero() {
         refreshAudioLength();
         player.master.addEventListener("loadedmetadata", refreshAudioLength);
         player.master.addEventListener("durationchange", refreshAudioLength);
+        const onlyGuitar =
+          loaded.availableInstruments.length === 1 &&
+          loaded.availableInstruments[0] === "guitar";
+        let noteCount = loaded.chart.notes.length;
+        let instrument: PlayableInstrument | null = null;
+        if (onlyGuitar) {
+          const chart = loaded.setInstrument("guitar");
+          chartEndRef.current = chart.duration;
+          durationRef.current = Math.max(durationRef.current, chart.duration);
+          noteCount = chart.notes.length;
+          instrument = "guitar";
+        }
         setState((prev) => ({
           ...prev,
           phase: "ready",
           title: loaded.chart.name || hit.name,
           artist: loaded.chart.artist || hit.artist,
           artUrl: loaded.artUrl,
-          noteCount: loaded.chart.notes.length,
+          noteCount,
           duration: durationRef.current,
-          instrument: null,
+          instrument,
           availableInstruments: loaded.availableInstruments,
           error: null,
         }));
@@ -474,6 +544,7 @@ export function useBloonHero() {
     scanFromRef.current = 0;
     endedRef.current = false;
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
+    dartsRef.current = [];
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
@@ -645,6 +716,7 @@ export function useBloonHero() {
       if (best.sustain) holdingRef.current.add(lane);
       attemptedRef.current += 1;
       hitsRef.current += 1;
+      spawnDart(lane);
       const pay = cashFor(judge);
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
@@ -671,7 +743,7 @@ export function useBloonHero() {
       }, 360);
       if (pendingCashRef.current >= 40) void flushCash();
     },
-    [flashPress, flushCash, songTimeNow, finishRun],
+    [flashPress, flushCash, songTimeNow, finishRun, spawnDart],
   );
 
   // Playback + canvas draw loop
@@ -797,12 +869,20 @@ export function useBloonHero() {
       const ctx = canvasCtxRef.current;
       const { w, h } = canvasCssRef.current;
       if (ctx && w > 0 && h > 0) {
+        const wall = performance.now();
+        dartsRef.current = dartsRef.current.filter(
+          (d) => wall - d.born < (d.dur + 0.2) * 1000,
+        );
         scanFromRef.current = drawHeroHighway(ctx, w, h, {
           now,
           notes,
           scanFrom: scanFromRef.current,
           pressed: pressedRef.current,
           holding: holdingRef.current,
+          approachSec: approachSec(),
+          laneLabels: highwayLabels(),
+          darts: dartsRef.current,
+          wallMs: wall,
         });
       }
 
@@ -903,7 +983,7 @@ export function useBloonHero() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", onResize);
     };
-  }, [state.phase, finishRun, rebuildHolding, resizeCanvas]);
+  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, highwayLabels]);
 
   useEffect(() => () => cleanupSong(), [cleanupSong]);
 
@@ -923,27 +1003,33 @@ export function useBloonHero() {
           scanFrom: 0,
           pressed: new Set(),
           holding: new Set(),
+          approachSec: approachSec(),
+          laneLabels: highwayLabels(),
+          darts: [],
+          wallMs: performance.now(),
         });
       }
     }
     return () => window.removeEventListener("resize", onResize);
-  }, [state.phase, resizeCanvas]);
+  }, [state.phase, resizeCanvas, approachSec, highwayLabels, settings]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
     const down = new Set<string>();
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (!(k in KEY_TO_LANE)) return;
+      const lane = keyMapRef.current[k];
+      if (lane == null) return;
       if (e.repeat || down.has(k)) return;
       down.add(k);
       e.preventDefault();
-      applyHit(KEY_TO_LANE[k]!);
+      applyHit(lane);
     };
     const onUp = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       down.delete(k);
-      if (k in KEY_TO_LANE) releaseLane(KEY_TO_LANE[k]!);
+      const lane = keyMapRef.current[k];
+      if (lane != null) releaseLane(lane);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onUp);
@@ -955,11 +1041,13 @@ export function useBloonHero() {
 
   return {
     state,
+    settings,
     artUrl: state.artUrl,
     noteCount: state.noteCount,
     search,
     setQuery,
     setVolume,
+    updateSettings,
     pickSong,
     setInstrument,
     start,
