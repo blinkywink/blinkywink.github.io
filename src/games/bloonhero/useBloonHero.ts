@@ -367,21 +367,11 @@ export function useBloonHero() {
   const spawnHitFlash = useCallback((lane: number, judge: Judge) => {
     hitFlashIdRef.current += 1;
     const now = performance.now();
-    const rays =
-      judge === "miss"
-        ? undefined
-        : Array.from({ length: 5 + Math.floor(Math.random() * 4) }, () => ({
-            angle: Math.random() * Math.PI * 2,
-            len: 0.55 + Math.random() * 0.75,
-            thick: 1.4 + Math.random() * 2.2,
-            inset: 0.12 + Math.random() * 0.14,
-          }));
     hitFlashesRef.current.push({
       id: hitFlashIdRef.current,
       lane,
       born: now,
       judge,
-      rays,
     });
     if (hitFlashesRef.current.length > 24) {
       hitFlashesRef.current = hitFlashesRef.current.filter(
