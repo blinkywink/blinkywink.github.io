@@ -8579,6 +8579,26 @@ body:has(.zoomed-page) {
   gap: 0.85rem 1.4rem;
 }
 
+.catch-volume {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 0.45rem;
+  min-width: 9.5rem;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.catch-volume input[type="range"] {
+  width: 6.5rem;
+  accent-color: #f0c84a;
+  cursor: pointer;
+}
+
 .catch-stat {
   display: inline-flex;
   align-items: center;

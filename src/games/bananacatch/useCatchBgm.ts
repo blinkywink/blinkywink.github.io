@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CATCH_BGM_TRACKS, CATCH_BGM_VOLUME } from "./bgmTracks";
+import { CATCH_BGM_TRACKS } from "./bgmTracks";
 import type { CatchPhase } from "./useBananaCatch";
 
 function shuffleOrder(n: number): number[] {
@@ -11,19 +11,26 @@ function shuffleOrder(n: number): number[] {
   return order;
 }
 
-/** Quiet random BGM while Banana Catch is actively playing. */
-export function useCatchBgm(phase: CatchPhase) {
+function clamp01(n: number) {
+  return Math.max(0, Math.min(1, n));
+}
+
+/** Random BGM while Banana Catch is actively playing. */
+export function useCatchBgm(phase: CatchPhase, volume: number) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const orderRef = useRef<number[]>([]);
   const cursorRef = useRef(0);
+  const volumeRef = useRef(clamp01(volume));
   const playNextRef = useRef<() => void>(() => {});
+
+  volumeRef.current = clamp01(volume);
 
   useEffect(() => {
     if (!CATCH_BGM_TRACKS.length) return;
 
     const audio = new Audio();
     audio.preload = "auto";
-    audio.volume = CATCH_BGM_VOLUME;
+    audio.volume = volumeRef.current;
     audioRef.current = audio;
 
     const playNext = () => {
@@ -39,7 +46,7 @@ export function useCatchBgm(phase: CatchPhase) {
       const src = CATCH_BGM_TRACKS[idx];
       if (!src) return;
       audio.src = src;
-      audio.volume = CATCH_BGM_VOLUME;
+      audio.volume = volumeRef.current;
       void audio.play().catch(() => {
         /* autoplay blocked until a gesture — Start covers that */
       });
@@ -57,6 +64,11 @@ export function useCatchBgm(phase: CatchPhase) {
       audioRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.volume = clamp01(volume);
+  }, [volume]);
 
   useEffect(() => {
     const audio = audioRef.current;

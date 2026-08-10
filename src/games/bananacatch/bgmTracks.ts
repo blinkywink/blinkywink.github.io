@@ -27,7 +27,34 @@ const TRACK_FILES = [
   "Winter Is Coming, Bloons Tower Defense 6 (Video Game Soundtrack).mp3",
 ] as const;
 
-export const CATCH_BGM_VOLUME = 0.15;
+/** Quiet default so music sits under gameplay. */
+export const CATCH_BGM_DEFAULT_VOLUME = 0.15;
+
+const VOLUME_KEY = "bananacatch-music-volume";
+
+export function readCatchBgmVolume(): number {
+  if (typeof window === "undefined") return CATCH_BGM_DEFAULT_VOLUME;
+  try {
+    const raw = window.localStorage.getItem(VOLUME_KEY);
+    if (raw == null || raw === "") return CATCH_BGM_DEFAULT_VOLUME;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return CATCH_BGM_DEFAULT_VOLUME;
+    return Math.max(0, Math.min(1, n));
+  } catch {
+    return CATCH_BGM_DEFAULT_VOLUME;
+  }
+}
+
+export function writeCatchBgmVolume(volume: number): void {
+  try {
+    window.localStorage.setItem(
+      VOLUME_KEY,
+      String(Math.max(0, Math.min(1, volume))),
+    );
+  } catch {
+    /* ignore */
+  }
+}
 
 export const CATCH_BGM_TRACKS = TRACK_FILES.map(
   (name) => `/music/bananacatch/${encodeURIComponent(name)}`,

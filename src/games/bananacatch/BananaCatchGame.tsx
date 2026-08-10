@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
+import { readCatchBgmVolume, writeCatchBgmVolume } from "./bgmTracks";
 import {
   BANANA_IMAGE,
   BFB_IMAGE,
@@ -50,8 +51,15 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef(state.phase);
   const [pointerLocked, setPointerLocked] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(() => readCatchBgmVolume());
 
-  useCatchBgm(state.phase);
+  useCatchBgm(state.phase, musicVolume);
+
+  const onMusicVolume = useCallback((next: number) => {
+    const v = Math.max(0, Math.min(1, next));
+    setMusicVolume(v);
+    writeCatchBgmVolume(v);
+  }, []);
 
   const requestLock = useCallback(() => {
     const el = fieldRef.current;
@@ -136,6 +144,19 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             <CashAmount amount={state.cashEarned} size={18} />
           </span>
         </div>
+
+        <label className="catch-volume">
+          <span>Music {Math.round(musicVolume * 100)}</span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round(musicVolume * 100)}
+            aria-label="Banana Catch music volume"
+            onChange={(e) => onMusicVolume(Number(e.target.value) / 100)}
+          />
+        </label>
 
         <p className="catch-hint">
           {playing
