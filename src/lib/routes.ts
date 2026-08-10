@@ -7,7 +7,8 @@ export type GamePath =
   | "orderup"
   | "bloonle"
   | "camodetection"
-  | "bloonssweeper";
+  | "bloonssweeper"
+  | "bananacatch";
 
 export const GAME_PATHS: readonly GamePath[] = [
   "zoomed",
@@ -17,6 +18,7 @@ export const GAME_PATHS: readonly GamePath[] = [
   "bloonle",
   "camodetection",
   "bloonssweeper",
+  "bananacatch",
 ] as const;
 
 export function gamePath(game: GamePath): string {

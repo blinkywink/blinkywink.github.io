@@ -25,6 +25,7 @@ import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { BloonleGame } from "./games/bloonle";
+import { BananaCatchGame } from "./games/bananacatch";
 import { BloonsSweeperGame } from "./games/bloonssweeper";
 import { CamoDetectionGame } from "./games/camodetection";
 import { GeoguessrGame } from "./games/geoguessr";
@@ -380,6 +381,20 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
+  const onBananaCatchRunEnd = useCallback(
+    (info: { cleared: boolean }) => {
+      void (async () => {
+        await creditHeroClear(info.cleared);
+        void settleFeaturedBonus("bananacatch", info.cleared);
+        queueClearAndBonusPacks({
+          cleared: info.cleared,
+          wantBonus: info.cleared,
+        });
+      })();
+    },
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+  );
+
   const afterPackDone = useCallback(() => {
     if (bonusChoices?.length) {
       setRewardPack(null);
@@ -468,6 +483,15 @@ function AppShell() {
             path="/bloonssweeper"
             element={
               <BloonsSweeperGame onBack={goGames} onRunEnd={onSweeperRunEnd} />
+            }
+          />
+          <Route
+            path="/bananacatch"
+            element={
+              <BananaCatchGame
+                onBack={goGames}
+                onRunEnd={onBananaCatchRunEnd}
+              />
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -13,7 +13,8 @@ export type GameId =
   | "orderup"
   | "bloonle"
   | "camodetection"
-  | "bloonssweeper";
+  | "bloonssweeper"
+  | "bananacatch";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -270,6 +271,37 @@ function SweeperPreview() {
   );
 }
 
+function BananaCatchPreview() {
+  return (
+    <div className="game-preview game-preview--catch" aria-hidden>
+      <img
+        className="game-preview__catch-banana game-preview__catch-banana--a"
+        src="/images/bananas/long-life-bananas.webp"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="game-preview__catch-banana game-preview__catch-banana--b"
+        src="/images/bananas/long-life-bananas.webp"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="game-preview__catch-bloon"
+        src="/images/bloons/red-bloon.png"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="game-preview__catch-monkey"
+        src="/images/bananas/banana-farm-dance.gif"
+        alt=""
+        draggable={false}
+      />
+    </div>
+  );
+}
+
 function MapPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -399,6 +431,13 @@ export function ArcadeHome({
       blurb: "Minesweeper — red bloons are the mines.",
       label: "Bloons Sweeper — Classic minesweeper with red bloon mines",
       preview: <SweeperPreview />,
+    },
+    {
+      id: "bananacatch" as const,
+      title: "BANANA CATCH",
+      blurb: "Catch falling bananas — dodge the red bloons.",
+      label: "Banana Catch — Collect bananas and dodge red bloons",
+      preview: <BananaCatchPreview />,
     },
   ];
   const shown =
