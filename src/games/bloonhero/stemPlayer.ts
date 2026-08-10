@@ -4,6 +4,8 @@ export type StemPlayer = {
   /** Primary clock stem (song.* when present, else longest). */
   master: HTMLAudioElement;
   stems: HTMLAudioElement[];
+  /** Pack includes a dedicated vocals/voice stem. */
+  hasVocalsStem: boolean;
   get duration(): number;
   get currentTime(): number;
   set currentTime(t: number);
@@ -12,6 +14,8 @@ export type StemPlayer = {
   play: () => Promise<void>;
   pause: () => void;
   setVolume: (v: number) => void;
+  /** 0–1 vocals loudness (0 if no vocals stem). */
+  getVocalsLevel: () => number;
   destroy: () => void;
 };
 
@@ -39,6 +43,11 @@ export function isAudioStemFile(name: string): boolean {
   return /^(song|guitar|bass|rhythm|drums?\d*|vocals?|voice|keys|crowd|backing|music)([_\-.]|$)/.test(
     base,
   );
+}
+
+function isVocalsStemName(name: string): boolean {
+  const base = name.replace(/^.*[/\\]/, "").toLowerCase();
+  return /^(vocals?|voice)([_\-.]|$)/.test(base);
 }
 
 function waitReady(audio: HTMLAudioElement): Promise<void> {
@@ -79,6 +88,8 @@ export async function createStemPlayer(
     const audio = new Audio(url);
     audio.preload = "auto";
     audio.volume = volume;
+    // MediaElementSource requires CORS-friendly media; blob URLs are fine.
+    audio.crossOrigin = "anonymous";
     elements.push(audio);
   }
 
@@ -96,9 +107,44 @@ export async function createStemPlayer(
     }
   }
 
+  const vocalIdx = stems.findIndex((s) => isVocalsStemName(s.name));
+  const hasVocalsStem = vocalIdx >= 0;
+  const vocalsEl = hasVocalsStem ? elements[vocalIdx]! : null;
+
+  let audioCtx: AudioContext | null = null;
+  let analyser: AnalyserNode | null = null;
+  let vocalsGain: GainNode | null = null;
+  let timeData: Uint8Array<ArrayBuffer> | null = null;
+  let smooth = 0;
+
+  const ensureVocalsGraph = () => {
+    if (!vocalsEl || analyser || typeof AudioContext === "undefined") return;
+    try {
+      audioCtx = new AudioContext();
+      const src = audioCtx.createMediaElementSource(vocalsEl);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.65;
+      vocalsGain = audioCtx.createGain();
+      vocalsGain.gain.value = Math.min(1, Math.max(0, volume));
+      src.connect(analyser);
+      analyser.connect(vocalsGain);
+      vocalsGain.connect(audioCtx.destination);
+      timeData = new Uint8Array(analyser.fftSize);
+      // Volume for the routed element is handled by the gain node.
+      vocalsEl.volume = 1;
+    } catch {
+      analyser = null;
+      audioCtx = null;
+      vocalsGain = null;
+      timeData = null;
+    }
+  };
+
   const player: StemPlayer = {
     master,
     stems: elements,
+    hasVocalsStem,
     get duration() {
       let d = 0;
       for (const el of elements) {
@@ -125,6 +171,14 @@ export async function createStemPlayer(
       return master.ended;
     },
     async play() {
+      ensureVocalsGraph();
+      if (audioCtx && audioCtx.state === "suspended") {
+        try {
+          await audioCtx.resume();
+        } catch {
+          /* ignore */
+        }
+      }
       const t = master.currentTime;
       for (const el of elements) {
         if (Math.abs(el.currentTime - t) > 0.04) {
@@ -142,7 +196,30 @@ export async function createStemPlayer(
     },
     setVolume(v: number) {
       const vol = Math.min(1, Math.max(0, v));
-      for (const el of elements) el.volume = vol;
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i]!;
+        if (vocalsEl && el === vocalsEl && vocalsGain) {
+          vocalsGain.gain.value = vol;
+          el.volume = 1;
+        } else {
+          el.volume = vol;
+        }
+      }
+    },
+    getVocalsLevel() {
+      if (!analyser || !timeData) return 0;
+      // AnalyserNode typings expect ArrayBuffer-backed Uint8Array.
+      analyser.getByteTimeDomainData(timeData as Uint8Array<ArrayBuffer>);
+      let sum = 0;
+      for (let i = 0; i < timeData.length; i++) {
+        const v = (timeData[i]! - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / timeData.length);
+      // Typical vocal stem rms is small; scale + gate.
+      const level = Math.min(1, Math.max(0, (rms - 0.02) / 0.18));
+      smooth = smooth * 0.55 + level * 0.45;
+      return smooth;
     },
     destroy() {
       for (const el of elements) {
@@ -151,6 +228,15 @@ export async function createStemPlayer(
         el.load();
       }
       elements.length = 0;
+      try {
+        void audioCtx?.close();
+      } catch {
+        /* ignore */
+      }
+      audioCtx = null;
+      analyser = null;
+      vocalsGain = null;
+      timeData = null;
     },
   };
 

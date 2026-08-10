@@ -53,6 +53,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setCanvasEl,
     setProgressFillEl,
     setCountdownEl,
+    togglePause,
   } = useBloonHero();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -122,10 +123,15 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   );
 
   const playing = state.phase === "playing";
-  const countingIn = playing && (state.countdown != null || state.songTime < 0);
+  const countingIn =
+    playing &&
+    !state.paused &&
+    (state.countdown != null || state.songTime < 0);
   const attemptsUsed = maxLives - state.lives;
   const keyHint = settings.keys.map((k) => formatKey(k)).join(" ");
   const needsInstrumentPick = state.availableInstruments.length > 1;
+  const resuming =
+    playing && state.paused && state.countdown != null;
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -334,7 +340,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               {volumeSlider}
             </div>
 
-            {playing && state.lastJudge && !countingIn ? (
+            {playing && state.lastJudge && !countingIn && !state.paused ? (
               <p
                 className={`hero-judge is-${state.lastJudge}`}
                 key={`${state.perfect}-${state.great}-${state.good}-${state.miss}-${state.emptyStreak}-${state.burst?.id ?? 0}`}
@@ -348,17 +354,37 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             ) : (
               <p className="hero-hint">
-                {countingIn
-                  ? "Get ready…"
-                  : playing
-                    ? state.emptyStreak >= 2
-                      ? `Wrong taps ×${state.emptyStreak}`
-                      : `${state.artist}, ${state.title}`
-                    : `${state.artist}, ${state.title}`}
+                {state.paused
+                  ? resuming
+                    ? "Get ready…"
+                    : "Paused"
+                  : countingIn
+                    ? "Get ready…"
+                    : playing
+                      ? state.emptyStreak >= 2
+                        ? `Wrong taps ×${state.emptyStreak}`
+                        : `${state.artist}, ${state.title}`
+                      : `${state.artist}, ${state.title}`}
               </p>
             )}
 
             <div className="hero-stage">
+              {state.hasVocals ? (
+                <div
+                  className={`hero-singer${state.singing ? " is-singing" : ""}`}
+                  aria-hidden
+                >
+                  <img
+                    src={
+                      state.singing
+                        ? "/images/bloonhero/dart-monkey-open.webp?v=4"
+                        : "/images/bloonhero/dart-monkey-closed.webp?v=4"
+                    }
+                    alt=""
+                    draggable={false}
+                  />
+                </div>
+              ) : null}
               <div className="hero-progress" aria-hidden>
                 <span ref={setProgressFillEl} />
               </div>
@@ -382,12 +408,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                       aria-label={`Lane ${formatKey(settings.keys[lane.id] ?? "")}`}
                       onPointerDown={(e) => {
                         e.preventDefault();
-                        if (!playing) return;
+                        if (!playing || state.paused) return;
                         e.currentTarget.setPointerCapture?.(e.pointerId);
                         applyHit(lane.id);
                       }}
                       onPointerUp={(e) => {
-                        if (!playing) return;
+                        if (!playing || state.paused) return;
                         releaseLane(lane.id);
                         try {
                           e.currentTarget.releasePointerCapture?.(e.pointerId);
@@ -396,7 +422,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                         }
                       }}
                       onPointerCancel={() => {
-                        if (!playing) return;
+                        if (!playing || state.paused) return;
                         releaseLane(lane.id);
                       }}
                     />
@@ -407,11 +433,40 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <div
                 className="hero-countdown"
                 ref={setCountdownEl}
-                hidden={!playing || !state.countdown}
+                hidden={
+                  !playing ||
+                  !state.countdown ||
+                  (state.paused && !resuming)
+                }
                 aria-live="polite"
               >
                 <span>{state.countdown ?? ""}</span>
               </div>
+
+              {playing && state.paused && !resuming ? (
+                <div className="hero-overlay hero-overlay--pause" role="dialog">
+                  <h2>Paused</h2>
+                  <p className="hero-overlay__detail">
+                    Press Esc to resume — 3 · 2 · 1 · GO
+                  </p>
+                  <div className="hero-overlay__actions">
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      onClick={togglePause}
+                    >
+                      Resume
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={backToBrowse}
+                    >
+                      Quit song
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {state.phase === "ready" ? (
                 <div className="hero-overlay">

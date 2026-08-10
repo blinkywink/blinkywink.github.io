@@ -8884,6 +8884,29 @@ body:has(.zoomed-page) {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
+.hero-singer {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  z-index: 3;
+  width: clamp(4.5rem, 16vw, 6.5rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+  transition: transform 0.08s ease;
+}
+
+.hero-singer.is-singing {
+  transform: translateX(-50%) scale(1.04);
+}
+
+.hero-singer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
 .hero-progress {
   height: 4px;
   background: rgba(255, 255, 255, 0.08);

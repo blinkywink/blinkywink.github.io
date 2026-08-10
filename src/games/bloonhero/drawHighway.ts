@@ -77,7 +77,6 @@ const LANE_FILL = LANES.map((l) => l.color);
 const LANE_TRAIL = LANES.map((l) => hexAlpha(l.color, 0.7));
 const LANE_TRAIL_HOT = LANES.map((l) => hexAlpha(l.color, 0.95));
 const LANE_TRAIL_DROP = LANES.map((l) => hexAlpha(l.color, 0.28));
-const LANE_BORDER = LANES.map((l) => hexAlpha(l.color, 0.35));
 
 type BloonSprite = {
   img: HTMLImageElement;
@@ -87,14 +86,15 @@ type BloonSprite = {
 const sprites: (BloonSprite | null)[] = BLOON_IMAGES.map(() => null);
 let loadKey = "";
 let shurikenImg: HTMLImageElement | null = null;
-let shurikenLoadStarted = false;
+let shurikenSrcLoaded = "";
 
-const SHURIKEN_SRC = "/images/bloons/shuriken.webp";
+const SHURIKEN_SRC = "/images/bloons/shuriken.webp?v=2";
 
 function ensureShuriken(): HTMLImageElement | null {
   if (typeof Image === "undefined") return null;
-  if (!shurikenLoadStarted) {
-    shurikenLoadStarted = true;
+  if (shurikenSrcLoaded !== SHURIKEN_SRC) {
+    shurikenSrcLoaded = SHURIKEN_SRC;
+    shurikenImg = null;
     const img = new Image();
     img.decoding = "async";
     img.src = SHURIKEN_SRC;
@@ -201,6 +201,31 @@ function drawShuriken(
   ctx.restore();
 }
 
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: CanvasImageSource,
+  cx: number,
+  cy: number,
+  box: number,
+  alpha = 1,
+) {
+  const iw =
+    "naturalWidth" in img && (img as HTMLImageElement).naturalWidth
+      ? (img as HTMLImageElement).naturalWidth
+      : (img as HTMLCanvasElement).width;
+  const ih =
+    "naturalHeight" in img && (img as HTMLImageElement).naturalHeight
+      ? (img as HTMLImageElement).naturalHeight
+      : (img as HTMLCanvasElement).height;
+  if (!iw || !ih) return;
+  const scale = Math.min(box / iw, box / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+  ctx.globalAlpha = 1;
+}
+
 function drawBloonAt(
   ctx: CanvasRenderingContext2D,
   lane: number,
@@ -219,9 +244,7 @@ function drawBloonAt(
     ctx.globalAlpha = 1;
     return;
   }
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(spr.img, cx - size / 2, cy - size / 2, size, size);
-  ctx.globalAlpha = 1;
+  drawImageContain(ctx, spr.img, cx, cy, size, alpha);
 }
 
 function drawReceptor(
@@ -239,16 +262,10 @@ function drawReceptor(
   const y = cy + push;
 
   ctx.save();
-  // Ghost fill
   if (spr?.img.complete && spr.img.naturalWidth) {
-    ctx.globalAlpha = pressed ? 0.42 : 0.26;
-    ctx.drawImage(spr.img, cx - s / 2, y - s / 2, s, s);
-    ctx.globalAlpha = 1;
+    drawImageContain(ctx, spr.img, cx, y, s, pressed ? 0.42 : 0.26);
     if (spr.outline) {
-      const os = s * 1.12;
-      ctx.globalAlpha = pressed ? 1 : 0.88;
-      ctx.drawImage(spr.outline, cx - os / 2, y - os / 2, os, os);
-      ctx.globalAlpha = 1;
+      drawImageContain(ctx, spr.outline, cx, y, s * 1.12, pressed ? 1 : 0.88);
     }
   } else {
     ctx.globalAlpha = pressed ? 0.35 : 0.18;
@@ -287,20 +304,43 @@ export function drawHeroHighway(
   ctx.fillRect(0, 0, cssW, cssH);
 
   const laneCount = 5;
-  const gap = 3;
+  const gap = 4;
   const laneW = (cssW - gap * (laneCount - 1)) / laneCount;
   const hitY = (HIT_LINE_Y / 100) * cssH;
-  const bloonSize = Math.min(laneW * 0.78, 56);
+  const bloonSize = Math.min(laneW * 0.56, 40);
+
+  // Lane columns
+  for (let i = 0; i < laneCount; i++) {
+    const x = i * (laneW + gap);
+    ctx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.018)";
+    ctx.fillRect(x, 0, laneW, cssH);
+  }
+
+  // Subtle depth grid so you can read which note is ahead.
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 1;
+  const gridRows = 10;
+  for (let r = 1; r < gridRows; r++) {
+    const y = (r / gridRows) * cssH;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(cssW, y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  for (let i = 0; i <= laneCount; i++) {
+    const x = i * (laneW + gap) - gap / 2;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, cssH);
+    ctx.stroke();
+  }
+  ctx.restore();
 
   for (let i = 0; i < laneCount; i++) {
     const x = i * (laneW + gap);
     const active = pressed.has(i) || holding.has(i);
-
-    ctx.fillStyle = "rgba(255,255,255,0.03)";
-    ctx.fillRect(x, 0, laneW, cssH);
-    ctx.strokeStyle = LANE_BORDER[i]!;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + 0.5, 0.5, laneW - 1, cssH - 1);
 
     drawReceptor(
       ctx,
