@@ -34,6 +34,17 @@ export type HitFlash = {
   lane: number;
   born: number;
   judge: Judge;
+  /** Randomized white pop slash lines (successful hits only). */
+  rays?: readonly PopRay[];
+};
+
+export type PopRay = {
+  angle: number;
+  /** Relative length vs bloon size. */
+  len: number;
+  thick: number;
+  /** Start as a short gap from center. */
+  inset: number;
 };
 
 export type HighwayDrawState = {
@@ -489,6 +500,30 @@ export function drawHeroHighway(
     ctx.beginPath();
     ctx.arc(cx, hitY, bloonSize * 0.55, 0, Math.PI * 2);
     ctx.fill();
+
+    // White pop slash lines (cartoon burst) — only on real hits.
+    if (flash.rays?.length && flash.judge !== "miss") {
+      const burst = Math.min(1, age / 0.18);
+      const expand = 0.65 + burst * 0.9 + t * 0.35;
+      const lineFade = fade * (1 - burst * 0.15);
+      ctx.globalAlpha = lineFade;
+      ctx.strokeStyle = "#ffffff";
+      ctx.shadowColor = "rgba(255, 255, 255, 0.85)";
+      ctx.shadowBlur = 5;
+      ctx.lineCap = "round";
+      for (const ray of flash.rays) {
+        const cos = Math.cos(ray.angle);
+        const sin = Math.sin(ray.angle);
+        const inner = bloonSize * ray.inset * (0.85 + burst * 0.4);
+        const outer = bloonSize * ray.len * expand;
+        ctx.lineWidth = Math.max(1, ray.thick * (1 - t * 0.55));
+        ctx.beginPath();
+        ctx.moveTo(cx + cos * inner, hitY + sin * inner);
+        ctx.lineTo(cx + cos * outer, hitY + sin * outer);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+    }
 
     ctx.fillStyle = color;
     ctx.font = `800 ${Math.max(11, Math.min(15, laneW * 0.22))}px system-ui,sans-serif`;
