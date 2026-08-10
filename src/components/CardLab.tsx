@@ -33,6 +33,10 @@ export type CardsOpenOpts = {
   tower?: string;
   /** Soft-highlight these card ids (recent pulls). */
   highlightIds?: string[];
+  /** Open the Heroes manage / upgrade screen. */
+  heroes?: boolean;
+  /** Optional hero to focus when opening Heroes. */
+  heroId?: string;
 };
 
 export type CollectionViewer = {
@@ -134,7 +138,11 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>(() =>
-    initial?.tower ? { kind: "tower", name: initial.tower } : { kind: "towers" },
+    initial?.heroes
+      ? { kind: "heroes" }
+      : initial?.tower
+        ? { kind: "tower", name: initial.tower }
+        : { kind: "towers" },
   );
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
@@ -221,6 +229,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
 
   useEffect(() => {
     if (!initial || isRemote) return;
+    if (initial.heroes) {
+      setView({ kind: "heroes" });
+      return;
+    }
     if (initial.tower) {
       setView({ kind: "tower", name: initial.tower });
       setTierHighFirst(false);
@@ -571,6 +583,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   if (view.kind === "heroes" && !isRemote) {
     return (
       <HeroesLab
+        initialHeroId={initial?.heroId}
         onBack={() => {
           setView({ kind: "towers" });
         }}

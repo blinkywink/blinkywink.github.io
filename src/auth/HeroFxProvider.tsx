@@ -2,15 +2,21 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { heroById, heroPortraitForLevel } from "../data/heroes";
 import {
+  heroClearProgressFromProfile,
   heroLevelFromProfile,
+  heroLevelUpReady,
+  normalizeHeroClearProgress,
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
 } from "../lib/profileHeroes";
@@ -18,6 +24,7 @@ import {
   resolveEquippedHero,
   type EquippedHeroContext,
 } from "../lib/heroEffects";
+import { collectionPath } from "../lib/routes";
 
 export type HeroProc = {
   id: number;
@@ -25,6 +32,8 @@ export type HeroProc = {
   message: string;
   portrait: string;
   theme?: "default" | "ice" | "fire" | "nature" | "gold";
+  /** Tap opens Cards → Heroes (optionally focused on this hero). */
+  openHeroes?: boolean;
 };
 
 type HeroFxValue = {
@@ -33,6 +42,7 @@ type HeroFxValue = {
     heroId: string;
     message: string;
     theme?: HeroProc["theme"];
+    openHeroes?: boolean;
   }) => void;
 };
 
@@ -58,7 +68,9 @@ function themeForHero(heroId: string): HeroProc["theme"] {
 
 export function HeroFxProvider({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [procs, setProcs] = useState<HeroProc[]>([]);
+  const readyNotified = useRef<Set<string>>(new Set());
 
   const equipped = useMemo(() => {
     if (!profile) return null;
@@ -70,7 +82,12 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
   }, [profile]);
 
   const notifyHeroProc = useCallback(
-    (input: { heroId: string; message: string; theme?: HeroProc["theme"] }) => {
+    (input: {
+      heroId: string;
+      message: string;
+      theme?: HeroProc["theme"];
+      openHeroes?: boolean;
+    }) => {
       const hero = heroById(input.heroId);
       const level = heroLevelFromProfile(
         normalizeHeroLevels(profile?.hero_levels),
@@ -86,13 +103,57 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
         message: input.message,
         portrait,
         theme: input.theme ?? themeForHero(input.heroId),
+        openHeroes: input.openHeroes,
       };
       setProcs((list) => [...list.slice(-2), proc]);
-      window.setTimeout(() => {
-        setProcs((list) => list.filter((p) => p.id !== id));
-      }, 3200);
+      window.setTimeout(
+        () => {
+          setProcs((list) => list.filter((p) => p.id !== id));
+        },
+        input.openHeroes ? 5600 : 3200,
+      );
     },
     [profile?.hero_levels],
+  );
+
+  // Surface persistent "ready to level" when profile shows any owned hero ready.
+  useEffect(() => {
+    if (!profile) return;
+    const owned = normalizeOwnedHeroIds(profile.owned_hero_ids);
+    const levels = normalizeHeroLevels(profile.hero_levels);
+    const clears = normalizeHeroClearProgress(profile.hero_clear_progress);
+    for (const id of owned) {
+      const level = heroLevelFromProfile(levels, id);
+      const progress = heroClearProgressFromProfile(clears, id);
+      const key = `${id}@${level}`;
+      if (!heroLevelUpReady(level, progress)) {
+        readyNotified.current.delete(key);
+        continue;
+      }
+      if (readyNotified.current.has(key)) continue;
+      readyNotified.current.add(key);
+      const name = heroById(id)?.name ?? "Hero";
+      notifyHeroProc({
+        heroId: id,
+        message: `${name}: ready to level up — tap`,
+        openHeroes: true,
+      });
+      break;
+    }
+  }, [
+    profile?.owned_hero_ids,
+    profile?.hero_levels,
+    profile?.hero_clear_progress,
+    notifyHeroProc,
+  ]);
+
+  const openHeroesFor = useCallback(
+    (heroId: string) => {
+      navigate(collectionPath(), {
+        state: { heroes: true, heroId },
+      });
+    },
+    [navigate],
   );
 
   const value = useMemo(
@@ -106,15 +167,30 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
       {typeof document !== "undefined"
         ? createPortal(
             <div className="hero-proc-stack" aria-live="polite">
-              {procs.map((p) => (
-                <div
-                  key={p.id}
-                  className={`hero-proc hero-proc--${p.theme ?? "default"}`}
-                >
-                  <img src={p.portrait} alt="" className="hero-proc__img" />
-                  <p className="hero-proc__msg">{p.message}</p>
-                </div>
-              ))}
+              {procs.map((p) =>
+                p.openHeroes ? (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`hero-proc hero-proc--${p.theme ?? "default"} hero-proc--action`}
+                    onClick={() => {
+                      setProcs((list) => list.filter((x) => x.id !== p.id));
+                      openHeroesFor(p.heroId);
+                    }}
+                  >
+                    <img src={p.portrait} alt="" className="hero-proc__img" />
+                    <p className="hero-proc__msg">{p.message}</p>
+                  </button>
+                ) : (
+                  <div
+                    key={p.id}
+                    className={`hero-proc hero-proc--${p.theme ?? "default"}`}
+                  >
+                    <img src={p.portrait} alt="" className="hero-proc__img" />
+                    <p className="hero-proc__msg">{p.message}</p>
+                  </div>
+                ),
+              )}
             </div>,
             document.body,
           )

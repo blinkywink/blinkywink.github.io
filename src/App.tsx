@@ -11,6 +11,7 @@ import {
 import { useCardCollection } from "./auth/CardCollectionProvider";
 import { useAuth } from "./auth/AuthProvider";
 import { useHeroFx } from "./auth/HeroFxProvider";
+import { HeroFxProvider } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
@@ -253,7 +254,8 @@ function AppShell() {
       if (result.ready) {
         notifyHeroProc({
           heroId: result.heroId,
-          message: `${name}: level-up unlocked!`,
+          message: `${name}: level-up unlocked! Tap to upgrade`,
+          openHeroes: true,
         });
       } else if (result.required > 0) {
         notifyHeroProc({
@@ -521,7 +523,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <AppShell />
+      <HeroFxProvider>
+        <AppShell />
+      </HeroFxProvider>
     </BrowserRouter>
   );
 }

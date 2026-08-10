@@ -27,12 +27,16 @@ import {
 import { CashAmount } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
+/** Milestone looks that shift the plate VFX (matches heroVisualTier bands). */
+const PREVIEW_LEVELS = [5, 10, 15, 20] as const;
+
 type Props = {
   onBack: () => void;
+  initialHeroId?: string;
 };
 
 /** Full-page hero manage / upgrade screen (Collection → Heroes). */
-export function HeroesLab({ onBack }: Props) {
+export function HeroesLab({ onBack, initialHeroId }: Props) {
   const { isGuest, profile, setCoinBalance, refreshProfile } = useAuth();
   const heroes = useMemo(() => shoppableHeroes(), []);
   const owned = useMemo(
@@ -51,25 +55,31 @@ export function HeroesLab({ onBack }: Props) {
     ? String(profile.equipped_hero_id).toLowerCase()
     : null;
 
-  const ownedHeroes = useMemo(
-    () => heroes.filter((h) => owned.has(h.id)),
-    [heroes, owned],
-  );
+  const ownedCount = heroes.filter((h) => owned.has(h.id)).length;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => initialHeroId?.toLowerCase() ?? null,
+  );
+  const [previewLevel, setPreviewLevel] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   const selected: HeroEntity | null = useMemo(() => {
-    const id = selectedId ?? ownedHeroes[0]?.id ?? heroes[0]?.id ?? null;
-    return heroes.find((h) => h.id === id) ?? null;
-  }, [selectedId, ownedHeroes, heroes]);
+    if (!selectedId) return null;
+    return heroes.find((h) => h.id === selectedId) ?? null;
+  }, [selectedId, heroes]);
+
+  useEffect(() => {
+    if (initialHeroId) setSelectedId(initialHeroId.toLowerCase());
+  }, [initialHeroId]);
 
   useEffect(() => {
     if (!selected) return;
     preloadPackSounds();
     preloadHeroEquipVo(selected.id);
+    setPreviewLevel(null);
+    setError(null);
   }, [selected?.id]);
 
   useEffect(() => {
@@ -77,31 +87,40 @@ export function HeroesLab({ onBack }: Props) {
       if (e.key !== "Escape") return;
       if (busy) return;
       e.preventDefault();
+      if (selected) {
+        setSelectedId(null);
+        return;
+      }
       onBack();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [busy, onBack]);
+  }, [busy, onBack, selected]);
 
   const mine = selected ? owned.has(selected.id) : false;
-  const level = selected
+  const realLevel = selected
     ? mine
       ? heroLevelFromProfile(levels, selected.id)
       : 1
     : 1;
-  const maxed = mine && level >= HERO_MAX_LEVEL;
+  const displayLevel = previewLevel ?? realLevel;
+  const maxed = mine && realLevel >= HERO_MAX_LEVEL;
   const progress = selected
     ? heroClearProgressFromProfile(clears, selected.id)
     : 0;
   const need =
-    mine && !maxed ? heroClearsRequiredForNextLevel(level) : 0;
-  const ready = !mine || maxed || heroLevelUpReady(level, progress);
+    mine && !maxed ? heroClearsRequiredForNextLevel(realLevel) : 0;
+  const ready = Boolean(mine && !maxed && heroLevelUpReady(realLevel, progress));
   const upgradePrice =
-    mine && !maxed ? heroUpgradeCost(level + 1, selected!.id) : 0;
+    mine && !maxed && selected
+      ? heroUpgradeCost(realLevel + 1, selected.id)
+      : 0;
   const equipped = Boolean(selected && equippedId === selected.id);
   const equipCost = mine && !equipped ? HERO_EQUIP_SWAP_COST : 0;
   const fillPct =
     need > 0 ? Math.min(100, (progress / need) * 100) : maxed ? 100 : 0;
+  const previewingFuture =
+    previewLevel != null && previewLevel > realLevel;
 
   async function onLevelUp() {
     if (!selected || busy || isGuest || !mine || maxed) return;
@@ -124,8 +143,9 @@ export function HeroesLab({ onBack }: Props) {
       playBuy();
       setCoinBalance(result.coins);
       await refreshProfile();
-      const nextLevel = result.heroLevels[selected.id] ?? level + 1;
+      const nextLevel = result.heroLevels[selected.id] ?? realLevel + 1;
       setStatus(`${selected.name} leveled to ${nextLevel}!`);
+      setPreviewLevel(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Level-up failed.");
     }
@@ -158,115 +178,95 @@ export function HeroesLab({ onBack }: Props) {
     setBusy(false);
   }
 
-  return (
-    <div className="card-lab heroes-lab">
-      <div className="card-lab__atmosphere" aria-hidden="true" />
-      <header className="card-lab__header">
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          disabled={busy}
-          onClick={onBack}
-        >
-          ← Towers
-        </button>
-        <div className="card-lab__titles card-lab__titles--tower">
-          <p className="eyebrow">Collection</p>
-          <h1>Heroes</h1>
-          <p className="card-lab__blurb">
-            {ownedHeroes.length === 0
-              ? "Unlock heroes in the shop, then equip and level them here."
-              : `${ownedHeroes.length} / ${heroes.length} unlocked · clear games to unlock level-ups.`}
+  // ——— Detail focus ———
+  if (selected) {
+    return (
+      <div className="card-lab heroes-lab heroes-lab--focus">
+        <div className="card-lab__atmosphere" aria-hidden="true" />
+        <header className="card-lab__header">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            disabled={busy}
+            onClick={() => setSelectedId(null)}
+          >
+            ← Heroes
+          </button>
+          <div className="card-lab__titles card-lab__titles--tower">
+            <p className="eyebrow">
+              {mine ? (equipped ? "Equipped" : "Owned") : "Locked"}
+              {previewingFuture ? ` · Preview Lv ${displayLevel}` : ""}
+            </p>
+            <h1>{selected.name}</h1>
+          </div>
+        </header>
+
+        {status ? (
+          <p className="shop-direct__banner shop-direct__banner--ok heroes-lab__banner">
+            {status}
           </p>
-        </div>
-      </header>
+        ) : null}
 
-      {status ? (
-        <p className="shop-direct__banner shop-direct__banner--ok heroes-lab__banner">
-          {status}
-        </p>
-      ) : null}
-
-      <div className="heroes-lab__picker" role="list">
-        {heroes.map((hero) => {
-          const isMine = owned.has(hero.id);
-          const lv = isMine ? heroLevelFromProfile(levels, hero.id) : 1;
-          const isSel = selected?.id === hero.id;
-          const isEq = equippedId === hero.id;
-          const prog = heroClearProgressFromProfile(clears, hero.id);
-          const req =
-            isMine && lv < HERO_MAX_LEVEL
-              ? heroClearsRequiredForNextLevel(lv)
-              : 0;
-          return (
-            <button
-              key={hero.id}
-              type="button"
-              role="listitem"
-              className={[
-                "heroes-lab__pick",
-                isSel ? "is-selected" : "",
-                isEq ? "is-equipped" : "",
-                !isMine ? "is-locked" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => {
-                setError(null);
-                playCardFocus();
-                setSelectedId(hero.id);
-              }}
-            >
-              <HeroCardFace
-                hero={hero}
-                level={lv}
-                equipped={isEq}
-                hideCaption
-                size="md"
-                mode="preview"
-              />
-              <span className="heroes-lab__pick-meta">
-                <strong>
-                  {hero.name}
-                  {isEq ? " ✓" : ""}
-                </strong>
-                <span>
-                  {!isMine
-                    ? "Locked"
-                    : lv >= HERO_MAX_LEVEL
-                      ? `Lv ${lv} · Max`
-                      : `Lv ${lv} · ${prog}/${req}`}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {selected ? (
-        <section className="heroes-lab__detail" aria-label={selected.name}>
+        <div className="heroes-lab__focus">
           <div className="heroes-lab__stage">
             <HeroCardFace
               hero={selected}
-              level={level}
+              level={displayLevel}
               size="lg"
               mode="focus"
               hideCaption
             />
+            {previewingFuture ? (
+              <p className="heroes-lab__preview-tag">
+                Preview · current Lv {realLevel}
+              </p>
+            ) : null}
           </div>
 
           <div className="heroes-lab__info">
-            <p className="eyebrow">
-              {mine
-                ? equipped
-                  ? "Equipped"
-                  : "Owned"
-                : "Locked"}
-            </p>
-            <h2 className="heroes-lab__name">{selected.name}</h2>
             <p className="heroes-lab__blurb">
-              {heroBlurb(selected.id, level)}
+              {heroBlurb(selected.id, displayLevel)}
             </p>
+
+            <div className="heroes-lab__previews" role="group" aria-label="Level looks">
+              <p className="heroes-lab__previews-label">Looks</p>
+              <div className="heroes-lab__previews-row">
+                <button
+                  type="button"
+                  className={`heroes-lab__preview-btn${previewLevel == null ? " is-active" : ""}`}
+                  onClick={() => setPreviewLevel(null)}
+                >
+                  <HeroCardFace
+                    hero={selected}
+                    level={realLevel}
+                    size="sm"
+                    mode="preview"
+                    hideCaption
+                  />
+                  <span>Now · Lv {realLevel}</span>
+                </button>
+                {PREVIEW_LEVELS.map((lv) => (
+                  <button
+                    key={lv}
+                    type="button"
+                    className={`heroes-lab__preview-btn${previewLevel === lv ? " is-active" : ""}${lv <= realLevel ? " is-unlocked" : ""}`}
+                    onClick={() => {
+                      playCardFocus();
+                      setPreviewLevel(lv);
+                    }}
+                  >
+                    <HeroCardFace
+                      hero={selected}
+                      level={lv}
+                      size="sm"
+                      mode="preview"
+                      hideCaption
+                    />
+                    <span>Lv {lv}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {mine ? (
               <>
@@ -274,7 +274,7 @@ export function HeroesLab({ onBack }: Props) {
                   <div className="heroes-lab__stat">
                     <span className="heroes-lab__stat-label">Level</span>
                     <strong className="heroes-lab__stat-value">
-                      {level}
+                      {realLevel}
                       <span> / {HERO_MAX_LEVEL}</span>
                     </strong>
                   </div>
@@ -357,7 +357,7 @@ export function HeroesLab({ onBack }: Props) {
                   amount={heroUpgradeCost(1, selected.id)}
                   size={14}
                 />
-                . Upgrades live here after you own them.
+                . Come back here to equip and level up.
               </p>
             )}
 
@@ -369,8 +369,96 @@ export function HeroesLab({ onBack }: Props) {
               </p>
             )}
           </div>
-        </section>
+        </div>
+      </div>
+    );
+  }
+
+  // ——— Grid ———
+  return (
+    <div className="card-lab heroes-lab">
+      <div className="card-lab__atmosphere" aria-hidden="true" />
+      <header className="card-lab__header">
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          onClick={onBack}
+        >
+          ← Towers
+        </button>
+        <div className="card-lab__titles card-lab__titles--tower">
+          <p className="eyebrow">Collection</p>
+          <h1>Heroes</h1>
+          <p className="card-lab__blurb">
+            {ownedCount === 0
+              ? "Unlock heroes in the shop, then equip and level them here."
+              : `${ownedCount} / ${heroes.length} unlocked · tap a hero to upgrade.`}
+          </p>
+        </div>
+      </header>
+
+      {status ? (
+        <p className="shop-direct__banner shop-direct__banner--ok heroes-lab__banner">
+          {status}
+        </p>
       ) : null}
+
+      <div className="heroes-lab__grid">
+        {heroes.map((hero) => {
+          const isMine = owned.has(hero.id);
+          const lv = isMine ? heroLevelFromProfile(levels, hero.id) : 1;
+          const isEq = equippedId === hero.id;
+          const prog = heroClearProgressFromProfile(clears, hero.id);
+          const req =
+            isMine && lv < HERO_MAX_LEVEL
+              ? heroClearsRequiredForNextLevel(lv)
+              : 0;
+          const isReady =
+            isMine && lv < HERO_MAX_LEVEL && heroLevelUpReady(lv, prog);
+          return (
+            <button
+              key={hero.id}
+              type="button"
+              className={[
+                "heroes-lab__card",
+                isEq ? "is-equipped" : "",
+                !isMine ? "is-locked" : "",
+                isReady ? "is-ready" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => {
+                playCardFocus();
+                setSelectedId(hero.id);
+              }}
+            >
+              <HeroCardFace
+                hero={hero}
+                level={lv}
+                equipped={isEq}
+                hideCaption
+                size="md"
+                mode="preview"
+              />
+              <span className="heroes-lab__card-meta">
+                <strong>
+                  {hero.name}
+                  {isEq ? " ✓" : ""}
+                </strong>
+                <span>
+                  {!isMine
+                    ? "Locked · Shop"
+                    : lv >= HERO_MAX_LEVEL
+                      ? `Lv ${lv} · Max`
+                      : isReady
+                        ? `Lv ${lv} · Ready!`
+                        : `Lv ${lv} · ${prog}/${req}`}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
