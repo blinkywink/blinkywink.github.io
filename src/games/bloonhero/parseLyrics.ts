@@ -4,12 +4,23 @@
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 
-/** One timed lyric unit — a syllable or accumulated word when hyphen-joined. */
+/** One timed lyric unit — a syllable within a word group. */
 export type LyricCue = {
   /** Seconds from song start (after chart offset). */
   start: number;
   end: number;
+  /** @deprecated Revealed portion only — prefer fullWord + revealedChars. */
   text: string;
+  /** Complete word once all syllables in the group have landed. */
+  fullWord: string;
+  /** Characters of fullWord that should be visible at this cue. */
+  revealedChars: number;
+};
+
+export type LyricDisplay = {
+  fullWord: string;
+  visible: string;
+  pending: string;
 };
 
 /** @deprecated Alias for chart loaders — each entry is one timed cue, not a full line. */
@@ -131,11 +142,33 @@ function parseSyllable(raw: string): Syllable | null {
   return { text: s, joinNext };
 }
 
-function wordTextAt(timed: { syl: Syllable }[], index: number): string {
+type TimedSyl = { tick: number; syl: Syllable };
+
+function wordBounds(timed: TimedSyl[], index: number): { start: number; end: number } {
   let start = index;
   while (start > 0 && timed[start - 1]!.syl.joinNext) start--;
+  let end = index;
+  while (end < timed.length - 1 && timed[end]!.syl.joinNext) end++;
+  // Charts sometimes send "ev" then "everybody" without a hyphen join.
+  while (end < timed.length - 1) {
+    const current = assembleSyllables(timed, start, end);
+    const withNext = assembleSyllables(timed, start, end + 1);
+    if (
+      !timed[end]!.syl.joinNext &&
+      withNext.length > current.length &&
+      withNext.toLowerCase().startsWith(current.toLowerCase())
+    ) {
+      end++;
+      continue;
+    }
+    break;
+  }
+  return { start, end };
+}
+
+function assembleSyllables(timed: TimedSyl[], from: number, to: number): string {
   let out = "";
-  for (let i = start; i <= index; i++) {
+  for (let i = from; i <= to; i++) {
     const s = timed[i]!.syl;
     if (!s.text) continue;
     if (!out) out = s.text;
@@ -162,7 +195,6 @@ function buildCues(
   if (!events.length) return [];
   events.sort((a, b) => a.tick - b.tick);
 
-  type TimedSyl = { tick: number; syl: Syllable };
   const timed: TimedSyl[] = [];
   let lastTick = 0;
 
@@ -190,10 +222,15 @@ function buildCues(
     const nextTick =
       timed[i + 1]?.tick ?? tick + Math.max(resolution * 2, 192);
     let end = tickToSec(nextTick) - 0.02;
+    const { start: wordStart, end: wordEnd } = wordBounds(timed, i);
+    const fullWord = assembleSyllables(timed, wordStart, wordEnd);
+    const revealed = assembleSyllables(timed, wordStart, i);
     cues.push({
       start,
       end: Math.max(end, start + 0.06),
-      text: wordTextAt(timed, i),
+      text: revealed,
+      fullWord,
+      revealedChars: revealed.length,
     });
   }
 
@@ -355,15 +392,30 @@ export function parseLyricsFromPack(opts: {
   return opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
 }
 
-export function lyricAtTime(
+export function lyricDisplayAtTime(
   cues: LyricCue[],
   songTime: number,
-): string | null {
+): LyricDisplay | null {
   if (!cues.length || songTime < -0.5) return null;
   for (const cue of cues) {
     if (songTime >= cue.start - 0.04 && songTime <= cue.end + 0.06) {
-      return cue.text;
+      const visible = cue.fullWord.slice(0, cue.revealedChars);
+      const pending = cue.fullWord.slice(cue.revealedChars);
+      return { fullWord: cue.fullWord, visible, pending };
     }
   }
   return null;
+}
+
+export function lyricDisplaysEqual(
+  a: LyricDisplay | null,
+  b: LyricDisplay | null,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.fullWord === b.fullWord &&
+    a.visible === b.visible &&
+    a.pending === b.pending
+  );
 }

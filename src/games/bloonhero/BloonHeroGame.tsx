@@ -287,7 +287,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             }
           />
           <span className="hero-settings__hint">
-            Karaoke-style — one synced word or syllable at a time
+            Karaoke-style — unrevealed syllables stay invisible until sung
           </span>
         </label>
 
@@ -298,8 +298,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           </span>
           <input
             type="range"
-            min={70}
-            max={160}
+            min={40}
+            max={280}
             step={5}
             value={Math.round((settings.lyricsScale ?? 1) * 100)}
             aria-label="Lyric subtitle size"
@@ -308,6 +308,33 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               updateSettings({ lyricsScale: Number(e.target.value) / 100 })
             }
           />
+        </label>
+
+        <label className="hero-settings__row">
+          <span>
+            Lyric height{" "}
+            <strong>
+              {(settings.lyricsOffsetY ?? 0) > 0
+                ? `+${settings.lyricsOffsetY ?? 0}`
+                : settings.lyricsOffsetY ?? 0}
+              px
+            </strong>
+          </span>
+          <input
+            type="range"
+            min={-60}
+            max={200}
+            step={5}
+            value={settings.lyricsOffsetY ?? 0}
+            aria-label="Lyric vertical position"
+            disabled={!(settings.lyricsEnabled ?? true)}
+            onChange={(e) =>
+              updateSettings({ lyricsOffsetY: Number(e.target.value) })
+            }
+          />
+          <span className="hero-settings__hint">
+            Move subtitles up or down on the stage
+          </span>
         </label>
 
         <div className="hero-settings__binds">
@@ -345,6 +372,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 popVolume: 1,
                 lyricsEnabled: true,
                 lyricsScale: 1,
+                lyricsOffsetY: 0,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
               })
             }
@@ -616,15 +644,23 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               state.currentLyric &&
               (playing || state.phase === "ready") ? (
                 <p
-                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : ""}`}
+                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}`}
                   style={
                     {
                       "--lyrics-scale": settings.lyricsScale ?? 1,
+                      "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
                     } as CSSProperties
                   }
                   aria-live="polite"
                 >
-                  {state.currentLyric}
+                  <span className="hero-lyrics__visible">
+                    {state.currentLyric.visible}
+                  </span>
+                  {state.currentLyric.pending ? (
+                    <span className="hero-lyrics__pending" aria-hidden="true">
+                      {state.currentLyric.pending}
+                    </span>
+                  ) : null}
                 </p>
               ) : null}
               <div className="hero-progress" aria-hidden>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense, type ReactNode } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -25,16 +25,9 @@ import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
-import { BloonleGame } from "./games/bloonle";
-import { BananaCatchGame } from "./games/bananacatch";
-import { BloonHeroGame } from "./games/bloonhero";
-import { BloonsSweeperGame } from "./games/bloonssweeper";
-import { CamoDetectionGame } from "./games/camodetection";
-import { GeoguessrGame } from "./games/geoguessr";
-import { OrderUpGame } from "./games/orderup";
-import { PriceCheckGame } from "./games/pricecheck";
+import { RouteFallback } from "./components/RouteFallback";
+import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { earnsQuizBonusPack } from "./games/rewards";
-import { ZoomedGame } from "./games/zoomed";
 import { awardCoins } from "./lib/awardCoins";
 import {
   resolveFeaturedBonusGame,
@@ -58,7 +51,38 @@ import {
   type GamePath,
 } from "./lib/routes";
 import type { AvatarCrop } from "./lib/avatar";
-import "./index.css";
+
+const ZoomedGame = lazy(() =>
+  import("./games/zoomed").then((m) => ({ default: m.ZoomedGame })),
+);
+const GeoguessrGame = lazy(() =>
+  import("./games/geoguessr").then((m) => ({ default: m.GeoguessrGame })),
+);
+const PriceCheckGame = lazy(() =>
+  import("./games/pricecheck").then((m) => ({ default: m.PriceCheckGame })),
+);
+const OrderUpGame = lazy(() =>
+  import("./games/orderup").then((m) => ({ default: m.OrderUpGame })),
+);
+const BloonleGame = lazy(() =>
+  import("./games/bloonle").then((m) => ({ default: m.BloonleGame })),
+);
+const CamoDetectionGame = lazy(() =>
+  import("./games/camodetection").then((m) => ({ default: m.CamoDetectionGame })),
+);
+const BloonsSweeperGame = lazy(() =>
+  import("./games/bloonssweeper").then((m) => ({ default: m.BloonsSweeperGame })),
+);
+const BananaCatchGame = lazy(() =>
+  import("./games/bananacatch").then((m) => ({ default: m.BananaCatchGame })),
+);
+const BloonHeroGame = lazy(() =>
+  import("./games/bloonhero").then((m) => ({ default: m.BloonHeroGame })),
+);
+
+function LazyGame({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+}
 
 type RewardPackState = {
   pack: PackDef;
@@ -446,77 +470,95 @@ function AppShell() {
           <Route
             path="/zoomed"
             element={
-              <ZoomedGame
-                onBack={goGames}
-                onRunEnd={quizRewardHandlers.zoomed}
-              />
+              <LazyGame>
+                <ZoomedGame
+                  onBack={goGames}
+                  onRunEnd={quizRewardHandlers.zoomed}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/geoguessr"
             element={
-              <GeoguessrGame
-                onBack={goGames}
-                onRunEnd={quizRewardHandlers.geoguessr}
-              />
+              <LazyGame>
+                <GeoguessrGame
+                  onBack={goGames}
+                  onRunEnd={quizRewardHandlers.geoguessr}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/pricecheck"
             element={
-              <PriceCheckGame
-                onBack={goGames}
-                onRunEnd={quizRewardHandlers.pricecheck}
-              />
+              <LazyGame>
+                <PriceCheckGame
+                  onBack={goGames}
+                  onRunEnd={quizRewardHandlers.pricecheck}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/orderup"
             element={
-              <OrderUpGame
-                onBack={goGames}
-                onRunEnd={quizRewardHandlers.orderup}
-              />
+              <LazyGame>
+                <OrderUpGame
+                  onBack={goGames}
+                  onRunEnd={quizRewardHandlers.orderup}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/bloonle"
             element={
-              <BloonleGame
-                onBack={goGames}
-                onFastSolve={offerBloonleBonus}
-                onRunEnd={onBloonleRunEnd}
-              />
+              <LazyGame>
+                <BloonleGame
+                  onBack={goGames}
+                  onFastSolve={offerBloonleBonus}
+                  onRunEnd={onBloonleRunEnd}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/camodetection"
             element={
-              <CamoDetectionGame
-                onBack={goGames}
-                onRunEnd={quizRewardHandlers.camodetection}
-              />
+              <LazyGame>
+                <CamoDetectionGame
+                  onBack={goGames}
+                  onRunEnd={quizRewardHandlers.camodetection}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/bloonssweeper"
             element={
-              <BloonsSweeperGame onBack={goGames} onRunEnd={onSweeperRunEnd} />
+              <LazyGame>
+                <BloonsSweeperGame onBack={goGames} onRunEnd={onSweeperRunEnd} />
+              </LazyGame>
             }
           />
           <Route
             path="/bananacatch"
             element={
-              <BananaCatchGame
-                onBack={goGames}
-                onRunEnd={onBananaCatchRunEnd}
-              />
+              <LazyGame>
+                <BananaCatchGame
+                  onBack={goGames}
+                  onRunEnd={onBananaCatchRunEnd}
+                />
+              </LazyGame>
             }
           />
           <Route
             path="/bloonhero"
             element={
-              <BloonHeroGame onBack={goGames} onRunEnd={onBloonHeroRunEnd} />
+              <LazyGame>
+                <BloonHeroGame onBack={goGames} onRunEnd={onBloonHeroRunEnd} />
+              </LazyGame>
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -595,6 +637,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <DesktopOnlineGate />
       <HeroFxProvider>
         <AppShell />
       </HeroFxProvider>

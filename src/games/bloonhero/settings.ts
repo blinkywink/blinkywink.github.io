@@ -11,8 +11,10 @@ export type HeroSettings = {
   popVolume: number;
   /** Show synced chart lyrics during play. */
   lyricsEnabled: boolean;
-  /** 0.7–1.6 — synced lyric subtitle size. */
+  /** 0.4–2.8 — synced lyric subtitle size. */
   lyricsScale: number;
+  /** Vertical offset in px (−60–200) added to lyric position. */
+  lyricsOffsetY: number;
   /** Keys for lanes 0–4. Lowercase. */
   keys: HeroKeybinds;
 };
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: HeroSettings = {
   popVolume: 1,
   lyricsEnabled: true,
   lyricsScale: 1,
+  lyricsOffsetY: 0,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
 };
 
@@ -48,6 +51,7 @@ export function readHeroSettings(): HeroSettings {
     const bloonScale = Number(parsed.bloonScale);
     const popVolume = Number(parsed.popVolume);
     const lyricsScale = Number(parsed.lyricsScale);
+    const lyricsOffsetY = Number(parsed.lyricsOffsetY);
     return {
       trackSpeed: Number.isFinite(trackSpeed)
         ? clamp(trackSpeed, 0.6, 2)
@@ -59,8 +63,11 @@ export function readHeroSettings(): HeroSettings {
       lyricsEnabled:
         parsed.lyricsEnabled === undefined ? true : Boolean(parsed.lyricsEnabled),
       lyricsScale: Number.isFinite(lyricsScale)
-        ? clamp(lyricsScale, 0.7, 1.6)
+        ? clamp(lyricsScale, 0.4, 2.8)
         : 1,
+      lyricsOffsetY: Number.isFinite(lyricsOffsetY)
+        ? clamp(lyricsOffsetY, -60, 200)
+        : 0,
       keys,
     };
   } catch {

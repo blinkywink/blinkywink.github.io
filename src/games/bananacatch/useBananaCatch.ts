@@ -317,6 +317,9 @@ export function useBananaCatch() {
   const frameRef = useRef(0);
   const lastTsRef = useRef(0);
   const pendingCashRef = useRef(0);
+  const dropsRef = useRef<Drop[]>([]);
+  const paintRef = useRef<(() => void) | null>(null);
+  const movePlayerRef = useRef<((x: number) => void) | null>(null);
 
   const nextId = useCallback(() => {
     const id = nextIdRef.current;
@@ -366,6 +369,7 @@ export function useBananaCatch() {
     lastTsRef.current = 0;
     targetXRef.current = 0.5;
     playerXRef.current = 0.5;
+    dropsRef.current = [];
     setState((s) => ({
       ...INITIAL,
       phase: "playing",
@@ -380,6 +384,7 @@ export function useBananaCatch() {
     pendingCashRef.current = 0;
     cancelAnimationFrame(frameRef.current);
     lastTsRef.current = 0;
+    dropsRef.current = [];
     setState((s) => ({
       ...INITIAL,
       fieldW: s.fieldW,
@@ -388,6 +393,14 @@ export function useBananaCatch() {
     }));
     targetXRef.current = 0.5;
     playerXRef.current = 0.5;
+  }, []);
+
+  const setPaintLoop = useCallback((paint: (() => void) | null) => {
+    paintRef.current = paint;
+  }, []);
+
+  const setPlayerMover = useCallback((move: ((x: number) => void) | null) => {
+    movePlayerRef.current = move;
   }, []);
 
   useEffect(() => {
@@ -515,17 +528,30 @@ export function useBananaCatch() {
       const phase: CatchPhase = dead ? "lost" : "playing";
       const cleared = dead && bananas >= CATCH_CLEAR_BANANAS;
 
-      setState({
-        phase,
-        bananas,
-        lives: Math.max(0, lives),
-        cashEarned,
-        drops: nextDrops,
-        playerX: playerXRef.current,
-        fieldW,
-        fieldH,
-        cleared,
-      });
+      dropsRef.current = nextDrops;
+      movePlayerRef.current?.(playerXRef.current);
+      paintRef.current?.();
+
+      const hudChanged =
+        phase !== s.phase ||
+        bananas !== s.bananas ||
+        lives !== s.lives ||
+        cashEarned !== s.cashEarned ||
+        cleared !== s.cleared;
+
+      if (hudChanged) {
+        setState({
+          phase,
+          bananas,
+          lives: Math.max(0, lives),
+          cashEarned,
+          drops: dead ? nextDrops : [],
+          playerX: playerXRef.current,
+          fieldW,
+          fieldH,
+          cleared,
+        });
+      }
 
       if (pendingCashRef.current >= CASH_PER_BANANA * 5) {
         void flushCash();
@@ -555,5 +581,8 @@ export function useBananaCatch() {
     aimAt,
     aimByDelta,
     setFieldSize,
+    setPaintLoop,
+    setPlayerMover,
+    getLiveDrops: () => dropsRef.current,
   };
 }

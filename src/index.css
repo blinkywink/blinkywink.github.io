@@ -433,6 +433,52 @@ body:has(.zoomed-page) {
   height: 100dvh;
 }
 
+.route-fallback {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.desktop-online-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgba(8, 8, 12, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.desktop-online-gate__card {
+  max-width: 28rem;
+  padding: 1.5rem 1.35rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #121218;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.desktop-online-gate__card h1 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desktop-online-gate__card p {
+  margin: 0 0 1rem;
+  line-height: 1.5;
+  color: rgba(240, 240, 244, 0.75);
+}
+
 /* Arcade home */
 .arcade {
   width: min(var(--content-max), calc(100% - 2rem));
@@ -712,6 +758,90 @@ body:has(.zoomed-page) {
   font-size: 0.85rem;
   color: rgba(240, 240, 244, 0.45);
   min-width: 1ch;
+}
+
+.home-hub__download {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  padding: 1.1rem 1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(165deg, rgba(240, 200, 74, 0.1), transparent 55%),
+    rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.home-hub__download-copy {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(240, 240, 244, 0.78);
+}
+
+.home-hub__download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+}
+
+.home-hub__download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 0.5rem 0.95rem 0.52rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f0f0f4;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.home-hub__download-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.home-hub__download-btn:hover,
+.home-hub__download-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(240, 200, 74, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.home-hub__download-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.home-hub__download-btn--mac {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.05);
+}
+
+.home-hub__download-btn--win {
+  background:
+    linear-gradient(180deg, rgba(110, 180, 255, 0.18), rgba(110, 180, 255, 0.05)),
+    rgba(255, 255, 255, 0.04);
 }
 
 /* Embed /games tiles — 3 across on hub */
@@ -8706,6 +8836,15 @@ body:has(.zoomed-page) {
   z-index: 3;
 }
 
+.catch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .catch-player {
   position: absolute;
   bottom: 0.55rem;
@@ -8982,7 +9121,6 @@ body:has(.zoomed-page) {
 
 .hero-lyrics {
   position: absolute;
-  top: 0.35rem;
   left: 50%;
   z-index: 4;
   width: min(92%, 36rem);
@@ -8999,11 +9137,22 @@ body:has(.zoomed-page) {
     0 0 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   user-select: none;
+  white-space: pre-wrap;
+}
+
+.hero-lyrics--solo {
+  top: calc(2.75rem + var(--lyrics-offset-y, 0px));
+}
+
+.hero-lyrics__pending {
+  visibility: hidden;
 }
 
 .hero-lyrics--below-monkey {
   /* Sit below dart monkey (width ≈ height); stay under singer z-index. */
-  top: calc(0.15rem + clamp(7.5rem, 28vw, 11.5rem) + 0.45rem);
+  top: calc(
+    0.15rem + clamp(7.5rem, 28vw, 11.5rem) + 0.45rem + var(--lyrics-offset-y, 0px)
+  );
   z-index: 2;
 }
 

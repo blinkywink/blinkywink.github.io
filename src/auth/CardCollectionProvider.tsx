@@ -38,7 +38,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authReady) return;
     let cancelled = false;
-    setReady(false);
+    setReady(true);
     void (async () => {
       if (session?.userId) {
         await mergeGuestProgressIntoAccount();
@@ -46,7 +46,6 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       const ids = await fetchOwnedCardIds();
       if (cancelled) return;
       setOwnedIds(ids);
-      setReady(true);
     })();
     return () => {
       cancelled = true;

@@ -3,19 +3,14 @@ import { createRoot } from "react-dom/client";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CardCollectionProvider } from "./auth/CardCollectionProvider";
 import App from "./App";
-import {
-  assertOnlineBackend,
-  isDesktopShell,
-  offlineGateHtml,
-} from "./lib/desktopOnline";
 import { supabaseConfigured } from "./lib/supabase";
-import "@fontsource/fredoka/500.css";
-import "@fontsource/fredoka/600.css";
-import "@fontsource/fredoka/700.css";
-import "@fontsource/nunito/600.css";
-import "@fontsource/nunito/700.css";
-import "@fontsource/nunito/800.css";
-import "@fontsource/luckiest-guy/400.css";
+import "@fontsource/fredoka/latin-500.css";
+import "@fontsource/fredoka/latin-600.css";
+import "@fontsource/fredoka/latin-700.css";
+import "@fontsource/nunito/latin-600.css";
+import "@fontsource/nunito/latin-700.css";
+import "@fontsource/nunito/latin-800.css";
+import "@fontsource/luckiest-guy/latin-400.css";
 import "./index.css";
 
 const root = document.getElementById("root")!;
@@ -50,37 +45,10 @@ function renderApp() {
   );
 }
 
-async function gateDesktopOnline(): Promise<boolean> {
-  const result = await assertOnlineBackend();
-  if (result === true) return true;
-
-  root.innerHTML = offlineGateHtml(result);
-  const btn = document.getElementById("desktop-online-retry");
-  btn?.addEventListener("click", () => {
-    void boot();
-  });
-  return false;
-}
-
 async function boot() {
   if (!supabaseConfigured) {
     renderMissingConfig();
     return;
-  }
-
-  // Desktop build: same site code, but refuse to run offline.
-  if (isDesktopShell()) {
-    const ok = await gateDesktopOnline();
-    if (!ok) return;
-
-    window.addEventListener("offline", () => {
-      void gateDesktopOnline().then((stillOk) => {
-        if (!stillOk) {
-          // Tear down React if it was mounted — reload into gate.
-          window.location.reload();
-        }
-      });
-    });
   }
 
   renderApp();

@@ -29,6 +29,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { supabase } from "../lib/supabase";
+import { isDesktopShell } from "../lib/desktopOnline";
 import { ArcadeHome } from "./ArcadeHome";
 import { UserAvatar } from "./UserAvatar";
 import {
@@ -254,6 +255,41 @@ export function HomeHub() {
           </div>
         )}
       </section>
+
+      {!isDesktopShell() ? (
+        <section
+          className="home-hub__section home-hub__section--download"
+          aria-labelledby="hub-download"
+        >
+          <div className="home-hub__download">
+            <p id="hub-download" className="home-hub__download-copy">
+              Download for Mac or Windows for faster loading times.
+            </p>
+            <div className="home-hub__download-actions">
+              <button
+                type="button"
+                className="home-hub__download-btn home-hub__download-btn--mac"
+                aria-label="Download for Mac (coming soon)"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden focusable="false">
+                  <path d="M16.13 12.87c-.02-2.17 1.77-3.21 1.85-3.26-1.01-1.47-2.58-1.67-3.13-1.7-1.33-.14-2.6.78-3.28.78-.68 0-1.73-.76-2.85-.74-1.47.02-2.82.85-3.58 2.16-1.53 2.65-.39 6.57 1.1 8.72.73 1.05 1.6 2.23 2.74 2.19 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.7.71 2.85.69 1.18-.02 1.93-1.07 2.65-2.12.83-1.21 1.17-2.38 1.19-2.44-.03-.01-2.28-.87-2.3-3.45zm-2.17-6.3c.61-.74 1.02-1.77.91-2.8-.88.04-1.94.59-2.57 1.33-.56.65-1.05 1.69-.92 2.69.97.08 1.96-.49 2.58-1.22z" />
+                </svg>
+                Mac
+              </button>
+              <button
+                type="button"
+                className="home-hub__download-btn home-hub__download-btn--win"
+                aria-label="Download for Windows (coming soon)"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden focusable="false">
+                  <path d="M3 5.5 10.5 4.2v7.4H3V5.5zm0 13V12.8h7.5v7.5L3 18.5zm9-11.3L21 3.8v8.9H12V7.2zm0 13.3V12.8H21v8.4l-9 1.3z" />
+                </svg>
+                Windows
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <footer className="arcade__footer">
         <p>

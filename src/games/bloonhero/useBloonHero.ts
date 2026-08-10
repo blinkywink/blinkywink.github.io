@@ -22,7 +22,12 @@ import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
 import type { ChartNote } from "./parseChartFile";
-import { lyricAtTime, type LyricPhrase } from "./parseLyrics";
+import {
+  lyricDisplayAtTime,
+  lyricDisplaysEqual,
+  type LyricDisplay,
+  type LyricPhrase,
+} from "./parseLyrics";
 import {
   fetchBloonHeroRecentPlays,
   recordBloonHeroPlay,
@@ -121,8 +126,8 @@ export type HeroState = {
   hasVocals: boolean;
   /** Synced lyrics available in this pack. */
   hasLyrics: boolean;
-  /** Current synced lyric line (when enabled in settings). */
-  currentLyric: string | null;
+  /** Current synced lyric (when enabled in settings). */
+  currentLyric: LyricDisplay | null;
   /** Vocals stem is audible — bob / talk motion. */
   talking: boolean;
   /** Monkey mouth open frame. */
@@ -381,8 +386,12 @@ export function useBloonHero() {
             : prev.lyricsEnabled,
         lyricsScale:
           partial.lyricsScale != null
-            ? Math.min(1.6, Math.max(0.7, partial.lyricsScale))
+            ? Math.min(2.8, Math.max(0.4, partial.lyricsScale))
             : prev.lyricsScale,
+        lyricsOffsetY:
+          partial.lyricsOffsetY != null
+            ? Math.min(200, Math.max(-60, partial.lyricsOffsetY))
+            : prev.lyricsOffsetY,
       };
       writeHeroSettings(next);
       settingsRef.current = next;
@@ -1290,9 +1299,11 @@ export function useBloonHero() {
         wallMs - lyricsUiAtRef.current > 35
       ) {
         lyricsUiAtRef.current = wallMs;
-        const line = lyricAtTime(lyricsRef.current, now);
+        const line = lyricDisplayAtTime(lyricsRef.current, now);
         setState((prev) =>
-          prev.currentLyric === line ? prev : { ...prev, currentLyric: line },
+          lyricDisplaysEqual(prev.currentLyric, line)
+            ? prev
+            : { ...prev, currentLyric: line },
         );
       }
 

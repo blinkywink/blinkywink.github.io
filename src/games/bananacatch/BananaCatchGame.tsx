@@ -29,36 +29,97 @@ type Props = {
 /** WKWebView / Tauri desktop does not support pointer lock reliably. */
 const USE_POINTER_LOCK = !isDesktopShell();
 
-function dropSrc(kind: DropKind): string {
-  switch (kind) {
-    case "banana":
-      return BANANA_IMAGE;
-    case "blue":
-      return BLUE_BLOON_IMAGE;
-    case "green":
-      return GREEN_BLOON_IMAGE;
-    case "pink":
-      return PINK_BLOON_IMAGE;
-    case "moab":
-      return MOAB_IMAGE;
-    case "bfb":
-      return BFB_IMAGE;
-    case "red":
-    default:
-      return RED_BLOON_IMAGE;
+const DROP_SRC: Record<DropKind, string> = {
+  banana: BANANA_IMAGE,
+  blue: BLUE_BLOON_IMAGE,
+  green: GREEN_BLOON_IMAGE,
+  pink: PINK_BLOON_IMAGE,
+  moab: MOAB_IMAGE,
+  bfb: BFB_IMAGE,
+  red: RED_BLOON_IMAGE,
+};
+
+function preloadDropImages(): Map<DropKind, HTMLImageElement> {
+  const map = new Map<DropKind, HTMLImageElement>();
+  for (const kind of Object.keys(DROP_SRC) as DropKind[]) {
+    const img = new Image();
+    img.src = DROP_SRC[kind];
+    map.set(kind, img);
   }
+  return map;
 }
 
 export function BananaCatchGame({ onBack, onRunEnd }: Props) {
-  const { state, clearAt, start, aimAt, aimByDelta, setFieldSize } =
-    useBananaCatch();
+  const {
+    state,
+    clearAt,
+    start,
+    aimAt,
+    aimByDelta,
+    setFieldSize,
+    setPaintLoop,
+    setPlayerMover,
+    getLiveDrops,
+  } = useBananaCatch();
   const fieldRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playerRef = useRef<HTMLImageElement>(null);
+  const dropImagesRef = useRef<Map<DropKind, HTMLImageElement> | null>(null);
+  const fieldSizeRef = useRef({ w: state.fieldW, h: state.fieldH });
+  fieldSizeRef.current = { w: state.fieldW, h: state.fieldH };
   const prevPhase = useRef(state.phase);
   const [pointerLocked, setPointerLocked] = useState(false);
   const [lockUnavailable, setLockUnavailable] = useState(!USE_POINTER_LOCK);
   const [musicVolume, setMusicVolume] = useState(() => readCatchBgmVolume());
 
   useCatchBgm(state.phase, musicVolume);
+
+  useEffect(() => {
+    dropImagesRef.current = preloadDropImages();
+  }, []);
+
+  useEffect(() => {
+    setPlayerMover((x) => {
+      const el = playerRef.current;
+      if (el) el.style.left = `${x * 100}%`;
+    });
+    return () => setPlayerMover(null);
+  }, [setPlayerMover]);
+
+  useEffect(() => {
+    const paint = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const { w, h } = fieldSizeRef.current;
+      if (w <= 0 || h <= 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const pw = Math.round(w * dpr);
+      const ph = Math.round(h * dpr);
+      if (canvas.width !== pw || canvas.height !== ph) {
+        canvas.width = pw;
+        canvas.height = ph;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      const images = dropImagesRef.current;
+      if (!images) return;
+      for (const d of getLiveDrops()) {
+        const img = images.get(d.kind);
+        if (!img?.complete || !img.naturalWidth) continue;
+        ctx.save();
+        ctx.translate(d.x, d.y);
+        ctx.rotate((d.rot * Math.PI) / 180);
+        ctx.drawImage(img, -d.w / 2, -d.h / 2, d.w, d.h);
+        ctx.restore();
+      }
+    };
+    setPaintLoop(paint);
+    return () => setPaintLoop(null);
+  }, [getLiveDrops, setPaintLoop]);
 
   const onMusicVolume = useCallback((next: number) => {
     const v = Math.max(0, Math.min(1, next));
@@ -233,24 +294,14 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
         >
           <div className="catch-field__sky" aria-hidden="true" />
 
-          {state.drops.map((d) => (
-            <img
-              key={d.id}
-              className={`catch-drop catch-drop--${d.kind}`}
-              src={dropSrc(d.kind)}
-              alt=""
-              draggable={false}
-              style={{
-                width: d.w,
-                height: d.h,
-                left: d.x,
-                top: d.y,
-                transform: `translate(-50%, -50%) rotate(${d.rot}deg)`,
-              }}
-            />
-          ))}
+          <canvas
+            ref={canvasRef}
+            className="catch-canvas"
+            aria-hidden="true"
+          />
 
           <img
+            ref={playerRef}
             className="catch-player"
             src={MONKEY_IMAGE}
             alt=""
