@@ -11,7 +11,6 @@ import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import { formatCash, type PricedCombo } from "../pricecheck/costs";
-import { earnsQuizBonusPack } from "../rewards";
 import { useOrderUp } from "./useOrderUp";
 
 type Props = {
@@ -202,8 +201,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={earnsQuizBonusPack(state.correct)}
-          continueAvailable={!state.freePlay}
+          continueAvailable={!state.freePlay && !state.clearedRun}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}

@@ -3,7 +3,6 @@ import { useAuth } from "../../auth/AuthProvider";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
-import { earnsQuizBonusPack } from "../rewards";
 import { CAMO_IMAGE } from "./config";
 import { useCamoDetection } from "./useCamoDetection";
 
@@ -70,8 +69,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
           coinsEarned={state.lastRun.score * (state.perfectRun ? 2 : 1)}
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={earnsQuizBonusPack(state.correct)}
-          continueAvailable={!state.freePlay}
+          continueAvailable={!state.freePlay && !state.clearedRun}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}

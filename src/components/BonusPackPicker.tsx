@@ -15,8 +15,8 @@ export function BonusPackPicker({ open, options, onPick }: Props) {
   return (
     <div className="bonus-pick" role="dialog" aria-modal="true" aria-label="Bonus pack">
       <div className="bonus-pick__panel">
-        <h2 className="bonus-pick__title">Nice work, you earned a bonus!</h2>
-        <p className="bonus-pick__hint">Pick a pack to open</p>
+        <h2 className="bonus-pick__title">Bonus pack</h2>
+        <p className="bonus-pick__hint">Pick one to open</p>
 
         <div className="bonus-pick__row">
           {options.map((pack) => (

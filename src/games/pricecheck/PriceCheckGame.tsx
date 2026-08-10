@@ -4,7 +4,6 @@ import { formatPathLevels } from "../../lib/pathCombos";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
-import { earnsQuizBonusPack } from "../rewards";
 import { formatCash, type PricedCombo } from "./costs";
 import { usePriceCheck, type Guess } from "./usePriceCheck";
 
@@ -155,8 +154,7 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={earnsQuizBonusPack(state.correct)}
-          continueAvailable={!state.freePlay}
+          continueAvailable={!state.freePlay && !state.clearedRun}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}

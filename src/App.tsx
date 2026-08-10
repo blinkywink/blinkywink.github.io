@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -230,15 +230,24 @@ function AppShell() {
   const navigate = useNavigate();
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
-  const [pendingHighlights, setPendingHighlights] = useState<string[]>([]);
-  const [pendingTower, setPendingTower] = useState<string | undefined>();
   const [bonusToast, setBonusToast] = useState<string | null>(null);
 
   const creditHeroClear = useCallback(
     async (cleared: boolean) => {
-      if (!cleared || !equipped) return;
+      // Always hit the RPC on clear — don't gate on client `equipped`
+      // (stale/null context was silently skipping progress).
+      if (!cleared) return;
       const result = await recordHeroClear();
-      if (!result?.heroId) return;
+      if (!result) return;
+      if (!result.heroId) {
+        if (!equipped) {
+          notifyHeroProc({
+            heroId: "quincy",
+            message: "Equip a hero to earn clear XP",
+          });
+        }
+        return;
+      }
       await refreshProfile();
       const name = heroById(result.heroId)?.name ?? "Hero";
       if (result.ready) {
@@ -246,10 +255,7 @@ function AppShell() {
           heroId: result.heroId,
           message: `${name}: level-up unlocked!`,
         });
-      } else if (
-        result.required > 0 &&
-        (result.progress === 1 || result.progress % 5 === 0)
-      ) {
+      } else if (result.required > 0) {
         notifyHeroProc({
           heroId: result.heroId,
           message: `${name}: ${result.progress}/${result.required} clears`,
@@ -282,95 +288,103 @@ function AppShell() {
     [equipped?.heroId, notifyHeroProc, setCoinBalance],
   );
 
-  const finishRewards = useCallback(
-    (highlightIds: string[], tower?: string) => {
-      setRewardPack(null);
-      setBonusChoices(null);
-      setPendingHighlights([]);
-      setPendingTower(undefined);
-      navigate(collectionPath(), {
-        state:
-          highlightIds.length > 0
-            ? ({ tower, highlightIds } satisfies CardsOpenOpts)
-            : null,
-      });
-    },
-    [navigate],
-  );
+  const finishRewards = useCallback(() => {
+    setRewardPack(null);
+    setBonusChoices(null);
+    navigate(gamesPath());
+  }, [navigate]);
 
-  const offerQuizRewards = useCallback(
-    (game: FeaturedBonusGame) =>
-      (info: { cleared: boolean; correctCount: number }) => {
-        void settleFeaturedBonus(game, info.cleared);
-        void creditHeroClear(info.cleared);
-        const wantBonus = earnsQuizBonusPack(info.correctCount);
-        const free = info.cleared ? pickRewardTowerPack(owned) : null;
-        const exclude = new Set(free?.tower ? [free.tower] : []);
-        const choices = wantBonus
-          ? pickRewardTowerPackChoices(owned, 3, exclude)
-          : [];
+  const queueClearAndBonusPacks = useCallback(
+    (opts: { cleared: boolean; wantBonus: boolean }) => {
+      const free = opts.cleared ? pickRewardTowerPack(owned) : null;
+      const exclude = new Set(free?.tower ? [free.tower] : []);
+      const choices = opts.wantBonus
+        ? pickRewardTowerPackChoices(owned, 3, exclude)
+        : [];
 
-        setPendingHighlights([]);
-        setPendingTower(undefined);
-
-        if (free) {
-          setRewardPack({ pack: free, reason: "clear" });
-          setBonusChoices(choices.length ? choices : null);
-          return;
-        }
-
+      const hasReward = Boolean(free) || choices.length > 0;
+      if (free) {
+        setRewardPack({ pack: free, reason: "clear" });
+        setBonusChoices(choices.length ? choices : null);
+      } else {
         setRewardPack(null);
         setBonusChoices(choices.length ? choices : null);
-      },
-    [owned, settleFeaturedBonus, creditHeroClear],
+      }
+
+      // Leave the results screen — pack UI lives at App shell level.
+      if (hasReward) navigate(gamesPath());
+    },
+    [owned, navigate],
   );
+
+  const quizRewardHandlers = useMemo(() => {
+    const make =
+      (game: FeaturedBonusGame) =>
+      (info: { cleared: boolean; correctCount: number }) => {
+        void (async () => {
+          // Credit hero clear before pack UI so progress can't get skipped
+          // behind reward-pack state churn.
+          await creditHeroClear(info.cleared);
+          void settleFeaturedBonus(game, info.cleared);
+          queueClearAndBonusPacks({
+            cleared: info.cleared,
+            wantBonus: earnsQuizBonusPack(info.correctCount),
+          });
+        })();
+      };
+    return {
+      zoomed: make("zoomed"),
+      geoguessr: make("geoguessr"),
+      pricecheck: make("pricecheck"),
+      orderup: make("orderup"),
+      camodetection: make("camodetection"),
+    };
+  }, [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks]);
 
   const offerBloonleBonus = useCallback(
     (guesses: number) => {
       if (guesses > BLOONLE_BONUS_MAX_TRIES) return;
       const choices = pickRewardTowerPackChoices(owned, 3);
       if (!choices.length) return;
-      setPendingHighlights([]);
-      setPendingTower(undefined);
       setRewardPack(null);
       setBonusChoices(choices);
+      navigate(gamesPath());
     },
-    [owned],
+    [owned, navigate],
   );
 
   const onBloonleRunEnd = useCallback(
     (info: { cleared: boolean }) => {
-      void settleFeaturedBonus("bloonle", info.cleared);
-      void creditHeroClear(info.cleared);
+      void (async () => {
+        await creditHeroClear(info.cleared);
+        void settleFeaturedBonus("bloonle", info.cleared);
+      })();
     },
     [settleFeaturedBonus, creditHeroClear],
   );
 
   const onSweeperRunEnd = useCallback(
     (info: { cleared: boolean }) => {
-      void settleFeaturedBonus("bloonssweeper", info.cleared);
-      void creditHeroClear(info.cleared);
+      void (async () => {
+        await creditHeroClear(info.cleared);
+        void settleFeaturedBonus("bloonssweeper", info.cleared);
+        // Win = clear pack + bonus pick (Sweeper has no 7/10 score).
+        queueClearAndBonusPacks({
+          cleared: info.cleared,
+          wantBonus: info.cleared,
+        });
+      })();
     },
-    [settleFeaturedBonus, creditHeroClear],
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
-  const afterPackDone = useCallback(
-    (pulls: { id: string }[], pack: PackDef) => {
-      const highlights = [...pendingHighlights, ...pulls.map((c) => c.id)];
-      const tower =
-        pack.kind === "tower" ? (pack.tower ?? undefined) : pendingTower;
-
-      if (bonusChoices?.length) {
-        setRewardPack(null);
-        setPendingHighlights(highlights);
-        setPendingTower(tower);
-        return;
-      }
-
-      finishRewards(highlights, tower);
-    },
-    [bonusChoices, finishRewards, pendingHighlights, pendingTower],
-  );
+  const afterPackDone = useCallback(() => {
+    if (bonusChoices?.length) {
+      setRewardPack(null);
+      return;
+    }
+    finishRewards();
+  }, [bonusChoices, finishRewards]);
 
   const goHome = () => navigate("/");
   const goGames = () => navigate(gamesPath());
@@ -398,7 +412,7 @@ function AppShell() {
             element={
               <ZoomedGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards("zoomed")}
+                onRunEnd={quizRewardHandlers.zoomed}
               />
             }
           />
@@ -407,7 +421,7 @@ function AppShell() {
             element={
               <GeoguessrGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards("geoguessr")}
+                onRunEnd={quizRewardHandlers.geoguessr}
               />
             }
           />
@@ -416,7 +430,7 @@ function AppShell() {
             element={
               <PriceCheckGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards("pricecheck")}
+                onRunEnd={quizRewardHandlers.pricecheck}
               />
             }
           />
@@ -425,7 +439,7 @@ function AppShell() {
             element={
               <OrderUpGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards("orderup")}
+                onRunEnd={quizRewardHandlers.orderup}
               />
             }
           />
@@ -444,7 +458,7 @@ function AppShell() {
             element={
               <CamoDetectionGame
                 onBack={goGames}
-                onRunEnd={offerQuizRewards("camodetection")}
+                onRunEnd={quizRewardHandlers.camodetection}
               />
             }
           />
@@ -472,13 +486,11 @@ function AppShell() {
           onClose={() => {
             setRewardPack(null);
             if (!bonusChoices?.length) {
-              if (pendingHighlights.length) {
-                finishRewards(pendingHighlights, pendingTower);
-              }
+              finishRewards();
             }
           }}
-          onFinished={({ pack, unlocked }) => {
-            afterPackDone(unlocked, pack);
+          onFinished={() => {
+            afterPackDone();
           }}
         />
       ) : null}

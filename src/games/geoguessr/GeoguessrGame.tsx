@@ -7,7 +7,6 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { MapAnswerSearch } from "../../components/MapAnswerSearch";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import type { TransformParams } from "../../utils/imageProcessing";
-import { earnsQuizBonusPack } from "../rewards";
 import { useGeoguessr } from "./useGeoguessr";
 
 type Props = {
@@ -70,8 +69,7 @@ export function GeoguessrGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={earnsQuizBonusPack(state.correctCount)}
-          continueAvailable={!state.freePlay}
+          continueAvailable={!state.freePlay && !state.clearedRun}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}

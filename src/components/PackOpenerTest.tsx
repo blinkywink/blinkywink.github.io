@@ -33,6 +33,7 @@ const CARD_EXIT_MS = 150;
 const SLICE_REVEAL_MS = 420;
 /** Dramatic hold before a T5 / Paragon face reveals. */
 const RARE_SUSPENSE_MS = 1450;
+const RARE_PARAGON_SUSPENSE_MS = 1900;
 /** While holding Space, T4 cards force a beat so you can see them. */
 const T4_SPACE_HOLD_MS = 1500;
 
@@ -456,11 +457,14 @@ export function PackOpenerTest({
       if (rare) {
         playPackRare();
         setPhaseBoth("suspense");
+        const suspenseMs = card?.isParagon
+          ? RARE_PARAGON_SUSPENSE_MS
+          : RARE_SUSPENSE_MS;
         later(() => {
           if (phaseRef.current !== "suspense") return;
           setPhaseBoth("enter");
           later(finishEnter, CARD_ENTER_MS);
-        }, RARE_SUSPENSE_MS);
+        }, suspenseMs);
         return;
       }
 
@@ -1010,6 +1014,21 @@ export function PackOpenerTest({
                       <span className="pack-opener__suspense-outline pack-opener__suspense-outline--mid" />
                       <span className="pack-opener__suspense-outline pack-opener__suspense-outline--hot" />
                       <span className="pack-opener__suspense-shimmer" />
+                      {currentTier === "paragon" ? (
+                        <>
+                          <span className="pack-opener__suspense-bloom" />
+                          <span className="pack-opener__suspense-ring" />
+                          <span className="pack-opener__suspense-ring pack-opener__suspense-ring--late" />
+                          <span className="pack-opener__suspense-corners">
+                            <i />
+                            <i />
+                            <i />
+                            <i />
+                          </span>
+                          <span className="pack-opener__suspense-flare" />
+                          <span className="pack-opener__suspense-shimmer pack-opener__suspense-shimmer--cross" />
+                        </>
+                      ) : null}
                     </div>
                     <p className="pack-opener__suspense-label">
                       {currentTier === "paragon" ? "PARAGON" : "TIER 5"}

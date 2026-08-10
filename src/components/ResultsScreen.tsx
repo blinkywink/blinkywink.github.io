@@ -4,8 +4,6 @@ type Props = {
   cleared?: boolean;
   /** Flawless clear — Cash was doubled. */
   perfect?: boolean;
-  /** ≥7 correct in the 10-round quiz — bonus pick incoming. */
-  bonusPack?: boolean;
   /** False after the one allowed continue was already used. */
   continueAvailable?: boolean;
   continueCost: number;
@@ -21,12 +19,11 @@ function formatCoins(n: number): string {
   return n.toLocaleString("en-US");
 }
 
-/** Compact run-over panel — earnings + home / again / paid continue. */
+/** Compact run-over panel — earnings + continue / again / games. */
 export function ResultsScreen({
   coinsEarned,
   cleared = false,
   perfect = false,
-  bonusPack = false,
   continueAvailable = true,
   continueCost,
   canAffordContinue,
@@ -62,18 +59,6 @@ export function ResultsScreen({
             All correct — Cash doubled!
           </p>
         ) : null}
-        {cleared ? (
-          <p className="results__pack-note">
-            Free tower pack unlocked. Slash to open!
-          </p>
-        ) : null}
-        {bonusPack ? (
-          <p className="results__pack-note results__pack-note--bonus">
-            {cleared
-              ? "7+ correct — bonus pack coming up."
-              : "7+ correct — pick a bonus pack."}
-          </p>
-        ) : null}
 
         <div className="results__actions">
           {continueAvailable ? (
@@ -104,11 +89,7 @@ export function ResultsScreen({
                 <p className="results__continue-error">{continueError}</p>
               ) : null}
             </>
-          ) : (
-            <p className="results__continue-note">
-              Continue already used this run
-            </p>
-          )}
+          ) : null}
 
           <button
             type="button"
@@ -124,7 +105,7 @@ export function ResultsScreen({
             onClick={onBack}
             disabled={continueBusy}
           >
-            Home
+            Games
           </button>
         </div>
       </div>

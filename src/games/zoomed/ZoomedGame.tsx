@@ -7,7 +7,6 @@ import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import type { TransformParams } from "../../utils/imageProcessing";
-import { earnsQuizBonusPack } from "../rewards";
 import { useZoomedGame } from "./useZoomedGame";
 
 type Props = {
@@ -71,8 +70,7 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
           }
           cleared={state.clearedRun}
           perfect={state.perfectRun}
-          bonusPack={earnsQuizBonusPack(state.correctCount)}
-          continueAvailable={!state.freePlay}
+          continueAvailable={!state.freePlay && !state.clearedRun}
           continueCost={continueCost}
           canAffordContinue={(profile?.coins ?? 0) >= continueCost}
           continueBusy={state.continueBusy}
