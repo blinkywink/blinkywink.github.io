@@ -3,6 +3,7 @@
 const SLICE_SRC = "/sounds/pack-slice.wav";
 const CARD_FOCUS_SRC = "/sounds/card-focus.wav";
 const PACK_RARE_SRC = "/sounds/pack-rare.wav";
+const PACK_PARAGON_SRC = "/sounds/pack-paragon.wav";
 const BUY_SRC = "/sounds/buy.wav";
 const WHOOSH_SRC = "/sounds/whoosh-2.wav";
 
@@ -173,6 +174,7 @@ export function preloadPackSounds(): void {
   warm(SLICE_SRC);
   warm(CARD_FOCUS_SRC);
   warm(PACK_RARE_SRC);
+  warm(PACK_PARAGON_SRC);
   warm(BUY_SRC);
   warm(WHOOSH_SRC);
 }
@@ -198,9 +200,14 @@ export function playCardFocus(): void {
   playBuffer(CARD_FOCUS_SRC, 1);
 }
 
-/** T5 / Paragon revealed in a pack pull. */
+/** T5 revealed in a pack pull. */
 export function playPackRare(): void {
   playBuffer(PACK_RARE_SRC, 1);
+}
+
+/** Paragon revealed in a pack pull (Dark Knight upgrade sting). */
+export function playPackParagon(): void {
+  playBuffer(PACK_PARAGON_SRC, 1);
 }
 
 /** Successful Cash purchase (packs, shop, marketplace, heroes). */

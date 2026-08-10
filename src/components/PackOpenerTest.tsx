@@ -18,7 +18,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
-import { playBuy, playCardWhoosh, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, preloadPackSounds } from "../lib/packSounds";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -455,7 +455,8 @@ export function PackOpenerTest({
       };
 
       if (rare) {
-        playPackRare();
+        if (card?.isParagon) playPackParagon();
+        else playPackRare();
         setPhaseBoth("suspense");
         const suspenseMs = card?.isParagon
           ? RARE_PARAGON_SUSPENSE_MS
