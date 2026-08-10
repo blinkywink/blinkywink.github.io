@@ -4,11 +4,7 @@ const SLICE_SRC = "/sounds/pack-slice.wav";
 const CARD_FOCUS_SRC = "/sounds/card-focus.wav";
 const PACK_RARE_SRC = "/sounds/pack-rare.wav";
 const BUY_SRC = "/sounds/buy.wav";
-const WHOOSH_SRCS = [
-  "/sounds/whoosh-1.wav",
-  "/sounds/whoosh-2.wav",
-  "/sounds/whoosh-3.wav",
-] as const;
+const WHOOSH_SRC = "/sounds/whoosh-2.wav";
 
 const VOLUME_KEY = "bloon.sfxVolume";
 const DEFAULT_VOLUME = 0.5;
@@ -106,7 +102,7 @@ export function preloadPackSounds(): void {
   ensure(CARD_FOCUS_SRC);
   ensure(PACK_RARE_SRC);
   ensure(BUY_SRC);
-  for (const src of WHOOSH_SRCS) ensure(src);
+  ensure(WHOOSH_SRC);
 }
 
 export function preloadHeroEquipVo(heroId?: string): void {
@@ -141,10 +137,9 @@ export function playBuy(): void {
   play(BUY_SRC, 1);
 }
 
-/** Random whoosh when flinging a revealed pack card away. */
+/** Whoosh when flinging a revealed pack card away. */
 export function playCardWhoosh(): void {
-  const src = WHOOSH_SRCS[Math.floor(Math.random() * WHOOSH_SRCS.length)]!;
-  play(src, 1);
+  play(WHOOSH_SRC, 1);
 }
 
 /** Hero place/equip voice line (first line only). No-op if missing (e.g. Silas). */
