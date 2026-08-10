@@ -8877,20 +8877,80 @@ body:has(.zoomed-page) {
   background: color-mix(in srgb, var(--lane) 18%, transparent);
 }
 
+.hero-lane__highway {
+  position: absolute;
+  inset: 0 0 14% 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--lane) 12%, transparent),
+      transparent 28%
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 34px,
+      rgba(255, 255, 255, 0.045) 34px,
+      rgba(255, 255, 255, 0.045) 36px
+    );
+  background-position: 0 var(--scroll, 0px);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 8%, #000 78%, transparent 92%);
+}
+
 .hero-lane__notes {
   position: absolute;
-  inset: 0 0 18% 0;
+  inset: 0;
   pointer-events: none;
+  overflow: visible;
+}
+
+.hero-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(8, 12, 18, 0.28),
+    transparent 55%
+  );
+}
+
+.hero-countdown span {
+  font-size: clamp(3.2rem, 14vw, 5.5rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #f4f1e6;
+  text-shadow:
+    0 0 24px color-mix(in srgb, #f0c84a 55%, transparent),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: hero-count-pop 0.28s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+
+@keyframes hero-count-pop {
+  from {
+    opacity: 0.2;
+    transform: scale(0.65);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .hero-note {
   position: absolute;
   left: 50%;
-  width: min(68%, 3.4rem);
+  width: min(72%, 3.55rem);
   transform: translate(-50%, -50%);
   object-fit: contain;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
   will-change: top;
+  z-index: 2;
 }
 
 .hero-note.is-miss {
@@ -8898,15 +8958,99 @@ body:has(.zoomed-page) {
   filter: grayscale(0.8);
 }
 
+.hero-target {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: min(72%, 3.55rem);
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+  z-index: 1;
+  aspect-ratio: 1;
+}
+
+.hero-target__fill,
+.hero-target__outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Ghost fill so you can see the shape under the falling bloon. */
+.hero-target__fill {
+  opacity: 0.28;
+  filter: saturate(0.9) brightness(1.05);
+}
+
+/* Colored silhouette outline of the same bloon (drop-shadow follows alpha). */
+.hero-target__outline {
+  opacity: 0.9;
+  filter:
+    brightness(0)
+    drop-shadow(0 0 0.6px var(--lane))
+    drop-shadow(2.2px 0 0 var(--lane))
+    drop-shadow(-2.2px 0 0 var(--lane))
+    drop-shadow(0 2.2px 0 var(--lane))
+    drop-shadow(0 -2.2px 0 var(--lane))
+    drop-shadow(1.6px 1.6px 0 var(--lane))
+    drop-shadow(-1.6px 1.6px 0 var(--lane))
+    drop-shadow(1.6px -1.6px 0 var(--lane))
+    drop-shadow(-1.6px -1.6px 0 var(--lane));
+  /* Keep stroke, hide the solid black body. */
+  -webkit-mask-image: radial-gradient(circle at 50% 52%, transparent 42%, #000 54%);
+  mask-image: radial-gradient(circle at 50% 52%, transparent 42%, #000 54%);
+}
+
 .hero-hitline {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 16%;
-  height: 4px;
+  left: 10%;
+  right: 10%;
+  bottom: 18%;
+  height: 3px;
   border-radius: 999px;
-  background: var(--lane);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--lane) 70%, transparent);
+  background: color-mix(in srgb, var(--lane) 75%, white);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lane) 65%, transparent);
+  opacity: 0.7;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-diff {
+  display: grid;
+  gap: 0.4rem;
+  width: min(100%, 20rem);
+  margin: 0.15rem 0 0.35rem;
+}
+
+.hero-diff__btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.hero-diff__btn strong {
+  font-size: 0.98rem;
+}
+
+.hero-diff__btn span {
+  font-size: 0.75rem;
+  opacity: 0.72;
+}
+
+.hero-diff__btn.is-active {
+  border-color: color-mix(in srgb, #f0c84a 70%, white);
+  background: rgba(240, 200, 74, 0.14);
+  box-shadow: 0 0 0 1px rgba(240, 200, 74, 0.25);
 }
 
 .hero-key {

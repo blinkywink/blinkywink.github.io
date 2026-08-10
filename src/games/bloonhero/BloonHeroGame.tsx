@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
-import { BLOON_IMAGES, HERO_LIVES } from "./config";
+import { BLOON_IMAGES } from "./config";
+import { DIFFICULTY_META, type Difficulty } from "./difficulty";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -10,9 +11,22 @@ type Props = {
   onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
 };
 
+const DIFFS: Difficulty[] = ["easy", "normal", "hard"];
+
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
-  const { state, chart, start, restart, applyHit, visibleNotes, approach } =
-    useBloonHero();
+  const {
+    state,
+    chart,
+    noteCounts,
+    start,
+    restart,
+    setDifficulty,
+    applyHit,
+    visibleNotes,
+    approach,
+    noteY,
+    maxLives,
+  } = useBloonHero();
   const prevPhase = useRef(state.phase);
   const notes = visibleNotes();
 
@@ -26,8 +40,14 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   }, [state.phase, state.cleared, state.cashEarned, onRunEnd]);
 
   const playing = state.phase === "playing";
-  const attemptsUsed = HERO_LIVES - state.lives;
-  const progress = Math.min(100, (state.songTime / chart.duration) * 100);
+  const countingIn = playing && state.songTime < 0;
+  const attemptsUsed = maxLives - state.lives;
+  const progress = Math.min(
+    100,
+    Math.max(0, (state.songTime / chart.duration) * 100),
+  );
+  const meta = DIFFICULTY_META[state.difficulty];
+  const scrollPx = state.phase === "ready" ? 0 : state.songTime * 140;
 
   return (
     <div className={`hero-page${state.phase === "results" ? " is-done" : ""}`}>
@@ -39,13 +59,13 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <strong>{state.combo}</strong>
             <span>combo</span>
           </span>
-          <LivesMeter maxAttempts={HERO_LIVES} attemptsUsed={attemptsUsed} />
+          <LivesMeter maxAttempts={maxLives} attemptsUsed={attemptsUsed} />
           <span className="hero-stat hero-stat--cash">
             <CashAmount amount={state.cashEarned} size={18} />
           </span>
         </div>
 
-        {playing && state.lastJudge ? (
+        {playing && state.lastJudge && !countingIn ? (
           <p
             className={`hero-judge is-${state.lastJudge}`}
             key={`${state.perfect}-${state.great}-${state.good}-${state.miss}`}
@@ -54,9 +74,11 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           </p>
         ) : (
           <p className="hero-hint">
-            {playing
-              ? "D F · J K — hit when bloons meet the line"
-              : `${chart.title} · ${chart.bpm} BPM`}
+            {countingIn
+              ? "Feel the beat…"
+              : playing
+                ? "Tap when a bloon covers its outline"
+                : `${chart.title} · ${meta.label}`}
           </p>
         )}
 
@@ -71,7 +93,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 key={lane.id}
                 type="button"
                 className="hero-lane"
-                style={{ ["--lane" as string]: lane.color }}
+                style={
+                  {
+                    ["--lane" as string]: lane.color,
+                    ["--scroll" as string]: `${scrollPx}px`,
+                  } as CSSProperties
+                }
                 aria-label={`Lane ${lane.label}`}
                 onPointerDown={(e) => {
                   e.preventDefault();
@@ -79,6 +106,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   applyHit(lane.id);
                 }}
               >
+                <div className="hero-lane__highway" aria-hidden />
                 <div className="hero-lane__notes">
                   {notes
                     .filter((n) => n.lane === lane.id)
@@ -87,9 +115,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                         playing || state.phase === "results"
                           ? state.songTime
                           : 0;
-                      // 1 at spawn, 0 at hit line
-                      const u = Math.min(1, Math.max(0, (n.t - t) / approach));
-                      const y = (1 - u) * 100;
+                      const y = noteY(t, n.t, approach);
                       return (
                         <img
                           key={n.id}
@@ -102,21 +128,60 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                       );
                     })}
                 </div>
+                <div className="hero-target" aria-hidden>
+                  <img
+                    className="hero-target__fill"
+                    src={BLOON_IMAGES[lane.id]}
+                    alt=""
+                    draggable={false}
+                  />
+                  <img
+                    className="hero-target__outline"
+                    src={BLOON_IMAGES[lane.id]}
+                    alt=""
+                    draggable={false}
+                  />
+                </div>
                 <div className="hero-hitline" />
                 <span className="hero-key">{lane.label}</span>
               </button>
             ))}
           </div>
 
+          {playing && state.countdown ? (
+            <div className="hero-countdown" aria-live="polite">
+              <span key={state.countdown}>{state.countdown}</span>
+            </div>
+          ) : null}
+
           {state.phase === "ready" ? (
             <div className="hero-overlay">
               <h2>BLOON HERO</h2>
               <p>
-                {chart.title}, four lanes, Guitar Hero style. Hit D F J K
-                (or tap) when bloons land on the line. Missed notes stay silent.
+                Match falling bloons to the outlines. Keyboard: D F J K. Missed
+                notes stay silent. Harder modes pay more.
               </p>
+              <div className="hero-diff" role="group" aria-label="Difficulty">
+                {DIFFS.map((d) => {
+                  const m = DIFFICULTY_META[d];
+                  const active = state.difficulty === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`hero-diff__btn${active ? " is-active" : ""}`}
+                      onClick={() => setDifficulty(d)}
+                    >
+                      <strong>{m.label}</strong>
+                      <span>
+                        {noteCounts[d]} notes · ×{m.cashMul.toFixed(1)} cash
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
               <button type="button" className="btn btn--primary" onClick={start}>
-                Play
+                Play {meta.label}
               </button>
             </div>
           ) : null}
@@ -131,11 +196,19 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 <CashAmount amount={state.cashEarned} size={22} />
               </p>
               <p className="hero-overlay__detail">
-                {state.perfect} perfect · {state.great} great · {state.good}{" "}
-                good · {state.miss} miss · max combo {state.maxCombo}
+                {meta.label} · {state.perfect} perfect · {state.great} great ·{" "}
+                {state.good} good · {state.miss} miss · max combo{" "}
+                {state.maxCombo}
               </p>
               <div className="hero-overlay__actions">
-                <button type="button" className="btn btn--primary" onClick={() => { restart(); start(); }}>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => {
+                    restart();
+                    start();
+                  }}
+                >
                   Play again
                 </button>
                 <button type="button" className="btn btn--ghost" onClick={onBack}>
