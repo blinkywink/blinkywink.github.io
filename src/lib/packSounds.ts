@@ -192,12 +192,12 @@ export function preloadHeroEquipVo(heroId?: string): void {
 
 /** Pack-cut / open slash. */
 export function playPackSlice(): void {
-  playBuffer(SLICE_SRC, 1);
+  playBuffer(SLICE_SRC, 0.72);
 }
 
 /** Monkey / hero / shop-pack opening into focus. */
 export function playCardFocus(): void {
-  playBuffer(CARD_FOCUS_SRC, 1);
+  playBuffer(CARD_FOCUS_SRC, 0.42);
 }
 
 /** T5 revealed in a pack pull. */
@@ -212,12 +212,12 @@ export function playPackParagon(): void {
 
 /** Successful Cash purchase (packs, shop, marketplace, heroes). */
 export function playBuy(): void {
-  playBuffer(BUY_SRC, 1);
+  playBuffer(BUY_SRC, 0.48);
 }
 
 /** Whoosh when flinging a revealed pack card away. */
 export function playCardWhoosh(): void {
-  playBuffer(WHOOSH_SRC, 1);
+  playBuffer(WHOOSH_SRC, 0.32);
 }
 
 /** Hero place/equip voice line (first line only). No-op if missing (e.g. Silas). */
