@@ -1815,8 +1815,8 @@ body:has(.zoomed-page) {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 90% 60% at 50% 0%, #9ad4ff 0%, transparent 55%),
-    linear-gradient(180deg, #74c06e 0%, #2f7a3d 55%, #1f5630 100%);
+    url("/images/bananas/monkey-meadow-bg.webp") center / 220% auto no-repeat,
+    #3a7a3a;
 }
 
 .game-preview__catch-monkey {
@@ -8467,8 +8467,7 @@ body:has(.zoomed-page) {
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.25),
     0 16px 40px rgba(0, 0, 0, 0.35);
-  background:
-    linear-gradient(180deg, #6bb86a 0%, #3d8f4a 42%, #2a6b38 70%, #1e4d2a 100%);
+  background: #3a7a3a;
 }
 
 .catch-field.is-playing {
@@ -8477,16 +8476,44 @@ body:has(.zoomed-page) {
 
 .catch-field__sky {
   position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("/images/bananas/monkey-meadow-bg.webp");
+  /* Zoomed crop of the meadow, tiled so the drift can loop forever */
+  background-size: 2200px auto;
+  background-repeat: repeat;
+  background-position: 0 0;
+  animation: catch-meadow-drift 70s linear infinite;
+  filter: saturate(1.05) brightness(0.96);
+}
+
+.catch-field__sky::after {
+  content: "";
+  position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 120% 55% at 50% -10%, #b8e8ff 0%, transparent 55%),
-    linear-gradient(180deg, rgba(120, 190, 110, 0.25) 0%, transparent 40%),
-    repeating-linear-gradient(
-      -12deg,
-      transparent 0 14px,
-      rgba(255, 255, 255, 0.03) 14px 15px
-    );
+    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 40%, rgba(10, 28, 14, 0.28) 100%),
+    linear-gradient(180deg, rgba(140, 200, 255, 0.12) 0%, transparent 28%);
+}
+
+@keyframes catch-meadow-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    /* One full tile in each axis so the loop is seamless */
+    background-position: 2200px 1417px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catch-field__sky {
+    animation: none;
+  }
 }
 
 .catch-drop {

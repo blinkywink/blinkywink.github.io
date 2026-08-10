@@ -20,8 +20,10 @@ type Props = {
   onPlay: (game: GameId) => void;
   /** Embed on home hub — games grid only, full width. */
   embed?: boolean;
-  /** Cap how many tiles render (home hub uses 3). */
+  /** Cap how many tiles render (home hub uses 3). Ignored when `pick` is set. */
   limit?: number;
+  /** Exact games to show, in order (home hub peeks). */
+  pick?: readonly GameId[];
   /** Current gold-outline bonus mode (games hub). */
   bonusGame?: FeaturedBonusGame | null;
 };
@@ -363,6 +365,7 @@ export function ArcadeHome({
   onPlay,
   embed = false,
   limit,
+  pick,
   bonusGame: bonusGameProp = null,
 }: Props) {
   const [bonusGame, setBonusGame] = useState<FeaturedBonusGame | null>(
@@ -390,18 +393,11 @@ export function ArcadeHome({
 
   const games = [
     {
-      id: "zoomed" as const,
-      title: "ZOOMED",
-      blurb: "Guess the tower from the image.",
-      label: "Zoomed, Guess the tower from the image",
-      preview: <ZoomedPreview />,
-    },
-    {
-      id: "geoguessr" as const,
-      title: "GEOGUESSR",
-      blurb: "Guess the map from a zoomed crop.",
-      label: "Geoguessr, Guess the map from a zoomed crop",
-      preview: <MapPreview />,
+      id: "bananacatch" as const,
+      title: "BANANA CATCH",
+      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
+      label: "Banana Catch, Endless banana catch with escalating bloons",
+      preview: <BananaCatchPreview />,
     },
     {
       id: "pricecheck" as const,
@@ -411,18 +407,11 @@ export function ArcadeHome({
       preview: <PricePreview />,
     },
     {
-      id: "orderup" as const,
-      title: "ORDER UP",
-      blurb: "Drag towers cheap to pricey before time runs out.",
-      label: "Order Up, Drag towers by price before time runs out",
-      preview: <OrderPreview />,
-    },
-    {
-      id: "bloonle" as const,
-      title: "BLOONLE",
-      blurb: "Bloons worldle including all base towers and 5th tiers.",
-      label: "Bloonle, Daily Wordle with tower names",
-      preview: <BloonlePreview />,
+      id: "bloonssweeper" as const,
+      title: "BLOONS SWEEPER",
+      blurb: "Minesweeper, red bloons are the mines.",
+      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
+      preview: <SweeperPreview />,
     },
     {
       id: "camodetection" as const,
@@ -432,22 +421,41 @@ export function ArcadeHome({
       preview: <CamoPreview />,
     },
     {
-      id: "bloonssweeper" as const,
-      title: "BLOONS SWEEPER",
-      blurb: "Minesweeper, red bloons are the mines.",
-      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
-      preview: <SweeperPreview />,
+      id: "geoguessr" as const,
+      title: "GEOGUESSR",
+      blurb: "Guess the map from a zoomed crop.",
+      label: "Geoguessr, Guess the map from a zoomed crop",
+      preview: <MapPreview />,
     },
     {
-      id: "bananacatch" as const,
-      title: "BANANA CATCH",
-      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
-      label: "Banana Catch, Endless banana catch with escalating bloons",
-      preview: <BananaCatchPreview />,
+      id: "bloonle" as const,
+      title: "BLOONLE",
+      blurb: "Bloons worldle including all base towers and 5th tiers.",
+      label: "Bloonle, Daily Wordle with tower names",
+      preview: <BloonlePreview />,
+    },
+    {
+      id: "orderup" as const,
+      title: "ORDER UP",
+      blurb: "Drag towers cheap to pricey before time runs out.",
+      label: "Order Up, Drag towers by price before time runs out",
+      preview: <OrderPreview />,
+    },
+    {
+      id: "zoomed" as const,
+      title: "ZOOMED",
+      blurb: "Guess the tower from the image.",
+      label: "Zoomed, Guess the tower from the image",
+      preview: <ZoomedPreview />,
     },
   ];
-  const shown =
-    limit != null && limit > 0 ? games.slice(0, limit) : games;
+  const shown = pick?.length
+    ? pick
+        .map((id) => games.find((g) => g.id === id))
+        .filter((g): g is (typeof games)[number] => g != null)
+    : limit != null && limit > 0
+      ? games.slice(0, limit)
+      : games;
 
   return (
     <div className={`arcade${embed ? " arcade--embed" : ""}`}>

@@ -1,5 +1,6 @@
 export const BANANA_IMAGE = "/images/bananas/banana.webp";
 export const MONKEY_IMAGE = "/images/bananas/banana-farm-dance.gif";
+export const MEADOW_BG_IMAGE = "/images/bananas/monkey-meadow-bg.webp";
 export const RED_BLOON_IMAGE = "/images/bloons/red-bloon.webp";
 export const BLUE_BLOON_IMAGE = "/images/bloons/blue-bloon.webp";
 export const GREEN_BLOON_IMAGE = "/images/bloons/green-bloon.webp";
@@ -50,10 +51,10 @@ export const KIND_ASPECT: Record<DropKind, number> = {
  */
 export const KIND_SCALE: Record<DropKind, number> = {
   banana: 44,
-  red: 22,
-  blue: 22,
-  green: 22,
-  pink: 22,
+  red: 44,
+  blue: 44,
+  green: 44,
+  pink: 44,
   moab: 240,
   bfb: 300,
 };
