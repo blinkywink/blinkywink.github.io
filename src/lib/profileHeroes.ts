@@ -23,14 +23,14 @@ export type ShoppableHeroId = (typeof SHOPPABLE_HERO_IDS)[number];
 
 /** Per-hero unlock Cash. Keep in sync with public.hero_unlock_cost. */
 export const HERO_UNLOCK_COSTS: Record<ShoppableHeroId, number> = {
-  quincy: 3_500,
-  gwendolin: 4_000,
+  quincy: 4_750,
+  gwendolin: 5_250,
   "obyn-greenfoot": 4_500,
-  benjamin: 5_000,
-  ezili: 5_500,
-  sauda: 6_000,
-  psi: 6_500,
-  silas: 7_500,
+  benjamin: 5_500,
+  ezili: 5_000,
+  sauda: 5_750,
+  psi: 4_250,
+  silas: 5_250,
 };
 
 export function heroUnlockCost(heroId: string): number {

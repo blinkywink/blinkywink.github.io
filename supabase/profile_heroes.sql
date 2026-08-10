@@ -20,14 +20,14 @@ language sql
 immutable
 as $$
   select case lower(trim(coalesce(p_hero_id, '')))
-    when 'quincy' then 3500
-    when 'gwendolin' then 4000
+    when 'quincy' then 4750
+    when 'gwendolin' then 5250
     when 'obyn-greenfoot' then 4500
-    when 'benjamin' then 5000
-    when 'ezili' then 5500
-    when 'sauda' then 6000
-    when 'psi' then 6500
-    when 'silas' then 7500
+    when 'benjamin' then 5500
+    when 'ezili' then 5000
+    when 'sauda' then 5750
+    when 'psi' then 4250
+    when 'silas' then 5250
     else 5000
   end;
 $$;
