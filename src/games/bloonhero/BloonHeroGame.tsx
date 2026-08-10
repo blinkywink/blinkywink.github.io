@@ -2,7 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
-import { BLOON_IMAGES } from "./config";
+import { BLOON_IMAGES, HOLD_STACK_STEP, holdStackCount } from "./config";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -41,7 +41,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     100,
     Math.max(0, (state.songTime / chart.duration) * 100),
   );
-  const scrollPx = state.phase === "ready" ? 0 : state.songTime * 140;
+  const scrollPx = state.phase === "ready" ? 0 : state.songTime * 168;
 
   return (
     <div className={`hero-page${state.phase === "results" ? " is-done" : ""}`}>
@@ -119,16 +119,33 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                           playing || state.phase === "results"
                             ? state.songTime
                             : 0;
-                        const y = noteY(t, n.t, approach);
+                        const yHead = noteY(t, n.t, approach);
+                        const stacks = holdStackCount(n.dur, approach);
+                        const missed = n.result === "miss";
                         return (
-                          <img
+                          <div
                             key={n.id}
-                            className={`hero-note${n.result === "miss" ? " is-miss" : ""}`}
-                            src={BLOON_IMAGES[lane.id]}
-                            alt=""
-                            draggable={false}
-                            style={{ top: `${y}%` }}
-                          />
+                            className={`hero-note-stack${missed ? " is-miss" : ""}${stacks > 1 ? " is-hold" : ""}`}
+                          >
+                            {Array.from({ length: stacks }, (_, i) => {
+                              // Head at hit time; trail stacks toward the top of the highway
+                              const y = yHead - i * HOLD_STACK_STEP;
+                              const isHead = i === 0;
+                              return (
+                                <img
+                                  key={i}
+                                  className={`hero-note${isHead ? " is-head" : " is-trail"}`}
+                                  src={BLOON_IMAGES[lane.id]}
+                                  alt=""
+                                  draggable={false}
+                                  style={{
+                                    top: `${y}%`,
+                                    zIndex: stacks - i,
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
                         );
                       })}
                   </div>

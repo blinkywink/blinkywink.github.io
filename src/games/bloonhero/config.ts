@@ -4,17 +4,31 @@ export const CHART = chart;
 
 export type Judge = "perfect" | "great" | "good" | "miss";
 
-/** Travel time from top of highway to the hit line. */
-export const APPROACH_S = 2.45;
+/** Travel time from top of highway to the hit line (~20% faster than 2.45). */
+export const APPROACH_S = 2.04;
 /** Count-in beats before chart t=0 (drums + countdown). */
 export const LEAD_IN_BEATS = 4;
 /** Hit-line Y as % of the lane (matches target / note geometry). */
 export const HIT_LINE_Y = 82;
 /** Note spawn Y (%); slightly above 0 so they enter from off-screen. */
 export const SPAWN_Y = -10;
+/** Vertical spacing between stacked hold bloons (% of lane). */
+export const HOLD_STACK_STEP = 6.1;
+/** Min MIDI duration (s) before a note draws as a stacked hold. */
+export const HOLD_MIN_DUR = 0.16;
 
 export function leadInSeconds(bpm: number): number {
   return (60 / bpm) * LEAD_IN_BEATS;
+}
+
+/** How many stacked bloons to draw for a note of duration `dur`. */
+export function holdStackCount(dur: number, approach = APPROACH_S): number {
+  // Slightly exaggerate so holds read clearly at highway speed
+  const visualDur = dur * 1.4;
+  if (visualDur < HOLD_MIN_DUR) return 1;
+  const trackSpan = HIT_LINE_Y - SPAWN_Y;
+  const sustainPct = (visualDur / approach) * trackSpan;
+  return Math.min(10, Math.max(2, Math.round(sustainPct / HOLD_STACK_STEP) + 1));
 }
 
 /** Judgment windows (seconds from note time). */

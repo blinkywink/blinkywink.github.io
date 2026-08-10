@@ -8982,6 +8982,17 @@ body:has(.zoomed-page) {
   }
 }
 
+.hero-note-stack {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-note-stack.is-miss .hero-note {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+}
+
 .hero-note {
   position: absolute;
   left: 50%;
@@ -8990,12 +9001,20 @@ body:has(.zoomed-page) {
   object-fit: contain;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
   will-change: top;
-  z-index: 2;
 }
 
-.hero-note.is-miss {
-  opacity: 0.35;
-  filter: grayscale(0.8);
+.hero-note.is-head {
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+}
+
+.hero-note.is-trail {
+  opacity: 0.82;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.hero-note-stack.is-hold .hero-note.is-trail {
+  /* Slight squash so stacked holds read as a length, not a pile of orbs */
+  width: min(64%, 3.15rem);
 }
 
 .hero-target {
