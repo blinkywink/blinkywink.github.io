@@ -18,15 +18,27 @@ export type HighwayNote = {
   result?: Judge;
   holding: boolean;
   releasedEarly: boolean;
+  /** Special star-power phrase note. */
+  star?: boolean;
+  /** Wall-clock ms when hit (keep visible until dart arrives). */
+  hitWallMs?: number;
+  /** Dart flight duration ms paired with hitWallMs. */
+  dartDurMs?: number;
+  /** Freeze Y (css px) while waiting for the dart. */
+  hitY?: number;
 };
 
 export type DartFx = {
   id: number;
   lane: number;
   born: number;
-  /** seconds to reach the hit line */
+  /** seconds to reach the target Y */
   dur: number;
   judge: Judge;
+  /** Absolute canvas Y (css px) — spawn below highway */
+  startY: number;
+  /** Absolute canvas Y (css px) — bloon center at hit */
+  endY: number;
 };
 
 export type HitFlash = {
@@ -52,6 +64,8 @@ export type HighwayDrawState = {
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
   wallMs?: number;
+  /** Star power active — soft tint wash. */
+  starPowerActive?: boolean;
 };
 
 const JUDGE_COLOR: Record<Judge, string> = {
@@ -235,8 +249,26 @@ function drawBloonAt(
   cy: number,
   size: number,
   alpha: number,
+  star = false,
 ) {
   const spr = sprites[lane];
+  if (star) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 236, 120, 0.95)";
+    ctx.shadowColor = "rgba(255, 220, 80, 0.9)";
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = Math.max(2.5, size * 0.07);
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = Math.max(1.2, size * 0.035);
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
   if (!spr?.img.complete || !spr.img.naturalWidth) {
     ctx.globalAlpha = alpha;
     ctx.fillStyle = LANE_FILL[lane] ?? "#fff";
@@ -304,6 +336,10 @@ export function drawHeroHighway(
   ctx.clearRect(0, 0, cssW, cssH);
   ctx.fillStyle = "#0a0a0c";
   ctx.fillRect(0, 0, cssW, cssH);
+  if (state.starPowerActive) {
+    ctx.fillStyle = "rgba(120, 70, 220, 0.14)";
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
 
   const laneCount = 5;
   const gap = 4;
@@ -418,34 +454,51 @@ export function drawHeroHighway(
     }
 
     const miss = n.result === "miss";
-    // Hide head once hit unless still holding a sustain.
-    if (!(n.resolved && n.result !== "miss" && !n.holding)) {
-      drawBloonAt(ctx, lane, cx, yHead, bloonSize, miss ? 0.35 : 1);
+    const waitingForDart =
+      n.resolved &&
+      n.result !== "miss" &&
+      !n.holding &&
+      n.hitWallMs != null &&
+      wallMs - n.hitWallMs < (n.dartDurMs ?? 50);
+    // Hide head once hit (after dart arrives), unless still holding a sustain.
+    if (!(n.resolved && n.result !== "miss" && !n.holding && !waitingForDart)) {
+      const yDraw =
+        waitingForDart && n.hitY != null ? n.hitY : yHead;
+      drawBloonAt(
+        ctx,
+        lane,
+        cx,
+        yDraw,
+        bloonSize,
+        miss ? 0.35 : 1,
+        Boolean(n.star && !n.resolved),
+      );
     }
   }
 
   for (const d of darts) {
     const age = (wallMs - d.born) / 1000;
-    if (age < 0 || age > d.dur + 0.1) continue;
+    if (age < 0 || age > d.dur + 0.08) continue;
     const x = d.lane * (laneW + gap);
     const cx = x + laneW / 2;
     const color = JUDGE_COLOR[d.judge] ?? LANE_FILL[d.lane] ?? "#fff";
-    const fly = Math.min(1, age / d.dur);
-    const startY = cssH + 6;
-    const y = startY + (hitY - startY) * fly;
-    // ~2 full clockwise spins while flying
+    const fly = Math.min(1, age / Math.max(0.001, d.dur));
+    const startY = d.startY;
+    const endY = d.endY;
+    const y = startY + (endY - startY) * fly;
+    // Spins scale with flight progress (~2 turns).
     const spin = fly * Math.PI * 2 * 2;
     const size = Math.min(laneW * 0.55, 34);
     if (fly < 1) {
       drawShuriken(ctx, cx, y, size, spin);
     } else {
-      const pop = Math.min(1, (age - d.dur) / 0.1);
+      const pop = Math.min(1, (age - d.dur) / 0.08);
       ctx.globalAlpha = 1 - pop;
-      drawShuriken(ctx, cx, hitY, size * (1 - pop * 0.35), spin);
+      drawShuriken(ctx, cx, endY, size * (1 - pop * 0.35), spin);
       ctx.strokeStyle = color;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(cx, hitY, 6 + pop * 18, 0, Math.PI * 2);
+      ctx.arc(cx, endY, 6 + pop * 18, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }

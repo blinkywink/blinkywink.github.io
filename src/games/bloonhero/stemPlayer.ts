@@ -19,6 +19,13 @@ export type StemPlayer = {
   destroy: () => void;
 };
 
+/** Target RMS (sample absolute) after normalization. */
+const TARGET_RMS = 0.11;
+/** Soft peak ceiling so boosts don’t clip hard. */
+const PEAK_CEILING = 0.95;
+const NORM_GAIN_MIN = 0.4;
+const NORM_GAIN_MAX = 2.6;
+
 function mimeForName(name: string): string {
   if (name.endsWith(".opus")) return "audio/opus";
   if (name.endsWith(".ogg")) return "audio/ogg";
@@ -32,6 +39,12 @@ function asBlobPart(data: Uint8Array): BlobPart {
     data.byteOffset,
     data.byteOffset + data.byteLength,
   ) as ArrayBuffer;
+}
+
+function copyToArrayBuffer(data: Uint8Array): ArrayBuffer {
+  const buf = new ArrayBuffer(data.byteLength);
+  new Uint8Array(buf).set(data);
+  return buf;
 }
 
 /** Clone Hero / RB stem filenames (ignore album art / previews). */
@@ -71,6 +84,45 @@ function waitReady(audio: HTMLAudioElement): Promise<void> {
   });
 }
 
+/**
+ * Estimate perceived loudness from a stem (strided peak + RMS).
+ * Used to normalize packs that ship at very different masters.
+ */
+async function analyzeLoudness(
+  data: Uint8Array,
+): Promise<{ peak: number; rms: number } | null> {
+  if (typeof OfflineAudioContext === "undefined") return null;
+  try {
+    const offline = new OfflineAudioContext(1, 1, 44100);
+    const decoded = await offline.decodeAudioData(copyToArrayBuffer(data));
+    let peak = 0;
+    let sumSq = 0;
+    let n = 0;
+    for (let c = 0; c < decoded.numberOfChannels; c++) {
+      const ch = decoded.getChannelData(c);
+      // ~200k samples max per channel keeps load snappy on long charts.
+      const step = Math.max(1, Math.floor(ch.length / 200_000));
+      for (let i = 0; i < ch.length; i += step) {
+        const a = Math.abs(ch[i]!);
+        if (a > peak) peak = a;
+        sumSq += a * a;
+        n += 1;
+      }
+    }
+    if (n <= 0 || peak < 1e-5) return null;
+    return { peak, rms: Math.sqrt(sumSq / n) };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeGainFromLoudness(peak: number, rms: number): number {
+  const byRms = TARGET_RMS / Math.max(rms, 1e-4);
+  const byPeak = PEAK_CEILING / Math.max(peak, 1e-4);
+  // Prefer RMS matching; never push the peak past the ceiling.
+  return Math.min(NORM_GAIN_MAX, Math.max(NORM_GAIN_MIN, Math.min(byRms, byPeak)));
+}
+
 export async function createStemPlayer(
   stems: { name: string; data: Uint8Array }[],
   volume: number,
@@ -87,15 +139,25 @@ export async function createStemPlayer(
     urls.push(url);
     const audio = new Audio(url);
     audio.preload = "auto";
-    audio.volume = volume;
+    audio.volume = 1;
     // MediaElementSource requires CORS-friendly media; blob URLs are fine.
     audio.crossOrigin = "anonymous";
     elements.push(audio);
   }
 
+  const songIdx = stems.findIndex((s) => /^song\./i.test(s.name));
+  const analyzeIdx =
+    songIdx >= 0
+      ? songIdx
+      : stems.findIndex((s) => !isVocalsStemName(s.name));
+  const loudness =
+    analyzeIdx >= 0 ? await analyzeLoudness(stems[analyzeIdx]!.data) : null;
+  const normGain = loudness
+    ? normalizeGainFromLoudness(loudness.peak, loudness.rms)
+    : 1;
+
   await Promise.all(elements.map((a) => waitReady(a)));
 
-  const songIdx = stems.findIndex((s) => /^song\./i.test(s.name));
   let master = songIdx >= 0 ? elements[songIdx]! : elements[0]!;
   if (songIdx < 0) {
     let best = 0;
@@ -112,32 +174,54 @@ export async function createStemPlayer(
   const vocalsEl = hasVocalsStem ? elements[vocalIdx]! : null;
 
   let audioCtx: AudioContext | null = null;
+  let masterGain: GainNode | null = null;
   let analyser: AnalyserNode | null = null;
-  let vocalsGain: GainNode | null = null;
   let timeData: Uint8Array<ArrayBuffer> | null = null;
   let smooth = 0;
+  let userVolume = Math.min(1, Math.max(0, volume));
+  let graphReady = false;
+  let graphFailed = false;
 
-  const ensureVocalsGraph = () => {
-    if (!vocalsEl || analyser || typeof AudioContext === "undefined") return;
+  const applyOutputGain = () => {
+    const g = userVolume * normGain;
+    if (masterGain) {
+      masterGain.gain.value = g;
+      return;
+    }
+    // Fallback without Web Audio: can only attenuate (HTML volume ≤ 1).
+    const htmlVol = Math.min(1, g);
+    for (const el of elements) el.volume = htmlVol;
+  };
+
+  const ensureGraph = () => {
+    if (graphReady || graphFailed || typeof AudioContext === "undefined") return;
     try {
       audioCtx = new AudioContext();
-      const src = audioCtx.createMediaElementSource(vocalsEl);
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.65;
-      vocalsGain = audioCtx.createGain();
-      vocalsGain.gain.value = Math.min(1, Math.max(0, volume));
-      src.connect(analyser);
-      analyser.connect(vocalsGain);
-      vocalsGain.connect(audioCtx.destination);
-      timeData = new Uint8Array(analyser.fftSize);
-      // Volume for the routed element is handled by the gain node.
-      vocalsEl.volume = 1;
+      masterGain = audioCtx.createGain();
+      masterGain.connect(audioCtx.destination);
+      for (const el of elements) {
+        el.volume = 1;
+        const src = audioCtx.createMediaElementSource(el);
+        if (vocalsEl && el === vocalsEl) {
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 512;
+          analyser.smoothingTimeConstant = 0.65;
+          src.connect(analyser);
+          analyser.connect(masterGain);
+          timeData = new Uint8Array(analyser.fftSize);
+        } else {
+          src.connect(masterGain);
+        }
+      }
+      applyOutputGain();
+      graphReady = true;
     } catch {
-      analyser = null;
+      graphFailed = true;
       audioCtx = null;
-      vocalsGain = null;
+      masterGain = null;
+      analyser = null;
       timeData = null;
+      applyOutputGain();
     }
   };
 
@@ -171,7 +255,7 @@ export async function createStemPlayer(
       return master.ended;
     },
     async play() {
-      ensureVocalsGraph();
+      ensureGraph();
       if (audioCtx && audioCtx.state === "suspended") {
         try {
           await audioCtx.resume();
@@ -195,20 +279,11 @@ export async function createStemPlayer(
       for (const el of elements) el.pause();
     },
     setVolume(v: number) {
-      const vol = Math.min(1, Math.max(0, v));
-      for (let i = 0; i < elements.length; i++) {
-        const el = elements[i]!;
-        if (vocalsEl && el === vocalsEl && vocalsGain) {
-          vocalsGain.gain.value = vol;
-          el.volume = 1;
-        } else {
-          el.volume = vol;
-        }
-      }
+      userVolume = Math.min(1, Math.max(0, v));
+      applyOutputGain();
     },
     getVocalsLevel() {
       if (!analyser || !timeData) return 0;
-      // AnalyserNode typings expect ArrayBuffer-backed Uint8Array.
       analyser.getByteTimeDomainData(timeData as Uint8Array<ArrayBuffer>);
       let sum = 0;
       for (let i = 0; i < timeData.length; i++) {
@@ -216,7 +291,6 @@ export async function createStemPlayer(
         sum += v * v;
       }
       const rms = Math.sqrt(sum / timeData.length);
-      // Typical vocal stem rms is small; scale + gate.
       const level = Math.min(1, Math.max(0, (rms - 0.015) / 0.14));
       smooth = smooth * 0.4 + level * 0.6;
       return smooth;
@@ -234,11 +308,14 @@ export async function createStemPlayer(
         /* ignore */
       }
       audioCtx = null;
+      masterGain = null;
       analyser = null;
-      vocalsGain = null;
       timeData = null;
     },
   };
+
+  // Prefetch graph once a user gesture exists later; still apply HTML fallback now.
+  applyOutputGain();
 
   return { player, urls };
 }

@@ -19,7 +19,7 @@ import {
 } from "./enchorApi";
 import { INSTRUMENT_LABEL } from "./instruments";
 import { recentPlayToHit } from "./recentPlays";
-import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
+import { DEFAULT_KEYS, DEFAULT_STAR_KEY, type HeroKeybinds } from "./settings";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -95,10 +95,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setProgressFillEl,
     setCountdownEl,
     togglePause,
+    activateStarPower,
   } = useBloonHero();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capturingLane, setCapturingLane] = useState<number | null>(null);
+  const [capturingStar, setCapturingStar] = useState(false);
   const prevPhase = useRef(state.phase);
 
   useEffect(() => {
@@ -115,25 +117,51 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   }, [state.phase, state.cleared, state.didWell, state.cashEarned, onRunEnd]);
 
   useEffect(() => {
-    if (capturingLane == null) return;
+    if (capturingLane == null && !capturingStar) return;
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (e.key === "Escape") {
         setCapturingLane(null);
+        setCapturingStar(false);
         return;
       }
       const next = e.key.toLowerCase();
-      if (!next || next === "tab" || next === "shift" || next === "control" || next === "alt" || next === "meta") {
+      if (
+        !next ||
+        next === "tab" ||
+        next === "shift" ||
+        next === "control" ||
+        next === "alt" ||
+        next === "meta"
+      ) {
         return;
       }
+
+      if (capturingStar) {
+        // Don't bind star to an existing lane key without clearing that lane.
+        const keys = [...settings.keys] as HeroKeybinds;
+        for (let i = 0; i < keys.length; i++) {
+          if (keys[i] === next) keys[i] = "";
+        }
+        const used = new Set(keys.filter(Boolean));
+        for (let i = 0; i < keys.length; i++) {
+          if (keys[i]) continue;
+          const fill = DEFAULT_KEYS.find((d) => !used.has(d) && d !== next) ?? `f${i + 1}`;
+          keys[i] = fill;
+          used.add(fill);
+        }
+        updateSettings({ starKey: next, keys });
+        setCapturingStar(false);
+        return;
+      }
+
+      if (capturingLane == null) return;
       const keys = [...settings.keys] as HeroKeybinds;
-      // Clear duplicates
       for (let i = 0; i < keys.length; i++) {
         if (i !== capturingLane && keys[i] === next) keys[i] = "";
       }
       keys[capturingLane] = next;
-      // Fill blanks with defaults that aren't used
       const used = new Set(keys.filter(Boolean));
       for (let i = 0; i < keys.length; i++) {
         if (keys[i]) continue;
@@ -141,12 +169,22 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
         keys[i] = fill;
         used.add(fill);
       }
-      updateSettings({ keys });
+      const starKey = settings.starKey || DEFAULT_STAR_KEY;
+      updateSettings({
+        keys,
+        starKey: starKey === next ? DEFAULT_STAR_KEY : starKey,
+      });
       setCapturingLane(null);
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [capturingLane, settings.keys, updateSettings]);
+  }, [
+    capturingLane,
+    capturingStar,
+    settings.keys,
+    settings.starKey,
+    updateSettings,
+  ]);
 
   const volumeSlider = (
     <label className="hero-volume">
@@ -196,6 +234,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             aria-label="Close settings"
             onClick={() => {
               setCapturingLane(null);
+              setCapturingStar(false);
               setSettingsOpen(false);
             }}
           >
@@ -275,9 +314,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   capturingLane === lane.id ? " is-listening" : ""
                 }`}
                 style={{ "--lane": lane.color } as CSSProperties}
-                onClick={() =>
-                  setCapturingLane((c) => (c === lane.id ? null : lane.id))
-                }
+                onClick={() => {
+                  setCapturingStar(false);
+                  setCapturingLane((c) => (c === lane.id ? null : lane.id));
+                }}
               >
                 <i style={{ background: lane.color }} aria-hidden />
                 {capturingLane === lane.id
@@ -286,8 +326,21 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className={`hero-settings__key hero-settings__key--star${
+              capturingStar ? " is-listening" : ""
+            }`}
+            onClick={() => {
+              setCapturingLane(null);
+              setCapturingStar((v) => !v);
+            }}
+          >
+            Star {capturingStar ? "…" : formatKey(settings.starKey || " ")}
+          </button>
           <span className="hero-settings__hint">
-            Click a lane, then press a key
+            Click a lane or Star, then press a key. Hit outlined bloons to fill
+            star power, then press Star to activate.
           </span>
           <button
             type="button"
@@ -298,6 +351,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 bloonScale: 1,
                 popVolume: 1,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
+                starKey: DEFAULT_STAR_KEY,
               })
             }
           >
@@ -481,10 +535,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 )}
               </section>
             ) : null}
-
-            <button type="button" className="btn btn--ghost" onClick={onBack}>
-              Games
-            </button>
           </div>
         ) : (
           <>
@@ -497,6 +547,37 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <span className="hero-stat hero-stat--cash">
                 <CashAmount amount={state.cashEarned} size={18} />
               </span>
+              {playing || state.phase === "ready" ? (
+                <button
+                  type="button"
+                  className={`hero-star-meter${
+                    state.starActive ? " is-active" : ""
+                  }${state.starMeter >= 0.999 && !state.starActive ? " is-ready" : ""}`}
+                  aria-label={
+                    state.starActive
+                      ? "Star power active"
+                      : state.starMeter >= 0.999
+                        ? `Activate star power — ${formatKey(settings.starKey || " ")}`
+                        : "Star power meter"
+                  }
+                  disabled={!playing || state.paused || state.starMeter < 0.999 || state.starActive}
+                  onClick={() => activateStarPower()}
+                >
+                  <span
+                    className="hero-star-meter__fill"
+                    style={{
+                      transform: `scaleX(${Math.max(0, Math.min(1, state.starMeter))})`,
+                    }}
+                  />
+                  <span className="hero-star-meter__label">
+                    {state.starActive
+                      ? "STAR!"
+                      : state.starMeter >= 0.999
+                        ? formatKey(settings.starKey || " ")
+                        : "STAR"}
+                  </span>
+                </button>
+              ) : null}
               {volumeSlider}
             </div>
 
@@ -521,14 +602,18 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   : countingIn
                     ? "Get ready…"
                     : playing
-                      ? state.emptyStreak >= 2
-                        ? `Wrong taps ×${state.emptyStreak}`
-                        : `${state.artist}, ${state.title}`
+                      ? state.starActive
+                        ? "Star power — bloons pay more"
+                        : state.emptyStreak >= 2
+                          ? `Wrong taps ×${state.emptyStreak}`
+                          : `${state.artist}, ${state.title}`
                       : `${state.artist}, ${state.title}`}
               </p>
             )}
 
-            <div className="hero-stage">
+            <div
+              className={`hero-stage${state.starActive ? " is-star" : ""}`}
+            >
               {state.hasVocals ? (
                 <div
                   className={`hero-singer${state.talking ? " is-talking" : ""}${state.singing ? " is-open" : ""}`}

@@ -27,6 +27,10 @@ const publishableKey = (
 /** False when Vercel/local env is missing VITE_SUPABASE_* — app stays guest-only. */
 export const supabaseConfigured = Boolean(url && publishableKey);
 
+/** Normalized project URL (for health checks / desktop online gate). */
+export const supabaseUrl = url ?? null;
+export const supabasePublishableKey = publishableKey ?? null;
+
 /** Opaque session token → sent as x-bloon-session (not a JWT). */
 let sessionToken: string | null = loadAppSession()?.accessToken ?? null;
 

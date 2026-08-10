@@ -4,14 +4,20 @@ import { awardCoins } from "../../lib/awardCoins";
 import { playBloonPop, preloadPackSounds } from "../../lib/packSounds";
 import {
   APPROACH_S,
+  DART_SPEED_PX_S,
   EMPTY_STREAK_PER_LIFE,
   HERO_BONUS_RATIO,
   HERO_LIVES,
+  HIT_LINE_Y,
   HIT_WEIGHT,
+  STAR_CASH_MULT,
+  STAR_FILL_PER_HIT,
+  STAR_POWER_DURATION_S,
   WINDOW_GOOD,
   heroCashPools,
   judgeOffset,
   leadInSeconds,
+  noteY,
   type Judge,
 } from "./config";
 import { drawHeroHighway, ensureBloonImages, type DartFx, type HitFlash } from "./drawHighway";
@@ -25,6 +31,7 @@ import {
   type BloonHeroRecentPlay,
 } from "./recentPlays";
 import {
+  DEFAULT_STAR_KEY,
   keyToLaneMap,
   readHeroSettings,
   writeHeroSettings,
@@ -39,6 +46,10 @@ export type ActiveNote = ChartNote & {
   result?: Judge;
   holding: boolean;
   releasedEarly: boolean;
+  star?: boolean;
+  hitWallMs?: number;
+  dartDurMs?: number;
+  hitY?: number;
 };
 
 export type HeroPhase =
@@ -88,6 +99,10 @@ export type HeroState = {
   singing: boolean;
   recentPlays: BloonHeroRecentPlay[];
   recentLoading: boolean;
+  /** 0–1 star power meter (fills on special notes). */
+  starMeter: number;
+  /** Star power currently boosting cash. */
+  starActive: boolean;
 };
 
 const VOLUME_KEY = "bloonhero-volume";
@@ -140,7 +155,25 @@ const INITIAL: HeroState = {
   singing: false,
   recentPlays: [],
   recentLoading: false,
+  starMeter: 0,
+  starActive: false,
 };
+
+/** Sprinkle clustered “star” notes for the GH-style meter. */
+function markStarNotes(notes: ActiveNote[]) {
+  let i = 0;
+  while (i < notes.length) {
+    if (Math.random() < 0.085) {
+      const len = 3 + Math.floor(Math.random() * 3); // 3–5
+      for (let j = 0; j < len && i + j < notes.length; j++) {
+        notes[i + j]!.star = true;
+      }
+      i += len + 1 + Math.floor(Math.random() * 4);
+    } else {
+      i += 1;
+    }
+  }
+}
 
 function cashForHit(
   j: Judge,
@@ -196,6 +229,9 @@ export function useBloonHero() {
   const dartIdRef = useRef(0);
   const hitFlashesRef = useRef<HitFlash[]>([]);
   const hitFlashIdRef = useRef(0);
+  const starMeterRef = useRef(0);
+  const starActiveUntilRef = useRef(0);
+  const starUiAtRef = useRef(0);
   const pausedRef = useRef(false);
   /** When set, countdown before unpausing. wall ms start. */
   const resumeAtRef = useRef<number | null>(null);
@@ -330,6 +366,10 @@ export function useBloonHero() {
         keys: partial.keys
           ? ([...partial.keys] as HeroKeybinds)
           : ([...prev.keys] as HeroKeybinds),
+        starKey:
+          partial.starKey != null
+            ? partial.starKey.toLowerCase() || DEFAULT_STAR_KEY
+            : prev.starKey || DEFAULT_STAR_KEY,
       };
       writeHeroSettings(next);
       settingsRef.current = next;
@@ -338,6 +378,68 @@ export function useBloonHero() {
     });
   }, []);
 
+  const syncStarUi = useCallback((wallMs = performance.now()) => {
+    const active = wallMs < starActiveUntilRef.current;
+    const meter = active
+      ? Math.max(
+          0,
+          (starActiveUntilRef.current - wallMs) /
+            (STAR_POWER_DURATION_S * 1000),
+        )
+      : starMeterRef.current;
+    setState((prev) => {
+      if (
+        Math.abs(prev.starMeter - meter) < 0.02 &&
+        prev.starActive === active
+      ) {
+        return prev;
+      }
+      return { ...prev, starMeter: meter, starActive: active };
+    });
+  }, []);
+
+  const activateStarPower = useCallback(() => {
+    const s = stateRef.current;
+    if (s.phase !== "playing") return;
+    if (pausedRef.current || resumeAtRef.current != null) return;
+    const wall = performance.now();
+    if (wall < starActiveUntilRef.current) return;
+    if (starMeterRef.current < 0.999) return;
+    starMeterRef.current = 0;
+    starActiveUntilRef.current = wall + STAR_POWER_DURATION_S * 1000;
+    syncStarUi(wall);
+  }, [syncStarUi]);
+
+  const spawnDart = useCallback(
+    (lane: number, judge: Judge, targetY?: number): number => {
+      dartIdRef.current += 1;
+      const now = performance.now();
+      const h = canvasCssRef.current.h || 480;
+      const hitY = (HIT_LINE_Y / 100) * h;
+      const startY = h + 6;
+      const endY = targetY ?? hitY;
+      const dist = Math.abs(startY - endY);
+      // Math: time = distance / speed so the shuriken reaches the bloon center.
+      const dur = Math.min(0.11, Math.max(0.028, dist / DART_SPEED_PX_S));
+      dartsRef.current.push({
+        id: dartIdRef.current,
+        lane,
+        born: now,
+        dur,
+        judge,
+        startY,
+        endY,
+      });
+      if (dartsRef.current.length > 40) {
+        dartsRef.current = dartsRef.current.filter(
+          (d) => now - d.born < (d.dur + 0.2) * 1000,
+        );
+      }
+      return dur;
+    },
+    [],
+  );
+
   const approachSec = useCallback(() => {
     const speed = settingsRef.current.trackSpeed || 1;
     return APPROACH_S / speed;
@@ -345,24 +447,6 @@ export function useBloonHero() {
 
   const bloonScale = useCallback(() => {
     return settingsRef.current.bloonScale || 1;
-  }, []);
-
-  const spawnDart = useCallback((lane: number, judge: Judge) => {
-    dartIdRef.current += 1;
-    const now = performance.now();
-    dartsRef.current.push({
-      id: dartIdRef.current,
-      lane,
-      born: now,
-      // Keep short so the shuriken meets the bloon near the hit, not after it.
-      dur: 0.06,
-      judge,
-    });
-    if (dartsRef.current.length > 40) {
-      dartsRef.current = dartsRef.current.filter(
-        (d) => now - d.born < (d.dur + 0.2) * 1000,
-      );
-    }
   }, []);
 
   const spawnHitFlash = useCallback((lane: number, judge: Judge) => {
@@ -657,13 +741,17 @@ export function useBloonHero() {
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     dartsRef.current = [];
     hitFlashesRef.current = [];
+    starMeterRef.current = 0;
+    starActiveUntilRef.current = 0;
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
       resolved: false,
       holding: false,
       releasedEarly: false,
+      star: false,
     }));
+    markStarNotes(notesRef.current);
     leadInRef.current = leadInSeconds(120);
     originRef.current = performance.now();
     songTimeRef.current = -leadInRef.current;
@@ -809,18 +897,27 @@ export function useBloonHero() {
       if (pausedRef.current || resumeAtRef.current != null) return;
       keysDownRef.current.add(lane);
       flashPress(lane);
-      // Always fire a projectile on tap — hit or not.
-      spawnDart(lane, "good");
       const now = songTimeNow();
-      if (now < 0) return;
+      const approach = approachSec();
+      const h = canvasCssRef.current.h || 480;
+      // Aim at the hit line if we don't connect — empty taps still fire a dart.
+      let dartTargetY = (HIT_LINE_Y / 100) * h;
+      let dartJudge: Judge = "good";
+
+      if (now < 0) {
+        spawnDart(lane, dartJudge, dartTargetY);
+        return;
+      }
 
       for (const n of notesRef.current) {
-        if (n.holding && n.lane === lane && !n.releasedEarly) return;
+        if (n.holding && n.lane === lane && !n.releasedEarly) {
+          spawnDart(lane, dartJudge, dartTargetY);
+          return;
+        }
       }
 
       let best: ActiveNote | null = null;
       let bestAbs = Infinity;
-      // Only scan a window around the playhead
       const from = Math.max(0, scanFromRef.current - 4);
       for (let i = from; i < notesRef.current.length; i++) {
         const n = notesRef.current[i]!;
@@ -837,11 +934,7 @@ export function useBloonHero() {
       const punishEmpty = () => {
         const streak = stateRef.current.emptyStreak + 1;
         let lives = stateRef.current.lives;
-        // Only consecutive spam burns strikes — regular misses do not.
-        if (
-          streak > 0 &&
-          streak % EMPTY_STREAK_PER_LIFE === 0
-        ) {
+        if (streak > 0 && streak % EMPTY_STREAK_PER_LIFE === 0) {
           lives = Math.max(0, lives - 1);
         }
         burstIdRef.current += 1;
@@ -863,38 +956,72 @@ export function useBloonHero() {
       };
 
       if (!best) {
+        spawnDart(lane, dartJudge, dartTargetY);
         punishEmpty();
         return;
       }
       const judge = judgeOffset(now - best.t);
       if (!judge) {
+        spawnDart(lane, dartJudge, dartTargetY);
         punishEmpty();
         return;
       }
 
+      dartJudge = judge;
+      dartTargetY = (noteY(now, best.t, approach) / 100) * h;
+      const wallHit = performance.now();
+      const dartDur = spawnDart(lane, dartJudge, dartTargetY);
+
       best.resolved = true;
       best.result = judge;
       best.holding = best.sustain;
+      best.hitWallMs = wallHit;
+      best.dartDurMs = dartDur * 1000;
+      best.hitY = dartTargetY;
       if (best.sustain) holdingRef.current.add(lane);
       attemptedRef.current += 1;
       hitsRef.current += 1;
       spawnHitFlash(lane, judge);
       playBloonPop(settingsRef.current.popVolume ?? 1);
+
+      const starBoost =
+        wallHit < starActiveUntilRef.current ? STAR_CASH_MULT : 1;
+      if (best.star) {
+        if (wallHit >= starActiveUntilRef.current) {
+          starMeterRef.current = Math.min(
+            1,
+            starMeterRef.current + STAR_FILL_PER_HIT,
+          );
+        }
+      }
+
       const noteCount = Math.max(
         1,
         songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
       );
       const pools = heroCashPools(durationRef.current);
-      const pay = cashForHit(
+      let pay = cashForHit(
         judge,
         noteCount,
         hitCashRef.current,
         pools.hitPool,
       );
+      if (starBoost > 1 && pay > 0) {
+        const room = Math.max(0, pools.max - stateRef.current.cashEarned);
+        pay = Math.min(Math.round(pay * starBoost), room);
+      }
       hitCashRef.current += pay;
       pendingCashRef.current += pay;
       burstIdRef.current += 1;
       const burstId = burstIdRef.current;
+      const meterUi =
+        wallHit < starActiveUntilRef.current
+          ? Math.max(
+              0,
+              (starActiveUntilRef.current - wallHit) /
+                (STAR_POWER_DURATION_S * 1000),
+            )
+          : starMeterRef.current;
       setState((prev) => {
         const combo = prev.combo + 1;
         return {
@@ -908,6 +1035,8 @@ export function useBloonHero() {
           lastJudge: judge,
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
+          starMeter: meterUi,
+          starActive: wallHit < starActiveUntilRef.current,
         };
       });
       window.setTimeout(() => {
@@ -917,7 +1046,15 @@ export function useBloonHero() {
       }, 360);
       if (pendingCashRef.current >= 40) void flushCash();
     },
-    [flashPress, flushCash, songTimeNow, finishRun, spawnDart, spawnHitFlash],
+    [
+      flashPress,
+      flushCash,
+      songTimeNow,
+      finishRun,
+      spawnDart,
+      spawnHitFlash,
+      approachSec,
+    ],
   );
 
   // Playback + canvas draw loop
@@ -1000,6 +1137,7 @@ export function useBloonHero() {
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
             wallMs,
+            starPowerActive: wallMs < starActiveUntilRef.current,
           });
         }
         frameRef.current = requestAnimationFrame(tick);
@@ -1031,6 +1169,7 @@ export function useBloonHero() {
             darts: [],
             hitFlashes: [],
             wallMs,
+            starPowerActive: false,
           });
         }
         const cdEl = countdownElRef.current;
@@ -1179,6 +1318,12 @@ export function useBloonHero() {
           missed += 1;
           missLane = n.lane;
           attemptedRef.current += 1;
+          if (n.star && performance.now() >= starActiveUntilRef.current) {
+            starMeterRef.current = Math.max(
+              0,
+              starMeterRef.current - STAR_FILL_PER_HIT * 0.5,
+            );
+          }
           i += 1;
           continue;
         }
@@ -1212,7 +1357,13 @@ export function useBloonHero() {
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
           wallMs: wall,
+          starPowerActive: wall < starActiveUntilRef.current,
         });
+      }
+
+      if (wallMs - starUiAtRef.current > 90) {
+        starUiAtRef.current = wallMs;
+        syncStarUi(wallMs);
       }
 
       const countdown = countdownFromSongTime(now, 120);
@@ -1312,7 +1463,7 @@ export function useBloonHero() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", onResize);
     };
-  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels]);
+  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels, syncStarUi]);
 
   useEffect(() => () => cleanupSong(), [cleanupSong]);
 
@@ -1338,6 +1489,7 @@ export function useBloonHero() {
           darts: [],
           hitFlashes: [],
           wallMs: performance.now(),
+          starPowerActive: false,
         });
       }
     }
@@ -1356,6 +1508,14 @@ export function useBloonHero() {
       }
       if (pausedRef.current || resumeAtRef.current != null) return;
       const k = e.key.toLowerCase();
+      const starKey = (settingsRef.current.starKey || DEFAULT_STAR_KEY).toLowerCase();
+      if (k === starKey || (starKey === " " && e.code === "Space")) {
+        if (e.repeat || down.has("__star__")) return;
+        down.add("__star__");
+        e.preventDefault();
+        activateStarPower();
+        return;
+      }
       const lane = keyMapRef.current[k];
       if (lane == null) return;
       if (e.repeat || down.has(k)) return;
@@ -1365,6 +1525,10 @@ export function useBloonHero() {
     };
     const onUp = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
+      const starKey = (settingsRef.current.starKey || DEFAULT_STAR_KEY).toLowerCase();
+      if (k === starKey || (starKey === " " && e.code === "Space")) {
+        down.delete("__star__");
+      }
       down.delete(k);
       const lane = keyMapRef.current[k];
       if (lane != null) releaseLane(lane);
@@ -1375,7 +1539,7 @@ export function useBloonHero() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onUp);
     };
-  }, [state.phase, applyHit, releaseLane, togglePause]);
+  }, [state.phase, applyHit, releaseLane, togglePause, activateStarPower]);
 
   return {
     state,
@@ -1395,6 +1559,7 @@ export function useBloonHero() {
     applyHit,
     releaseLane,
     togglePause,
+    activateStarPower,
     maxLives: HERO_LIVES,
     setCanvasEl,
     setProgressFillEl,

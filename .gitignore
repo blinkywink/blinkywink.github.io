@@ -4,6 +4,9 @@ dist/
 dist-ssr/
 *.local
 
+# Tauri desktop build artifacts (source stays in src-tauri/)
+src-tauri/target/
+
 # Env & secrets — never commit
 .env
 .env.*

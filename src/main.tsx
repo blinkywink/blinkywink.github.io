@@ -3,12 +3,17 @@ import { createRoot } from "react-dom/client";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CardCollectionProvider } from "./auth/CardCollectionProvider";
 import App from "./App";
+import {
+  assertOnlineBackend,
+  isDesktopShell,
+  offlineGateHtml,
+} from "./lib/desktopOnline";
 import { supabaseConfigured } from "./lib/supabase";
 import "./index.css";
 
 const root = document.getElementById("root")!;
 
-if (!supabaseConfigured) {
+function renderMissingConfig() {
   root.innerHTML = `
     <div style="min-height:100dvh;display:grid;place-items:center;padding:2rem;font-family:system-ui,sans-serif;background:#0c0c10;color:#f0f0f4;text-align:center">
       <div style="max-width:28rem">
@@ -24,7 +29,9 @@ VITE_SUPABASE_PUBLISHABLE_KEY</pre>
       </div>
     </div>
   `;
-} else {
+}
+
+function renderApp() {
   createRoot(root).render(
     <StrictMode>
       <AuthProvider>
@@ -35,3 +42,41 @@ VITE_SUPABASE_PUBLISHABLE_KEY</pre>
     </StrictMode>,
   );
 }
+
+async function gateDesktopOnline(): Promise<boolean> {
+  const result = await assertOnlineBackend();
+  if (result === true) return true;
+
+  root.innerHTML = offlineGateHtml(result);
+  const btn = document.getElementById("desktop-online-retry");
+  btn?.addEventListener("click", () => {
+    void boot();
+  });
+  return false;
+}
+
+async function boot() {
+  if (!supabaseConfigured) {
+    renderMissingConfig();
+    return;
+  }
+
+  // Desktop build: same site code, but refuse to run offline.
+  if (isDesktopShell()) {
+    const ok = await gateDesktopOnline();
+    if (!ok) return;
+
+    window.addEventListener("offline", () => {
+      void gateDesktopOnline().then((stillOk) => {
+        if (!stillOk) {
+          // Tear down React if it was mounted — reload into gate.
+          window.location.reload();
+        }
+      });
+    });
+  }
+
+  renderApp();
+}
+
+void boot();
