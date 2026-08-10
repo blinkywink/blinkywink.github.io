@@ -44,6 +44,8 @@ export type HighwayDrawState = {
   holding: ReadonlySet<number>;
   /** Travel time spawn→hit. Lower = faster track. */
   approachSec?: number;
+  /** Note / receptor size multiplier (1 = default). */
+  bloonScale?: number;
   /** Lane key labels (defaults to D F J K L). */
   laneLabels?: readonly string[];
   darts?: readonly DartFx[];
@@ -294,6 +296,7 @@ export function drawHeroHighway(
   ensureShuriken();
   const { now, notes, pressed, holding } = state;
   const approach = state.approachSec ?? APPROACH_S;
+  const scaleMul = state.bloonScale ?? 1;
   const darts = state.darts ?? [];
   const hitFlashes = state.hitFlashes ?? [];
   const wallMs = state.wallMs ?? performance.now();
@@ -306,7 +309,7 @@ export function drawHeroHighway(
   const gap = 4;
   const laneW = (cssW - gap * (laneCount - 1)) / laneCount;
   const hitY = (HIT_LINE_Y / 100) * cssH;
-  const bloonSize = Math.min(laneW * 0.56, 40);
+  const bloonSize = Math.min(laneW * 0.56, 40) * scaleMul;
 
   // Lane columns
   for (let i = 0; i < laneCount; i++) {

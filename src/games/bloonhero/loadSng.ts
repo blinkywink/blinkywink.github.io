@@ -4,6 +4,7 @@ import { PLAYABLE_INSTRUMENTS } from "./instruments";
 import {
   listChartInstruments,
   parseChartFile,
+  type ChartNote,
   type ParsedChart,
 } from "./parseChartFile";
 import { listMidiInstruments, parseMidiChart } from "./parseMidiChart";
@@ -19,6 +20,8 @@ export type LoadedSong = {
   delayMs: number;
   ini: Record<string, string>;
   availableInstruments: PlayableInstrument[];
+  /** Vocal chart notes for lip-sync (independent of play instrument). */
+  vocalsNotes: ChartNote[] | null;
   setInstrument: (instrument: PlayableInstrument) => ParsedChart;
 };
 
@@ -198,6 +201,15 @@ export async function loadSongFromSng(
   const chosen = preferInstrument(availableInstruments, preferInstrumentName);
   let chart = parseFor(chosen);
 
+  let vocalsNotes: ChartNote[] | null = null;
+  if (availableInstruments.includes("vocals")) {
+    try {
+      vocalsNotes = parseFor("vocals").notes;
+    } catch {
+      vocalsNotes = null;
+    }
+  }
+
   const stemFiles = collectStemFiles(files);
   if (!stemFiles.length) throw new Error("No song audio found in chart pack");
 
@@ -218,6 +230,7 @@ export async function loadSongFromSng(
     delayMs,
     ini,
     availableInstruments,
+    vocalsNotes,
     setInstrument(instrument: PlayableInstrument) {
       if (!availableInstruments.includes(instrument)) {
         throw new Error(`${instrument} not in this pack`);

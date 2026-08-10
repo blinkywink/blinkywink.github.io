@@ -180,6 +180,26 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           </span>
         </label>
 
+        <label className="hero-settings__row">
+          <span>
+            Bloon size <strong>{Math.round(settings.bloonScale * 100)}%</strong>
+          </span>
+          <input
+            type="range"
+            min={60}
+            max={140}
+            step={5}
+            value={Math.round((settings.bloonScale ?? 1) * 100)}
+            aria-label="Bloon size"
+            onChange={(e) =>
+              updateSettings({ bloonScale: Number(e.target.value) / 100 })
+            }
+          />
+          <span className="hero-settings__hint">
+            Smaller can make stacked notes easier to read
+          </span>
+        </label>
+
         <div className="hero-settings__binds">
           <span>Keybinds</span>
           <div className="hero-settings__keys" role="group" aria-label="Lane keys">
@@ -211,6 +231,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             onClick={() =>
               updateSettings({
                 trackSpeed: 1,
+                bloonScale: 1,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
               })
             }

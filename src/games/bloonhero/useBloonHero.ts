@@ -192,6 +192,8 @@ export function useBloonHero() {
   const resumeAtRef = useRef<number | null>(null);
   const singingRef = useRef(false);
   const talkingRef = useRef(false);
+  const vocalsNotesRef = useRef<ChartNote[] | null>(null);
+  const vocalsScanRef = useRef(0);
 
   const songRef = useRef<LoadedSong | null>(null);
   const playerRef = useRef<StemPlayer | null>(null);
@@ -308,6 +310,10 @@ export function useBloonHero() {
           partial.trackSpeed != null
             ? Math.min(2, Math.max(0.6, partial.trackSpeed))
             : prev.trackSpeed,
+        bloonScale:
+          partial.bloonScale != null
+            ? Math.min(1.4, Math.max(0.6, partial.bloonScale))
+            : prev.bloonScale,
         keys: partial.keys
           ? ([...partial.keys] as HeroKeybinds)
           : ([...prev.keys] as HeroKeybinds),
@@ -322,6 +328,10 @@ export function useBloonHero() {
   const approachSec = useCallback(() => {
     const speed = settingsRef.current.trackSpeed || 1;
     return APPROACH_S / speed;
+  }, []);
+
+  const bloonScale = useCallback(() => {
+    return settingsRef.current.bloonScale || 1;
   }, []);
 
   const spawnDart = useCallback((lane: number, judge: Judge) => {
@@ -405,6 +415,8 @@ export function useBloonHero() {
         const buf = await downloadSng(hit.md5);
         const loaded = await loadSongFromSng(buf);
         songRef.current = loaded;
+        vocalsNotesRef.current = loaded.vocalsNotes;
+        vocalsScanRef.current = 0;
         const { player, urls } = await createStemPlayer(
           loaded.stemFiles,
           volumeRef.current,
@@ -596,6 +608,7 @@ export function useBloonHero() {
     }
     pendingCashRef.current = 0;
     hitCashRef.current = 0;
+    vocalsScanRef.current = 0;
     attemptedRef.current = 0;
     hitsRef.current = 0;
     scanFromRef.current = 0;
@@ -935,6 +948,7 @@ export function useBloonHero() {
             pressed: pressedRef.current,
             holding: holdingRef.current,
             approachSec: approachSec(),
+            bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
@@ -965,6 +979,7 @@ export function useBloonHero() {
             pressed: pressedRef.current,
             holding: holdingRef.current,
             approachSec: approachSec(),
+            bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
             darts: [],
             hitFlashes: [],
@@ -1025,17 +1040,30 @@ export function useBloonHero() {
       }
       songTimeRef.current = now;
 
-      // Dart monkey: chatter while vocals are present (mostly closed, flips open briefly).
-      if (stateRef.current.hasVocals && player) {
-        const level = player.paused ? 0 : player.getVocalsLevel();
-        const talking = level > 0.06;
+      // Dart monkey mouth follows vocal chart notes (not audio loudness).
+      if (stateRef.current.hasVocals) {
+        const vNotes = vocalsNotesRef.current;
         let open = false;
-        if (talking) {
-          const flap =
-            Math.sin(wallMs * 0.016) * 0.6 + Math.sin(wallMs * 0.027) * 0.4;
-          // Prefer closed — only open on slower peaks so it reads as talking.
-          const gate = 0.55 - level * 0.18;
-          open = flap > gate;
+        let talking = false;
+        if (vNotes?.length && !pausedRef.current) {
+          let i = Math.max(0, vocalsScanRef.current - 4);
+          while (i < vNotes.length) {
+            const n = vNotes[i]!;
+            const hold = Math.max(n.dur || 0, 0.12);
+            const end = n.t + hold;
+            if (n.t - now > 0.45) break;
+            if (end < now - 0.08) {
+              vocalsScanRef.current = i + 1;
+              i += 1;
+              continue;
+            }
+            // Bob when a lyric is about to land or currently sounding.
+            if (n.t - now <= 0.35 && now <= end + 0.05) talking = true;
+            // Mouth open while the vocal note is "on".
+            if (now >= n.t - 0.02 && now <= end) open = true;
+            if (open && talking) break;
+            i += 1;
+          }
         }
         if (
           open !== singingRef.current ||
@@ -1132,6 +1160,7 @@ export function useBloonHero() {
           pressed: pressedRef.current,
           holding: holdingRef.current,
           approachSec: approachSec(),
+          bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
@@ -1236,7 +1265,7 @@ export function useBloonHero() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", onResize);
     };
-  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, highwayLabels]);
+  }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels]);
 
   useEffect(() => () => cleanupSong(), [cleanupSong]);
 
@@ -1257,6 +1286,7 @@ export function useBloonHero() {
           pressed: new Set(),
           holding: new Set(),
           approachSec: approachSec(),
+          bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
           darts: [],
           hitFlashes: [],
@@ -1265,7 +1295,7 @@ export function useBloonHero() {
       }
     }
     return () => window.removeEventListener("resize", onResize);
-  }, [state.phase, resizeCanvas, approachSec, highwayLabels, settings]);
+  }, [state.phase, resizeCanvas, approachSec, bloonScale, highwayLabels, settings]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;

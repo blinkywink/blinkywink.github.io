@@ -5,6 +5,8 @@ export type HeroKeybinds = [string, string, string, string, string];
 export type HeroSettings = {
   /** 0.7–1.8 — higher = notes travel faster (shorter approach). */
   trackSpeed: number;
+  /** 0.6–1.4 — note / receptor size multiplier. */
+  bloonScale: number;
   /** Keys for lanes 0–4. Lowercase. */
   keys: HeroKeybinds;
 };
@@ -13,8 +15,13 @@ const KEY = "bloonhero-settings-v1";
 export const DEFAULT_KEYS: HeroKeybinds = ["d", "f", "j", "k", "l"];
 export const DEFAULT_SETTINGS: HeroSettings = {
   trackSpeed: 1,
+  bloonScale: 1,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
 };
+
+function clamp(n: number, lo: number, hi: number) {
+  return Math.min(hi, Math.max(lo, n));
+}
 
 export function readHeroSettings(): HeroSettings {
   try {
@@ -27,11 +34,14 @@ export function readHeroSettings(): HeroSettings {
         ) as HeroKeybinds)
       : ([...DEFAULT_KEYS] as HeroKeybinds);
     const trackSpeed = Number(parsed.trackSpeed);
+    const bloonScale = Number(parsed.bloonScale);
     return {
-      trackSpeed:
-        Number.isFinite(trackSpeed) && trackSpeed >= 0.6 && trackSpeed <= 2
-          ? trackSpeed
-          : 1,
+      trackSpeed: Number.isFinite(trackSpeed)
+        ? clamp(trackSpeed, 0.6, 2)
+        : 1,
+      bloonScale: Number.isFinite(bloonScale)
+        ? clamp(bloonScale, 0.6, 1.4)
+        : 1,
       keys,
     };
   } catch {
