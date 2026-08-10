@@ -7,7 +7,7 @@ import {
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
-import { EMPTY_STREAK_KILL, LANES, noteY } from "./config";
+import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
   enchorArtUrl,
   expertNotesFor,
@@ -18,7 +18,11 @@ import { useBloonHero } from "./useBloonHero";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
+  onRunEnd?: (info: {
+    cleared: boolean;
+    didWell: boolean;
+    coinsEarned: number;
+  }) => void;
 };
 
 export function BloonHeroGame({ onBack, onRunEnd }: Props) {
@@ -36,12 +40,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     backToBrowse,
     applyHit,
     releaseLane,
-    visibleNotes,
-    approach,
     maxLives,
-    setBoardEl,
+    setCanvasEl,
     setProgressFillEl,
-    setNoteEl,
+    setCountdownEl,
   } = useBloonHero();
 
   const volumeSlider = (
@@ -65,12 +67,16 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     prevPhase.current = state.phase;
     if (was === "results") return;
     if (state.phase === "results") {
-      onRunEnd?.({ cleared: state.cleared, coinsEarned: state.cashEarned });
+      onRunEnd?.({
+        cleared: state.cleared,
+        didWell: state.didWell,
+        coinsEarned: state.cashEarned,
+      });
     }
-  }, [state.phase, state.cleared, state.cashEarned, onRunEnd]);
+  }, [state.phase, state.cleared, state.didWell, state.cashEarned, onRunEnd]);
 
   const playing = state.phase === "playing";
-  const countingIn = playing && state.songTime < 0;
+  const countingIn = playing && (state.countdown != null || state.songTime < 0);
   const attemptsUsed = maxLives - state.lives;
 
   const onSearch = (e: FormEvent) => {
@@ -120,10 +126,9 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             <ul className="hero-results">
               {state.results.map((hit) => {
                 const instruments = playableInstrumentsOnHit(hit);
-                const primary =
-                  instruments.includes("guitar")
-                    ? "guitar"
-                    : (instruments[0] ?? "guitar");
+                const primary = instruments.includes("guitar")
+                  ? "guitar"
+                  : (instruments[0] ?? "guitar");
                 const notes = expertNotesFor(hit, primary);
                 const cover = enchorArtUrl(hit.albumArtMd5);
                 return (
@@ -193,7 +198,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 key={`${state.perfect}-${state.great}-${state.good}-${state.miss}-${state.emptyStreak}-${state.burst?.id ?? 0}`}
               >
                 {state.lastJudge === "miss" && state.emptyStreak > 0
-                  ? state.emptyStreak >= EMPTY_STREAK_KILL - 1
+                  ? state.emptyStreak % EMPTY_STREAK_PER_LIFE >=
+                    EMPTY_STREAK_PER_LIFE - 1
                     ? "DON'T SPAM"
                     : "WHIFF"
                   : state.lastJudge.toUpperCase()}
@@ -226,54 +232,33 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </div>
 
               <div
-                className="hero-board hero-board--5"
+                className="hero-board"
                 role="application"
                 aria-label="Chart lanes"
-                ref={setBoardEl}
-                style={
-                  {
-                    ["--approach" as string]: String(approach),
-                  } as CSSProperties
-                }
               >
-                {LANES.map((lane) => {
-                  const pressed =
-                    state.pressed.includes(lane.id) ||
-                    state.holdingLanes.includes(lane.id);
-                  const burst =
-                    state.burst?.lane === lane.id ? state.burst : null;
-                  return (
+                <canvas
+                  ref={setCanvasEl}
+                  className="hero-highway-canvas"
+                  aria-hidden
+                />
+                <div className="hero-lane-hits">
+                  {LANES.map((lane) => (
                     <button
                       key={lane.id}
                       type="button"
-                      className={[
-                        "hero-lane",
-                        pressed ? "is-pressed" : "",
-                        burst ? `is-burst is-${burst.judge}` : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      style={
-                        {
-                          ["--lane" as string]: lane.color,
-                        } as CSSProperties
-                      }
+                      className="hero-lane-hit"
                       aria-label={`Lane ${lane.label}`}
                       onPointerDown={(e) => {
                         e.preventDefault();
                         if (!playing) return;
-                        (e.currentTarget as HTMLElement).setPointerCapture?.(
-                          e.pointerId,
-                        );
+                        e.currentTarget.setPointerCapture?.(e.pointerId);
                         applyHit(lane.id);
                       }}
                       onPointerUp={(e) => {
                         if (!playing) return;
                         releaseLane(lane.id);
                         try {
-                          (e.currentTarget as HTMLElement).releasePointerCapture?.(
-                            e.pointerId,
-                          );
+                          e.currentTarget.releasePointerCapture?.(e.pointerId);
                         } catch {
                           /* ignore */
                         }
@@ -282,68 +267,19 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                         if (!playing) return;
                         releaseLane(lane.id);
                       }}
-                    >
-                      <div className="hero-lane__highway" aria-hidden />
-                      <div className="hero-lane__notes">
-                        {visibleNotes
-                          .filter((n) => n.lane === lane.id)
-                          .map((n) => (
-                            <div
-                              key={n.id}
-                              ref={(el) => setNoteEl(n.id, el)}
-                              className={[
-                                "hero-note",
-                                n.result === "miss" ? "is-miss" : "",
-                                n.sustain ? "is-sustain" : "",
-                                n.holding ? "is-holding" : "",
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
-                            >
-                              {n.sustain ? (
-                                <span
-                                  className="hero-note__trail"
-                                  style={{
-                                    top: `${noteY(state.songTime, n.t, approach)}%`,
-                                    height: `${Math.max(
-                                      0,
-                                      noteY(state.songTime, n.t + n.dur, approach) -
-                                        noteY(state.songTime, n.t, approach),
-                                    )}%`,
-                                  }}
-                                />
-                              ) : null}
-                              <span
-                                className="hero-note__key"
-                                style={{
-                                  top: `${noteY(state.songTime, n.t, approach)}%`,
-                                }}
-                              />
-                            </div>
-                          ))}
-                      </div>
-                      <div className="hero-target" aria-hidden>
-                        <span className="hero-target__key" />
-                      </div>
-                      {burst ? (
-                        <span
-                          key={burst.id}
-                          className={`hero-burst is-${burst.judge}`}
-                          aria-hidden
-                        />
-                      ) : null}
-                      <div className="hero-hitline" />
-                      <span className="hero-key">{lane.label}</span>
-                    </button>
-                  );
-                })}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {playing && state.countdown ? (
-                <div className="hero-countdown" aria-live="polite">
-                  <span key={state.countdown}>{state.countdown}</span>
-                </div>
-              ) : null}
+              <div
+                className="hero-countdown"
+                ref={setCountdownEl}
+                hidden={!playing || !state.countdown}
+                aria-live="polite"
+              >
+                <span>{state.countdown ?? ""}</span>
+              </div>
 
               {state.phase === "ready" ? (
                 <div className="hero-overlay">
@@ -397,9 +333,22 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   className={`hero-overlay${state.cleared ? " is-win" : " is-lose"}`}
                   role="status"
                 >
-                  <h2>{state.cleared ? "Nice run!" : "Popped out"}</h2>
+                  <h2>
+                    {state.cleared
+                      ? state.didWell
+                        ? "Clean clear!"
+                        : "Song clear!"
+                      : "Tilted out"}
+                  </h2>
                   <p className="hero-overlay__score">
                     <CashAmount amount={state.cashEarned} size={22} />
+                  </p>
+                  <p className="hero-overlay__detail">
+                    {state.cleared
+                      ? state.didWell
+                        ? "Finished the song + strong accuracy — pack & bonus"
+                        : "Finished the song — free pack unlocked"
+                      : "Too much spamming — finish the track to clear"}
                   </p>
                   <p className="hero-overlay__detail">
                     {state.perfect} perfect · {state.great} great · {state.good}{" "}

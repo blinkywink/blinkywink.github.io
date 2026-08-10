@@ -8888,26 +8888,54 @@ body:has(.zoomed-page) {
 .hero-progress {
   height: 4px;
   background: rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 1;
 }
 
 .hero-progress span {
   display: block;
   height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
   background: linear-gradient(90deg, #e23b4c, #e85aa8);
 }
 
 .hero-board {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.35rem;
+  position: relative;
+  display: block;
   height: calc(100% - 4px);
   padding: 0.45rem 0.45rem 0.55rem;
   touch-action: manipulation;
+  z-index: 1;
+  contain: layout paint size;
 }
 
-.hero-board--5 {
+.hero-highway-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-lane-hits {
+  position: absolute;
+  inset: 0.45rem 0.45rem 0.55rem;
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.28rem;
+  gap: 3px;
+  z-index: 2;
+}
+
+.hero-lane-hit {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
 }
 
 .hero-stage__art {
@@ -8917,23 +8945,16 @@ body:has(.zoomed-page) {
   background-image: var(--hero-art);
   background-size: cover;
   background-position: center;
-  opacity: 0.18;
-  filter: blur(10px) saturate(1.1);
-  transform: scale(1.08);
+  opacity: 0.12;
+  /* no blur — was a major paint cost every frame */
+  transform: scale(1.04);
   z-index: 0;
-}
-
-.hero-stage > .hero-progress,
-.hero-stage > .hero-board,
-.hero-stage > .hero-countdown,
-.hero-stage > .hero-overlay {
-  position: relative;
-  z-index: 1;
 }
 
 .hero-stage > .hero-countdown,
 .hero-stage > .hero-overlay {
   position: absolute;
+  z-index: 3;
 }
 
 .hero-browse {

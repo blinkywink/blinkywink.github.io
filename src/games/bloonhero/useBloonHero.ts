@@ -2,21 +2,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import {
-  APPROACH_S,
   CASH_PER_GOOD,
   CASH_PER_GREAT,
   CASH_PER_PERFECT,
-  EMPTY_STREAK_KILL,
+  EMPTY_STREAK_PER_LIFE,
+  HERO_BONUS_RATIO,
   HERO_CLEAR_BONUS,
-  HERO_CLEAR_RATIO,
+  HERO_GOOD_BONUS,
   HERO_LIVES,
   KEY_TO_LANE,
   WINDOW_GOOD,
   judgeOffset,
   leadInSeconds,
-  noteY,
   type Judge,
 } from "./config";
+import { drawHeroHighway } from "./drawHighway";
 import { downloadSng, searchEnchor, type EnchorHit } from "./enchorApi";
 import type { PlayableInstrument } from "./instruments";
 import { loadSongFromSng, revokeLoadedSong, type LoadedSong } from "./loadSng";
@@ -26,7 +26,6 @@ export type ActiveNote = ChartNote & {
   id: number;
   resolved: boolean;
   result?: Judge;
-  /** Sustain head was hit; key should stay down. */
   holding: boolean;
   releasedEarly: boolean;
 };
@@ -54,9 +53,9 @@ export type HeroState = {
   cashEarned: number;
   lastJudge: Judge | null;
   cleared: boolean;
+  /** Finished the song with strong accuracy → bonus pack. */
+  didWell: boolean;
   countdown: string | null;
-  pressed: number[];
-  holdingLanes: number[];
   burst: { lane: number; judge: Judge; id: number } | null;
   emptyStreak: number;
   title: string;
@@ -64,9 +63,8 @@ export type HeroState = {
   artUrl: string | null;
   noteCount: number;
   duration: number;
-  /** Sparse UI clock — do not drive note motion from this. */
+  /** Sparse UI clock — not used for note motion. */
   songTime: number;
-  /** 0–1, game-local (not master SFX). */
   volume: number;
   instrument: PlayableInstrument;
   availableInstruments: PlayableInstrument[];
@@ -103,9 +101,8 @@ const INITIAL: HeroState = {
   cashEarned: 0,
   lastJudge: null,
   cleared: false,
+  didWell: false,
   countdown: null,
-  pressed: [],
-  holdingLanes: [],
   burst: null,
   emptyStreak: 0,
   title: "",
@@ -136,28 +133,6 @@ function countdownFromSongTime(songTime: number, bpm: number): string | null {
   return String(n);
 }
 
-function noteEnd(n: ChartNote): number {
-  return n.t + (n.sustain ? n.dur : 0);
-}
-
-function computeVisible(notes: ActiveNote[], now: number): ActiveNote[] {
-  const out: ActiveNote[] = [];
-  for (const n of notes) {
-    const end = noteEnd(n);
-    if (n.resolved && n.result === "miss") {
-      if (now - n.t < 0.18) out.push(n);
-      continue;
-    }
-    if (n.resolved && n.sustain && (n.holding || now < end + 0.05)) {
-      if (now < end + 0.12 && !n.releasedEarly) out.push(n);
-      continue;
-    }
-    if (n.resolved) continue;
-    if (n.t - now < APPROACH_S + 0.08 && end - now > -WINDOW_GOOD) out.push(n);
-  }
-  return out;
-}
-
 export function useBloonHero() {
   const { setCoinBalance } = useAuth();
   const setCoinBalanceRef = useRef(setCoinBalance);
@@ -183,16 +158,25 @@ export function useBloonHero() {
   const attemptedRef = useRef(0);
   const hitsRef = useRef(0);
   const burstIdRef = useRef(0);
-  const pressTimers = useRef<Record<number, number>>({});
   const songTimeRef = useRef(0);
   const keysDownRef = useRef(new Set<number>());
-  const boardRef = useRef<HTMLElement | null>(null);
+  const pressedRef = useRef(new Set<number>());
+  const holdingRef = useRef(new Set<number>());
+  const pressClearTimers = useRef<Record<number, number>>({});
   const progressFillRef = useRef<HTMLElement | null>(null);
-  const noteElsRef = useRef(new Map<number, HTMLElement>());
-  const visibleRef = useRef<ActiveNote[]>([]);
-  const [visibleNotes, setVisibleNotes] = useState<ActiveNote[]>([]);
+  const countdownElRef = useRef<HTMLElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const canvasCssRef = useRef({ w: 0, h: 0, dpr: 1 });
+  const scanFromRef = useRef(0);
   const lastCountdownRef = useRef<string | null>(null);
-  const lastUiSongTimeRef = useRef(-999);
+  const endedRef = useRef(false);
+  /** Smoothed audio clock (audio.currentTime is chunky). */
+  const clockRef = useRef({
+    baseAudio: 0,
+    baseWall: 0,
+    lastAudioSample: -1,
+  });
 
   const flushCash = useCallback(async () => {
     const amount = pendingCashRef.current;
@@ -212,18 +196,44 @@ export function useBloonHero() {
     songRef.current = null;
   }, []);
 
-  const setBoardEl = useCallback((el: HTMLElement | null) => {
-    boardRef.current = el;
-  }, []);
-
   const setProgressFillEl = useCallback((el: HTMLElement | null) => {
     progressFillRef.current = el;
   }, []);
 
-  const setNoteEl = useCallback((id: number, el: HTMLElement | null) => {
-    if (el) noteElsRef.current.set(id, el);
-    else noteElsRef.current.delete(id);
+  const setCountdownEl = useCallback((el: HTMLElement | null) => {
+    countdownElRef.current = el;
   }, []);
+
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const rect = parent.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    canvasCssRef.current = { w, h, dpr };
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    const ctx = canvas.getContext("2d", { alpha: true });
+    canvasCtxRef.current = ctx;
+    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }, []);
+
+  const setCanvasEl = useCallback(
+    (el: HTMLCanvasElement | null) => {
+      canvasRef.current = el;
+      if (el) {
+        requestAnimationFrame(() => resizeCanvas());
+      } else {
+        canvasCtxRef.current = null;
+      }
+    },
+    [resizeCanvas],
+  );
 
   const setQuery = useCallback((query: string) => {
     setState((prev) => ({ ...prev, query }));
@@ -365,72 +375,61 @@ export function useBloonHero() {
   }, []);
 
   const flashPress = useCallback((lane: number) => {
-    setState((prev) => ({
-      ...prev,
-      pressed: prev.pressed.includes(lane)
-        ? prev.pressed
-        : [...prev.pressed, lane],
-    }));
-    if (pressTimers.current[lane]) {
-      window.clearTimeout(pressTimers.current[lane]);
+    pressedRef.current.add(lane);
+    if (pressClearTimers.current[lane]) {
+      window.clearTimeout(pressClearTimers.current[lane]);
     }
-    pressTimers.current[lane] = window.setTimeout(() => {
-      if (keysDownRef.current.has(lane)) return;
-      setState((prev) => ({
-        ...prev,
-        pressed: prev.pressed.filter((l) => l !== lane),
-      }));
-    }, 110);
+    pressClearTimers.current[lane] = window.setTimeout(() => {
+      if (!keysDownRef.current.has(lane) && !holdingRef.current.has(lane)) {
+        pressedRef.current.delete(lane);
+      }
+    }, 90);
   }, []);
 
-  const syncHoldingLanes = useCallback(() => {
-    const lanes: number[] = [];
+  const rebuildHolding = useCallback(() => {
+    const next = new Set<number>();
     for (const n of notesRef.current) {
-      if (n.holding && !n.releasedEarly) lanes.push(n.lane);
+      if (n.holding && !n.releasedEarly) next.add(n.lane);
     }
-    setState((prev) => {
-      const same =
-        prev.holdingLanes.length === lanes.length &&
-        prev.holdingLanes.every((l, i) => l === lanes[i]);
-      return same ? prev : { ...prev, holdingLanes: lanes };
-    });
+    holdingRef.current = next;
   }, []);
 
-  const songTimeNow = useCallback(() => {
-    const audio = audioRef.current;
-    const song = songRef.current;
-    if (!audio || !song) return songTimeRef.current;
-    if (audio.paused && stateRef.current.phase === "playing") {
-      const wall = (performance.now() - originRef.current) / 1000;
-      return wall - leadInRef.current;
-    }
-    const delay = (song.delayMs || 0) / 1000;
-    return audio.currentTime - delay;
-  }, []);
+  const songTimeNow = useCallback(() => songTimeRef.current, []);
 
-  const finishRun = useCallback((livesAfter: number) => {
+  const finishRun = useCallback((opts: { died: boolean }) => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    cancelAnimationFrame(frameRef.current);
     const attempted = Math.max(1, attemptedRef.current);
     const ratio = hitsRef.current / attempted;
-    const cleared = ratio >= HERO_CLEAR_RATIO;
+    // Clear = survived to the end of the song. Misses never fail you.
+    const cleared = !opts.died;
+    const didWell = cleared && ratio >= HERO_BONUS_RATIO;
     setState((prev) => ({
       ...prev,
       phase: "results",
-      lives: livesAfter,
+      lives: opts.died ? 0 : prev.lives,
       cleared,
+      didWell,
       countdown: null,
       songTime: songTimeRef.current,
     }));
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    if (audioRef.current) audioRef.current.pause();
     void (async () => {
       let grant = pendingCashRef.current;
       pendingCashRef.current = 0;
       if (cleared) {
         grant += HERO_CLEAR_BONUS;
+        if (didWell) grant += HERO_GOOD_BONUS;
         setState((prev) =>
           prev.phase === "results"
-            ? { ...prev, cashEarned: prev.cashEarned + HERO_CLEAR_BONUS }
+            ? {
+                ...prev,
+                cashEarned:
+                  prev.cashEarned +
+                  HERO_CLEAR_BONUS +
+                  (didWell ? HERO_GOOD_BONUS : 0),
+              }
             : prev,
         );
       }
@@ -448,6 +447,8 @@ export function useBloonHero() {
     pendingCashRef.current = 0;
     attemptedRef.current = 0;
     hitsRef.current = 0;
+    scanFromRef.current = 0;
+    endedRef.current = false;
     notesRef.current = song.chart.notes.map((n, i) => ({
       ...n,
       id: i,
@@ -459,13 +460,13 @@ export function useBloonHero() {
     originRef.current = performance.now();
     songTimeRef.current = -leadInRef.current;
     lastCountdownRef.current = "4";
-    lastUiSongTimeRef.current = -999;
-    visibleRef.current = [];
-    setVisibleNotes([]);
-    noteElsRef.current.clear();
+    clockRef.current = { baseAudio: 0, baseWall: 0, lastAudioSample: -1 };
     keysDownRef.current.clear();
+    pressedRef.current.clear();
+    holdingRef.current.clear();
     audio.pause();
     audio.currentTime = 0;
+    resizeCanvas();
     setState((prev) => ({
       ...INITIAL,
       phase: "playing",
@@ -483,12 +484,11 @@ export function useBloonHero() {
       countdown: "4",
       lives: HERO_LIVES,
     }));
-  }, []);
+  }, [resizeCanvas]);
 
   const backToBrowse = useCallback(() => {
     cancelAnimationFrame(frameRef.current);
     cleanupSong();
-    setVisibleNotes([]);
     setState((prev) => ({
       ...INITIAL,
       query: prev.query,
@@ -504,7 +504,6 @@ export function useBloonHero() {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    setVisibleNotes([]);
     setState((prev) => ({
       ...INITIAL,
       phase: "ready",
@@ -524,6 +523,7 @@ export function useBloonHero() {
   const releaseLane = useCallback(
     (lane: number) => {
       keysDownRef.current.delete(lane);
+      pressedRef.current.delete(lane);
       let changed = false;
       for (const n of notesRef.current) {
         if (!n.holding || n.lane !== lane || n.releasedEarly) continue;
@@ -543,13 +543,9 @@ export function useBloonHero() {
           changed = true;
         }
       }
-      if (changed) syncHoldingLanes();
-      setState((prev) => ({
-        ...prev,
-        pressed: prev.pressed.filter((l) => l !== lane),
-      }));
+      if (changed) rebuildHolding();
     },
-    [syncHoldingLanes],
+    [rebuildHolding],
   );
 
   const applyHit = useCallback(
@@ -561,14 +557,17 @@ export function useBloonHero() {
       const now = songTimeNow();
       if (now < 0) return;
 
-      // Already holding this lane's sustain
       for (const n of notesRef.current) {
         if (n.holding && n.lane === lane && !n.releasedEarly) return;
       }
 
       let best: ActiveNote | null = null;
       let bestAbs = Infinity;
-      for (const n of notesRef.current) {
+      // Only scan a window around the playhead
+      const from = Math.max(0, scanFromRef.current - 4);
+      for (let i = from; i < notesRef.current.length; i++) {
+        const n = notesRef.current[i]!;
+        if (n.t - now > WINDOW_GOOD) break;
         if (n.resolved || n.lane !== lane) continue;
         const a = Math.abs(now - n.t);
         if (a > WINDOW_GOOD) continue;
@@ -581,8 +580,13 @@ export function useBloonHero() {
       const punishEmpty = () => {
         const streak = stateRef.current.emptyStreak + 1;
         let lives = stateRef.current.lives;
-        if (streak >= 2) lives = Math.max(0, lives - 1);
-        if (streak >= EMPTY_STREAK_KILL) lives = 0;
+        // Only consecutive spam burns strikes — regular misses do not.
+        if (
+          streak > 0 &&
+          streak % EMPTY_STREAK_PER_LIFE === 0
+        ) {
+          lives = Math.max(0, lives - 1);
+        }
         burstIdRef.current += 1;
         const burstId = burstIdRef.current;
         const next = {
@@ -595,6 +599,9 @@ export function useBloonHero() {
         };
         stateRef.current = next;
         setState(next);
+        if (lives <= 0) {
+          finishRun({ died: true });
+        }
       };
 
       if (!best) {
@@ -610,6 +617,7 @@ export function useBloonHero() {
       best.resolved = true;
       best.result = judge;
       best.holding = best.sustain;
+      if (best.sustain) holdingRef.current.add(lane);
       attemptedRef.current += 1;
       hitsRef.current += 1;
       const pay = cashFor(judge);
@@ -629,11 +637,6 @@ export function useBloonHero() {
           lastJudge: judge,
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
-          holdingLanes: best!.sustain
-            ? prev.holdingLanes.includes(lane)
-              ? prev.holdingLanes
-              : [...prev.holdingLanes, lane]
-            : prev.holdingLanes,
         };
       });
       window.setTimeout(() => {
@@ -643,10 +646,10 @@ export function useBloonHero() {
       }, 360);
       if (pendingCashRef.current >= 40) void flushCash();
     },
-    [flashPress, flushCash, songTimeNow],
+    [flashPress, flushCash, songTimeNow, finishRun],
   );
 
-  // Playback clock — avoids setState every frame (was the main lag source).
+  // Playback + canvas draw loop
   useEffect(() => {
     if (state.phase !== "playing") {
       cancelAnimationFrame(frameRef.current);
@@ -654,58 +657,58 @@ export function useBloonHero() {
     }
 
     let audioStarted = false;
+    resizeCanvas();
+    const onResize = () => resizeCanvas();
+    window.addEventListener("resize", onResize);
+
     const tick = () => {
+      if (endedRef.current) return;
       const leadIn = leadInRef.current;
-      const wall = (performance.now() - originRef.current) / 1000;
+      const wallMs = performance.now();
+      const wall = (wallMs - originRef.current) / 1000;
       let now = wall - leadIn;
 
       const audio = audioRef.current;
       if (!audioStarted && now >= 0 && audio) {
         audioStarted = true;
         audio.currentTime = 0;
+        clockRef.current = {
+          baseAudio: 0,
+          baseWall: wallMs / 1000,
+          lastAudioSample: 0,
+        };
         void audio.play().catch(() => {});
       }
+
       if (audioStarted && audio && !audio.paused) {
         const delay = (songRef.current?.delayMs || 0) / 1000;
-        now = audio.currentTime - delay;
+        const sample = audio.currentTime - delay;
+        const clock = clockRef.current;
+        const wallSec = wallMs / 1000;
+        // Resync when the media clock advances; otherwise extrapolate for smoothness
+        if (sample !== clock.lastAudioSample) {
+          clock.lastAudioSample = sample;
+          clock.baseAudio = sample;
+          clock.baseWall = wallSec;
+          now = sample;
+        } else {
+          now = clock.baseAudio + (wallSec - clock.baseWall);
+        }
       }
       songTimeRef.current = now;
 
-      const board = boardRef.current;
-      if (board) {
-        board.style.setProperty("--now", String(now));
-        board.style.setProperty("--scroll", `${Math.max(0, now) * 168}px`);
-      }
       const fill = progressFillRef.current;
       if (fill) {
         const p = Math.min(
           100,
-          Math.max(0, (Math.max(0, now) / Math.max(1, durationRef.current)) * 100),
+          Math.max(
+            0,
+            (Math.max(0, now) / Math.max(1, durationRef.current)) * 100,
+          ),
         );
-        fill.style.width = `${p}%`;
+        fill.style.transform = `scaleX(${p / 100})`;
       }
 
-      // Direct DOM note positions
-      for (const n of visibleRef.current) {
-        const el = noteElsRef.current.get(n.id);
-        if (!el) continue;
-        const head = el.querySelector<HTMLElement>(".hero-note__key");
-        const trail = el.querySelector<HTMLElement>(".hero-note__trail");
-        const yHead = noteY(now, n.t);
-        if (head) head.style.top = `${yHead}%`;
-        if (trail && n.sustain) {
-          const yEnd = noteY(now, n.t + n.dur);
-          const top = Math.min(yHead, yEnd);
-          const height = Math.max(0, Math.abs(yEnd - yHead));
-          trail.style.top = `${top}%`;
-          trail.style.height = `${height}%`;
-          trail.classList.toggle("is-holding", n.holding && !n.releasedEarly);
-          trail.classList.toggle("is-dropped", n.releasedEarly);
-        }
-        el.classList.toggle("is-holding", n.holding && !n.releasedEarly);
-      }
-
-      // Finish completed holds
       let holdsChanged = false;
       for (const n of notesRef.current) {
         if (!n.holding || n.releasedEarly) continue;
@@ -714,43 +717,64 @@ export function useBloonHero() {
           holdsChanged = true;
         }
       }
-      if (holdsChanged) syncHoldingLanes();
+      if (holdsChanged) rebuildHolding();
 
-      const nextVisible = computeVisible(notesRef.current, now);
-      const prevIds = visibleRef.current;
-      let changed =
-        prevIds.length !== nextVisible.length ||
-        prevIds.some((n, i) => n.id !== nextVisible[i]!.id);
-      if (changed) {
-        visibleRef.current = nextVisible;
-        setVisibleNotes(nextVisible);
-      }
-
-      const countdown = countdownFromSongTime(now, 120);
+      // Advance miss scanner
+      // Missed notes: score only — they do not drain lives.
       let missed = 0;
       let missLane = -1;
-      for (const n of notesRef.current) {
-        if (n.resolved) continue;
-        if (now - n.t > WINDOW_GOOD) {
+      let i = scanFromRef.current;
+      const notes = notesRef.current;
+      while (i < notes.length) {
+        const n = notes[i]!;
+        if (!n.resolved && now - n.t > WINDOW_GOOD) {
           n.resolved = true;
           n.result = "miss";
           missed += 1;
           missLane = n.lane;
           attemptedRef.current += 1;
+          i += 1;
+          continue;
         }
+        if (n.resolved && !n.holding) {
+          i += 1;
+          scanFromRef.current = i;
+          continue;
+        }
+        break;
       }
 
-      let livesAfter = stateRef.current.lives;
+      const ctx = canvasCtxRef.current;
+      const { w, h } = canvasCssRef.current;
+      if (ctx && w > 0 && h > 0) {
+        scanFromRef.current = drawHeroHighway(ctx, w, h, {
+          now,
+          notes,
+          scanFrom: scanFromRef.current,
+          pressed: pressedRef.current,
+          holding: holdingRef.current,
+        });
+      }
+
+      const countdown = countdownFromSongTime(now, 120);
+      if (countdown !== lastCountdownRef.current) {
+        lastCountdownRef.current = countdown;
+        setState((prev) => ({ ...prev, countdown, songTime: now }));
+      }
+      const cdEl = countdownElRef.current;
+      if (cdEl) {
+        cdEl.hidden = !countdown;
+        const span = cdEl.querySelector("span");
+        if (span && countdown) span.textContent = countdown;
+      }
+
       if (missed > 0) {
-        livesAfter = Math.max(0, livesAfter - missed);
         burstIdRef.current += 1;
         const next = {
           ...stateRef.current,
           miss: stateRef.current.miss + missed,
           combo: 0,
-          lives: livesAfter,
           lastJudge: "miss" as const,
-          countdown,
           burst:
             missLane >= 0
               ? {
@@ -762,22 +786,18 @@ export function useBloonHero() {
         };
         stateRef.current = next;
         setState(next);
-        lastCountdownRef.current = countdown;
-      } else if (countdown !== lastCountdownRef.current) {
-        lastCountdownRef.current = countdown;
-        setState((prev) => ({ ...prev, countdown }));
-      } else if (Math.abs(now - lastUiSongTimeRef.current) > 0.25) {
-        // Low-rate hint / countdown-adjacent UI only
-        lastUiSongTimeRef.current = now;
-        setState((prev) => ({ ...prev, songTime: now }));
       }
 
-      livesAfter = Math.min(livesAfter, stateRef.current.lives);
+      const livesAfter = stateRef.current.lives;
       const songDone =
         now >= durationRef.current + 0.4 || (audioStarted && !!audio?.ended);
 
-      if ((livesAfter <= 0 || songDone) && now >= 0) {
-        finishRun(livesAfter);
+      if (livesAfter <= 0 && now >= 0) {
+        finishRun({ died: true });
+        return;
+      }
+      if (songDone && now >= 0) {
+        finishRun({ died: false });
         return;
       }
 
@@ -785,10 +805,35 @@ export function useBloonHero() {
     };
 
     frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [state.phase, finishRun, syncHoldingLanes]);
+    return () => {
+      cancelAnimationFrame(frameRef.current);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [state.phase, finishRun, rebuildHolding, resizeCanvas]);
 
   useEffect(() => () => cleanupSong(), [cleanupSong]);
+
+  useEffect(() => {
+    if (state.phase !== "playing" && state.phase !== "ready") return;
+    const onResize = () => resizeCanvas();
+    window.addEventListener("resize", onResize);
+    // draw a static preview on ready
+    if (state.phase === "ready") {
+      resizeCanvas();
+      const ctx = canvasCtxRef.current;
+      const { w, h } = canvasCssRef.current;
+      if (ctx && w > 0 && h > 0) {
+        drawHeroHighway(ctx, w, h, {
+          now: 0,
+          notes: [],
+          scanFrom: 0,
+          pressed: new Set(),
+          holding: new Set(),
+        });
+      }
+    }
+    return () => window.removeEventListener("resize", onResize);
+  }, [state.phase, resizeCanvas]);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
@@ -828,12 +873,9 @@ export function useBloonHero() {
     backToBrowse,
     applyHit,
     releaseLane,
-    visibleNotes,
-    approach: APPROACH_S,
     maxLives: HERO_LIVES,
-    setBoardEl,
+    setCanvasEl,
     setProgressFillEl,
-    setNoteEl,
-    songTimeRef,
+    setCountdownEl,
   };
 }

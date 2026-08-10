@@ -402,11 +402,11 @@ function AppShell() {
   );
 
   const onBloonHeroRunEnd = useCallback(
-    (info: { cleared: boolean; coinsEarned: number }) => {
+    (info: { cleared: boolean; didWell: boolean; coinsEarned: number }) => {
       setRunCashEarned(info.coinsEarned);
       queueClearAndBonusPacks({
         cleared: info.cleared,
-        wantBonus: info.cleared,
+        wantBonus: info.didWell,
       });
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("bloonhero", info.cleared);

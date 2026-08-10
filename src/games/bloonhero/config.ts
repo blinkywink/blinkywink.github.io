@@ -13,14 +13,19 @@ export const WINDOW_PERFECT = 0.055;
 export const WINDOW_GREAT = 0.1;
 export const WINDOW_GOOD = 0.16;
 
-export const HERO_LIVES = 10;
-export const HERO_CLEAR_RATIO = 0.55;
-export const EMPTY_STREAK_KILL = 6;
+export const HERO_LIVES = 5;
+/** Hit accuracy needed after finishing a song for the bonus pack / cash. */
+export const HERO_BONUS_RATIO = 0.65;
+/** Consecutive empty taps before you lose one strike. */
+export const EMPTY_STREAK_PER_LIFE = 8;
+/** Cash for finishing the whole song (clear). */
+export const HERO_CLEAR_BONUS = 400;
+/** Extra cash when you clear and hit the accuracy bonus threshold. */
+export const HERO_GOOD_BONUS = 350;
 
 export const CASH_PER_PERFECT = 8;
 export const CASH_PER_GREAT = 5;
 export const CASH_PER_GOOD = 3;
-export const HERO_CLEAR_BONUS = 400;
 
 /** 5 frets: D F J K L */
 export const LANES = [
