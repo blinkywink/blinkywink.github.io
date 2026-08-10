@@ -31,16 +31,31 @@ const SWIPE_DEADZONE = 16;
 const CARD_ENTER_MS = 240;
 const CARD_EXIT_MS = 150;
 const SLICE_REVEAL_MS = 420;
+/** Dramatic hold before a T5 / Paragon face reveals. */
+const RARE_SUSPENSE_MS = 1450;
 /** While holding Space, T4 cards force a beat so you can see them. */
 const T4_SPACE_HOLD_MS = 1500;
 
-type Phase = "shop" | "sealed" | "sliced" | "enter" | "ready" | "exit" | "done";
+type Phase =
+  | "shop"
+  | "sealed"
+  | "sliced"
+  | "suspense"
+  | "enter"
+  | "ready"
+  | "exit"
+  | "done";
 type Pt = { x: number; y: number }; // % of pack box
 type SpaceHoldGate = "none" | "t4" | "rare";
 
+function isRareCard(card: MonkeyCardSpec | null | undefined): boolean {
+  if (!card) return false;
+  return card.isParagon || maxPathTier(card.pathLevels) >= 5;
+}
+
 function spaceHoldGate(card: MonkeyCardSpec | null | undefined): SpaceHoldGate {
   if (!card) return "none";
-  if (card.isParagon || maxPathTier(card.pathLevels) >= 5) return "rare";
+  if (isRareCard(card)) return "rare";
   if (maxPathTier(card.pathLevels) >= 4) return "t4";
   return "none";
 }
@@ -419,22 +434,38 @@ export function PackOpenerTest({
       setIndex(i);
       setDrag({ x: 0, y: 0 });
       dragRef.current = { x: 0, y: 0 };
-      setPhaseBoth("enter");
       awardDupCashForIndex(i);
       const card = pullsRef.current[i];
-      if (card && (card.isParagon || maxPathTier(card.pathLevels) >= 5)) {
-        playPackRare();
-      }
-      later(() => {
-        if (phaseRef.current !== "enter") return;
+      const rare = isRareCard(card);
+
+      const finishEnter = () => {
+        if (
+          phaseRef.current !== "enter" &&
+          phaseRef.current !== "suspense"
+        ) {
+          return;
+        }
         readyAtRef.current = performance.now();
         const gate = spaceHoldGate(pullsRef.current[i]);
-        // Holding Space through a rare pull: force a fresh press.
         if (gate === "rare" && spaceHeldRef.current) {
           needFreshSpaceRef.current = true;
         }
         setPhaseBoth("ready");
-      }, CARD_ENTER_MS);
+      };
+
+      if (rare) {
+        playPackRare();
+        setPhaseBoth("suspense");
+        later(() => {
+          if (phaseRef.current !== "suspense") return;
+          setPhaseBoth("enter");
+          later(finishEnter, CARD_ENTER_MS);
+        }, RARE_SUSPENSE_MS);
+        return;
+      }
+
+      setPhaseBoth("enter");
+      later(finishEnter, CARD_ENTER_MS);
     },
     [awardDupCashForIndex],
   );
@@ -761,11 +792,19 @@ export function PackOpenerTest({
     : null;
   const showTierGlow =
     Boolean(currentTier) &&
-    (phase === "enter" || phase === "ready" || phase === "exit");
+    (phase === "suspense" ||
+      phase === "enter" ||
+      phase === "ready" ||
+      phase === "exit");
   const showPack =
     phase === "shop" || phase === "sealed" || phase === "sliced";
   const showCard =
-    (phase === "enter" || phase === "ready" || phase === "exit") && current;
+    (phase === "suspense" ||
+      phase === "enter" ||
+      phase === "ready" ||
+      phase === "exit") &&
+    current;
+  const showCardFace = phase !== "suspense";
 
   const cardStyle =
     phase === "ready"
@@ -943,30 +982,57 @@ export function PackOpenerTest({
                   `pack-opener__card--${phase}`,
                   currentIsDup ? "is-duplicate" : "",
                   currentTier ? `is-glow-${currentTier}` : "",
+                  phase === "suspense" ? "is-suspense" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
                 style={cardStyle}
-                onPointerDownCapture={onCardPointerDown}
-                onPointerMoveCapture={onCardPointerMove}
-                onPointerUpCapture={onCardPointerUp}
-                onPointerCancelCapture={onCardPointerUp}
+                onPointerDownCapture={
+                  phase === "ready" ? onCardPointerDown : undefined
+                }
+                onPointerMoveCapture={
+                  phase === "ready" ? onCardPointerMove : undefined
+                }
+                onPointerUpCapture={
+                  phase === "ready" ? onCardPointerUp : undefined
+                }
+                onPointerCancelCapture={
+                  phase === "ready" ? onCardPointerUp : undefined
+                }
               >
-                {showTierGlow ? (
+                {phase === "suspense" ? (
+                  <div
+                    className={`pack-opener__suspense pack-opener__suspense--${currentTier === "paragon" ? "paragon" : "t5"}`}
+                    aria-hidden
+                  >
+                    <div className="pack-opener__suspense-core" />
+                    <div className="pack-opener__suspense-ring" />
+                    <div className="pack-opener__suspense-ring pack-opener__suspense-ring--late" />
+                    <p className="pack-opener__suspense-label">
+                      {currentTier === "paragon" ? "PARAGON" : "TIER 5"}
+                    </p>
+                  </div>
+                ) : null}
+                {showTierGlow && showCardFace ? (
                   <div
                     className={`pack-opener__card-glow pack-opener__card-glow--${currentTier}`}
                     aria-hidden
                   />
                 ) : null}
-                <MonkeyCard
-                  entity={current.entity}
-                  pathLevels={current.pathLevels}
-                  mode="focus"
-                />
-                {currentIsDup ? (
-                  <p className="pack-opener__dup-banner" role="status">
-                    Duplicate · +{duplicateCashForCard(current, dupCashMods())} Cash
-                  </p>
+                {showCardFace ? (
+                  <>
+                    <MonkeyCard
+                      entity={current.entity}
+                      pathLevels={current.pathLevels}
+                      mode="focus"
+                    />
+                    {currentIsDup ? (
+                      <p className="pack-opener__dup-banner" role="status">
+                        Duplicate · +
+                        {duplicateCashForCard(current, dupCashMods())} Cash
+                      </p>
+                    ) : null}
+                  </>
                 ) : null}
               </div>
             ) : null}

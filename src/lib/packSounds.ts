@@ -67,7 +67,8 @@ export function subscribeSfxVolume(fn: (v: number) => void): () => void {
 }
 
 function level(gain = 1): number {
-  return masterVolume * clamp01(gain);
+  /** Keep the profile slider scale; bake in a quieter default mix. */
+  return masterVolume * 0.5 * clamp01(gain);
 }
 
 function ctx(): AudioContext | null {

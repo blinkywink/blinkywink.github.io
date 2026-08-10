@@ -323,7 +323,6 @@ export function ShopHeroesShelf() {
           const progress = heroClearProgressFromProfile(clears, hero.id);
           const need =
             mine && !maxed ? heroClearsRequiredForNextLevel(level) : 0;
-          const ready = !mine || maxed || heroLevelUpReady(level, progress);
           const isEquipped = equippedId === hero.id;
           const price = mine
             ? maxed
@@ -356,11 +355,28 @@ export function ShopHeroesShelf() {
                 </strong>
                 <span className="pack-shelf__price">
                   {isEquipped ? (
-                    "Equipped"
+                    maxed ? (
+                      `Lv ${level} · Max`
+                    ) : (
+                      <span
+                        className="shop-hero-xp"
+                        title={`${progress}/${need} clears to level up`}
+                      >
+                        <span className="shop-hero-xp__meta">
+                          {progress}/{need}
+                        </span>
+                        <span className="shop-hero-xp__bar" aria-hidden>
+                          <span
+                            className="shop-hero-xp__fill"
+                            style={{
+                              width: `${Math.min(100, need > 0 ? (progress / need) * 100 : 0)}%`,
+                            }}
+                          />
+                        </span>
+                      </span>
+                    )
                   ) : maxed ? (
                     `Lv ${level} · Max`
-                  ) : mine && !ready ? (
-                    `${progress}/${need} clears · Lv ${level}`
                   ) : (
                     <>
                       <img
