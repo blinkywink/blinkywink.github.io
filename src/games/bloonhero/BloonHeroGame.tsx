@@ -644,12 +644,15 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               state.currentLyric &&
               (playing || state.phase === "ready") ? (
                 <p
-                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}`}
+                  key={`${state.currentLyric.fullWord}:${state.currentLyric.visible}`}
+                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}${(state.currentLyric.opacity ?? 1) < 0.99 ? " is-fading-out" : ""}`}
                   style={
                     {
                       "--lyrics-scale": settings.lyricsScale ?? 1,
                       "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
-                      opacity: state.currentLyric.opacity,
+                      ...((state.currentLyric.opacity ?? 1) < 0.99
+                        ? { opacity: state.currentLyric.opacity }
+                        : {}),
                     } as CSSProperties
                   }
                   aria-live="polite"

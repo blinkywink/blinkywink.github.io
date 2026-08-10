@@ -9140,7 +9140,11 @@ body:has(.zoomed-page) {
     0 0 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   user-select: none;
-  transition: opacity 0.08s linear;
+}
+
+.hero-lyrics.is-fading-out {
+  /* Fade-out only — new words snap in at full opacity. */
+  transition: opacity 0.12s linear;
 }
 
 .hero-lyrics--solo {

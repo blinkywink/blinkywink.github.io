@@ -451,18 +451,20 @@ export function lyricDisplayAtTime(
 ): LyricDisplay | null {
   if (!cues.length || songTime < -0.5) return null;
   const FADE_SEC = 0.45;
+  let active: LyricCue | null = null;
   for (const cue of cues) {
     if (songTime < cue.start - 0.04) continue;
     if (songTime > cue.end + FADE_SEC) continue;
-    const visible = cue.fullWord.slice(0, cue.revealedChars);
-    const pending = cue.fullWord.slice(cue.revealedChars);
-    let opacity = 1;
-    if (songTime > cue.end) {
-      opacity = Math.max(0, 1 - (songTime - cue.end) / FADE_SEC);
-    }
-    return { fullWord: cue.fullWord, visible, pending, opacity };
+    if (!active || cue.start >= active.start) active = cue;
   }
-  return null;
+  if (!active) return null;
+  const visible = active.fullWord.slice(0, active.revealedChars);
+  const pending = active.fullWord.slice(active.revealedChars);
+  let opacity = 1;
+  if (songTime > active.end) {
+    opacity = Math.max(0, 1 - (songTime - active.end) / FADE_SEC);
+  }
+  return { fullWord: active.fullWord, visible, pending, opacity };
 }
 
 export function lyricDisplaysEqual(
