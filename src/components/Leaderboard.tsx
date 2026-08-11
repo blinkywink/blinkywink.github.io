@@ -232,7 +232,9 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                       <UserAvatar crop={row.avatar} size={56} />
                       <span className="board-card__who">
                         <span className="board-card__name">
-                          {row.username}
+                          <span className="board-card__username">
+                            {row.username}
+                          </span>
                           {mine ? (
                             <span className="board-card__you">you</span>
                           ) : null}
