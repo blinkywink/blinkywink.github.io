@@ -17,6 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { CardVisualizerBg } from "./CardVisualizerBg";
+import { formatVisualSeed } from "../lib/cardVisualSeed";
 
 type Accent = {
   primary: string;
@@ -41,6 +42,8 @@ type Props = {
   staticArt?: boolean;
   /** Paragon degree 1–100. Falls back to the signed-in collection. */
   degree?: number;
+  /** Per-copy art seed. Falls back to the signed-in collection. */
+  visualSeed?: number | null;
 };
 
 const accents = cardAccents as unknown as Record<string, Accent>;
@@ -228,6 +231,7 @@ export function MonkeyCard({
   onSelect,
   staticArt = false,
   degree: degreeProp,
+  visualSeed: visualSeedProp,
 }: Props) {
   const isPreview = mode === "preview";
   const locked = !owned;
@@ -256,6 +260,12 @@ export function MonkeyCard({
     : PARAGON_MIN_DEGREE;
   const stage = isParagon ? paragonStage(paragonDegree) : 0;
   const pathLevels = pathLevelsProp ?? pathLevelsFromEntity(entity);
+  const catalogId = isParagon
+    ? paragonCardId(entity.tower)
+    : `${towerIdSlug(entity.tower)}-${formatPathLevels(pathLevels)}`;
+  const resolvedSeed =
+    visualSeedProp ??
+    (!locked ? (collection?.visualSeedOf(catalogId) ?? null) : null);
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
@@ -558,7 +568,11 @@ export function MonkeyCard({
           <div className="monkey-card__bleed">
             {visualizer ? (
               <CardVisualizerBg
-                seed={`${entity.id}-${pathLabel}`}
+                seed={
+                  resolvedSeed != null
+                    ? `copy:${resolvedSeed}`
+                    : `${entity.id}-${pathLabel}`
+                }
                 colors={palette}
                 animated={!isPreview}
                 intensity={isParagon ? "paragon" : "standard"}
@@ -615,6 +629,14 @@ export function MonkeyCard({
                   {pathLabel} · {entity.tower}
                 </p>
               </div>
+              {visualizer && resolvedSeed != null ? (
+                <span
+                  className="monkey-card__code monkey-card__code--seed"
+                  title="Unique art seed for this copy"
+                >
+                  #{formatVisualSeed(resolvedSeed)}
+                </span>
+              ) : null}
             </header>
 
             <footer className="monkey-card__rail">

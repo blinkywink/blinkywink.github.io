@@ -1,7 +1,45 @@
-import { awardGuestCards, loadGuestCardIds } from "./guestCollection";
+import {
+  awardGuestCards,
+  loadGuestCardIds,
+  loadGuestCardSeeds,
+} from "./guestCollection";
 import { cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
+import { parseVisualSeed } from "./cardVisualSeed";
+
+export type OwnedCardCopy = {
+  cardId: string;
+  visualSeed: number | null;
+};
+
+function copiesFromIds(
+  ids: Iterable<string>,
+  seeds: Record<string, number> = {},
+): OwnedCardCopy[] {
+  return [...new Set([...ids].map(String))].map((cardId) => ({
+    cardId,
+    visualSeed: parseVisualSeed(seeds[cardId]),
+  }));
+}
+
+function parseCopies(raw: unknown): OwnedCardCopy[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((row) => {
+      if (typeof row === "string") {
+        return { cardId: row, visualSeed: null };
+      }
+      const r = row as Record<string, unknown>;
+      const cardId = String(r.cardId ?? r.card_id ?? "").trim();
+      if (!cardId) return null;
+      return {
+        cardId,
+        visualSeed: parseVisualSeed(r.visualSeed ?? r.visual_seed),
+      };
+    })
+    .filter((row): row is OwnedCardCopy => Boolean(row));
+}
 
 const userLsKey = (userId: string) => `bloon-arcade:cards:${userId}`;
 const pendingLsKey = (userId: string) =>
@@ -140,80 +178,125 @@ export async function awardCards(cardIds: string[]): Promise<string[]> {
 }
 
 /** Fetch every owned card id (paginated — PostgREST caps ~1000 rows/request). */
-async function fetchOwnedCardIdsFromTable(userId: string): Promise<string[]> {
+async function fetchOwnedCopiesFromTable(
+  userId: string,
+): Promise<OwnedCardCopy[]> {
   const pageSize = 1000;
-  const ids: string[] = [];
+  const copies: OwnedCardCopy[] = [];
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
+    const first = await supabase
       .from("owned_cards")
-      .select("card_id")
+      .select("card_id, visual_seed")
       .eq("user_id", userId)
       .range(from, from + pageSize - 1);
 
-    if (error) throw new Error(error.message);
+    const result = first.error
+      ? await supabase
+          .from("owned_cards")
+          .select("card_id")
+          .eq("user_id", userId)
+          .range(from, from + pageSize - 1)
+      : first;
 
-    const batch = (data ?? []).map((row) => String(row.card_id));
-    ids.push(...batch);
+    if (result.error) throw new Error(result.error.message);
+
+    const batch = parseCopies(result.data ?? []);
+    copies.push(...batch);
     if (batch.length < pageSize) break;
   }
-  return [...new Set(ids)];
+  return copies;
 }
 
-/** Load owned card ids for the current session. */
-export async function fetchOwnedCardIds(): Promise<string[]> {
+async function fetchCopiesViaRpc(userId: string): Promise<OwnedCardCopy[]> {
+  const copies = await supabase.rpc("get_player_card_copies", {
+    p_user_id: userId,
+  });
+  if (!copies.error && copies.data != null) {
+    return parseCopies(copies.data);
+  }
+
+  const ids = await supabase.rpc("get_player_cards", {
+    p_user_id: userId,
+  });
+  if (ids.error) throw new Error(ids.error.message);
+  if (!Array.isArray(ids.data)) return [];
+  return copiesFromIds(ids.data.map(String));
+}
+
+/** Load owned card copies for the current session. */
+export async function fetchOwnedCopies(): Promise<OwnedCardCopy[]> {
   const app = loadAppSession();
   if (!getAccessToken() || !app) {
-    return loadGuestCardIds();
+    const ids = loadGuestCardIds();
+    return copiesFromIds(ids, loadGuestCardSeeds());
   }
 
   // Re-apply any awards that never made it to the server (network / RPC blip).
   await flushPendingAwards(app.userId);
 
-  // Same RPC used for public profiles — returns the full array (no 1000-row cut).
-  const { data, error } = await supabase.rpc("get_player_cards", {
-    p_user_id: app.userId,
-  });
-
-  let serverIds: string[] = [];
-  if (error) {
-    console.warn("get_player_cards (self) failed", error.message);
+  let server: OwnedCardCopy[] = [];
+  try {
+    server = await fetchCopiesViaRpc(app.userId);
+  } catch (err) {
+    console.warn(
+      "get_player_card_copies (self) failed",
+      err instanceof Error ? err.message : err,
+    );
     try {
-      serverIds = await fetchOwnedCardIdsFromTable(app.userId);
+      server = await fetchOwnedCopiesFromTable(app.userId);
     } catch (tableErr) {
       console.warn(
         "owned_cards fetch failed",
         tableErr instanceof Error ? tableErr.message : tableErr,
       );
       const pending = loadPendingAwards(app.userId);
-      return [...new Set([...loadUserLocalCards(app.userId), ...pending])];
+      return copiesFromIds(
+        [...loadUserLocalCards(app.userId), ...pending],
+      );
     }
-  } else if (Array.isArray(data)) {
-    serverIds = [...new Set(data.map(String))];
   }
 
   const pending = loadPendingAwards(app.userId);
-  // Show pending unlocks optimistically until flush succeeds next time.
-  const merged = [...new Set([...serverIds, ...pending])];
-  saveUserLocalCards(app.userId, merged);
-  return merged;
+  const merged = new Map(server.map((row) => [row.cardId, row]));
+  for (const id of pending) {
+    if (!merged.has(id)) merged.set(id, { cardId: id, visualSeed: null });
+  }
+  const copies = [...merged.values()];
+  saveUserLocalCards(
+    app.userId,
+    copies.map((row) => row.cardId),
+  );
+  return copies;
+}
+
+/** Load owned card ids for the current session. */
+export async function fetchOwnedCardIds(): Promise<string[]> {
+  const copies = await fetchOwnedCopies();
+  return copies.map((row) => row.cardId);
+}
+
+/** Load another player's owned card copies (public leaderboard browse). */
+export async function fetchPlayerCardCopies(
+  userId: string,
+): Promise<OwnedCardCopy[]> {
+  const id = String(userId ?? "").trim();
+  if (!id) return [];
+
+  return cached(`player-card-copies:${id}`, CacheTtl.playerCards, async () => {
+    try {
+      return await fetchCopiesViaRpc(id);
+    } catch (error) {
+      console.warn(
+        "get_player_card_copies failed",
+        error instanceof Error ? error.message : error,
+      );
+      throw error instanceof Error ? error : new Error(String(error));
+    }
+  });
 }
 
 /** Load another player's owned card ids (public leaderboard browse). */
 export async function fetchPlayerCardIds(userId: string): Promise<string[]> {
-  const id = String(userId ?? "").trim();
-  if (!id) return [];
-
-  return cached(`player-cards:${id}`, CacheTtl.playerCards, async () => {
-    const { data, error } = await supabase.rpc("get_player_cards", {
-      p_user_id: id,
-    });
-
-    if (error) {
-      console.warn("get_player_cards failed", error.message);
-      throw new Error(error.message);
-    }
-
-    if (!Array.isArray(data)) return [];
-    return [...new Set(data.map(String))];
-  });
+  const copies = await fetchPlayerCardCopies(userId);
+  return copies.map((row) => row.cardId);
 }

@@ -15,6 +15,7 @@ import {
   type ShopDirectListing,
 } from "../lib/shopDirect";
 import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
+import { feedForCard } from "../lib/paragonProgress";
 import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
@@ -27,7 +28,7 @@ type FocusedDeal = {
 
 export function ShopDirectShelf() {
   const { isGuest, profile, setCoinBalance } = useAuth();
-  const { owned, refresh: refreshCards } = useCardCollection();
+  const { owned, refresh: refreshCards, applyParagonFeeds } = useCardCollection();
   const [listings, setListings] = useState<ShopDirectListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -112,6 +113,12 @@ export function ShopDirectShelf() {
       setCoinBalance(result.coins);
       setListings(result.listings);
       await refreshCards();
+      const feed = feedForCard(card);
+      if (feed && (owned.has(feed.paragonId) || card.id === feed.paragonId)) {
+        if (!(card.isParagon && !owned.has(card.id))) {
+          await applyParagonFeeds([feed]);
+        }
+      }
       setStatus(
         `Bought ${card.entity.name} for ${result.price.toLocaleString()} Cash.`,
       );

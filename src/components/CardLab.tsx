@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
-import { fetchPlayerCardIds } from "../lib/awardCards";
+import { fetchPlayerCardCopies } from "../lib/awardCards";
 import { fetchPlayerParagons } from "../lib/paragonApi";
 import type { ParagonMap } from "../lib/guestParagons";
 import type { AvatarCrop } from "../lib/avatar";
@@ -143,6 +143,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
     null,
   );
+  const [remoteSeeds, setRemoteSeeds] = useState<Record<string, number>>({});
   const [remoteParagons, setRemoteParagons] = useState<ParagonMap>({});
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
@@ -184,17 +185,25 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     setRemoteLoading(true);
     setRemoteError(null);
     setRemoteOwned(null);
+    setRemoteSeeds({});
     setView({ kind: "towers" });
     setTierHighFirst(true);
     setQuery("");
     setFocused(null);
     void Promise.all([
-      fetchPlayerCardIds(viewer.userId),
+      fetchPlayerCardCopies(viewer.userId),
       fetchPlayerParagons(viewer.userId),
     ])
-      .then(([ids, nextParagons]) => {
+      .then(([copies, nextParagons]) => {
         if (cancelled) return;
-        setRemoteOwned(new Set(ids));
+        setRemoteOwned(new Set(copies.map((row) => row.cardId)));
+        setRemoteSeeds(
+          Object.fromEntries(
+            copies
+              .filter((row) => row.visualSeed != null)
+              .map((row) => [row.cardId, row.visualSeed as number]),
+          ),
+        );
         setRemoteParagons(nextParagons);
         setRemoteLoading(false);
       })
@@ -204,6 +213,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           err instanceof Error ? err.message : "Could not load collection.",
         );
         setRemoteOwned(new Set());
+        setRemoteSeeds({});
         setRemoteParagons({});
         setRemoteLoading(false);
       });
@@ -231,6 +241,10 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const cardDegree = (card: MonkeyCardSpec): number | undefined => {
     if (!card.isParagon || !isRemote) return undefined;
     return remoteParagons[card.id]?.degree ?? 1;
+  };
+  const cardSeed = (card: MonkeyCardSpec): number | undefined => {
+    if (!isRemote) return undefined;
+    return remoteSeeds[card.id];
   };
   const ownerLabel = viewer?.username ?? "You";
   const canRequestTrade =
@@ -431,6 +445,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               mode="focus"
               owned
               degree={cardDegree(focused)}
+              visualSeed={cardSeed(focused)}
             />
             {focused.isParagon ? (
               <ParagonXpBar
@@ -473,8 +488,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   <p className="eyebrow">Exchange</p>
                   <h2>Swap a copy with {viewer.username}</h2>
                   <p>
-                    Pick a card you both own. They set a Cash fee — or make it
-                    free.
+                    Pick a card you both own. They name a Cash fee, then you
+                    accept or decline — nothing moves until you agree.
                   </p>
                 </div>
                 <button
@@ -592,6 +607,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                           mode="preview"
                           owned
                           degree={cardDegree(card)}
+                          visualSeed={cardSeed(card)}
                           onSelect={() => {
                             playCardFocus();
                             setFocused(card);
@@ -819,6 +835,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 owned
                 highlight={highlightIds.has(card.id)}
                 degree={cardDegree(card)}
+                visualSeed={cardSeed(card)}
                 onSelect={() => {
                   playCardFocus();
                   setFocused(card);
@@ -887,6 +904,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               owned={isOwned}
               highlight={highlightIds.has(card.id)}
               degree={isOwned ? cardDegree(card) : undefined}
+              visualSeed={isOwned ? cardSeed(card) : undefined}
               onSelect={() => {
                 if (!isOwned) return;
                 playCardFocus();

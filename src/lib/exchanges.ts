@@ -1,6 +1,7 @@
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
+import { parseVisualSeed } from "./cardVisualSeed";
 
 export type ExchangeInboxItem = {
   id: string;
@@ -11,6 +12,8 @@ export type ExchangeInboxItem = {
   price: number;
   theirDegree: number;
   myDegree: number;
+  theirSeed: number | null;
+  mySeed: number | null;
   createdAt: string;
 };
 
@@ -40,6 +43,8 @@ function asItems(raw: unknown): ExchangeInboxItem[] {
       price: Math.max(0, Number(r.price) || 0),
       theirDegree: Math.max(1, Number(r.theirDegree) || 1),
       myDegree: Math.max(1, Number(r.myDegree) || 1),
+      theirSeed: parseVisualSeed(r.theirSeed),
+      mySeed: parseVisualSeed(r.mySeed),
       createdAt: String(r.createdAt ?? ""),
     };
   });
@@ -64,7 +69,7 @@ export async function respondExchange(
   exchangeId: string,
   accept: boolean,
   price = 0,
-): Promise<"completed" | "declined"> {
+): Promise<"offered" | "declined"> {
   requireSession();
   const { data, error } = await supabase.rpc("respond_exchange", {
     p_exchange_id: exchangeId,
@@ -74,6 +79,23 @@ export async function respondExchange(
   if (error) throw new Error(error.message);
   cacheInvalidate("exchange:inbox");
   cacheInvalidate("trade:inbox");
+  return data === "offered" ? "offered" : "declined";
+}
+
+export async function confirmExchange(
+  exchangeId: string,
+  accept: boolean,
+): Promise<"completed" | "declined"> {
+  requireSession();
+  const { data, error } = await supabase.rpc("confirm_exchange", {
+    p_exchange_id: exchangeId,
+    p_accept: accept,
+  });
+  if (error) throw new Error(error.message);
+  cacheInvalidate("exchange:inbox");
+  cacheInvalidate("trade:inbox");
+  cacheInvalidate("player-card-copies:");
+  cacheInvalidate("player-cards:");
   return data === "completed" ? "completed" : "declined";
 }
 

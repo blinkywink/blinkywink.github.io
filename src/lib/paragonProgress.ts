@@ -95,7 +95,8 @@ export function suggestedParagonValue(degree: number): number {
   return Math.round(6000 + 120 * d + 18 * d * d);
 }
 
-export function feedForDuplicate(card: MonkeyCardSpec): ParagonFeed | null {
+/** XP / degrees this card should feed if the player already has that Paragon. */
+export function feedForCard(card: MonkeyCardSpec): ParagonFeed | null {
   if (!findParagon(card.tower)) return null;
   const paragonId = paragonCardId(card.tower);
   if (card.isParagon) {
@@ -107,6 +108,43 @@ export function feedForDuplicate(card: MonkeyCardSpec): ParagonFeed | null {
     xp: PARAGON_XP_BY_TIER[tier] ?? 1,
     degrees: 0,
   };
+}
+
+/** @deprecated use feedForCard — same values, not duplicate-only. */
+export function feedForDuplicate(card: MonkeyCardSpec): ParagonFeed | null {
+  return feedForCard(card);
+}
+
+export function previewParagonFeeds(
+  feeds: ParagonFeed[],
+  ownedParagonIds: ReadonlySet<string>,
+  current: Record<string, ParagonState>,
+): { map: Record<string, ParagonState>; results: ParagonApplyResult[] } {
+  const merged = new Map<string, { xp: number; degrees: number }>();
+  for (const feed of feeds) {
+    if (!ownedParagonIds.has(feed.paragonId)) continue;
+    const prev = merged.get(feed.paragonId) ?? { xp: 0, degrees: 0 };
+    merged.set(feed.paragonId, {
+      xp: prev.xp + Math.max(0, feed.xp),
+      degrees: prev.degrees + Math.max(0, feed.degrees),
+    });
+  }
+  if (!merged.size) return { map: current, results: [] };
+
+  const next = { ...current };
+  const results: ParagonApplyResult[] = [];
+  for (const [cardId, gain] of merged) {
+    const before = next[cardId] ?? freshParagonState();
+    const applied = applyParagonGain(before, gain);
+    next[cardId] = applied.next;
+    results.push({
+      cardId,
+      ...applied.next,
+      xpGained: gain.xp,
+      degreesGained: applied.degreesGained,
+    });
+  }
+  return { map: next, results };
 }
 
 export function applyParagonGain(

@@ -1,10 +1,10 @@
 import { loadAppSession } from "../auth/session";
 import { getAccessToken, supabase } from "./supabase";
 import {
-  applyParagonGain,
   freshParagonState,
   mergeParagonStates,
   normalizeParagonState,
+  previewParagonFeeds,
   type ParagonApplyResult,
   type ParagonFeed,
   type ParagonState,
@@ -151,88 +151,67 @@ export async function applyParagonFeeds(
   ownedParagonIds: ReadonlySet<string>,
   current: ParagonMap,
 ): Promise<{ map: ParagonMap; results: ParagonApplyResult[] }> {
-  const merged = new Map<string, { xp: number; degrees: number }>();
+  const preview = previewParagonFeeds(feeds, ownedParagonIds, current);
+  if (!preview.results.length) return preview;
+
+  const app = loadAppSession();
+  if (!getAccessToken() || !app) {
+    return { map: saveGuestParagons(preview.map), results: preview.results };
+  }
+
+  const mergedPayload = new Map<string, { xp: number; degrees: number }>();
   for (const feed of feeds) {
     if (!ownedParagonIds.has(feed.paragonId)) continue;
-    const prev = merged.get(feed.paragonId) ?? { xp: 0, degrees: 0 };
-    merged.set(feed.paragonId, {
+    const prev = mergedPayload.get(feed.paragonId) ?? { xp: 0, degrees: 0 };
+    mergedPayload.set(feed.paragonId, {
       xp: prev.xp + Math.max(0, feed.xp),
       degrees: prev.degrees + Math.max(0, feed.degrees),
     });
   }
-  if (!merged.size) return { map: current, results: [] };
-
-  const app = loadAppSession();
-  if (!getAccessToken() || !app) {
-    const next = { ...current };
-    const results: ParagonApplyResult[] = [];
-    for (const [cardId, gain] of merged) {
-      const before = next[cardId] ?? freshParagonState();
-      const applied = applyParagonGain(before, gain);
-      next[cardId] = applied.next;
-      results.push({
-        cardId,
-        ...applied.next,
-        xpGained: gain.xp,
-        degreesGained: applied.degreesGained,
-      });
-    }
-    return { map: saveGuestParagons(next), results };
-  }
-
-  const payload = [...merged.entries()].map(([card_id, gain]) => ({
+  const rpcPayload = [...mergedPayload.entries()].map(([card_id, gain]) => ({
     card_id,
     xp: gain.xp,
     degrees: gain.degrees,
   }));
   const { data, error } = await supabase.rpc("apply_paragon_feeds", {
-    p_feeds: payload,
+    p_feeds: rpcPayload,
   });
   if (error) {
     console.warn("apply_paragon_feeds failed", error.message);
-    queuePendingFeeds(app.userId, payload);
-    const next = { ...current };
-    const results: ParagonApplyResult[] = [];
-    for (const [cardId, gain] of merged) {
-      const before = next[cardId] ?? freshParagonState();
-      const applied = applyParagonGain(before, gain);
-      next[cardId] = applied.next;
-      results.push({
-        cardId,
-        ...applied.next,
-        xpGained: gain.xp,
-        degreesGained: applied.degreesGained,
-      });
-    }
-    return { map: next, results };
+    queuePendingFeeds(app.userId, rpcPayload);
+    return preview;
   }
 
   await flushPendingFeeds(app.userId);
   cacheInvalidate("player-paragons:");
 
-  const next = { ...current };
-  const results: ParagonApplyResult[] = [];
-  if (Array.isArray(data)) {
-    for (const row of data as {
-      card_id?: string;
-      degree?: number;
-      xp?: number;
-      xp_gained?: number;
-      degrees_gained?: number;
-    }[]) {
-      const cardId = String(row.card_id ?? "").trim();
-      if (!cardId) continue;
-      const state = normalizeParagonState(row);
-      next[cardId] = state;
-      results.push({
-        cardId,
-        ...state,
-        xpGained: Number(row.xp_gained ?? 0),
-        degreesGained: Number(row.degrees_gained ?? 0),
-      });
-    }
+  if (!Array.isArray(data) || data.length === 0) {
+    // RPC skipped (paragon row not owned yet) — keep local XP and retry later.
+    queuePendingFeeds(app.userId, rpcPayload);
+    return preview;
   }
-  return { map: next, results };
+
+  const next = { ...preview.map };
+  const results: ParagonApplyResult[] = [];
+  for (const row of data as {
+    card_id?: string;
+    degree?: number;
+    xp?: number;
+    xp_gained?: number;
+    degrees_gained?: number;
+  }[]) {
+    const cardId = String(row.card_id ?? "").trim();
+    if (!cardId) continue;
+    const state = normalizeParagonState(row);
+    next[cardId] = state;
+    results.push({
+      cardId,
+      ...state,
+      xpGained: Number(row.xp_gained ?? 0),
+      degreesGained: Number(row.degrees_gained ?? 0),
+    });
+  }
+  return { map: next, results: results.length ? results : preview.results };
 }
 
 export async function importParagonProgress(map: ParagonMap): Promise<ParagonMap> {

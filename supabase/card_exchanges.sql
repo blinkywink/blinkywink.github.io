@@ -1,5 +1,7 @@
--- Same-card copy exchange (paragon degree / copy identity).
--- Sender picks a card both own. Recipient names a Cash fee (0 = free).
+-- Same-card copy exchange (paragon degree / copy identity / visual seed).
+-- Sender picks a card both own. Recipient names a Cash fee.
+-- Requester must accept that fee before Cash or copies move.
+-- Current RPCs: supabase/exchange_offer_and_visual_seeds.sql
 -- Safe to re-run.
 
 create table if not exists public.card_exchanges (
@@ -17,7 +19,7 @@ create table if not exists public.card_exchanges (
   ),
   constraint card_exchanges_price_ok check (price >= 0 and price <= 1000000),
   constraint card_exchanges_status_ok check (
-    status in ('pending', 'completed', 'declined', 'cancelled')
+    status in ('pending', 'offered', 'completed', 'declined', 'cancelled')
   )
 );
 
@@ -27,12 +29,12 @@ create index if not exists card_exchanges_recipient_status_idx
 create index if not exists card_exchanges_requester_status_idx
   on public.card_exchanges (requester_id, status, created_at desc);
 
-create unique index if not exists card_exchanges_one_pending_pair_idx
+create unique index if not exists card_exchanges_one_open_pair_idx
   on public.card_exchanges (
     least(requester_id, recipient_id),
     greatest(requester_id, recipient_id)
   )
-  where status = 'pending';
+  where status in ('pending', 'offered');
 
 alter table public.card_exchanges enable row level security;
 

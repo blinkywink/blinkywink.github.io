@@ -44,6 +44,7 @@ export type OwnedCard = {
   user_id: string;
   card_id: string;
   obtained_at: string;
+  visual_seed?: number;
 };
 
 export type Database = {
@@ -146,9 +147,11 @@ export type Database = {
           user_id: string;
           card_id: string;
           obtained_at?: string;
+          visual_seed?: number;
         };
         Update: {
           obtained_at?: string;
+          visual_seed?: number;
         };
         Relationships: [];
       };
@@ -162,6 +165,7 @@ export type Database = {
           created_at: string;
           paragon_degree?: number | null;
           paragon_xp?: number | null;
+          visual_seed?: number | null;
         };
         Insert: {
           id?: string;
@@ -172,6 +176,7 @@ export type Database = {
           created_at?: string;
           paragon_degree?: number | null;
           paragon_xp?: number | null;
+          visual_seed?: number | null;
         };
         Update: {
           status?: string;
@@ -263,6 +268,10 @@ export type Database = {
       get_player_cards: {
         Args: { p_user_id: string };
         Returns: string[];
+      };
+      get_player_card_copies: {
+        Args: { p_user_id: string };
+        Returns: unknown;
       };
       get_profile_by_username: {
         Args: { p_username: string };
@@ -395,6 +404,10 @@ export type Database = {
       };
       respond_exchange: {
         Args: { p_exchange_id: string; p_accept: boolean; p_price: number };
+        Returns: string;
+      };
+      confirm_exchange: {
+        Args: { p_exchange_id: string; p_accept: boolean };
         Returns: string;
       };
       cancel_exchange: {

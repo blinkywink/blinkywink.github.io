@@ -11,7 +11,7 @@ import {
 } from "../lib/pathCombos";
 import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
 import {
-  feedForDuplicate,
+  feedForCard,
   formatParagonFeedLine,
   type ParagonFeed,
 } from "../lib/paragonProgress";
@@ -527,14 +527,24 @@ export function PackOpenerTest({
         if (ownedAtOpen.has(card.id)) {
           dupIds.add(card.id);
           cash += duplicateCashForCard(card, dupCashMods());
-          const feed = feedForDuplicate(card);
-          if (feed && ownedAtOpen.has(feed.paragonId)) {
-            feeds.push(feed);
-            feedByCard.set(card.id, feed);
-          }
         } else {
           unlocked.push(card);
         }
+      }
+      const ownedParagons = new Set<string>();
+      for (const id of ownedAtOpen) {
+        if (id.endsWith("-paragon")) ownedParagons.add(id);
+      }
+      for (const card of unlocked) {
+        if (card.isParagon) ownedParagons.add(card.id);
+      }
+      for (const card of cards) {
+        const feed = feedForCard(card);
+        if (!feed || !ownedParagons.has(feed.paragonId)) continue;
+        // First copy of the Paragon itself is the unlock, not a feed.
+        if (card.isParagon && !ownedAtOpen.has(card.id)) continue;
+        feeds.push(feed);
+        feedByCard.set(card.id, feed);
       }
 
       pullsRef.current = cards;
@@ -549,12 +559,24 @@ export function PackOpenerTest({
       setParagonFeeds(feedByCard);
       setGodPack(isGod);
 
-      if (unlocked.length) {
-        void awardCards(unlocked.map((c) => c.id)).then(() => {
-          if (feeds.length) return applyParagonFeeds(feeds);
-        });
-      } else if (feeds.length) {
-        void applyParagonFeeds(feeds);
+      const unlockedParagonIds = new Set(
+        unlocked.filter((card) => card.isParagon).map((card) => card.id),
+      );
+      const feedsNeedNewParagon = feeds.some((feed) =>
+        unlockedParagonIds.has(feed.paragonId),
+      );
+      const award = unlocked.length
+        ? awardCards(unlocked.map((c) => c.id))
+        : Promise.resolve();
+      if (feeds.length) {
+        if (feedsNeedNewParagon) {
+          void award.then(() => applyParagonFeeds(feeds));
+        } else {
+          void applyParagonFeeds(feeds);
+          void award;
+        }
+      } else {
+        void award;
       }
       // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
@@ -1095,12 +1117,14 @@ export function PackOpenerTest({
                       pathLevels={current.pathLevels}
                       mode="focus"
                     />
-                    {currentIsDup ? (
+                    {currentIsDup || paragonFeeds.get(current.id) ? (
                       <div className="pack-opener__dup-stack" role="status">
-                        <p className="pack-opener__dup-banner">
-                          Duplicate · +
-                          {duplicateCashForCard(current, dupCashMods())} Cash
-                        </p>
+                        {currentIsDup ? (
+                          <p className="pack-opener__dup-banner">
+                            Duplicate · +
+                            {duplicateCashForCard(current, dupCashMods())} Cash
+                          </p>
+                        ) : null}
                         {paragonFeeds.get(current.id) ? (
                           <p className="pack-opener__xp-banner">
                             {formatParagonFeedLine(paragonFeeds.get(current.id)!)}
@@ -1181,14 +1205,13 @@ export function PackOpenerTest({
                   />
                   <span>
                     {isDup
-                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}${
-                          paragonFeeds.get(card.id)
-                            ? ` · ${formatParagonFeedLine(paragonFeeds.get(card.id)!)}`
-                            : ""
-                        }`
+                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}`
                       : card.isParagon
                         ? `${card.tower} · Paragon`
                         : `${card.tower} · ${card.pathLevels.join("-")}`}
+                    {paragonFeeds.get(card.id)
+                      ? ` · ${formatParagonFeedLine(paragonFeeds.get(card.id)!)}`
+                      : ""}
                   </span>
                 </div>
               );

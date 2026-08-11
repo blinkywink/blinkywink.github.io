@@ -217,6 +217,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
             mode="preview"
             owned
             degree={card.isParagon ? (row.paragonDegree ?? 1) : undefined}
+            visualSeed={row.visualSeed}
             onSelect={openListing}
           />
         ) : (

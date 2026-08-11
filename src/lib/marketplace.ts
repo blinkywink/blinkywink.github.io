@@ -19,6 +19,7 @@ export type MarketplaceListing = {
   status?: string;
   paragonDegree?: number | null;
   paragonXp?: number | null;
+  visualSeed?: number | null;
 };
 
 export type MarketOffer = {
@@ -87,6 +88,7 @@ type ListingRow = {
   status?: string;
   paragon_degree?: number | null;
   paragon_xp?: number | null;
+  visual_seed?: number | null;
 };
 
 function mapListing(
@@ -106,11 +108,15 @@ function mapListing(
     paragonDegree:
       r.paragon_degree == null ? null : Number(r.paragon_degree) || 1,
     paragonXp: r.paragon_xp == null ? null : Number(r.paragon_xp) || 0,
+    visualSeed:
+      r.visual_seed == null || !Number.isFinite(Number(r.visual_seed))
+        ? null
+        : Math.floor(Number(r.visual_seed)),
   };
 }
 
 const LISTING_COLS =
-  "id, seller_id, card_id, price, created_at, status, paragon_degree, paragon_xp";
+  "id, seller_id, card_id, price, created_at, status, paragon_degree, paragon_xp, visual_seed";
 const LISTING_COLS_FALLBACK = "id, seller_id, card_id, price, created_at, status";
 
 /** Active listings newest-first. */

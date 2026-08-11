@@ -304,6 +304,7 @@ export function ListingPage() {
                 mode="focus"
                 owned
                 degree={card.isParagon ? (listing.paragonDegree ?? 1) : undefined}
+                visualSeed={listing.visualSeed}
               />
             </>
           ) : (

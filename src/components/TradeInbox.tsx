@@ -15,11 +15,13 @@ import {
 } from "../lib/marketplace";
 import {
   cancelExchange,
+  confirmExchange,
   fetchExchangeInbox,
   respondExchange,
   type ExchangeInbox,
   type ExchangeInboxItem,
 } from "../lib/exchanges";
+import { formatVisualSeed, needsVisualSeed } from "../lib/cardVisualSeed";
 import {
   cancelTrade,
   fetchTradeInbox,
@@ -72,7 +74,12 @@ export function TradeInbox() {
         fetchExchangeInbox({ force }).catch(() => EMPTY_EXCHANGES),
       ]);
 
-      const nextOutgoingIds = new Set(nextOffers.outgoing.map((o) => o.id));
+      const nextOutgoingIds = new Set([
+        ...nextOffers.outgoing.map((o) => `m:${o.id}`),
+        ...nextExchanges.outgoing
+          .filter((e) => e.status === "offered")
+          .map((e) => `x:${e.id}`),
+      ]);
       if (hydrated.current) {
         let resolvedOutgoing = false;
         for (const id of prevOutgoingIds.current) {
@@ -82,11 +89,9 @@ export function TradeInbox() {
           }
         }
         if (resolvedOutgoing) {
-          // Seller accepted/declined (or listing sold) — pull Cash + cards.
+          // Seller / exchange partner accepted or declined — pull Cash + cards.
           await Promise.all([refreshCards(), refreshProfile()]);
-          setNotice(
-            "A market offer resolved, Cash and cards were refreshed.",
-          );
+          setNotice("An offer resolved. Cash and cards were refreshed.");
           setOpen(true);
         }
       }
@@ -102,7 +107,8 @@ export function TradeInbox() {
         nextTrades.incoming.length +
         nextTrades.active.length +
         nextOffers.incoming.length +
-        nextExchanges.incoming.length +
+        nextExchanges.incoming.filter((e) => e.status === "pending").length +
+        nextExchanges.outgoing.filter((e) => e.status === "offered").length +
         nextSales.length;
 
       if (!hydrated.current) {
@@ -211,22 +217,45 @@ export function TradeInbox() {
     return Math.min(1_000_000, n);
   }
 
-  async function onAcceptExchange(item: ExchangeInboxItem, price: number) {
+  async function onOfferExchange(item: ExchangeInboxItem, price: number) {
     setBusyId(item.id);
     setError(null);
     setNotice(null);
     try {
       await respondExchange(item.id, true, price);
       await pingInbox(item.partnerId).catch(() => undefined);
-      await Promise.all([refreshCards(), refreshProfile()]);
       setNotice(
         price > 0
-          ? `Exchanged ${offerCardLabel(item.cardId)} for ${price.toLocaleString()} Cash.`
-          : `Exchanged ${offerCardLabel(item.cardId)} for free.`,
+          ? `Asked ${item.partnerUsername} for ${price.toLocaleString()} Cash. Waiting for them to accept.`
+          : `Offered a free swap. Waiting for ${item.partnerUsername} to accept.`,
       );
       await refresh(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not accept exchange.");
+      setError(err instanceof Error ? err.message : "Could not send offer.");
+    }
+    setBusyId(null);
+  }
+
+  async function onConfirmExchange(item: ExchangeInboxItem, accept: boolean) {
+    setBusyId(item.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await confirmExchange(item.id, accept);
+      await pingInbox(item.partnerId).catch(() => undefined);
+      if (result === "completed") {
+        await Promise.all([refreshCards(), refreshProfile()]);
+        setNotice(
+          item.price > 0
+            ? `Exchanged ${offerCardLabel(item.cardId)} for ${item.price.toLocaleString()} Cash.`
+            : `Exchanged ${offerCardLabel(item.cardId)} for free.`,
+        );
+      }
+      await refresh(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not respond to exchange.",
+      );
     }
     setBusyId(null);
   }
@@ -333,6 +362,15 @@ export function TradeInbox() {
     return cardSpecById(cardId)?.entity.name ?? "Card";
   }
 
+  function exchangeSeedNote(item: ExchangeInboxItem): string | null {
+    if (!needsVisualSeed(item.cardId)) return null;
+    const theirs =
+      item.theirSeed != null ? `#${formatVisualSeed(item.theirSeed)}` : "—";
+    const mine =
+      item.mySeed != null ? `#${formatVisualSeed(item.mySeed)}` : "—";
+    return `their seed ${theirs} / yours ${mine}`;
+  }
+
   return (
     <div className="trade-inbox" ref={wrapRef}>
       <button
@@ -340,7 +378,8 @@ export function TradeInbox() {
         className={`trade-inbox__pill${
           inbox.incoming.length +
             offers.incoming.length +
-            exchanges.incoming.length +
+            exchanges.incoming.filter((e) => e.status === "pending").length +
+            exchanges.outgoing.filter((e) => e.status === "offered").length +
             sales.length >
           0
             ? " is-hot"
@@ -518,6 +557,8 @@ export function TradeInbox() {
                 {exchanges.incoming.map((item) => {
                   const card = cardSpecById(item.cardId);
                   const paragon = item.cardId.endsWith("-paragon");
+                  const seedNote = exchangeSeedNote(item);
+                  const offered = item.status === "offered";
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
@@ -531,8 +572,26 @@ export function TradeInbox() {
                           />
                         ) : null}
                         <span>
-                          <strong>{item.partnerUsername}</strong> wants to
-                          exchange {offerCardLabel(item.cardId)}
+                          {offered ? (
+                            <>
+                              Waiting on <strong>{item.partnerUsername}</strong>{" "}
+                              to accept your{" "}
+                              {item.price > 0 ? (
+                                <>
+                                  <CashAmount amount={item.price} size={15} />{" "}
+                                  offer
+                                </>
+                              ) : (
+                                "free swap"
+                              )}{" "}
+                              for {offerCardLabel(item.cardId)}
+                            </>
+                          ) : (
+                            <>
+                              <strong>{item.partnerUsername}</strong> wants to
+                              exchange {offerCardLabel(item.cardId)}
+                            </>
+                          )}
                           {paragon ? (
                             <>
                               {" "}
@@ -540,50 +599,64 @@ export function TradeInbox() {
                               {item.myDegree}
                             </>
                           ) : null}
+                          {seedNote ? <> · {seedNote}</> : null}
                         </span>
                         <div className="trade-inbox__actions">
-                          <label className="trade-inbox__price">
-                            Cash
-                            <input
-                              type="number"
-                              min={0}
-                              max={1000000}
-                              inputMode="numeric"
-                              value={exchangePrice[item.id] ?? "0"}
-                              onChange={(e) =>
-                                setExchangePrice((prev) => ({
-                                  ...prev,
-                                  [item.id]: e.target.value,
-                                }))
-                              }
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            className="btn btn--ghost btn--sm"
-                            disabled={busyId === item.id}
-                            onClick={() => void onAcceptExchange(item, 0)}
-                          >
-                            Accept free
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--primary btn--sm"
-                            disabled={busyId === item.id}
-                            onClick={() =>
-                              void onAcceptExchange(item, exchangeFee(item))
-                            }
-                          >
-                            Accept
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--ghost btn--sm"
-                            disabled={busyId === item.id}
-                            onClick={() => void onDeclineExchange(item)}
-                          >
-                            Decline
-                          </button>
+                          {offered ? (
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--sm"
+                              disabled={busyId === item.id}
+                              onClick={() => void onCancelExchange(item)}
+                            >
+                              Cancel
+                            </button>
+                          ) : (
+                            <>
+                              <label className="trade-inbox__price">
+                                Cash
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={1000000}
+                                  inputMode="numeric"
+                                  value={exchangePrice[item.id] ?? "0"}
+                                  onChange={(e) =>
+                                    setExchangePrice((prev) => ({
+                                      ...prev,
+                                      [item.id]: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                className="btn btn--ghost btn--sm"
+                                disabled={busyId === item.id}
+                                onClick={() => void onOfferExchange(item, 0)}
+                              >
+                                Offer free
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn--primary btn--sm"
+                                disabled={busyId === item.id}
+                                onClick={() =>
+                                  void onOfferExchange(item, exchangeFee(item))
+                                }
+                              >
+                                Send offer
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn--ghost btn--sm"
+                                disabled={busyId === item.id}
+                                onClick={() => void onDeclineExchange(item)}
+                              >
+                                Decline
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </li>
@@ -597,26 +670,71 @@ export function TradeInbox() {
             <section className="trade-inbox__section">
               <h3>Sent exchanges</h3>
               <ul>
-                {exchanges.outgoing.map((item) => (
-                  <li key={item.id}>
-                    <div className="trade-inbox__row">
-                      <span>
-                        {offerCardLabel(item.cardId)} · waiting on{" "}
-                        <strong>{item.partnerUsername}</strong> to set a price
-                      </span>
-                      <div className="trade-inbox__actions">
-                        <button
-                          type="button"
-                          className="btn btn--ghost btn--sm"
-                          disabled={busyId === item.id}
-                          onClick={() => void onCancelExchange(item)}
-                        >
-                          Cancel
-                        </button>
+                {exchanges.outgoing.map((item) => {
+                  const offered = item.status === "offered";
+                  const seedNote = exchangeSeedNote(item);
+                  return (
+                    <li key={item.id}>
+                      <div className="trade-inbox__row trade-inbox__row--offer">
+                        <span>
+                          {offered ? (
+                            <>
+                              <strong>{item.partnerUsername}</strong> wants{" "}
+                              {item.price > 0 ? (
+                                <CashAmount amount={item.price} size={15} />
+                              ) : (
+                                "a free swap"
+                              )}{" "}
+                              to exchange {offerCardLabel(item.cardId)}
+                            </>
+                          ) : (
+                            <>
+                              {offerCardLabel(item.cardId)} · waiting on{" "}
+                              <strong>{item.partnerUsername}</strong> to name a
+                              price
+                            </>
+                          )}
+                          {seedNote ? <> · {seedNote}</> : null}
+                        </span>
+                        <div className="trade-inbox__actions">
+                          {offered ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn--primary btn--sm"
+                                disabled={busyId === item.id}
+                                onClick={() =>
+                                  void onConfirmExchange(item, true)
+                                }
+                              >
+                                Accept
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn--ghost btn--sm"
+                                disabled={busyId === item.id}
+                                onClick={() =>
+                                  void onConfirmExchange(item, false)
+                                }
+                              >
+                                Decline
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--sm"
+                              disabled={busyId === item.id}
+                              onClick={() => void onCancelExchange(item)}
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ) : null}
