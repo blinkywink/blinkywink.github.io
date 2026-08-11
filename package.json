@@ -1,7 +1,7 @@
 {
   "name": "bloon-arcade",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "desktop:dev": "tauri dev",
-    "desktop:build": "tsx scripts/with-updater-key.ts tauri build --bundles dmg",
+    "desktop:build": "tsx scripts/with-updater-key.ts tauri build --bundles app,dmg",
     "desktop:build:windows": "PATH=\"/opt/homebrew/opt/llvm/bin:$PATH\" tsx scripts/with-updater-key.ts tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc",
     "desktop:stage-downloads": "tsx scripts/stage-desktop-downloads.ts",
     "desktop:write-latest": "tsx scripts/write-desktop-latest.ts",

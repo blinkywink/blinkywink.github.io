@@ -38,3 +38,20 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  cleanup-old-releases:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete older GitHub releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          keep="${{ github.ref_name }}"
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName \
+            --jq '.[].tagName' | while read -r tag; do
+            [ -z "$tag" ] && continue
+            [ "$tag" = "$keep" ] && continue
+            echo "Deleting old release $tag"
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          done

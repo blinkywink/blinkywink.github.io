@@ -80,6 +80,36 @@ function releaseExists(tag: string): boolean {
   return result.status === 0;
 }
 
+function listReleaseTags(): string[] {
+  const result = spawnSync(
+    "gh",
+    ["release", "list", "--repo", REPO, "--limit", "100", "--json", "tagName"],
+    { encoding: "utf8" },
+  );
+  if (result.status !== 0) {
+    throw new Error("gh release list failed");
+  }
+  const rows = JSON.parse(result.stdout || "[]") as { tagName?: string }[];
+  return rows.map((r) => String(r.tagName ?? "")).filter(Boolean);
+}
+
+/** Drop every GitHub release except the one we just published. */
+function deleteOlderReleases(keepTag: string) {
+  for (const oldTag of listReleaseTags()) {
+    if (oldTag === keepTag) continue;
+    console.log(`Deleting old release ${oldTag}`);
+    gh([
+      "release",
+      "delete",
+      oldTag,
+      "--repo",
+      REPO,
+      "--yes",
+      "--cleanup-tag",
+    ]);
+  }
+}
+
 const version = readDesktopVersion();
 const tag = releaseTag(version);
 
@@ -165,23 +195,8 @@ if (releaseExists(tag)) {
   ]);
 }
 
-if (releaseExists("beta")) {
-  gh(["release", "upload", "beta", "--repo", REPO, "--clobber", ...staged]);
-} else {
-  gh([
-    "release",
-    "create",
-    "beta",
-    "--repo",
-    REPO,
-    "--title",
-    "blinkywink.co latest desktop",
-    "--notes",
-    "Rolling latest desktop installers. Prefer versioned vX.Y.Z releases.",
-    ...staged,
-  ]);
-}
+deleteOlderReleases(tag);
 
-console.log(`\nPublished ${tag}`);
+console.log(`\nPublished ${tag} (older GitHub releases removed)`);
 console.log(`  ${RELEASE_DOWNLOAD}/${tag}/latest.json`);
 console.log(`  wrote ${path.relative(ROOT, OUT_JSON)}`);

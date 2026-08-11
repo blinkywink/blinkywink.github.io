@@ -1,11 +1,11 @@
-/** Hosted desktop installers (GitHub Releases). */
+/** Hosted desktop installers (always the current GitHub release). */
 export const DESKTOP_MAC_DMG =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta/blinkywink-mac.dmg";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg";
 export const DESKTOP_WINDOWS_SETUP =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta/blinkywink-windows-setup.exe";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-windows-setup.exe";
 
 export const DESKTOP_RELEASE_TAG_BASE =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download";
 
 export type DesktopRemoteConfig = {
   minDesktopVersion: string;
