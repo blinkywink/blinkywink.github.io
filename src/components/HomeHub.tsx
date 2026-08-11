@@ -33,7 +33,6 @@ import {
   DESKTOP_WINDOWS_SETUP,
 } from "../lib/desktopDownloads";
 import { ArcadeHome } from "./ArcadeHome";
-import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 import {
   hasPlayerChrome,
@@ -238,11 +237,6 @@ export function HomeHub() {
                   <span className="home-hub__rank">{row.rank}</span>
                   <UserAvatar crop={row.avatar} size={36} />
                   <strong>{row.username}</strong>
-                  <PlayerBadges
-                    rank={row.rank}
-                    badgeIds={row.badgeIds}
-                    size="sm"
-                  />
                 </Link>
               );
             })}
