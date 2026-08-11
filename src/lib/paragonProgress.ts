@@ -199,13 +199,13 @@ export function mergeParagonStates(
 }
 
 /** Keep whichever copy is further along — never let a stale fetch wipe XP. */
-export function mergeParagonMaps<T extends Record<string, ParagonState>>(
-  current: T,
-  incoming: T,
-): T {
-  const next = { ...incoming };
+export function mergeParagonMaps(
+  current: Record<string, ParagonState>,
+  incoming: Record<string, ParagonState>,
+): Record<string, ParagonState> {
+  const next: Record<string, ParagonState> = { ...incoming };
   for (const [id, state] of Object.entries(current)) {
-    next[id] = next[id] ? mergeParagonStates(next[id]!, state) : state;
+    next[id] = next[id] ? mergeParagonStates(next[id], state) : state;
   }
   return next;
 }
