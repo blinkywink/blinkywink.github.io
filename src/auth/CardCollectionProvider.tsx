@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -51,6 +52,11 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
   const [paragonMap, setParagonMap] = useState<ParagonMap>({});
+  const ownedRef = useRef(ownedIds);
+  const paragonRef = useRef(paragonMap);
+  const feedQueue = useRef(Promise.resolve());
+  ownedRef.current = ownedIds;
+  paragonRef.current = paragonMap;
 
   const refresh = useCallback(async () => {
     const [ids, nextParagons] = await Promise.all([
@@ -58,7 +64,11 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       fetchOwnParagons(),
     ]);
     setOwnedIds(ids);
-    setParagonMap(await ensureParagonStates(ids, nextParagons));
+    if (nextParagons) {
+      const next = await ensureParagonStates(ids, nextParagons);
+      paragonRef.current = next;
+      setParagonMap(next);
+    }
     setHydrated(true);
   }, []);
 
@@ -77,7 +87,11 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       ]);
       if (cancelled) return;
       setOwnedIds(ids);
-      setParagonMap(await ensureParagonStates(ids, nextParagons));
+      if (nextParagons) {
+        const next = await ensureParagonStates(ids, nextParagons);
+        paragonRef.current = next;
+        setParagonMap(next);
+      }
       setHydrated(true);
     })();
     return () => {
@@ -115,19 +129,24 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return added;
   }, []);
 
-  const applyParagonFeeds = useCallback(
-    async (feeds: ParagonFeed[]) => {
-      const ownedSet = new Set(ownedIds);
+  const applyParagonFeeds = useCallback(async (feeds: ParagonFeed[]) => {
+    const run = async () => {
       const { map, results } = await persistParagonFeeds(
         feeds,
-        ownedSet,
-        paragonMap,
+        new Set(ownedRef.current),
+        paragonRef.current,
       );
+      paragonRef.current = map;
       setParagonMap(map);
       return results;
-    },
-    [ownedIds, paragonMap],
-  );
+    };
+    const next = feedQueue.current.then(run, run);
+    feedQueue.current = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
+  }, []);
 
   const owned = useMemo(() => new Set(ownedIds), [ownedIds]);
   const paragons = useMemo(

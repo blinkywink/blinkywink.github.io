@@ -120,16 +120,26 @@ export function HomeHub() {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    const load = async (force = false) => {
       try {
-        const rows = (await fetchTopLeaderboard()).slice(0, 5);
+        const rows = (await fetchTopLeaderboard(force)).slice(0, 5);
         if (!cancelled) setTopPlayers(rows);
       } catch {
         if (!cancelled) setTopPlayers([]);
       }
-    })();
+    };
+    void load();
+    const id = window.setInterval(() => void load(true), 45_000);
+    const onWake = () => {
+      if (document.visibilityState === "visible") void load(true);
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
     };
   }, []);
 

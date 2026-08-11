@@ -65,6 +65,21 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    const tick = () => void load(true);
+    const id = window.setInterval(tick, 45_000);
+    const onWake = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
+    };
+  }, [load]);
+
   const trimmed = query.trim();
 
   useEffect(() => {

@@ -17,6 +17,67 @@ import {
 } from "./guestParagons";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
 
+type PendingFeed = { card_id: string; xp: number; degrees: number };
+
+const pendingKey = (userId: string) =>
+  `bloon-arcade:paragons:pending:${userId}`;
+
+function loadPendingFeeds(userId: string): PendingFeed[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(pendingKey(userId));
+    if (!raw) return [];
+    const data = JSON.parse(raw) as unknown;
+    if (!Array.isArray(data)) return [];
+    return data
+      .map((row) => {
+        const rec = row as PendingFeed;
+        const card_id = String(rec.card_id ?? "").trim();
+        const xp = Math.max(0, Number(rec.xp) || 0);
+        const degrees = Math.max(0, Number(rec.degrees) || 0);
+        if (!card_id.endsWith("-paragon") || (xp <= 0 && degrees <= 0)) {
+          return null;
+        }
+        return { card_id, xp, degrees };
+      })
+      .filter((row): row is PendingFeed => Boolean(row));
+  } catch {
+    return [];
+  }
+}
+
+function savePendingFeeds(userId: string, feeds: PendingFeed[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (!feeds.length) {
+      window.localStorage.removeItem(pendingKey(userId));
+    } else {
+      window.localStorage.setItem(pendingKey(userId), JSON.stringify(feeds));
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function queuePendingFeeds(userId: string, feeds: PendingFeed[]): void {
+  savePendingFeeds(userId, [...loadPendingFeeds(userId), ...feeds]);
+}
+
+async function flushPendingFeeds(userId: string): Promise<boolean> {
+  const pending = loadPendingFeeds(userId);
+  if (!pending.length) return true;
+  const { error } = await supabase.rpc("apply_paragon_feeds", {
+    p_feeds: pending,
+  });
+  if (error) {
+    console.warn("apply_paragon_feeds flush failed", error.message);
+    return false;
+  }
+  savePendingFeeds(userId, []);
+  cacheInvalidate("player-paragons:");
+  return true;
+}
+
 function asStateMap(
   rows: { card_id?: string; cardId?: string; degree?: number; xp?: number }[],
 ): ParagonMap {
@@ -29,18 +90,21 @@ function asStateMap(
   return out;
 }
 
-export async function fetchOwnParagons(): Promise<ParagonMap> {
+/** `null` means the server read failed — keep whatever the UI already has. */
+export async function fetchOwnParagons(): Promise<ParagonMap | null> {
   const app = loadAppSession();
   if (!getAccessToken() || !app) {
     return loadGuestParagons();
   }
+
+  await flushPendingFeeds(app.userId);
 
   const { data, error } = await supabase.rpc("get_player_paragons", {
     p_user_id: app.userId,
   });
   if (error) {
     console.warn("get_player_paragons (self) failed", error.message);
-    return {};
+    return null;
   }
   return Array.isArray(data) ? asStateMap(data) : {};
 }
@@ -126,6 +190,7 @@ export async function applyParagonFeeds(
   });
   if (error) {
     console.warn("apply_paragon_feeds failed", error.message);
+    queuePendingFeeds(app.userId, payload);
     const next = { ...current };
     const results: ParagonApplyResult[] = [];
     for (const [cardId, gain] of merged) {
@@ -141,6 +206,9 @@ export async function applyParagonFeeds(
     }
     return { map: next, results };
   }
+
+  await flushPendingFeeds(app.userId);
+  cacheInvalidate("player-paragons:");
 
   const next = { ...current };
   const results: ParagonApplyResult[] = [];

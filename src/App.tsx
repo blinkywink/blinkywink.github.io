@@ -29,6 +29,7 @@ import { TradeRoom } from "./components/TradeRoom";
 import { RouteFallback } from "./components/RouteFallback";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
+import { LivePlayerSync } from "./components/LivePlayerSync";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
 import {
@@ -644,6 +645,7 @@ export default function App() {
       <ScrollToTop />
       <DesktopOnlineGate />
       <DesktopUpdateGate />
+      <LivePlayerSync />
       <HeroFxProvider>
         <AppShell />
       </HeroFxProvider>

@@ -550,9 +550,10 @@ export function PackOpenerTest({
       setGodPack(isGod);
 
       if (unlocked.length) {
-        void awardCards(unlocked.map((c) => c.id));
-      }
-      if (feeds.length) {
+        void awardCards(unlocked.map((c) => c.id)).then(() => {
+          if (feeds.length) return applyParagonFeeds(feeds);
+        });
+      } else if (feeds.length) {
         void applyParagonFeeds(feeds);
       }
       // Duplicate Cash is awarded per revealed card in showCardAt.

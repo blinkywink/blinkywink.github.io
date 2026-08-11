@@ -215,7 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(loadGuestProfile());
       return;
     }
-    setProfile(await fetchProfile(userId));
+    const next = await fetchProfile(userId);
+    if (next) setProfile(next);
   }, [session?.userId]);
 
   useEffect(() => {
