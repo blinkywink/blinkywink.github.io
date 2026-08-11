@@ -1,7 +1,6 @@
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
-import { parseVisualSeed } from "./cardVisualSeed";
 
 export type ExchangeInboxItem = {
   id: string;
@@ -12,8 +11,6 @@ export type ExchangeInboxItem = {
   price: number;
   theirDegree: number;
   myDegree: number;
-  theirSeed: number | null;
-  mySeed: number | null;
   createdAt: string;
 };
 
@@ -43,8 +40,6 @@ function asItems(raw: unknown): ExchangeInboxItem[] {
       price: Math.max(0, Number(r.price) || 0),
       theirDegree: Math.max(1, Number(r.theirDegree) || 1),
       myDegree: Math.max(1, Number(r.myDegree) || 1),
-      theirSeed: parseVisualSeed(r.theirSeed),
-      mySeed: parseVisualSeed(r.mySeed),
       createdAt: String(r.createdAt ?? ""),
     };
   });

@@ -23,8 +23,3 @@ export function parseVisualSeed(raw: unknown): number | null {
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.floor(n);
 }
-
-/** Short hex players can compare when exchanging copies. */
-export function formatVisualSeed(seed: number): string {
-  return (seed >>> 0).toString(16).padStart(8, "0").toUpperCase();
-}

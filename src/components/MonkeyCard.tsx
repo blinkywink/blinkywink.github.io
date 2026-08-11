@@ -17,7 +17,6 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { CardVisualizerBg } from "./CardVisualizerBg";
-import { formatVisualSeed } from "../lib/cardVisualSeed";
 
 type Accent = {
   primary: string;
@@ -629,14 +628,6 @@ export function MonkeyCard({
                   {pathLabel} · {entity.tower}
                 </p>
               </div>
-              {visualizer && resolvedSeed != null ? (
-                <span
-                  className="monkey-card__code monkey-card__code--seed"
-                  title="Unique art seed for this copy"
-                >
-                  #{formatVisualSeed(resolvedSeed)}
-                </span>
-              ) : null}
             </header>
 
             <footer className="monkey-card__rail">

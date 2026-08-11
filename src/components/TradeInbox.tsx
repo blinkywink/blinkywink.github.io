@@ -21,7 +21,6 @@ import {
   type ExchangeInbox,
   type ExchangeInboxItem,
 } from "../lib/exchanges";
-import { formatVisualSeed, needsVisualSeed } from "../lib/cardVisualSeed";
 import {
   cancelTrade,
   fetchTradeInbox,
@@ -362,14 +361,6 @@ export function TradeInbox() {
     return cardSpecById(cardId)?.entity.name ?? "Card";
   }
 
-  function exchangeSeedNote(item: ExchangeInboxItem): string | null {
-    if (!needsVisualSeed(item.cardId)) return null;
-    const theirs =
-      item.theirSeed != null ? `#${formatVisualSeed(item.theirSeed)}` : "—";
-    const mine =
-      item.mySeed != null ? `#${formatVisualSeed(item.mySeed)}` : "—";
-    return `their seed ${theirs} / yours ${mine}`;
-  }
 
   return (
     <div className="trade-inbox" ref={wrapRef}>
@@ -557,7 +548,6 @@ export function TradeInbox() {
                 {exchanges.incoming.map((item) => {
                   const card = cardSpecById(item.cardId);
                   const paragon = item.cardId.endsWith("-paragon");
-                  const seedNote = exchangeSeedNote(item);
                   const offered = item.status === "offered";
                   return (
                     <li key={item.id}>
@@ -599,7 +589,6 @@ export function TradeInbox() {
                               {item.myDegree}
                             </>
                           ) : null}
-                          {seedNote ? <> · {seedNote}</> : null}
                         </span>
                         <div className="trade-inbox__actions">
                           {offered ? (
@@ -672,7 +661,6 @@ export function TradeInbox() {
               <ul>
                 {exchanges.outgoing.map((item) => {
                   const offered = item.status === "offered";
-                  const seedNote = exchangeSeedNote(item);
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
@@ -694,7 +682,6 @@ export function TradeInbox() {
                               price
                             </>
                           )}
-                          {seedNote ? <> · {seedNote}</> : null}
                         </span>
                         <div className="trade-inbox__actions">
                           {offered ? (
