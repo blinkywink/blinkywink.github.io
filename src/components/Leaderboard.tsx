@@ -237,6 +237,8 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                             <span className="board-card__you">you</span>
                           ) : null}
                         </span>
+                      </span>
+                      <span className="board-card__badges">
                         <PlayerBadges
                           rank={row.rank}
                           badgeIds={row.badgeIds}
