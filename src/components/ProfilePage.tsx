@@ -133,12 +133,17 @@ export function ProfilePage() {
     }),
   );
 
+  const visibleShowcase = useMemo(
+    () => savedShowcase.filter((id) => owned.has(id)),
+    [savedShowcase, owned],
+  );
+
   const showcaseSpecs = useMemo(
     () =>
-      savedShowcase
+      visibleShowcase
         .map((id) => cardSpecById(id))
         .filter((c): c is NonNullable<typeof c> => Boolean(c)),
-    [savedShowcase],
+    [visibleShowcase],
   );
 
   const ownedHeroIds = useMemo(
@@ -250,11 +255,11 @@ export function ProfilePage() {
 
   async function onAddShowcaseCard(cardId: string) {
     if (!cardId) return;
-    if (savedShowcase.includes(cardId)) {
+    if (visibleShowcase.includes(cardId)) {
       setError("That card is already on your profile.");
       return;
     }
-    if (savedShowcase.length >= showcaseSlots) {
+    if (visibleShowcase.length >= showcaseSlots) {
       setError(
         showcaseSlots >= SHOWCASE_MAX
           ? `You can only show ${SHOWCASE_MAX} showcase cards.`
@@ -262,7 +267,7 @@ export function ProfilePage() {
       );
       return;
     }
-    const next = [...savedShowcase, cardId];
+    const next = [...visibleShowcase, cardId];
     setBusy(true);
     setError(null);
     setStatus(null);
@@ -281,7 +286,7 @@ export function ProfilePage() {
   }
 
   async function onRemoveShowcaseCard(cardId: string) {
-    const next = savedShowcase.filter((id) => id !== cardId);
+    const next = visibleShowcase.filter((id) => id !== cardId);
     setBusy(true);
     setError(null);
     setStatus(null);
@@ -574,7 +579,7 @@ export function ProfilePage() {
             ) : null}
             <div className="pfp-editor__body pfp-editor__body--pick">
               <p className="pfp-editor__hint">
-                Slot {savedShowcase.length + 1} of {showcaseSlots}. Setting a
+                Slot {visibleShowcase.length + 1} of {showcaseSlots}. Setting a
                 card costs{" "}
                 <CashAmount amount={SHOWCASE_CHANGE_COST} size={14} />.
               </p>
@@ -800,7 +805,7 @@ export function ProfilePage() {
             <div>
               <h3>Showcase cards</h3>
               <p>
-                {savedShowcase.length}/{showcaseSlots} filled · {showcaseSlots}/
+                {visibleShowcase.length}/{showcaseSlots} filled · {showcaseSlots}/
                 {SHOWCASE_MAX} slots owned. Slots cost{" "}
                 <CashAmount amount={SHOWCASE_SLOT_COST} size={13} />, setting a
                 card costs <CashAmount amount={SHOWCASE_CHANGE_COST} size={13} />
@@ -821,7 +826,7 @@ export function ProfilePage() {
                   <CashAmount amount={SHOWCASE_SLOT_COST} size={14} />
                 </button>
               ) : null}
-              {savedShowcase.length < showcaseSlots ? (
+              {visibleShowcase.length < showcaseSlots ? (
                 <button
                   type="button"
                   className="btn btn--secondary"
@@ -834,7 +839,7 @@ export function ProfilePage() {
                   <CashAmount amount={SHOWCASE_CHANGE_COST} size={14} />
                 </button>
               ) : null}
-              {savedShowcase.length > 0 ? (
+              {visibleShowcase.length > 0 ? (
                 <button
                   type="button"
                   className="btn btn--ghost"

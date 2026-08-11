@@ -23,6 +23,7 @@ import {
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
 import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
+import { preloadImages } from "../lib/preloadImages";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CurrencyChip } from "./CurrencyChip";
@@ -269,6 +270,7 @@ export function PackOpenerTest({
   const readyAtRef = useRef(0);
   /** Sync lock — React buyBusy alone races on Space-hold / key-repeat. */
   const buyLockRef = useRef(false);
+  const preloadRef = useRef<HTMLImageElement[]>([]);
 
   const clearTimers = () => {
     for (const id of timers.current) window.clearTimeout(id);
@@ -313,6 +315,7 @@ export function PackOpenerTest({
     needFreshSpaceRef.current = false;
     readyAtRef.current = 0;
     buyLockRef.current = false;
+    preloadRef.current = [];
     setBuyBusy(false);
     setBuyError(null);
   }, []);
@@ -343,6 +346,7 @@ export function PackOpenerTest({
     needFreshSpaceRef.current = false;
     readyAtRef.current = 0;
     setBuyError(null);
+    preloadRef.current = [];
     setPhaseBoth("sealed");
   }, []);
 
@@ -538,10 +542,7 @@ export function PackOpenerTest({
       duplicateCashRef.current = cash;
       duplicatesRef.current = dupIds;
       paidDupIndicesRef.current = new Set();
-      for (const card of cards) {
-        const img = new Image();
-        img.src = card.entity.image;
-      }
+      preloadRef.current = preloadImages(cards.map((card) => card.entity.image));
       setPulls(cards);
       setDuplicates(dupIds);
       setDuplicateCash(cash);

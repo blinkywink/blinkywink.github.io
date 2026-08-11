@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
@@ -50,29 +50,37 @@ export function ListingPage() {
   const [offerInput, setOfferInput] = useState("");
   const [offerOpen, setOfferOpen] = useState(false);
   const [justPurchased, setJustPurchased] = useState(false);
+  const justPurchasedRef = useRef(false);
+  const userId = user?.id ?? null;
 
   const load = useCallback(async () => {
-    if (!listingId) return;
+    if (!listingId || justPurchasedRef.current) return;
     setLoading(true);
     setError(null);
     try {
       const row = await fetchMarketplaceListing(listingId);
+      if (justPurchasedRef.current) return;
       setListing(row);
-      if (row && user && !isGuest) {
+      if (row && userId && !isGuest) {
         const nextOffers = await fetchListingOffers(row.id).catch(() => []);
         setOffers(nextOffers);
       } else {
         setOffers([]);
       }
     } catch (err) {
+      if (justPurchasedRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to load listing.");
       setListing(null);
     }
     setLoading(false);
-  }, [listingId, user, isGuest]);
+  }, [listingId, userId, isGuest]);
 
   useEffect(() => {
+    justPurchasedRef.current = false;
     setJustPurchased(false);
+  }, [listingId]);
+
+  useEffect(() => {
     void load();
   }, [load]);
 
@@ -115,13 +123,14 @@ export function ListingPage() {
     setStatus(null);
     try {
       const bal = await buyListing(listing.id);
+      justPurchasedRef.current = true;
+      setJustPurchased(true);
+      setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
+      setStatus("Purchased! Card added to your collection.");
       playBuy();
       setCoinBalance(bal);
       await notifyMarketPartner(listing.sellerId);
       await Promise.all([refreshCards(), refreshProfile()]);
-      setJustPurchased(true);
-      setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
-      setStatus("Purchased! Card added to your collection.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Purchase failed.");
     }
@@ -188,19 +197,27 @@ export function ListingPage() {
       );
       if (accept) {
         // RPC returns the buyer's balance; sellers just refresh profile Cash.
+        if (!mine) {
+          justPurchasedRef.current = true;
+          setJustPurchased(true);
+          setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
+          setStatus("Purchased! Card added to your collection.");
+        }
         if (bal != null && !mine) setCoinBalance(bal);
         await Promise.all([refreshCards(), refreshProfile()]);
-        setStatus(
-          mine
-            ? `Accepted ${offer.offerPrice.toLocaleString()} Cash from ${offer.buyerUsername}.`
-            : "Offer accepted, card is yours!",
-        );
+        if (mine) {
+          setStatus(
+            `Accepted ${offer.offerPrice.toLocaleString()} Cash from ${offer.buyerUsername}.`,
+          );
+          await load();
+        }
       } else if (mine) {
         setStatus("Offer declined.");
+        await load();
       } else {
         setStatus("Offer cancelled.");
+        await load();
       }
-      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update offer.");
     }
@@ -217,6 +234,19 @@ export function ListingPage() {
   }
 
   if (!listing) {
+    if (justPurchased) {
+      return (
+        <div className="listing-page">
+          <PageHeader title="Purchased" />
+          <p className="market-banner market-banner--ok" role="status">
+            Purchased! Card added to your collection.
+          </p>
+          <Link className="btn btn--ghost" to={marketplacePath()}>
+            ← Marketplace
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="listing-page">
         <PageHeader title="Listing" />

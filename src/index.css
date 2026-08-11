@@ -7715,6 +7715,8 @@ body:has(.zoomed-page) {
   border-radius: calc(22px * var(--card-preview-scale));
 }
 
+/* zoom (not transform) so the portrait's layout box matches the visible thumb.
+   transform+overflow:hidden made WebKit skip decoding these images. */
 .pack-opener__summary-grid .monkey-card-scene--preview > .monkey-card {
   --opacity: 0;
   position: absolute;
@@ -7722,9 +7724,14 @@ body:has(.zoomed-page) {
   top: 0;
   width: var(--card-face-w);
   height: calc(var(--card-face-w) * 3.5 / 2.5);
-  transform: scale(var(--card-preview-scale));
+  transform: none;
+  zoom: var(--card-preview-scale);
   transform-origin: top left;
   transform-style: flat;
+}
+
+.pack-opener__summary-grid .monkey-card__portrait {
+  content-visibility: visible;
 }
 
 .pack-opener__actions {

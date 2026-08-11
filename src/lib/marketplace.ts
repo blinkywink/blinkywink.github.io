@@ -192,6 +192,7 @@ export async function listCardForSale(
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("market:");
+  cacheInvalidate("profile:");
   return String(data);
 }
 

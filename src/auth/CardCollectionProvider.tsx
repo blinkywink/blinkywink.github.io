@@ -9,6 +9,10 @@ import {
 } from "react";
 import { useAuth } from "./AuthProvider";
 import { awardCards as persistAwardCards, fetchOwnedCardIds } from "../lib/awardCards";
+import {
+  pruneUnownedShowcase,
+  showcaseFromProfile,
+} from "../lib/profileShowcase";
 import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
 import {
   applyParagonFeeds as persistParagonFeeds,
@@ -41,8 +45,10 @@ const CardCollectionContext = createContext<CardCollectionContextValue | null>(
 );
 
 export function CardCollectionProvider({ children }: { children: ReactNode }) {
-  const { ready: authReady, session, isGuest } = useAuth();
+  const { ready: authReady, session, isGuest, profile, refreshProfile } =
+    useAuth();
   const [ready, setReady] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
   const [paragonMap, setParagonMap] = useState<ParagonMap>({});
 
@@ -53,12 +59,14 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     ]);
     setOwnedIds(ids);
     setParagonMap(await ensureParagonStates(ids, nextParagons));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!authReady) return;
     let cancelled = false;
     setReady(true);
+    setHydrated(false);
     void (async () => {
       if (session?.userId) {
         await mergeGuestProgressIntoAccount();
@@ -70,11 +78,23 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setOwnedIds(ids);
       setParagonMap(await ensureParagonStates(ids, nextParagons));
+      setHydrated(true);
     })();
     return () => {
       cancelled = true;
     };
   }, [authReady, session?.userId, isGuest]);
+
+  useEffect(() => {
+    if (!hydrated || isGuest || !profile) return;
+    const current = showcaseFromProfile(profile);
+    if (current.length === 0) return;
+    void pruneUnownedShowcase(ownedIds, current)
+      .then((kept) => {
+        if (kept) return refreshProfile();
+      })
+      .catch(() => undefined);
+  }, [hydrated, isGuest, profile, ownedIds, refreshProfile]);
 
   const awardCards = useCallback(async (cardIds: string[]) => {
     const added = await persistAwardCards(cardIds);

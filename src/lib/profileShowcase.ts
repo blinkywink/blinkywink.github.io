@@ -83,3 +83,16 @@ export function showcaseFromProfile(row: {
 }): string[] {
   return normalizeShowcaseIds(row.showcase_card_ids);
 }
+
+/** Keep only cards the player still owns. Removals are free. */
+export async function pruneUnownedShowcase(
+  ownedIds: Iterable<string>,
+  currentIds: string[],
+): Promise<string[] | null> {
+  const owned = ownedIds instanceof Set ? ownedIds : new Set(ownedIds);
+  const current = normalizeShowcaseIds(currentIds);
+  const kept = current.filter((id) => owned.has(id));
+  if (kept.length === current.length) return null;
+  await setProfileShowcase(kept);
+  return kept;
+}

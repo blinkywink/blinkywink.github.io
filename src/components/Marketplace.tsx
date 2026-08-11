@@ -60,7 +60,7 @@ const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 
 export function Marketplace({ onBack: _onBack }: Props) {
   const navigate = useNavigate();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, refreshProfile } = useAuth();
   const { owned, paragons, refresh: refreshCards } = useCardCollection();
   const [tab, setTab] = useState<Tab>("browse");
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
@@ -195,7 +195,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setSelected(new Set());
       setSellStep("pick");
       setStatus(`Listed for ${price.toLocaleString()} Cash.`);
-      await Promise.all([refreshCards(), load()]);
+      await Promise.all([refreshCards(), refreshProfile(), load()]);
       setTab("mine");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not list card.");

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCardCollectionOptional } from "../auth/CardCollectionProvider";
 import cardAccents from "../data/cardAccents.json";
 import type { TowerEntity } from "../data/types";
@@ -233,6 +233,8 @@ export function MonkeyCard({
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const portraitRef = useRef<HTMLImageElement>(null);
+  const portraitTries = useRef(0);
   const rafRef = useRef<number | null>(null);
   const tapGesture = useRef<{
     x: number;
@@ -259,6 +261,17 @@ export function MonkeyCard({
   const strength = accentStrength(tier);
   const visualizer = usesVisualizer(tier) && !staticArt;
   const holo = usesHoloFx(tier) && !isPreview;
+
+  useEffect(() => {
+    portraitTries.current = 0;
+    const img = portraitRef.current;
+    if (!img || !entity.image) return;
+    if (img.complete && img.naturalWidth > 0) return;
+    // Scaled + clipped thumbs can miss the first decode; poke the loader.
+    const src = entity.image;
+    img.src = src;
+    void img.decode().catch(() => undefined);
+  }, [entity.image, staticArt]);
 
   const pathIcons = useMemo(() => {
     const iconFor = (id: string) =>
@@ -574,12 +587,22 @@ export function MonkeyCard({
               </>
             ) : null}
             <img
+              ref={portraitRef}
               className="monkey-card__portrait"
               src={entity.image}
               alt=""
               draggable={false}
               loading={isPreview && !staticArt ? "lazy" : "eager"}
-              decoding="async"
+              decoding={staticArt ? "sync" : "async"}
+              fetchPriority={staticArt || !isPreview ? "high" : "auto"}
+              onError={(e) => {
+                if (portraitTries.current >= 2) return;
+                portraitTries.current += 1;
+                const el = e.currentTarget;
+                const src = entity.image;
+                el.src = "";
+                el.src = src;
+              }}
             />
             {tier >= 2 ? (
               <div className="monkey-card__accent-frame" aria-hidden="true" />

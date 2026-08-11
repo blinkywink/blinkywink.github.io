@@ -320,8 +320,12 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     const ids = viewer?.showcaseCardIds ?? [];
     return ids
       .map((id) => cardSpecById(id))
-      .filter((c): c is MonkeyCardSpec => Boolean(c));
-  }, [viewer?.showcaseCardIds]);
+      .filter((c): c is MonkeyCardSpec => {
+        if (!c) return false;
+        if (viewer && remoteOwned == null) return true;
+        return owned.has(c.id);
+      });
+  }, [viewer?.showcaseCardIds, owned, viewer, remoteOwned]);
 
   const filteredTowers = useMemo(() => {
     const q = query.trim().toLowerCase();
