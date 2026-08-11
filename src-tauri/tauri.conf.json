@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "blinkywink.co",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "identifier": "co.blinkywink.arcade",
   "build": {
     "frontendDist": "../dist",

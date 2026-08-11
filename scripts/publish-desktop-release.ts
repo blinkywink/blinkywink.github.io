@@ -113,7 +113,33 @@ function deleteOlderReleases(keepTag: string) {
       { stdio: "inherit" },
     );
     if (del.status !== 0) {
-      console.warn(`Could not delete ${oldTag} — continuing`);
+      console.warn(`Could not delete ${oldTag} - continuing`);
+    }
+  }
+}
+
+/** Keep only this version's local installers/DMGs so leftover builds don't pile up. */
+function deleteOlderLocalBuilds(keepVersion: string) {
+  const dirs = [
+    path.join(ROOT, "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis"),
+    path.join(ROOT, "src-tauri/target/release/bundle/nsis"),
+    path.join(ROOT, "src-tauri/target/release/bundle/dmg"),
+    path.join(ROOT, "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg"),
+  ];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (!/\.(exe|dmg|sig)$/i.test(name)) continue;
+      if (name.includes(keepVersion)) continue;
+      const full = path.join(dir, name);
+      try {
+        fs.unlinkSync(full);
+        console.log(`Deleted local ${path.relative(ROOT, full)}`);
+      } catch (err) {
+        console.warn(
+          `Could not delete ${full}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
     }
   }
 }
@@ -221,6 +247,7 @@ if (releaseExists(tag)) {
 }
 
 deleteOlderReleases(tag);
+deleteOlderLocalBuilds(version);
 
 console.log(`\nPublished ${tag} (older GitHub releases removed)`);
 console.log(`  ${RELEASE_DOWNLOAD}/${tag}/latest.json`);

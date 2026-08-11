@@ -431,11 +431,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm market-refresh"
-                    onClick={() => {
-                      void load(true);
-                      if (tab === "mine") void loadMine();
-                    }}
-                    disabled={loading}
+                  onClick={() => void load(true)}
+                  disabled={loading}
                 >
                   Refresh
                 </button>
@@ -444,11 +441,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
               <button
                 type="button"
                 className="btn btn--ghost btn--sm market-refresh"
-                    onClick={() => {
-                      void load(true);
-                      if (tab === "mine") void loadMine();
-                    }}
-                    disabled={loading}
+                onClick={() => {
+                  void load(true);
+                  void loadMine();
+                }}
+                disabled={loading}
               >
                 Refresh
               </button>
