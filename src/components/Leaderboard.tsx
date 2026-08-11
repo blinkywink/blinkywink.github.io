@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import type { AvatarCrop } from "../lib/avatar";
 import {
-  fetchTopLeaderboard,
+  fetchLeaderboardPage,
+  LEADERBOARD_PAGE_SIZE,
   type LeaderboardEntry,
 } from "../lib/leaderboardRanks";
 import { searchProfilesByUsername } from "../lib/profiles";
@@ -10,6 +11,7 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { LoadingDots } from "./LoadingDots";
 import { PageHeader } from "./PageHeader";
 import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
@@ -43,23 +45,55 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchRows, setSearchRows] = useState<Row[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const loadingMoreRef = useRef(false);
 
   const load = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
     try {
-      setRows((await fetchTopLeaderboard(force)).map(entryToRow));
+      const page = await fetchLeaderboardPage(0, { force });
+      setRows(page.map(entryToRow));
+      offsetRef.current = page.length;
+      setHasMore(page.length === LEADERBOARD_PAGE_SIZE);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
       setRows([]);
+      offsetRef.current = 0;
+      setHasMore(false);
     }
     setLoading(false);
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const page = await fetchLeaderboardPage(offsetRef.current);
+      setRows((prev) => {
+        const seen = new Set(prev.map((row) => row.id));
+        const extra = page.filter((row) => !seen.has(row.id)).map(entryToRow);
+        return extra.length ? [...prev, ...extra] : prev;
+      });
+      offsetRef.current += page.length;
+      setHasMore(page.length === LEADERBOARD_PAGE_SIZE);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load more.");
+      setHasMore(false);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [hasMore]);
 
   useEffect(() => {
     void load();
@@ -81,9 +115,10 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   }, [load]);
 
   const trimmed = query.trim();
+  const searching = trimmed.length >= 2;
 
   useEffect(() => {
-    if (trimmed.length < 2) {
+    if (!searching) {
       setSearchRows([]);
       setSearchError(null);
       setSearchLoading(false);
@@ -96,7 +131,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
     const timer = window.setTimeout(() => {
       void (async () => {
         try {
-          const hits = await searchProfilesByUsername(trimmed);
+          const hits = await searchProfilesByUsername(trimmed, 50);
           if (cancelled) return;
           setSearchRows(
             hits.map((h) => ({
@@ -125,36 +160,45 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [trimmed]);
+  }, [searching, trimmed]);
+
+  useEffect(() => {
+    if (searching || loading || !hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      void loadMore();
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) void loadMore();
+      },
+      { rootMargin: "480px 0px", threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [searching, loading, hasMore, loadMore, rows.length]);
 
   const displayRows = useMemo(() => {
-    if (!trimmed) return rows;
-
-    const q = trimmed.toLowerCase();
+    if (!searching) return rows;
     const rankById = new Map(rows.map((r) => [r.id, r.rank]));
-    const local = rows.filter((r) => r.username.toLowerCase().includes(q));
-    const byId = new Map(local.map((r) => [r.id, r]));
-
-    for (const hit of searchRows) {
-      const existing = byId.get(hit.id);
-      if (existing) continue;
-      byId.set(hit.id, {
+    return searchRows
+      .map((hit) => ({
         ...hit,
-        rank: rankById.get(hit.id) ?? null,
-      });
-    }
-
-    return [...byId.values()].sort(
-      (a, b) => b.coins_earned - a.coins_earned || a.username.localeCompare(b.username),
-    );
-  }, [trimmed, rows, searchRows]);
+        rank: rankById.get(hit.id) ?? hit.rank,
+      }))
+      .sort(
+        (a, b) =>
+          b.coins_earned - a.coins_earned ||
+          a.username.localeCompare(b.username),
+      );
+  }, [searching, rows, searchRows]);
 
   const showEmptySearch =
-    Boolean(trimmed) &&
-    !loading &&
+    searching &&
     !searchLoading &&
     displayRows.length === 0 &&
-    !error &&
     !searchError;
 
   return (
@@ -187,25 +231,24 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
           </button>
         </div>
 
-        {loading ? (
-          <p className="board-status">Loading…</p>
-        ) : error ? (
-          <p className="board-status board-status--err" role="alert">
-            {error}
-          </p>
+        {searching && searchLoading && searchRows.length === 0 ? (
+          <LoadingDots label="Searching players" />
         ) : searchError ? (
           <p className="board-status board-status--err" role="alert">
             {searchError}
           </p>
         ) : showEmptySearch ? (
           <p className="board-status">No players match “{trimmed}”.</p>
-        ) : rows.length === 0 && !trimmed ? (
+        ) : loading ? (
+          <LoadingDots label="Loading leaderboard" />
+        ) : error && rows.length === 0 ? (
+          <p className="board-status board-status--err" role="alert">
+            {error}
+          </p>
+        ) : rows.length === 0 && !searching ? (
           <p className="board-status">No accounts yet.</p>
         ) : (
           <>
-            {trimmed && searchLoading ? (
-              <p className="board-status">Searching…</p>
-            ) : null}
             <ul className="board-list">
               {displayRows.map((row) => {
                 const mine = user?.id === row.id;
@@ -255,6 +298,11 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                 );
               })}
             </ul>
+            {!searching && hasMore ? (
+              <div ref={sentinelRef} className="board-more">
+                {loadingMore ? <LoadingDots label="Loading more players" /> : null}
+              </div>
+            ) : null}
           </>
         )}
       </main>

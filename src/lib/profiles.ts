@@ -84,7 +84,7 @@ export async function fetchProfileByUsername(
 /** Partial username search (case-insensitive), richest players first. */
 export async function searchProfilesByUsername(
   query: string,
-  limit = 40,
+  limit = 50,
 ): Promise<ProfileSearchHit[]> {
   const raw = String(query ?? "").trim();
   if (raw.length < 2) return [];

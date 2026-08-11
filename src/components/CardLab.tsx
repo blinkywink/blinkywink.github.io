@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
@@ -29,6 +29,7 @@ import { MonkeyCard } from "./MonkeyCard";
 import { VisibleCardGrid } from "./VisibleCardGrid";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
+import { LoadingDots } from "./LoadingDots";
 import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 import {
@@ -59,11 +60,20 @@ export type CollectionViewer = {
   badgeIds?: string[];
 };
 
+export type ViewerCollection = {
+  ownedIds: readonly string[];
+  seeds: Record<string, number>;
+  paragons: ParagonMap;
+  rank: number | null;
+};
+
 type Props = {
   onBack: () => void;
   initial?: CardsOpenOpts | null;
   /** When set, show this player's collection (read-only) instead of yours. */
   viewer?: CollectionViewer | null;
+  /** Prefetched collection so the first paint is complete. */
+  viewerCollection?: ViewerCollection | null;
 };
 
 type View =
@@ -135,20 +145,33 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 }
 
 /** Player collection — owned cards in color, missing ones greyed out. */
-export function CardLab({ onBack, initial, viewer = null }: Props) {
+export function CardLab({
+  onBack,
+  initial,
+  viewer = null,
+  viewerCollection = null,
+}: Props) {
   const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const { owned: myOwned, paragonOf } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
-    null,
+    () => (viewerCollection ? new Set(viewerCollection.ownedIds) : null),
   );
-  const [remoteSeeds, setRemoteSeeds] = useState<Record<string, number>>({});
-  const [remoteParagons, setRemoteParagons] = useState<ParagonMap>({});
-  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteSeeds, setRemoteSeeds] = useState<Record<string, number>>(
+    () => viewerCollection?.seeds ?? {},
+  );
+  const [remoteParagons, setRemoteParagons] = useState<ParagonMap>(
+    () => viewerCollection?.paragons ?? {},
+  );
+  const [remoteLoading, setRemoteLoading] = useState(
+    () => Boolean(viewer) && !viewerCollection,
+  );
   const [remoteError, setRemoteError] = useState<string | null>(null);
-  const [viewerRank, setViewerRank] = useState<number | null>(null);
+  const [viewerRank, setViewerRank] = useState<number | null>(
+    () => viewerCollection?.rank ?? null,
+  );
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>(() =>
     initial?.heroes
@@ -169,6 +192,9 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     () => !initial?.tower,
   );
 
+  const preloadRef = useRef(viewerCollection);
+  preloadRef.current = viewerCollection;
+
   useEffect(() => {
     if (!focused) return;
     preloadPackSounds();
@@ -178,6 +204,18 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     if (!viewer) {
       setRemoteOwned(null);
       setRemoteParagons({});
+      setRemoteSeeds({});
+      setRemoteLoading(false);
+      setRemoteError(null);
+      setViewerRank(null);
+      return;
+    }
+    const pre = preloadRef.current;
+    if (pre) {
+      setRemoteOwned(new Set(pre.ownedIds));
+      setRemoteSeeds(pre.seeds);
+      setRemoteParagons(pre.paragons);
+      setViewerRank(pre.rank);
       setRemoteLoading(false);
       setRemoteError(null);
       return;
@@ -194,8 +232,9 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     void Promise.all([
       fetchPlayerCardCopies(viewer.userId),
       fetchPlayerParagons(viewer.userId),
+      fetchLeaderboardRank(viewer.userId),
     ])
-      .then(([copies, nextParagons]) => {
+      .then(([copies, nextParagons, rank]) => {
         if (cancelled) return;
         setRemoteOwned(new Set(copies.map((row) => row.cardId)));
         setRemoteSeeds(
@@ -206,6 +245,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           ),
         );
         setRemoteParagons(nextParagons);
+        setViewerRank(rank);
         setRemoteLoading(false);
       })
       .catch((err: unknown) => {
@@ -218,20 +258,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         setRemoteParagons({});
         setRemoteLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [viewer?.userId]);
-
-  useEffect(() => {
-    if (!viewer?.userId) {
-      setViewerRank(null);
-      return;
-    }
-    let cancelled = false;
-    void fetchLeaderboardRank(viewer.userId).then((rank) => {
-      if (!cancelled) setViewerRank(rank);
-    });
     return () => {
       cancelled = true;
     };
@@ -526,30 +552,9 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   if (view.kind === "towers") {
     if (isRemote && remoteLoading) {
       return (
-        <div
-          className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
-          style={chromeOn ? chromeStyle : undefined}
-        >
+        <div className="card-lab">
           <div className="card-lab__atmosphere" aria-hidden="true" />
-          <header className="card-lab__header">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={onBack}
-            >
-              ← Leaderboard
-            </button>
-            <div className="card-lab__titles">
-              <p className="eyebrow">Collection</p>
-              <h1>{ownerLabel}</h1>
-              <PlayerBadges
-                rank={viewerRank}
-                badgeIds={viewer?.badgeIds}
-                size="lg"
-              />
-              <p className="card-lab__blurb">Loading cards…</p>
-            </div>
-          </header>
+          <LoadingDots label="Loading collection" className="card-lab__loading" />
         </div>
       );
     }

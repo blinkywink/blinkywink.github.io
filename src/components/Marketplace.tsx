@@ -1,20 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
+import { towers as baseTowers } from "../data/towers";
 import { cardSpecById, matchesCardQuery } from "../lib/cardCatalog";
 import {
-  fetchMarketplaceListings,
+  fetchMarketplaceListingsPage,
+  fetchMyMarketplaceListings,
   listCardForSale,
+  MARKET_PAGE_SIZE,
   type MarketplaceListing,
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
 import { suggestedParagonValue } from "../lib/paragonProgress";
 import { userCollectionPath, listingPath } from "../lib/routes";
-import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
+import { LoadingDots } from "./LoadingDots";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
+import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
 
 type Tab = "browse" | "sell" | "mine";
@@ -64,7 +68,10 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const { owned, paragons, refresh: refreshCards } = useCardCollection();
   const [tab, setTab] = useState<Tab>("browse");
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
+  const [myListings, setMyListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -74,95 +81,151 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [sellStep, setSellStep] = useState<"pick" | "price">("pick");
   const [priceInput, setPriceInput] = useState("100");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const loadingMoreRef = useRef(false);
 
-  const load = useCallback(async (force = false) => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    const q = query.trim();
+    const timer = window.setTimeout(() => setDebouncedQuery(q), 220);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  const load = useCallback(
+    async (force = false) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const rows = await fetchMarketplaceListingsPage({
+          offset: 0,
+          force,
+          query: debouncedQuery,
+          tower: towerFilter,
+          sort: sortKey,
+        });
+        setListings(rows);
+        offsetRef.current = rows.length;
+        setHasMore(rows.length === MARKET_PAGE_SIZE);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load market.");
+        setListings([]);
+        offsetRef.current = 0;
+        setHasMore(false);
+      }
+      setLoading(false);
+    },
+    [debouncedQuery, towerFilter, sortKey],
+  );
+
+  const loadMore = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
     try {
-      const rows = await fetchMarketplaceListings({ force });
-      setListings(rows);
+      const page = await fetchMarketplaceListingsPage({
+        offset: offsetRef.current,
+        query: debouncedQuery,
+        tower: towerFilter,
+        sort: sortKey,
+      });
+      setListings((prev) => {
+        const seen = new Set(prev.map((row) => row.id));
+        const extra = page.filter((row) => !seen.has(row.id));
+        return extra.length ? [...prev, ...extra] : prev;
+      });
+      offsetRef.current += page.length;
+      setHasMore(page.length === MARKET_PAGE_SIZE);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load market.");
-      setListings([]);
+      setError(err instanceof Error ? err.message : "Failed to load more.");
+      setHasMore(false);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
     }
-    setLoading(false);
-  }, []);
+  }, [hasMore, debouncedQuery, towerFilter, sortKey]);
+
+  const loadMine = useCallback(async () => {
+    if (!user?.id) {
+      setMyListings([]);
+      return;
+    }
+    try {
+      setMyListings(await fetchMyMarketplaceListings(user.id));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load your listings.",
+      );
+      setMyListings([]);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const towersForSale = useMemo(() => {
-    const names = new Set<string>();
-    for (const row of listings) {
-      const card = cardSpecById(row.cardId);
-      if (card?.tower) names.add(card.tower);
+  useEffect(() => {
+    if (tab === "mine") void loadMine();
+  }, [tab, loadMine]);
+
+  useEffect(() => {
+    if (tab !== "browse" || loading || !hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      void loadMore();
+      return;
     }
-    return [...names].sort((a, b) => a.localeCompare(b));
-  }, [listings]);
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) void loadMore();
+      },
+      { rootMargin: "640px 0px", threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [tab, loading, hasMore, loadMore, listings.length]);
+
+  const towersForSale = useMemo(
+    () => baseTowers.map((t) => t.name).sort((a, b) => a.localeCompare(b)),
+    [],
+  );
 
   const browsedListings = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    // Skip other sellers' listings for cards you already own — keep your own.
     let rows = listings.filter(
       (row) => !owned.has(row.cardId) || row.sellerId === user?.id,
     );
 
-    if (towerFilter !== "all") {
-      rows = rows.filter((row) => cardSpecById(row.cardId)?.tower === towerFilter);
+    if (sortKey !== "tier-desc" && sortKey !== "tier-asc" && sortKey !== "tower") {
+      return rows;
     }
 
-    if (q) {
-      rows = rows.filter((row) => {
-        if (row.sellerUsername.toLowerCase().includes(q)) return true;
-        const card = cardSpecById(row.cardId);
-        if (!card) return row.cardId.toLowerCase().includes(q);
-        return matchesCardQuery(card, q);
-      });
-    }
-
-    const sorted = rows.slice().sort((a, b) => {
+    return rows.slice().sort((a, b) => {
       const ca = cardSpecById(a.cardId);
       const cb = cardSpecById(b.cardId);
-      switch (sortKey) {
-        case "price-asc":
-          return a.price - b.price || Date.parse(b.createdAt) - Date.parse(a.createdAt);
-        case "price-desc":
-          return b.price - a.price || Date.parse(b.createdAt) - Date.parse(a.createdAt);
-        case "tier-desc":
-          return (
-            listingTier(cb) - listingTier(ca) ||
-            a.price - b.price ||
-            Date.parse(b.createdAt) - Date.parse(a.createdAt)
-          );
-        case "tier-asc":
-          return (
-            listingTier(ca) - listingTier(cb) ||
-            a.price - b.price ||
-            Date.parse(b.createdAt) - Date.parse(a.createdAt)
-          );
-        case "tower": {
-          const ta = ca?.tower ?? "";
-          const tb = cb?.tower ?? "";
-          return (
-            ta.localeCompare(tb) ||
-            listingTier(cb) - listingTier(ca) ||
-            a.price - b.price
-          );
-        }
-        case "newest":
-        default:
-          return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      if (sortKey === "tier-desc") {
+        return (
+          listingTier(cb) - listingTier(ca) ||
+          a.price - b.price ||
+          Date.parse(b.createdAt) - Date.parse(a.createdAt)
+        );
       }
+      if (sortKey === "tier-asc") {
+        return (
+          listingTier(ca) - listingTier(cb) ||
+          a.price - b.price ||
+          Date.parse(b.createdAt) - Date.parse(a.createdAt)
+        );
+      }
+      const ta = ca?.tower ?? "";
+      const tb = cb?.tower ?? "";
+      return (
+        ta.localeCompare(tb) ||
+        listingTier(cb) - listingTier(ca) ||
+        a.price - b.price
+      );
     });
-
-    return sorted;
-  }, [listings, query, towerFilter, sortKey, owned, user?.id]);
-
-  const myListings = useMemo(() => {
-    const mine = user ? listings.filter((l) => l.sellerId === user.id) : [];
-    return mine.slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-  }, [listings, user]);
+  }, [listings, sortKey, owned, user?.id]);
 
   const sellCardId = [...selected][0] ?? null;
   const sellCard = sellCardId ? cardSpecById(sellCardId) : null;
@@ -195,11 +258,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setSelected(new Set());
       setSellStep("pick");
       setStatus(`Listed for ${price.toLocaleString()} Cash.`);
-      await Promise.all([refreshCards(), refreshProfile(), load()]);
+      await Promise.all([refreshCards(), refreshProfile(), load(true), loadMine()]);
       setTab("mine");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not list card.");
-      await Promise.all([refreshCards(), load()]);
+      await Promise.all([refreshCards(), load(true)]);
     }
     setBusyId(null);
   };
@@ -368,8 +431,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm market-refresh"
-                  onClick={() => void load(true)}
-                  disabled={loading}
+                    onClick={() => {
+                      void load(true);
+                      if (tab === "mine") void loadMine();
+                    }}
+                    disabled={loading}
                 >
                   Refresh
                 </button>
@@ -378,8 +444,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
               <button
                 type="button"
                 className="btn btn--ghost btn--sm market-refresh"
-                onClick={() => void load(true)}
-                disabled={loading}
+                    onClick={() => {
+                      void load(true);
+                      if (tab === "mine") void loadMine();
+                    }}
+                    disabled={loading}
               >
                 Refresh
               </button>
@@ -388,12 +457,14 @@ export function Marketplace({ onBack: _onBack }: Props) {
         ) : null}
 
         {loading ? (
-          <p className="market-empty">Loading…</p>
+          <LoadingDots label="Loading marketplace" />
         ) : tab === "browse" ? (
           browsedListings.length === 0 ? (
             <p className="market-empty">
               {listings.length === 0
-                ? "No listings yet. Be the first to sell."
+                ? debouncedQuery
+                  ? "No listings match that search."
+                  : "No listings yet. Be the first to sell."
                 : "No listings match that search."}
             </p>
           ) : (
@@ -403,13 +474,21 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   {sortKey === "newest" ? "Recently posted" : "Listings"}
                 </h3>
                 <span>
-                  {browsedListings.length} for sale
+                  {browsedListings.length}
+                  {hasMore ? "+" : ""} for sale
                   {towerFilter !== "all" ? ` · ${towerFilter}` : ""}
                 </span>
               </div>
               <div className="market-grid">
                 {browsedListings.map((row) => renderListing(row, "browse"))}
               </div>
+              {hasMore ? (
+                <div ref={sentinelRef} className="market-more">
+                  {loadingMore ? (
+                    <LoadingDots label="Loading more listings" />
+                  ) : null}
+                </div>
+              ) : null}
             </>
           )
         ) : tab === "mine" ? (

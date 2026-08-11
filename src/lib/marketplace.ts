@@ -5,8 +5,11 @@ import {
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "./avatar";
+import { allCardSpecs, matchesCardQuery } from "./cardCatalog";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
 import { pingInbox } from "./trades";
+
+export const MARKET_PAGE_SIZE = 24;
 
 export type MarketplaceListing = {
   id: string;
@@ -119,40 +122,176 @@ const LISTING_COLS =
   "id, seller_id, card_id, price, created_at, status, paragon_degree, paragon_xp, visual_seed";
 const LISTING_COLS_FALLBACK = "id, seller_id, card_id, price, created_at, status";
 
-/** Active listings newest-first. */
+export type MarketSortKey =
+  | "newest"
+  | "price-asc"
+  | "price-desc"
+  | "tier-desc"
+  | "tier-asc"
+  | "tower";
+
+export type MarketListQuery = {
+  offset?: number;
+  limit?: number;
+  force?: boolean;
+  query?: string;
+  tower?: string;
+  sort?: MarketSortKey;
+};
+
+function escapeIlike(raw: string): string {
+  return raw.replace(/[%_]/g, "");
+}
+
+async function fetchListingRows(
+  cols: string,
+  opts: {
+    offset: number;
+    limit: number;
+    query: string;
+    tower: string;
+    sort: MarketSortKey;
+    sellerId?: string;
+  },
+) {
+  let req = supabase
+    .from("marketplace_listings")
+    .select(cols)
+    .eq("status", "active");
+
+  if (opts.sellerId) {
+    req = req.eq("seller_id", opts.sellerId);
+  }
+
+  if (opts.tower && opts.tower !== "all") {
+    const ids = allCardSpecs()
+      .filter((card) => card.tower === opts.tower)
+      .map((card) => card.id);
+    if (!ids.length) return { data: [] as ListingRow[], error: null };
+    req = req.in("card_id", ids);
+  }
+
+  const q = opts.query.trim();
+  if (q.length >= 2) {
+    const needle = q.toLowerCase();
+    const cardIds = allCardSpecs()
+      .filter((card) => matchesCardQuery(card, needle))
+      .map((card) => card.id);
+    const { data: sellers } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", `%${escapeIlike(q)}%`)
+      .limit(40);
+    const sellerIds = (sellers ?? []).map((row) => String(row.id));
+    const ors = [`card_id.ilike.%${escapeIlike(q)}%`];
+    if (sellerIds.length) {
+      ors.push(`seller_id.in.(${sellerIds.join(",")})`);
+    }
+    if (cardIds.length > 0 && cardIds.length <= 80) {
+      ors.push(`card_id.in.(${cardIds.join(",")})`);
+    }
+    req = req.or(ors.join(","));
+  }
+
+  if (opts.sort === "price-asc") {
+    req = req
+      .order("price", { ascending: true })
+      .order("created_at", { ascending: false });
+  } else if (opts.sort === "price-desc") {
+    req = req
+      .order("price", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else {
+    req = req.order("created_at", { ascending: false });
+  }
+
+  return req.range(opts.offset, opts.offset + opts.limit - 1);
+}
+
+async function hydrateListings(rows: ListingRow[]): Promise<MarketplaceListing[]> {
+  const profiles = await profilesByIds([
+    ...new Set(rows.map((r) => String(r.seller_id))),
+  ]);
+  return rows.map((r) => mapListing(r, profiles));
+}
+
+/** One page of active listings. Search/filter hit the server, not just loaded rows. */
+export async function fetchMarketplaceListingsPage(
+  opts?: MarketListQuery,
+): Promise<MarketplaceListing[]> {
+  const offset = Math.max(0, Math.floor(opts?.offset ?? 0));
+  const limit = Math.min(100, Math.max(1, opts?.limit ?? MARKET_PAGE_SIZE));
+  const query = String(opts?.query ?? "").trim();
+  const tower = String(opts?.tower ?? "all");
+  const sort = opts?.sort ?? "newest";
+  const key = `market:listings:${offset}:${limit}:${tower}:${sort}:${query.toLowerCase()}`;
+
+  return cached(
+    key,
+    CacheTtl.listings,
+    async () => {
+      const first = await fetchListingRows(LISTING_COLS, {
+        offset,
+        limit,
+        query,
+        tower,
+        sort,
+      });
+      const result = first.error
+        ? await fetchListingRows(LISTING_COLS_FALLBACK, {
+            offset,
+            limit,
+            query,
+            tower,
+            sort,
+          })
+        : first;
+      if (result.error) throw new Error(result.error.message);
+      return hydrateListings((result.data ?? []) as ListingRow[]);
+    },
+    { force: opts?.force },
+  );
+}
+
+/** Active listings newest-first (first page). */
 export async function fetchMarketplaceListings(
   opts?: { force?: boolean },
 ): Promise<MarketplaceListing[]> {
-  return cached(
-    "market:listings",
-    CacheTtl.listings,
-    async () => {
-      const first = await supabase
-        .from("marketplace_listings")
-        .select(LISTING_COLS)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(200);
+  return fetchMarketplaceListingsPage({
+    offset: 0,
+    limit: MARKET_PAGE_SIZE,
+    force: opts?.force,
+  });
+}
 
-      const result = first.error
-        ? await supabase
-            .from("marketplace_listings")
-            .select(LISTING_COLS_FALLBACK)
-            .eq("status", "active")
-            .order("created_at", { ascending: false })
-            .limit(200)
-        : first;
-
-      if (result.error) throw new Error(result.error.message);
-
-      const rows = (result.data ?? []) as ListingRow[];
-      const profiles = await profilesByIds([
-        ...new Set(rows.map((r) => String(r.seller_id))),
-      ]);
-      return rows.map((r) => mapListing(r, profiles));
-    },
-    opts,
-  );
+/** The signed-in player's active listings. */
+export async function fetchMyMarketplaceListings(
+  sellerId: string,
+): Promise<MarketplaceListing[]> {
+  const id = String(sellerId ?? "").trim();
+  if (!id) return [];
+  return cached(`market:listings:mine:${id}`, CacheTtl.listings, async () => {
+    const first = await fetchListingRows(LISTING_COLS, {
+      offset: 0,
+      limit: 100,
+      query: "",
+      tower: "all",
+      sort: "newest",
+      sellerId: id,
+    });
+    const result = first.error
+      ? await fetchListingRows(LISTING_COLS_FALLBACK, {
+          offset: 0,
+          limit: 100,
+          query: "",
+          tower: "all",
+          sort: "newest",
+          sellerId: id,
+        })
+      : first;
+    if (result.error) throw new Error(result.error.message);
+    return hydrateListings((result.data ?? []) as ListingRow[]);
+  });
 }
 
 /** One listing (active preferred; sellers can still open cancelled/sold of theirs). */

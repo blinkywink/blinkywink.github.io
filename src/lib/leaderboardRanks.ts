@@ -69,11 +69,40 @@ export function medalForRank(
   return MEDAL_TIERS.find((tier) => rank <= tier.max) ?? null;
 }
 
-export async function fetchTopLeaderboard(
-  force = false,
+export const LEADERBOARD_PAGE_SIZE = 50;
+
+function mapLeaderboardRows(
+  rows: readonly Record<string, unknown>[],
+  offset: number,
+): LeaderboardEntry[] {
+  return rows.map((r, i) => ({
+    id: String(r.id),
+    username: String(r.username ?? "Player"),
+    coins_earned: Number(r.coins_earned) || 0,
+    avatar: normalizeAvatarCrop({
+      cardId: r.avatar_card_id ?? null,
+      zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
+      x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
+      y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+    }),
+    accentColor: normalizeAccentColor(r.accent_color),
+    rank: offset + i + 1,
+    badgeIds: normalizeBadgeIds(r.profile_badges),
+  }));
+}
+
+/** One page of the lifetime Cash board, richest first. */
+export async function fetchLeaderboardPage(
+  offset = 0,
+  opts?: { force?: boolean; limit?: number },
 ): Promise<LeaderboardEntry[]> {
+  const start = Math.max(0, Math.floor(offset));
+  const limit = Math.min(
+    100,
+    Math.max(1, opts?.limit ?? LEADERBOARD_PAGE_SIZE),
+  );
   return cached(
-    "leaderboard:top100",
+    `leaderboard:page:${start}:${limit}`,
     CacheTtl.leaderboard,
     async () => {
       const { data, error } = await supabase
@@ -82,36 +111,40 @@ export async function fetchTopLeaderboard(
           "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, profile_badges(badge_id)",
         )
         .order("coins_earned", { ascending: false })
-        .limit(100);
+        .range(start, start + limit - 1);
 
       if (error) throw new Error(error.message);
-      return (data ?? []).map((r, i) => ({
-        id: String(r.id),
-        username: String(r.username ?? "Player"),
-        coins_earned: Number(r.coins_earned) || 0,
-        avatar: normalizeAvatarCrop({
-          cardId: r.avatar_card_id ?? null,
-          zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
-          x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
-          y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
-        }),
-        accentColor: normalizeAccentColor(r.accent_color),
-        rank: i + 1,
-        badgeIds: normalizeBadgeIds(
-          (r as { profile_badges?: unknown }).profile_badges,
-        ),
-      }));
+      return mapLeaderboardRows((data ?? []) as Record<string, unknown>[], start);
     },
-    { force },
+    { force: opts?.force },
   );
+}
+
+export async function fetchTopLeaderboard(
+  force = false,
+): Promise<LeaderboardEntry[]> {
+  return fetchLeaderboardPage(0, { force, limit: LEADERBOARD_PAGE_SIZE });
 }
 
 export async function fetchLeaderboardRank(
   userId: string,
 ): Promise<number | null> {
+  const id = String(userId ?? "").trim();
+  if (!id) return null;
   try {
-    const rows = await fetchTopLeaderboard();
-    return rows.find((row) => row.id === userId)?.rank ?? null;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("coins_earned")
+      .eq("id", id)
+      .maybeSingle();
+    if (error || !data) return null;
+    const earned = Number(data.coins_earned) || 0;
+    const { count, error: countErr } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .gt("coins_earned", earned);
+    if (countErr) return null;
+    return (count ?? 0) + 1;
   } catch {
     return null;
   }

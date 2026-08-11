@@ -444,6 +444,48 @@ body:has(.zoomed-page) {
   color: rgba(240, 240, 244, 0.55);
 }
 
+.loading-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  margin: 0;
+  min-height: 7rem;
+}
+
+.loading-dots span {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: rgba(240, 240, 244, 0.72);
+  animation: loading-dot 1.05s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes loading-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-0.22rem);
+  }
+}
+
+.card-lab__loading {
+  min-height: min(70vh, 28rem);
+}
+
 .desktop-online-gate {
   position: fixed;
   inset: 0;
@@ -10735,6 +10777,16 @@ body:has(.zoomed-page) {
   color: #f07178;
 }
 
+.board-more {
+  min-height: 3.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.board-more .loading-dots {
+  min-height: 3.5rem;
+}
+
 .board-list {
   list-style: none;
   margin: 0;
@@ -11265,6 +11317,16 @@ body:has(.zoomed-page) {
   margin: 0.5rem 0;
   color: rgba(240, 240, 244, 0.55);
   font-weight: 700;
+}
+
+.market-more {
+  min-height: 3.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.market-more .loading-dots {
+  min-height: 3.5rem;
 }
 
 .market-grid {

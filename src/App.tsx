@@ -16,6 +16,7 @@ import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CashAmount } from "./components/CurrencyChip";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
+import { LoadingDots } from "./components/LoadingDots";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
@@ -42,7 +43,7 @@ import {
   pickRewardTowerPackChoices,
   type PackDef,
 } from "./lib/packTheme";
-import { fetchProfileByUsername } from "./lib/profiles";
+import { fetchPublicPlayerPage } from "./lib/playerPage";
 import { recordHeroClear } from "./lib/profileHeroes";
 import { heroById } from "./data/heroes";
 import {
@@ -53,7 +54,6 @@ import {
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
-import type { AvatarCrop } from "./lib/avatar";
 
 const ZoomedGame = lazy(() =>
   import("./games/zoomed").then((m) => ({ default: m.ZoomedGame })),
@@ -142,17 +142,9 @@ function CollectionPage() {
 function UserCollectionPage() {
   const { username = "" } = useParams();
   const navigate = useNavigate();
-  const [viewer, setViewer] = useState<{
-    userId: string;
-    username: string;
-    avatar: AvatarCrop;
-    showcaseCardIds: string[];
-    accentColor: string | null;
-    ownedHeroIds: string[];
-    equippedHeroId: string | null;
-    heroLevels: Record<string, number>;
-    badgeIds: string[];
-  } | null>(null);
+  const [page, setPage] = useState<Awaited<
+    ReturnType<typeof fetchPublicPlayerPage>
+  >>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -160,26 +152,16 @@ function UserCollectionPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setViewer(null);
-    void fetchProfileByUsername(username)
-      .then((profile) => {
+    setPage(null);
+    void fetchPublicPlayerPage(username)
+      .then((next) => {
         if (cancelled) return;
-        if (!profile) {
+        if (!next) {
           setError("Player not found.");
           setLoading(false);
           return;
         }
-        setViewer({
-          userId: profile.userId,
-          username: profile.username,
-          avatar: profile.avatar,
-          showcaseCardIds: profile.showcaseCardIds,
-          accentColor: profile.accentColor,
-          ownedHeroIds: profile.ownedHeroIds,
-          equippedHeroId: profile.equippedHeroId,
-          heroLevels: profile.heroLevels,
-          badgeIds: profile.badgeIds,
-        });
+        setPage(next);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -196,25 +178,12 @@ function UserCollectionPage() {
     return (
       <div className="card-lab">
         <div className="card-lab__atmosphere" aria-hidden="true" />
-        <header className="card-lab__header">
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => navigate(leaderboardPath())}
-          >
-            ← Leaderboard
-          </button>
-          <div className="card-lab__titles">
-            <p className="eyebrow">Collection</p>
-            <h1>{username || "Player"}</h1>
-            <p className="card-lab__blurb">Loading…</p>
-          </div>
-        </header>
+        <LoadingDots label="Loading player" className="card-lab__loading" />
       </div>
     );
   }
 
-  if (error || !viewer) {
+  if (error || !page) {
     return (
       <div className="card-lab">
         <div className="card-lab__atmosphere" aria-hidden="true" />
@@ -236,9 +205,26 @@ function UserCollectionPage() {
     );
   }
 
+  const { profile } = page;
   return (
     <CardLab
-      viewer={viewer}
+      viewer={{
+        userId: profile.userId,
+        username: profile.username,
+        avatar: profile.avatar,
+        showcaseCardIds: profile.showcaseCardIds,
+        accentColor: profile.accentColor,
+        ownedHeroIds: profile.ownedHeroIds,
+        equippedHeroId: profile.equippedHeroId,
+        heroLevels: profile.heroLevels,
+        badgeIds: profile.badgeIds,
+      }}
+      viewerCollection={{
+        ownedIds: page.ownedIds,
+        seeds: page.seeds,
+        paragons: page.paragons,
+        rank: page.rank,
+      }}
       onBack={() => navigate(leaderboardPath())}
     />
   );
