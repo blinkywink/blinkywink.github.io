@@ -52,7 +52,6 @@ import {
 } from "../lib/packSounds";
 import {
   collectionPath,
-  paragonLabPath,
   shopPath,
   userCollectionPath,
 } from "../lib/routes";
@@ -659,13 +658,6 @@ export function ProfilePage() {
               <Link to={collectionPath()}>My cards</Link>
               <span aria-hidden="true">·</span>
               <Link to={userCollectionPath(user.username)}>Public page</Link>
-              <Link
-                to={paragonLabPath()}
-                className="profile-lab-hit"
-                title="Paragon degree lab"
-              >
-                zz
-              </Link>
             </p>
           </div>
         </section>

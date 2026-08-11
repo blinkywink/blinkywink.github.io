@@ -242,13 +242,22 @@ export function resolveCategoryPackTheme(
   };
 }
 
+/** Force these towers into the featured row on a given UTC day. */
+const PINNED_DAILY_TOWERS: Record<string, string[]> = {
+  "2026-8-11": ["Skywarden"],
+};
+
 /** Deterministic “daily” tower picks (for store shelf later). */
 export function dailyTowerPicks(count = 3, dayKey = dayStamp()): string[] {
   const names = towers.map((t) => t.name);
   if (!names.length) return [];
+  const known = new Set(names);
+  const pinned = (PINNED_DAILY_TOWERS[dayKey] ?? []).filter((n) =>
+    known.has(n),
+  );
+  const bag = names.filter((n) => !pinned.includes(n));
   let seed = hashString(dayKey);
-  const bag = [...names];
-  const out: string[] = [];
+  const out = pinned.slice(0, count);
   while (out.length < count && bag.length) {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     const idx = seed % bag.length;

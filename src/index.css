@@ -12900,19 +12900,6 @@ button.trade-offer-card:hover:not(:disabled) {
   text-underline-offset: 0.15em;
 }
 
-.profile-lab-hit {
-  margin-left: 0.15rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(240, 240, 244, 0.14) !important;
-  text-decoration: none !important;
-}
-
-.profile-lab-hit:hover {
-  color: rgba(210, 0, 211, 0.7) !important;
-}
-
 /* PFP editor modal */
 .pfp-editor {
   position: fixed;
