@@ -23,6 +23,10 @@ import {
   resolveTowerPackTheme,
   type PackDef,
 } from "../lib/packTheme";
+import {
+  getRemoteFeaturedTowers,
+  subscribeRemoteFeatured,
+} from "../lib/remoteShop";
 import { isDesktopShell } from "../lib/desktopOnline";
 import {
   DESKTOP_MAC_DMG,
@@ -97,7 +101,15 @@ export function HomeHub() {
   const [topPlayers, setTopPlayers] = useState<
     Awaited<ReturnType<typeof fetchTopLeaderboard>>
   >([]);
-  const shopPeeks = useMemo(() => featuredShopPacks().slice(0, 3), []);
+  const [remoteTowers, setRemoteTowers] = useState(getRemoteFeaturedTowers);
+  useEffect(
+    () => subscribeRemoteFeatured(() => setRemoteTowers(getRemoteFeaturedTowers())),
+    [],
+  );
+  const shopPeeks = useMemo(
+    () => featuredShopPacks(undefined, 0, remoteTowers ?? undefined).slice(0, 3),
+    [remoteTowers],
+  );
   const cardPeeks = useMemo(
     () =>
       CARD_PEEK_IDS.map((id) => cardSpecById(id)).filter(

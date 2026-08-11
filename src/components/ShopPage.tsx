@@ -8,6 +8,10 @@ import {
   packPrice,
   type PackDef,
 } from "../lib/packTheme";
+import {
+  getRemoteFeaturedTowers,
+  subscribeRemoteFeatured,
+} from "../lib/remoteShop";
 import type { MonkeyCardSpec } from "../lib/pathCombos";
 import { BoosterPack } from "./BoosterPack";
 import { DailyClaimButton } from "./DailyClaimButton";
@@ -48,7 +52,14 @@ function useShopClock() {
 export function ShopPage({ onPackFinished }: Props) {
   const [activePack, setActivePack] = useState<PackDef | null>(null);
   const { remaining, shopDay } = useShopClock();
-  const featured = useMemo(() => featuredShopPacks(shopDay), [shopDay]);
+  const [remoteTowers, setRemoteTowers] = useState(getRemoteFeaturedTowers);
+  useEffect(() => subscribeRemoteFeatured(() => {
+    setRemoteTowers(getRemoteFeaturedTowers());
+  }), []);
+  const featured = useMemo(
+    () => featuredShopPacks(shopDay, 0, remoteTowers ?? undefined),
+    [shopDay, remoteTowers],
+  );
   const categories = useMemo(() => allCategoryPacks(), []);
 
   useEffect(() => {

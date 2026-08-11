@@ -14,6 +14,7 @@ import {
   readDesktopVersion,
   releaseTag,
 } from "./desktop-version.ts";
+import { dailyTowerPicks, dayStamp } from "../src/lib/packTheme.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_JSON = path.join(ROOT, "public", "desktop-latest.json");
@@ -162,10 +163,15 @@ if (winExe) {
   console.log(`Windows updater: ${path.basename(winExe)}`);
 }
 
+const shopDay = dayStamp();
+const featuredTowers = dailyTowerPicks(3, shopDay);
+
 const manifest = {
   version,
   notes: `blinkywink.co desktop ${version}`,
   pub_date: new Date().toISOString(),
+  shopDay,
+  featuredTowers,
   platforms,
 };
 
@@ -174,9 +180,21 @@ const latestJson = path.join(STAGE, "latest.json");
 fs.copyFileSync(OUT_JSON, latestJson);
 staged.push(latestJson);
 
+const configPath = path.join(ROOT, "public", "desktop-config.json");
+const config = JSON.parse(fs.readFileSync(configPath, "utf8")) as Record<
+  string,
+  unknown
+>;
+config.minDesktopVersion = version;
+config.version = version;
+config.shopDay = shopDay;
+config.featuredTowers = featuredTowers;
+config.message = "This desktop app is out of date. Update to keep playing.";
+fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+
 const notes = `Desktop ${version}
 
-The app checks for this release on launch and installs it after a restart.`;
+The app installs this update on the next check (launch, page change, or shop).`;
 
 if (releaseExists(tag)) {
   gh(["release", "upload", tag, "--repo", REPO, "--clobber", ...staged]);

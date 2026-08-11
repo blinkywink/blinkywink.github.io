@@ -173,9 +173,12 @@ export function allCategoryPacks(): PackDef[] {
 export function featuredShopPacks(
   dayKey = dayStamp(),
   rerollSalt = 0,
+  towersOverride?: string[],
 ): PackDef[] {
   const key = rerollSalt > 0 ? `${dayKey}:r${rerollSalt}` : dayKey;
-  return [btd6Pack(), ...dailyTowerPicks(3, key).map(towerPack)];
+  const names =
+    towersOverride?.length ? towersOverride.slice(0, 3) : dailyTowerPicks(3, key);
+  return [btd6Pack(), ...names.map(towerPack)];
 }
 
 export function shortTowerName(tower: string): string {

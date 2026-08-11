@@ -12,6 +12,9 @@ export type DesktopRemoteConfig = {
   message: string;
   downloadMac: string;
   downloadWindows: string;
+  version?: string;
+  shopDay?: string;
+  featuredTowers?: string[];
 };
 
 const DEFAULT_CONFIG: DesktopRemoteConfig = {
@@ -43,11 +46,17 @@ function parseDesktopConfig(raw: string): DesktopRemoteConfig | null {
     const data = JSON.parse(raw) as Partial<DesktopRemoteConfig>;
     const minDesktopVersion = String(data.minDesktopVersion ?? "").trim();
     if (!minDesktopVersion) return null;
+    const featuredTowers = Array.isArray(data.featuredTowers)
+      ? data.featuredTowers.map((n) => String(n).trim()).filter(Boolean)
+      : undefined;
     return {
       minDesktopVersion,
       message: String(data.message ?? DEFAULT_CONFIG.message),
       downloadMac: String(data.downloadMac ?? DEFAULT_CONFIG.downloadMac),
       downloadWindows: String(data.downloadWindows ?? DEFAULT_CONFIG.downloadWindows),
+      version: data.version ? String(data.version) : undefined,
+      shopDay: data.shopDay ? String(data.shopDay) : undefined,
+      featuredTowers: featuredTowers?.length ? featuredTowers : undefined,
     };
   } catch {
     return null;
@@ -63,4 +72,55 @@ export async function fetchDesktopRemoteConfig(): Promise<DesktopRemoteConfig | 
   } catch {
     return null;
   }
+}
+
+const LATEST_URLS = [
+  `${DESKTOP_RELEASE_TAG_BASE}/latest.json`,
+  "https://blinkywink.github.io/desktop-latest.json",
+];
+
+/** Updater manifest on GitHub Releases / the site (version + today's shop). */
+export async function fetchDesktopLatestManifest(): Promise<DesktopRemoteConfig | null> {
+  for (const base of LATEST_URLS) {
+    try {
+      const res = await fetch(`${base}?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) continue;
+      const data = (await res.json()) as Partial<DesktopRemoteConfig> & {
+        version?: string;
+      };
+      const version = String(data.version ?? "").trim();
+      if (!version) continue;
+      const featuredTowers = Array.isArray(data.featuredTowers)
+        ? data.featuredTowers.map((n) => String(n).trim()).filter(Boolean)
+        : undefined;
+      return {
+        ...DEFAULT_CONFIG,
+        minDesktopVersion: version,
+        version,
+        shopDay: data.shopDay ? String(data.shopDay) : undefined,
+        featuredTowers: featuredTowers?.length ? featuredTowers : undefined,
+      };
+    } catch {
+      /* try next host */
+    }
+  }
+  return null;
+}
+
+export function mergeDesktopSignals(
+  ...parts: Array<DesktopRemoteConfig | null>
+): DesktopRemoteConfig | null {
+  const live = parts.filter((p): p is DesktopRemoteConfig => Boolean(p));
+  if (!live.length) return null;
+  const base = { ...DEFAULT_CONFIG };
+  for (const part of live) {
+    if (part.minDesktopVersion) base.minDesktopVersion = part.minDesktopVersion;
+    if (part.message) base.message = part.message;
+    if (part.downloadMac) base.downloadMac = part.downloadMac;
+    if (part.downloadWindows) base.downloadWindows = part.downloadWindows;
+    if (part.version) base.version = part.version;
+    if (part.shopDay) base.shopDay = part.shopDay;
+    if (part.featuredTowers?.length) base.featuredTowers = part.featuredTowers;
+  }
+  return base;
 }

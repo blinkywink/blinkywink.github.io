@@ -1,120 +1,101 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { isDesktopShell } from "../lib/desktopOnline";
 import {
   DESKTOP_MAC_DMG,
   DESKTOP_WINDOWS_SETUP,
+  fetchDesktopLatestManifest,
   fetchDesktopRemoteConfig,
   isOlderVersion,
+  mergeDesktopSignals,
   type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
+import { dailyTowerPicks, dayStamp } from "../lib/packTheme";
+import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
 
-type GateStatus =
-  | "idle"
-  | "downloading"
-  | "ready"
-  | "required"
-  | "blocked"
-  | "error";
+type GateStatus = "idle" | "updating" | "blocked";
+
+const RECHECK_MS = 90_000;
+
+function sameTowers(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((name, i) => name === b[i]);
+}
+
+function shopLooksStale(remote: DesktopRemoteConfig | null): boolean {
+  if (!remote?.featuredTowers?.length || !remote.shopDay) return false;
+  const today = dayStamp();
+  if (remote.shopDay !== today) return false;
+  return !sameTowers(dailyTowerPicks(3, today), remote.featuredTowers);
+}
 
 export function DesktopUpdateGate() {
+  const { pathname } = useLocation();
   const [status, setStatus] = useState<GateStatus>("idle");
-  const [required, setRequired] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Updating");
   const [progress, setProgress] = useState<number | null>(null);
   const [config, setConfig] = useState<DesktopRemoteConfig | null>(null);
-  const [targetVersion, setTargetVersion] = useState("");
-  const updateRef = useRef<{
-    install: () => Promise<void>;
-    close: () => Promise<void>;
-  } | null>(null);
-
-  const requiredRef = useRef(false);
-  requiredRef.current = required;
-
-  const applyRestart = useCallback(async () => {
-    const update = updateRef.current;
-    if (!update) return;
-    const must = requiredRef.current;
-    setStatus(must ? "required" : "downloading");
-    setMessage(
-      targetVersion
-        ? `Restarting into ${targetVersion}…`
-        : "Restarting to finish the update…",
-    );
-    try {
-      await update.install();
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
-    } catch (err) {
-      console.warn("Desktop update restart failed", err);
-      setStatus(must ? "blocked" : "error");
-      setMessage(
-        must
-          ? "Could not finish the update. Download the latest app below."
-          : "Could not restart into the update. You can keep playing.",
-      );
-    }
-  }, [targetVersion]);
+  const busyRef = useRef(false);
+  const installingRef = useRef(false);
 
   const run = useCallback(async () => {
-    if (!isDesktopShell()) return;
+    if (!isDesktopShell() || busyRef.current || installingRef.current) return;
+    busyRef.current = true;
 
-    setStatus("idle");
-    setProgress(null);
-
-    const [{ getVersion }, { check }, remote] = await Promise.all([
-      import("@tauri-apps/api/app"),
-      import("@tauri-apps/plugin-updater"),
-      fetchDesktopRemoteConfig(),
-    ]);
-
-    const current = await getVersion();
-    const mustUpdate = remote
-      ? isOlderVersion(current, remote.minDesktopVersion)
-      : false;
-
-    setConfig(remote);
-    setRequired(mustUpdate);
-    if (mustUpdate) {
-      setMessage(
-        remote?.message ??
-          "This desktop app is out of date. Update to keep playing.",
-      );
-    }
-
-    let update: Awaited<ReturnType<typeof check>> = null;
     try {
-      update = await check({ timeout: 15_000 });
-    } catch (err) {
-      if (mustUpdate) {
-        setStatus("blocked");
-        setMessage(
-          remote?.message ??
-            "This desktop app is out of date. Download the latest version to keep playing.",
-        );
+      const [{ getVersion }, { check }, remoteCfg, latest] = await Promise.all([
+        import("@tauri-apps/api/app"),
+        import("@tauri-apps/plugin-updater"),
+        fetchDesktopRemoteConfig(),
+        fetchDesktopLatestManifest(),
+      ]);
+
+      const remote = mergeDesktopSignals(remoteCfg, latest);
+      setConfig(remote);
+      if (remote?.featuredTowers?.length) {
+        applyRemoteFeaturedTowers(remote.featuredTowers);
+      }
+
+      const current = await getVersion();
+      const shopStale = shopLooksStale(remote);
+      const versionBehind = Boolean(
+        remote &&
+          ((remote.version && isOlderVersion(current, remote.version)) ||
+            isOlderVersion(current, remote.minDesktopVersion)),
+      );
+
+      let update: Awaited<ReturnType<typeof check>> = null;
+      try {
+        update = await check({ timeout: 15_000 });
+      } catch (err) {
+        if (versionBehind || shopStale) {
+          setStatus("blocked");
+          setMessage("Could not reach the update server. Try again.");
+        } else {
+          console.warn("Desktop update check failed", err);
+        }
         return;
       }
-      console.warn("Desktop update check failed", err);
-      return;
-    }
 
-    if (!update) {
-      if (mustUpdate) setStatus("blocked");
-      return;
-    }
+      if (!update) {
+        if (versionBehind || shopStale) {
+          setStatus("blocked");
+          setMessage(
+            shopStale
+              ? "The shop changed. Download the latest app to keep playing."
+              : (remote?.message ??
+                "This desktop app is out of date. Download the latest version."),
+          );
+        }
+        return;
+      }
 
-    updateRef.current = update;
-    setTargetVersion(update.version);
-    setStatus(mustUpdate ? "required" : "downloading");
-    setMessage(
-      mustUpdate
-        ? `Version ${current} is no longer supported. Installing ${update.version}…`
-        : `Downloading update ${update.version}…`,
-    );
+      installingRef.current = true;
+      setStatus("updating");
+      setMessage("Updating");
+      setProgress(null);
 
-    let downloaded = 0;
-    let total = 0;
-    try {
+      let downloaded = 0;
+      let total = 0;
       await update.download((event) => {
         if (event.event === "Started") {
           total = event.data.contentLength ?? 0;
@@ -127,32 +108,28 @@ export function DesktopUpdateGate() {
           setProgress(100);
         }
       });
-      if (mustUpdate) {
-        setMessage(`Restarting into ${update.version}…`);
-        await update.install();
-        const { relaunch } = await import("@tauri-apps/plugin-process");
-        await relaunch();
-        return;
-      }
-      setStatus("ready");
-      setMessage(`Version ${update.version} is ready. Restart to update.`);
+      await update.install();
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      await relaunch();
     } catch (err) {
-      console.warn("Desktop update download failed", err);
-      setStatus(mustUpdate ? "blocked" : "error");
-      setMessage(
-        mustUpdate
-          ? "Could not install the update automatically. Download the latest app below."
-          : "Could not download the update. You can keep playing.",
-      );
+      console.warn("Desktop update failed", err);
+      installingRef.current = false;
+      setStatus("blocked");
+      setMessage("Could not finish the update. Download the latest app below.");
+    } finally {
+      busyRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     if (!isDesktopShell()) return;
     void run();
-    return () => {
-      void updateRef.current?.close();
-    };
+  }, [run, pathname]);
+
+  useEffect(() => {
+    if (!isDesktopShell()) return;
+    const id = window.setInterval(() => void run(), RECHECK_MS);
+    return () => window.clearInterval(id);
   }, [run]);
 
   if (!isDesktopShell() || status === "idle") return null;
@@ -160,62 +137,19 @@ export function DesktopUpdateGate() {
   const mac = config?.downloadMac ?? DESKTOP_MAC_DMG;
   const win = config?.downloadWindows ?? DESKTOP_WINDOWS_SETUP;
 
-  if (status === "ready" || (status === "downloading" && !required)) {
-    return (
-      <div className="desktop-update-toast" role="status">
-        <p>
-          {status === "ready"
-            ? message
-            : targetVersion
-              ? `Downloading ${targetVersion}…`
-              : "Checking for updates…"}
-        </p>
-        {status === "downloading" ? (
-          <div
-            className="desktop-update-toast__progress"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress == null ? undefined : Math.round(progress)}
-          >
-            <div
-              className="desktop-update-toast__bar"
-              style={{
-                width: progress == null ? "40%" : `${progress}%`,
-                opacity: progress == null ? 0.7 : 1,
-              }}
-            />
-          </div>
-        ) : (
-          <button type="button" className="btn btn--primary btn--sm" onClick={() => void applyRestart()}>
-            Restart
-          </button>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="desktop-online-gate" role="alertdialog" aria-modal="true">
       <div className="desktop-online-gate__card">
-        <h1>
-          {required || status === "blocked"
-            ? "Update required"
-            : "Updating blinkywink.co"}
-        </h1>
+        <h1>Updating</h1>
         <p>{message}</p>
-        {status === "required" ? (
+        {status === "updating" ? (
           <div
             className="desktop-online-gate__progress"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={progress == null ? undefined : Math.round(progress)}
-            aria-label={
-              targetVersion
-                ? `Downloading update ${targetVersion}`
-                : "Downloading update"
-            }
+            aria-label="Downloading update"
           >
             <div
               className="desktop-online-gate__progress-bar"
@@ -225,8 +159,7 @@ export function DesktopUpdateGate() {
               }}
             />
           </div>
-        ) : null}
-        {status === "blocked" || status === "error" ? (
+        ) : (
           <div className="desktop-online-gate__actions">
             <a
               href={mac}
@@ -247,13 +180,8 @@ export function DesktopUpdateGate() {
             <button type="button" className="btn" onClick={() => void run()}>
               Retry
             </button>
-            {!required ? (
-              <button type="button" className="btn" onClick={() => setStatus("idle")}>
-                Continue
-              </button>
-            ) : null}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

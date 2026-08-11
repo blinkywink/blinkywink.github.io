@@ -1,5 +1,8 @@
 {
-  "minDesktopVersion": "0.2.0",
+  "minDesktopVersion": "0.9.1",
+  "version": "0.9.1",
+  "shopDay": "2026-8-11",
+  "featuredTowers": ["Skywarden", "Ice Monkey", "Monkey Village"],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",
   "downloadWindows": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-windows-setup.exe"
