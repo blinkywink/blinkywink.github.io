@@ -26,6 +26,7 @@ import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { EquippedHeroPanel } from "./HeroCollectionStrip";
 import { HeroesLab } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
+import { VisibleCardGrid } from "./VisibleCardGrid";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
 import { PlayerBadges } from "./PlayerBadges";
@@ -812,7 +813,6 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tower, upgrade name, 0-2-5…"
               autoComplete="off"
-              autoFocus
             />
           </label>
           {sortToggle}
@@ -825,10 +825,12 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               : `No owned cards match “${query}”.`}
           </p>
         ) : (
-          <div className="card-lab__grid">
-            {ownedAllCards.map((card) => (
+          <VisibleCardGrid
+            items={ownedAllCards}
+            getKey={(card) => card.id}
+            resetKey={`${query}|${tierHighFirst ? "hi" : "lo"}|${ownedAllCards.length}`}
+            renderItem={(card) => (
               <MonkeyCard
-                key={card.id}
                 entity={card.entity}
                 pathLevels={card.pathLevels}
                 mode="preview"
@@ -841,8 +843,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   setFocused(card);
                 }}
               />
-            ))}
-          </div>
+            )}
+          />
         )}
 
         {focusPortal}
@@ -892,12 +894,15 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         {sortToggle}
       </div>
 
-      <div className="card-lab__grid">
-        {towerCards.map((card) => {
+      <VisibleCardGrid
+        items={towerCards}
+        getKey={(card) => card.id}
+        resetKey={`${view.name}|${tierHighFirst ? "hi" : "lo"}`}
+        pageSize={36}
+        renderItem={(card) => {
           const isOwned = owned.has(card.id);
           return (
             <MonkeyCard
-              key={card.id}
               entity={card.entity}
               pathLevels={card.pathLevels}
               mode="preview"
@@ -912,8 +917,8 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               }}
             />
           );
-        })}
-      </div>
+        }}
+      />
 
       <p className="card-lab__hint">
         {ownedInTower}/{towerCards.length} unlocked · Escape returns to tower

@@ -4133,6 +4133,23 @@ body:has(.zoomed-page) {
   overflow: visible;
 }
 
+.card-lab__cell {
+  content-visibility: auto;
+  contain-intrinsic-size: var(--card-preview-w) var(--card-preview-h);
+}
+
+.card-lab__more {
+  margin: 0 auto 1.4rem;
+  text-align: center;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--ink, #d7e4f5) 62%, transparent);
+}
+
+.card-lab__more--done {
+  opacity: 0.72;
+}
+
 /*
  * Each grid cell is exactly one card. Scale from top-left into the cell and
  * clip paint so shadows / 3D layers cannot cover neighbors.
@@ -5096,9 +5113,14 @@ body:has(.zoomed-page) {
   position: absolute;
   top: 0;
   right: min(0.28rem, 1.12cqi);
-  z-index: 10;
+  z-index: 12;
   width: min(6.658rem, 26.632cqi);
   pointer-events: none;
+  transform: translateZ(48px);
+}
+
+.monkey-card--preview .monkey-card__paragon-corner {
+  transform: none;
 }
 
 .monkey-card__paragon-ribbon {

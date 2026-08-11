@@ -1,6 +1,7 @@
 import { loadAppSession } from "../auth/session";
 import { getAccessToken, supabase } from "./supabase";
 import {
+  feedForCardId,
   freshParagonState,
   mergeParagonStates,
   normalizeParagonState,
@@ -66,11 +67,14 @@ function queuePendingFeeds(userId: string, feeds: PendingFeed[]): void {
 async function flushPendingFeeds(userId: string): Promise<boolean> {
   const pending = loadPendingFeeds(userId);
   if (!pending.length) return true;
-  const { error } = await supabase.rpc("apply_paragon_feeds", {
+  const { data, error } = await supabase.rpc("apply_paragon_feeds", {
     p_feeds: pending,
   });
   if (error) {
     console.warn("apply_paragon_feeds flush failed", error.message);
+    return false;
+  }
+  if (!Array.isArray(data) || data.length === 0) {
     return false;
   }
   savePendingFeeds(userId, []);
@@ -212,6 +216,96 @@ export async function applyParagonFeeds(
     });
   }
   return { map: next, results: results.length ? results : preview.results };
+}
+
+function resultsFromRpc(
+  data: unknown,
+  preview: { map: ParagonMap; results: ParagonApplyResult[] },
+): { map: ParagonMap; results: ParagonApplyResult[] } {
+  if (!Array.isArray(data) || data.length === 0) {
+    return preview;
+  }
+  const next = { ...preview.map };
+  const results: ParagonApplyResult[] = [];
+  for (const row of data as {
+    card_id?: string;
+    degree?: number;
+    xp?: number;
+    xp_gained?: number;
+    degrees_gained?: number;
+  }[]) {
+    const cardId = String(row.card_id ?? "").trim();
+    if (!cardId) continue;
+    const state = normalizeParagonState(row);
+    next[cardId] = state;
+    results.push({
+      cardId,
+      ...state,
+      xpGained: Number(row.xp_gained ?? 0),
+      degreesGained: Number(row.degrees_gained ?? 0),
+    });
+  }
+  return { map: next, results: results.length ? results : preview.results };
+}
+
+/** Persist XP from pulled/bought card ids. Server computes amounts. */
+export async function feedParagonsFromCards(
+  cardIds: string[],
+  newIds: string[],
+  ownedParagonIds: ReadonlySet<string>,
+  current: ParagonMap,
+): Promise<{ map: ParagonMap; results: ParagonApplyResult[] }> {
+  const ids = [...new Set(cardIds.map((id) => String(id).trim()).filter(Boolean))];
+  const unlocked = [...new Set(newIds.map((id) => String(id).trim()).filter(Boolean))];
+  if (!ids.length) return { map: current, results: [] };
+
+  const unlockedSet = new Set(unlocked);
+  const feeds: ParagonFeed[] = [];
+  for (const id of ids) {
+    if (id.endsWith("-paragon") && unlockedSet.has(id)) continue;
+    const feed = feedForCardId(id);
+    if (!feed || !ownedParagonIds.has(feed.paragonId)) continue;
+    feeds.push(feed);
+  }
+  const preview = previewParagonFeeds(feeds, ownedParagonIds, current);
+  if (!preview.results.length && !ids.length) return preview;
+
+  const app = loadAppSession();
+  if (!getAccessToken() || !app) {
+    if (!preview.results.length) return preview;
+    return { map: saveGuestParagons(preview.map), results: preview.results };
+  }
+
+  const pendingPayload = [...feeds.reduce((map, feed) => {
+    const prev = map.get(feed.paragonId) ?? { xp: 0, degrees: 0 };
+    map.set(feed.paragonId, {
+      xp: prev.xp + Math.max(0, feed.xp),
+      degrees: prev.degrees + Math.max(0, feed.degrees),
+    });
+    return map;
+  }, new Map<string, { xp: number; degrees: number }>())].map(
+    ([card_id, gain]) => ({ card_id, xp: gain.xp, degrees: gain.degrees }),
+  );
+
+  const { data, error } = await supabase.rpc("feed_paragons_from_cards", {
+    p_card_ids: ids,
+    p_new_ids: unlocked,
+  });
+  if (error) {
+    console.warn("feed_paragons_from_cards failed", error.message);
+    if (pendingPayload.length) queuePendingFeeds(app.userId, pendingPayload);
+    return preview.results.length ? preview : { map: current, results: [] };
+  }
+
+  await flushPendingFeeds(app.userId);
+  cacheInvalidate("player-paragons:");
+
+  if (!Array.isArray(data) || data.length === 0) {
+    if (pendingPayload.length) queuePendingFeeds(app.userId, pendingPayload);
+    return preview.results.length ? preview : { map: current, results: [] };
+  }
+
+  return resultsFromRpc(data, preview.results.length ? preview : { map: current, results: [] });
 }
 
 export async function importParagonProgress(map: ParagonMap): Promise<ParagonMap> {

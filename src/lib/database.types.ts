@@ -261,6 +261,16 @@ export type Database = {
           degrees_gained: number;
         }[];
       };
+      feed_paragons_from_cards: {
+        Args: { p_card_ids: string[]; p_new_ids?: string[] };
+        Returns: {
+          card_id: string;
+          degree: number;
+          xp: number;
+          xp_gained: number;
+          degrees_gained: number;
+        }[];
+      };
       import_paragon_progress: {
         Args: { p_rows: unknown };
         Returns: { card_id: string; degree: number; xp: number }[];

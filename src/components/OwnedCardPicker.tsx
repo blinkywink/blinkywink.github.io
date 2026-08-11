@@ -8,6 +8,7 @@ import {
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { MonkeyCard } from "./MonkeyCard";
+import { VisibleCardGrid } from "./VisibleCardGrid";
 
 const CATEGORY_ORDER = ["Primary", "Military", "Magic", "Support"];
 
@@ -193,17 +194,22 @@ export function OwnedCardPicker({
   }
 
   /** Same grid DOM as CardLab — MonkeyCard preview, no extras. Owned only. */
-  function renderCardGrid(cards: MonkeyCardSpec[]) {
+  function renderCardGrid(cards: MonkeyCardSpec[], resetKey: string) {
     return (
-      <div className="card-lab__grid">
-        {cards.map((card) => {
+      <VisibleCardGrid
+        items={cards}
+        getKey={(card) => card.id}
+        resetKey={resetKey}
+        itemClassName={(card) => {
+          const on = draft.has(card.id);
+          const unavailable = blocked.has(card.id);
+          return `pick-item${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}`;
+        }}
+        renderItem={(card) => {
           const on = draft.has(card.id);
           const unavailable = blocked.has(card.id);
           return (
-            <div
-              key={card.id}
-              className={`pick-item${on ? " is-selected" : ""}${unavailable ? " is-unavailable" : ""}`}
-            >
+            <>
               <MonkeyCard
                 entity={card.entity}
                 pathLevels={card.pathLevels}
@@ -221,10 +227,10 @@ export function OwnedCardPicker({
                   Selected
                 </span>
               ) : null}
-            </div>
+            </>
           );
-        })}
-      </div>
+        }}
+      />
     );
   }
 
@@ -392,7 +398,6 @@ export function OwnedCardPicker({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Tower, upgrade name, 0-2-5…"
                 autoComplete="off"
-                autoFocus
               />
             </label>
             {sortToggle}
@@ -405,7 +410,10 @@ export function OwnedCardPicker({
                 : `No owned cards match “${query}”.`}
             </p>
           ) : (
-            renderCardGrid(ownedAllCards)
+            renderCardGrid(
+              ownedAllCards,
+              `all|${query}|${tierHighFirst ? "hi" : "lo"}|${ownedAllCards.length}`,
+            )
           )}
         </div>
         {dock}
@@ -448,7 +456,10 @@ export function OwnedCardPicker({
         {ownedTowerCards.length === 0 ? (
           <p className="card-lab__hint">You don’t own any {view.name} cards.</p>
         ) : (
-          renderCardGrid(ownedTowerCards)
+          renderCardGrid(
+            ownedTowerCards,
+            `tower|${view.kind === "tower" ? view.name : ""}|${tierHighFirst ? "hi" : "lo"}`,
+          )
         )}
       </div>
       {dock}

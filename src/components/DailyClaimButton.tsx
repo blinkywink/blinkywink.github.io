@@ -9,7 +9,6 @@ import {
   todaysDailyCard,
 } from "../lib/dailyReward";
 import { duplicateCashForCard } from "../lib/packPull";
-import { feedForCard } from "../lib/paragonProgress";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
 import { MonkeyCard } from "./MonkeyCard";
 
@@ -29,7 +28,7 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
     ready,
     setCoinBalance,
   } = useAuth();
-  const { owned, awardCards, applyParagonFeeds } = useCardCollection();
+  const { owned, awardCards, feedParagonsFromCards } = useCardCollection();
   const { dupCashMods } = useQuizHeroFx();
   const [cashBusy, setCashBusy] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
@@ -70,6 +69,7 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
       return;
     }
 
+    const wasNew = !owned.has(reward.card.id);
     if (owned.has(reward.card.id)) {
       const dup = duplicateCashForCard(reward.card, dupCashMods());
       const bal = await awardCoins(dup);
@@ -77,12 +77,7 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
     } else {
       await awardCards([reward.card.id]);
     }
-    const feed = feedForCard(reward.card);
-    const ownsParagon =
-      Boolean(feed && (owned.has(feed.paragonId) || reward.card.id === feed.paragonId));
-    if (feed && ownsParagon && !(reward.card.isParagon && !owned.has(reward.card.id))) {
-      await applyParagonFeeds([feed]);
-    }
+    await feedParagonsFromCards([reward.card.id], wasNew ? [reward.card.id] : []);
     setCardBusy(false);
   }
 

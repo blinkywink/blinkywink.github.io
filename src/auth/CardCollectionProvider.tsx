@@ -13,7 +13,11 @@ import {
   awardCards as persistAwardCards,
   fetchOwnedCopies,
 } from "../lib/awardCards";
-import { previewParagonFeeds } from "../lib/paragonProgress";
+import {
+  feedForCardId,
+  mergeParagonMaps,
+  previewParagonFeeds,
+} from "../lib/paragonProgress";
 import {
   pruneUnownedShowcase,
   showcaseFromProfile,
@@ -22,6 +26,7 @@ import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
 import {
   applyParagonFeeds as persistParagonFeeds,
   ensureParagonStates,
+  feedParagonsFromCards as persistFeedFromCards,
   fetchOwnParagons,
 } from "../lib/paragonApi";
 import {
@@ -45,6 +50,10 @@ type CardCollectionContextValue = {
   /** Persist unlocks; returns newly added ids. */
   awardCards: (cardIds: string[]) => Promise<string[]>;
   applyParagonFeeds: (feeds: ParagonFeed[]) => Promise<ParagonApplyResult[]>;
+  feedParagonsFromCards: (
+    cardIds: string[],
+    newIds?: string[],
+  ) => Promise<ParagonApplyResult[]>;
   refresh: () => Promise<void>;
 };
 
@@ -64,7 +73,6 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const paragonRef = useRef(paragonMap);
   const feedQueue = useRef(Promise.resolve());
   ownedRef.current = ownedIds;
-  paragonRef.current = paragonMap;
 
   const refresh = useCallback(async () => {
     const [copies, nextParagons] = await Promise.all([
@@ -80,9 +88,10 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       ),
     );
     if (nextParagons) {
+      const merged = mergeParagonMaps(paragonRef.current, nextParagons);
       const next = await ensureParagonStates(
         copies.map((row) => row.cardId),
-        nextParagons,
+        merged,
       );
       paragonRef.current = next;
       setParagonMap(next);
@@ -95,6 +104,8 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setReady(true);
     setHydrated(false);
+    paragonRef.current = {};
+    setParagonMap({});
     void (async () => {
       if (session?.userId) {
         await mergeGuestProgressIntoAccount();
@@ -113,9 +124,10 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
         ),
       );
       if (nextParagons) {
+        const merged = mergeParagonMaps(paragonRef.current, nextParagons);
         const next = await ensureParagonStates(
           copies.map((row) => row.cardId),
-          nextParagons,
+          merged,
         );
         paragonRef.current = next;
         setParagonMap(next);
@@ -207,6 +219,47 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return next;
   }, []);
 
+  const feedParagonsFromCards = useCallback(
+    async (cardIds: string[], newIds: string[] = []) => {
+      const run = async () => {
+        const ownedSet = new Set([
+          ...ownedRef.current,
+          ...Object.keys(paragonRef.current),
+          ...cardIds.filter((id) => id.endsWith("-paragon")),
+          ...newIds.filter((id) => id.endsWith("-paragon")),
+        ]);
+        const unlockedSet = new Set(newIds);
+        const feeds = cardIds.flatMap((id) => {
+          if (id.endsWith("-paragon") && unlockedSet.has(id)) return [];
+          const feed = feedForCardId(id);
+          return feed ? [feed] : [];
+        });
+        const before = paragonRef.current;
+        const preview = previewParagonFeeds(feeds, ownedSet, before);
+        if (preview.results.length) {
+          paragonRef.current = preview.map;
+          setParagonMap(preview.map);
+        }
+        const { map, results } = await persistFeedFromCards(
+          cardIds,
+          newIds,
+          ownedSet,
+          before,
+        );
+        paragonRef.current = map;
+        setParagonMap(map);
+        return results;
+      };
+      const next = feedQueue.current.then(run, run);
+      feedQueue.current = next.then(
+        () => undefined,
+        () => undefined,
+      );
+      return next;
+    },
+    [],
+  );
+
   const owned = useMemo(() => new Set(ownedIds), [ownedIds]);
   const paragons = useMemo(
     () => new Map(Object.entries(paragonMap)),
@@ -229,9 +282,19 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       visualSeedOf: (cardId: string) => visualSeeds.get(cardId) ?? null,
       awardCards,
       applyParagonFeeds,
+      feedParagonsFromCards,
       refresh,
     }),
-    [ready, owned, paragons, visualSeeds, awardCards, applyParagonFeeds, refresh],
+    [
+      ready,
+      owned,
+      paragons,
+      visualSeeds,
+      awardCards,
+      applyParagonFeeds,
+      feedParagonsFromCards,
+      refresh,
+    ],
   );
 
   return (

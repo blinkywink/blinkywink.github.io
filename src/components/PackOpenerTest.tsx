@@ -223,7 +223,7 @@ export function PackOpenerTest({
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
   const { profile, setCoinBalance } = useAuth();
-  const { awardCards, applyParagonFeeds, owned } = useCardCollection();
+  const { awardCards, feedParagonsFromCards, owned } = useCardCollection();
   const {
     packPullMods,
     onObynExtra,
@@ -559,29 +559,16 @@ export function PackOpenerTest({
       setParagonFeeds(feedByCard);
       setGodPack(isGod);
 
-      const unlockedParagonIds = new Set(
-        unlocked.filter((card) => card.isParagon).map((card) => card.id),
-      );
-      const feedsNeedNewParagon = feeds.some((feed) =>
-        unlockedParagonIds.has(feed.paragonId),
-      );
-      const award = unlocked.length
-        ? awardCards(unlocked.map((c) => c.id))
-        : Promise.resolve();
-      if (feeds.length) {
-        if (feedsNeedNewParagon) {
-          void award.then(() => applyParagonFeeds(feeds));
-        } else {
-          void applyParagonFeeds(feeds);
-          void award;
-        }
-      } else {
-        void award;
-      }
+      const newIds = unlocked.map((c) => c.id);
+      const pulledIds = cards.map((c) => c.id);
+      void (async () => {
+        if (unlocked.length) await awardCards(newIds);
+        await feedParagonsFromCards(pulledIds, newIds);
+      })();
       // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
     },
-    [applyParagonFeeds, awardCards, dupCashMods, owned, showCardAt],
+    [awardCards, dupCashMods, feedParagonsFromCards, owned, showCardAt],
   );
 
   const completeCut = useCallback(

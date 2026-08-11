@@ -198,6 +198,35 @@ export function mergeParagonStates(
   return { degree: left.degree, xp: Math.max(left.xp, right.xp) };
 }
 
+/** Keep whichever copy is further along — never let a stale fetch wipe XP. */
+export function mergeParagonMaps<T extends Record<string, ParagonState>>(
+  current: T,
+  incoming: T,
+): T {
+  const next = { ...incoming };
+  for (const [id, state] of Object.entries(current)) {
+    next[id] = next[id] ? mergeParagonStates(next[id]!, state) : state;
+  }
+  return next;
+}
+
+/** XP / degrees from a raw card id (`ice-monkey-5-0-0`, `ninja-monkey-paragon`). */
+export function feedForCardId(cardId: string): ParagonFeed | null {
+  const id = String(cardId ?? "").trim();
+  if (!id) return null;
+  if (id.endsWith("-paragon")) {
+    return { paragonId: id, xp: 0, degrees: PARAGON_DUP_DEGREES };
+  }
+  const m = id.match(/-([0-5])-([0-5])-([0-5])$/);
+  if (!m) return null;
+  const tier = Math.max(Number(m[1]), Number(m[2]), Number(m[3]));
+  return {
+    paragonId: id.replace(/-[0-5]-[0-5]-[0-5]$/, "-paragon"),
+    xp: PARAGON_XP_BY_TIER[tier] ?? 1,
+    degrees: 0,
+  };
+}
+
 export function formatParagonFeedLine(feed: ParagonFeed): string {
   if (feed.degrees > 0) {
     return `+${feed.degrees} Paragon degree${feed.degrees === 1 ? "" : "s"}`;

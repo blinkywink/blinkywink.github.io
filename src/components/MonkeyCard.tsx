@@ -268,8 +268,28 @@ export function MonkeyCard({
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
-  const visualizer = usesVisualizer(tier) && !staticArt;
+  const [fxOn, setFxOn] = useState(!isPreview);
+  const visualizer = usesVisualizer(tier) && !staticArt && fxOn;
   const holo = usesHoloFx(tier) && !isPreview;
+
+  useEffect(() => {
+    if (!isPreview || staticArt || !usesVisualizer(tier)) {
+      setFxOn(!staticArt && usesVisualizer(tier));
+      return;
+    }
+    const el = sceneRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setFxOn(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
+      { rootMargin: "180px 0px", threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -654,6 +674,48 @@ export function MonkeyCard({
                 )}
               </div>
             </footer>
+            {isParagon ? (
+              <div className="monkey-card__paragon-corner">
+                <svg
+                  className="monkey-card__paragon-ribbon"
+                  viewBox="0 0 56 176"
+                  aria-hidden
+                  preserveAspectRatio="none"
+                >
+                  <path fill="#d200d3" d="M0 0h56v176L28 152 0 176V0z" />
+                  <path
+                    fill="none"
+                    stroke="#3a0277"
+                    strokeWidth="4"
+                    strokeLinejoin="miter"
+                    strokeLinecap="butt"
+                    d="M2 0v174l26-24 26 24V0"
+                  />
+                </svg>
+                <div className="monkey-card__paragon-badge">
+                  <img
+                    className="monkey-card__paragon-mark"
+                    src={PARAGON_DEGREE_ICON}
+                    alt=""
+                    draggable={false}
+                  />
+                  <span className="monkey-card__paragon-degree">
+                    {paragonDegree}
+                    {holo ? (
+                      <span className="monkey-card__paragon-degree-sheen" aria-hidden>
+                        {paragonDegree}
+                      </span>
+                    ) : null}
+                  </span>
+                  {holo ? (
+                    <div className="monkey-card__paragon-shine" aria-hidden="true">
+                      <div className="monkey-card__paragon-shine-sweep" />
+                      <div className="monkey-card__paragon-shine-glint" />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -662,49 +724,6 @@ export function MonkeyCard({
             className={`monkey-card__paragon-aura monkey-card__paragon-aura--s${stage}`}
             aria-hidden
           />
-        ) : null}
-
-        {isParagon ? (
-          <div className="monkey-card__paragon-corner">
-            <svg
-              className="monkey-card__paragon-ribbon"
-              viewBox="0 0 56 176"
-              aria-hidden
-              preserveAspectRatio="none"
-            >
-              <path fill="#d200d3" d="M0 0h56v176L28 152 0 176V0z" />
-              <path
-                fill="none"
-                stroke="#3a0277"
-                strokeWidth="4"
-                strokeLinejoin="miter"
-                strokeLinecap="butt"
-                d="M2 0v174l26-24 26 24V0"
-              />
-            </svg>
-            <div className="monkey-card__paragon-badge">
-              <img
-                className="monkey-card__paragon-mark"
-                src={PARAGON_DEGREE_ICON}
-                alt=""
-                draggable={false}
-              />
-              <span className="monkey-card__paragon-degree">
-                {paragonDegree}
-                {holo ? (
-                  <span className="monkey-card__paragon-degree-sheen" aria-hidden>
-                    {paragonDegree}
-                  </span>
-                ) : null}
-              </span>
-              {holo ? (
-                <div className="monkey-card__paragon-shine" aria-hidden="true">
-                  <div className="monkey-card__paragon-shine-sweep" />
-                  <div className="monkey-card__paragon-shine-glint" />
-                </div>
-              ) : null}
-            </div>
-          </div>
         ) : null}
 
         <div className="monkey-card__edge" aria-hidden="true" />
