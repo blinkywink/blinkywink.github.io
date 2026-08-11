@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "blinkywink.co",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "co.blinkywink.arcade",
   "build": {
     "frontendDist": "../dist",
@@ -27,6 +27,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -35,5 +36,17 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk5RkZBQzg0MzI1QjkxNjIKUldSaWtWc3loS3ovbVdRUDB6eUhJWFZvZkhiYzlBSk5Eb2ljQlpqYjlvUm1iTU1Db3F5aXhJWkwK",
+      "endpoints": [
+        "https://blinkywink.github.io/desktop-latest.json",
+        "https://github.com/blinkywink/blinkywink.github.io/releases/download/beta/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

@@ -10,6 +10,12 @@ src-tauri/target/
 # Desktop installers (stage locally; host elsewhere — too large for git)
 public/downloads/*.dmg
 public/downloads/*.exe
+public/downloads/*.tar.gz
+public/downloads/*.sig
+
+# Updater signing private key — never commit
+src-tauri/.updater-key
+src-tauri/.updater-key.pub
 
 # Env & secrets — never commit
 .env
