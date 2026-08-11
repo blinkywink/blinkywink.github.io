@@ -1,26 +1,28 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { loadAppSession } from "../auth/session";
 import { cacheInvalidate } from "../lib/cache";
 
 const SYNC_MS = 45_000;
+const SYNC_COOLDOWN_MS = 12_000;
 
 /** Keep a long-lived desktop/web session honest with the server. */
 export function LivePlayerSync() {
-  const { pathname } = useLocation();
   const { session, isGuest, refreshProfile, signOut } = useAuth();
   const { refresh } = useCardCollection();
   const busyRef = useRef(false);
+  const lastSyncRef = useRef(0);
 
-  const sync = useCallback(async () => {
+  const sync = useCallback(async (force = false) => {
     if (busyRef.current || isGuest || !session) return;
+    if (!force && Date.now() - lastSyncRef.current < SYNC_COOLDOWN_MS) return;
     if (!loadAppSession()) {
       await signOut();
       return;
     }
     busyRef.current = true;
+    lastSyncRef.current = Date.now();
     try {
       cacheInvalidate("leaderboard:");
       cacheInvalidate("profile:");
@@ -33,10 +35,6 @@ export function LivePlayerSync() {
       busyRef.current = false;
     }
   }, [isGuest, refresh, refreshProfile, session, signOut]);
-
-  useEffect(() => {
-    void sync();
-  }, [pathname, sync]);
 
   useEffect(() => {
     const id = window.setInterval(() => void sync(), SYNC_MS);

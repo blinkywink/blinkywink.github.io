@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { isDesktopShell } from "../lib/desktopOnline";
 import {
   DESKTOP_MAC_DMG,
@@ -29,7 +28,6 @@ function shopLooksStale(remote: DesktopRemoteConfig | null): boolean {
 }
 
 export function DesktopUpdateGate() {
-  const { pathname } = useLocation();
   const [status, setStatus] = useState<GateStatus>("idle");
   const [message, setMessage] = useState("Updating");
   const [progress, setProgress] = useState<number | null>(null);
@@ -124,12 +122,17 @@ export function DesktopUpdateGate() {
   useEffect(() => {
     if (!isDesktopShell()) return;
     void run();
-  }, [run, pathname]);
-
-  useEffect(() => {
-    if (!isDesktopShell()) return;
     const id = window.setInterval(() => void run(), RECHECK_MS);
-    return () => window.clearInterval(id);
+    const onWake = () => {
+      if (document.visibilityState === "visible") void run();
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
+    };
   }, [run]);
 
   if (!isDesktopShell() || status === "idle") return null;

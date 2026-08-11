@@ -16,6 +16,7 @@ import {
   PARAGON_MIN_DEGREE,
   paragonStage,
 } from "../lib/paragonProgress";
+import { isDesktopShell } from "../lib/desktopOnline";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
 type Accent = {
@@ -268,13 +269,15 @@ export function MonkeyCard({
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
+  const desktopPreview = isPreview && isDesktopShell();
   const [fxOn, setFxOn] = useState(!isPreview);
-  const visualizer = usesVisualizer(tier) && !staticArt && fxOn;
+  const visualizer =
+    usesVisualizer(tier) && !staticArt && !desktopPreview && fxOn;
   const holo = usesHoloFx(tier) && !isPreview;
 
   useEffect(() => {
-    if (!isPreview || staticArt || !usesVisualizer(tier)) {
-      setFxOn(!staticArt && usesVisualizer(tier));
+    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
+      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -289,7 +292,7 @@ export function MonkeyCard({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [isPreview, staticArt, tier]);
+  }, [desktopPreview, isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;

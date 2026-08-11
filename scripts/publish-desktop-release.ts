@@ -99,15 +99,22 @@ function deleteOlderReleases(keepTag: string) {
   for (const oldTag of listReleaseTags()) {
     if (oldTag === keepTag) continue;
     console.log(`Deleting old release ${oldTag}`);
-    gh([
-      "release",
-      "delete",
-      oldTag,
-      "--repo",
-      REPO,
-      "--yes",
-      "--cleanup-tag",
-    ]);
+    const del = spawnSync(
+      "gh",
+      [
+        "release",
+        "delete",
+        oldTag,
+        "--repo",
+        REPO,
+        "--yes",
+        "--cleanup-tag",
+      ],
+      { stdio: "inherit" },
+    );
+    if (del.status !== 0) {
+      console.warn(`Could not delete ${oldTag} — continuing`);
+    }
   }
 }
 

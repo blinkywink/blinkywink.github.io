@@ -4389,7 +4389,6 @@ body:has(.zoomed-page) {
   border-radius: 22px;
   user-select: none;
   pointer-events: none;
-  will-change: transform;
   container-type: inline-size;
   container-name: monkey-card;
   text-align: left;
@@ -4401,6 +4400,7 @@ body:has(.zoomed-page) {
 
 .monkey-card.is-active {
   transition: transform 0.06s linear;
+  will-change: transform;
 }
 
 .monkey-card__glow {
