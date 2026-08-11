@@ -52,12 +52,12 @@ const MEDAL_TIERS: { max: number; src: string; label: string }[] = [
   {
     max: 10,
     src: "/images/ui/medals/6-10-silver.webp",
-    label: "Top 10 on the leaderboard (6th–10th)",
+    label: "Top 10 on the leaderboard (6th-10th)",
   },
   {
     max: 50,
     src: "/images/ui/medals/11-50-bronze.webp",
-    label: "Top 50 on the leaderboard (11th–50th)",
+    label: "Top 50 on the leaderboard (11th-50th)",
   },
 ];
 

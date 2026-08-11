@@ -490,7 +490,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   <h2>Swap a copy with {viewer.username}</h2>
                   <p>
                     Pick a card you both own. They name a Cash fee, then you
-                    accept or decline — nothing moves until you agree.
+                    accept or decline. Nothing moves until you agree.
                   </p>
                 </div>
                 <button

@@ -12,7 +12,7 @@ export const PROFILE_BADGES: Record<string, ProfileBadgeDef> = {
   [EARLY_SUPPORTER_BADGE]: {
     id: EARLY_SUPPORTER_BADGE,
     src: "/images/ui/medals/early-supporter.webp",
-    label: "Early Supporter — Playtested the game in beta",
+    label: "Early Supporter: Playtested the game in beta",
   },
 };
 

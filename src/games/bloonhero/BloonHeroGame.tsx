@@ -287,7 +287,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             }
           />
           <span className="hero-settings__hint">
-            Karaoke-style — unrevealed syllables stay invisible until sung
+            Karaoke-style: unrevealed syllables stay invisible until sung
           </span>
         </label>
 
@@ -413,7 +413,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               <a href="https://www.enchor.us/" target="_blank" rel="noreferrer">
                 enchor.us
               </a>
-              . Expert Guitar charts — Vocals when the pack has them. Defaults{" "}
+              . Expert Guitar charts, Vocals when the pack has them. Defaults{" "}
               {keyHint} (hold for sustains).
             </p>
             <form className="hero-search" onSubmit={onSearch}>
@@ -461,7 +461,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             state.results.length > 0 &&
             displayedResults.length === 0 ? (
               <p className="hero-browse__err">
-                No vocal charts in these results — try another search or turn
+                No vocal charts in these results. Try another search or turn
                 off the Vocals filter.
               </p>
             ) : null}
@@ -733,7 +733,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 <div className="hero-overlay hero-overlay--pause" role="dialog">
                   <h2>Paused</h2>
                   <p className="hero-overlay__detail">
-                    Press Esc to resume — 3 · 2 · 1 · GO
+                    Press Esc to resume. 3 · 2 · 1 · GO
                   </p>
                   <div className="hero-overlay__actions">
                     <button
@@ -829,9 +829,9 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   <p className="hero-overlay__detail">
                     {state.cleared
                       ? state.didWell
-                        ? "Finished the song + strong accuracy — pack & bonus"
-                        : "Finished the song — free pack unlocked"
-                      : "Too much spamming — finish the track to clear"}
+                        ? "Finished the song + strong accuracy. Pack & bonus"
+                        : "Finished the song. Free pack unlocked"
+                      : "Too much spamming. Finish the track to clear"}
                   </p>
                   <p className="hero-overlay__detail">
                     {state.perfect} perfect · {state.great} great · {state.good}{" "}

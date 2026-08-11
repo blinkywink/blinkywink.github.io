@@ -155,7 +155,7 @@ function mapRpcError(message: string | undefined): string {
   const m = message ?? "Auth failed.";
   if (m.includes("USERNAME_TAKEN")) return "That username is already taken.";
   if (m.includes("INVALID_USERNAME")) {
-    return "Username must be 3–24 characters (letters, numbers, underscores).";
+    return "Username must be 3-24 characters (letters, numbers, underscores).";
   }
   if (m.includes("INVALID_PASSWORD")) {
     return "Password must be at least 6 characters.";
@@ -257,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isValidUsername(username)) {
         return {
           error:
-            "Username must be 3–24 characters (letters, numbers, underscores).",
+            "Username must be 3-24 characters (letters, numbers, underscores).",
         };
       }
       if (input.password.length < 6) {

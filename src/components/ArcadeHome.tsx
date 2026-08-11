@@ -464,7 +464,7 @@ export function ArcadeHome({
     {
       id: "bloonhero" as const,
       title: "BLOON HERO",
-      blurb: "Encore Expert Guitar charts — Vocals when available. Hit with custom keys.",
+      blurb: "Encore Expert Guitar charts, Vocals when available. Hit with custom keys.",
       label: "Bloon Hero, Search Encore Guitar charts, play with remappable keys",
       preview: <BloonHeroPreview />,
     },
