@@ -479,6 +479,67 @@ body:has(.zoomed-page) {
   color: rgba(240, 240, 244, 0.75);
 }
 
+.desktop-online-gate__progress {
+  width: 100%;
+  height: 8px;
+  margin: 0 0 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-online-gate__progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: #f0c84a;
+  transition: width 0.15s ease;
+}
+
+.desktop-online-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+}
+
+.desktop-update-toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(26rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(16, 14, 22, 0.94);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.desktop-update-toast p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #f0f0f4;
+}
+
+.desktop-update-toast__progress {
+  flex: 0 0 5.5rem;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-update-toast__bar {
+  height: 100%;
+  border-radius: inherit;
+  background: #f0c84a;
+  transition: width 0.15s ease;
+}
+
 /* Arcade home */
 .arcade {
   width: min(var(--content-max), calc(100% - 2rem));
@@ -744,6 +805,12 @@ body:has(.zoomed-page) {
   overflow: hidden;
 }
 
+.home-hub__player-chip:hover,
+.home-hub__player-chip:focus-visible {
+  overflow: visible;
+  z-index: 2;
+}
+
 .home-hub__player-chip strong {
   flex: 1;
   font-size: 0.88rem;
@@ -751,6 +818,10 @@ body:has(.zoomed-page) {
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+.home-hub__player-chip .player-badges {
+  margin-left: -0.2rem;
 }
 
 .home-hub__rank {
@@ -3804,6 +3875,16 @@ body:has(.zoomed-page) {
   justify-content: center;
 }
 
+.card-lab__titles > .player-badges {
+  display: inline-flex;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.card-lab__header--remote .card-lab__titles > .player-badges {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .card-lab__header--remote .card-lab__blurb {
   margin-left: auto;
   margin-right: auto;
@@ -4220,6 +4301,36 @@ body:has(.zoomed-page) {
   max-width: none;
 }
 
+.paragon-xp-bar {
+  width: min(100%, var(--card-face-w, 22rem));
+  display: grid;
+  gap: 0.4rem;
+}
+
+.paragon-xp-bar__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(240, 220, 255, 0.88);
+}
+
+.paragon-xp-bar__track {
+  height: 0.62rem;
+  border-radius: 999px;
+  background: rgba(20, 6, 36, 0.72);
+  border: 1px solid rgba(210, 0, 211, 0.35);
+  overflow: hidden;
+}
+
+.paragon-xp-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7a1498, #d200d3 55%, #f0a0ff);
+}
+
 .card-lab__hint {
   text-align: center;
   color: rgba(255, 248, 232, 0.8);
@@ -4262,6 +4373,9 @@ body:has(.zoomed-page) {
   user-select: none;
   pointer-events: none;
   will-change: transform;
+  container-type: inline-size;
+  container-name: monkey-card;
+  text-align: left;
 }
 
 .monkey-card-scene:active {
@@ -4571,12 +4685,550 @@ body:has(.zoomed-page) {
   right: 0;
   z-index: 7;
   padding: 0.85rem 0.85rem 2rem;
+  text-align: left;
   background: linear-gradient(
     180deg,
     rgba(8, 28, 48, 0.78) 0%,
     rgba(8, 28, 48, 0.35) 60%,
     transparent 100%
   );
+}
+
+.monkey-card--paragon .monkey-card__head--overlay {
+  padding-right: min(7.22rem, 28.88cqi);
+}
+
+.monkey-card__paragon-aura {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.monkey-card--paragon-s1 {
+  box-shadow: 0 18px 36px rgba(58, 2, 119, 0.35);
+}
+
+.monkey-card--paragon-s1 .monkey-card__paragon-aura {
+  background: radial-gradient(
+    70% 55% at 50% 18%,
+    rgba(210, 0, 211, 0.22),
+    transparent 70%
+  );
+}
+
+.monkey-card--paragon-s2 {
+  box-shadow:
+    0 0 28px rgba(15, 125, 254, 0.28),
+    0 18px 36px rgba(58, 2, 119, 0.4);
+}
+
+.monkey-card--paragon-s2 .monkey-card__paragon-aura {
+  background:
+    radial-gradient(65% 50% at 50% 12%, rgba(94, 240, 255, 0.2), transparent 68%),
+    radial-gradient(80% 70% at 80% 80%, rgba(180, 1, 254, 0.18), transparent 72%);
+}
+
+.monkey-card--paragon-s3 {
+  box-shadow:
+    0 0 36px rgba(180, 1, 254, 0.42),
+    0 20px 40px rgba(16, 0, 40, 0.5);
+}
+
+.monkey-card--paragon-s3 .monkey-card__paragon-aura {
+  background:
+    radial-gradient(70% 55% at 50% 8%, rgba(233, 213, 255, 0.28), transparent 64%),
+    radial-gradient(90% 80% at 20% 90%, rgba(15, 125, 254, 0.22), transparent 70%);
+}
+
+.monkey-card--paragon-s3 .monkey-card__paragon-ribbon {
+  filter:
+    drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28))
+    drop-shadow(0 0 10px rgba(210, 0, 211, 0.55));
+}
+
+.monkey-card--paragon-s4 {
+  box-shadow:
+    0 0 42px rgba(180, 1, 254, 0.55),
+    0 0 70px rgba(15, 125, 254, 0.28),
+    0 22px 44px rgba(16, 0, 40, 0.55);
+}
+
+.monkey-card--paragon-s4 .monkey-card__paragon-aura {
+  background:
+    radial-gradient(75% 58% at 50% 6%, rgba(255, 230, 160, 0.32), transparent 62%),
+    radial-gradient(85% 75% at 85% 85%, rgba(180, 1, 254, 0.28), transparent 70%),
+    radial-gradient(80% 70% at 15% 80%, rgba(94, 240, 255, 0.2), transparent 68%);
+  animation: paragon-aura-breathe 2.8s ease-in-out infinite;
+}
+
+.monkey-card--paragon-s4 .monkey-card__paragon-ribbon {
+  filter:
+    drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28))
+    drop-shadow(0 0 14px rgba(255, 180, 80, 0.45));
+}
+
+.monkey-card--paragon-s5 {
+  box-shadow:
+    0 0 28px rgba(255, 214, 90, 0.55),
+    0 0 64px rgba(180, 1, 254, 0.7),
+    0 0 110px rgba(15, 125, 254, 0.38),
+    0 24px 48px rgba(16, 0, 40, 0.6);
+}
+
+.monkey-card--paragon-s5 .monkey-card__paragon-aura {
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(255, 244, 200, 0.5), transparent 58%),
+    radial-gradient(90% 80% at 88% 88%, rgba(255, 80, 220, 0.32), transparent 68%),
+    radial-gradient(90% 80% at 12% 86%, rgba(80, 220, 255, 0.3), transparent 68%);
+  animation: paragon-aura-breathe 1.8s ease-in-out infinite;
+}
+
+.monkey-card--paragon-s5 .monkey-card__paragon-ribbon {
+  filter:
+    drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28))
+    drop-shadow(0 0 16px rgba(255, 230, 140, 0.8));
+}
+
+.monkey-card--paragon-s5 .monkey-card__paragon-badge {
+  filter: drop-shadow(0 0 18px rgba(255, 220, 120, 0.55));
+}
+
+.monkey-card--paragon-s5 .monkey-card__paragon-degree {
+  color: #fff6c8;
+}
+
+.monkey-card--preview.monkey-card--paragon-s4,
+.monkey-card--preview.monkey-card--paragon-s5 {
+  animation: none;
+}
+
+.monkey-card--preview .monkey-card__paragon-aura {
+  animation: none;
+}
+
+@keyframes paragon-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.monkey-card-scene--paragon-fx {
+  position: relative;
+  overflow: visible;
+}
+
+.monkey-card-scene--paragon-fx > .monkey-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sit behind the card. Particles use leftover positions just outside
+   the face — this box itself must stay empty so it never reads as a
+   second card. */
+.monkey-card__paragon-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.monkey-card__paragon-rings {
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  pointer-events: none;
+  isolation: isolate;
+  transform: translateZ(0);
+  /* Hide anything over the card; keep the outside glow. */
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 22%,
+      transparent 25.5%,
+      transparent 74.5%,
+      #000 78%,
+      #000 100%
+    ),
+    linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 22%,
+      transparent 25.5%,
+      transparent 74.5%,
+      #000 78%,
+      #000 100%
+    );
+  -webkit-mask-composite: source-over;
+  mask-image:
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 22%,
+      transparent 25.5%,
+      transparent 74.5%,
+      #000 78%,
+      #000 100%
+    ),
+    linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 22%,
+      transparent 25.5%,
+      transparent 74.5%,
+      #000 78%,
+      #000 100%
+    );
+  mask-composite: add;
+}
+
+.monkey-card__paragon-rings-space {
+  position: absolute;
+  inset: 25%;
+  transform-style: preserve-3d;
+}
+
+.monkey-card__paragon-ring-pivot {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.monkey-card__paragon-ring-pivot--a {
+  transform: rotateX(72deg);
+  animation: paragon-ring-sway-a 9s ease-in-out infinite;
+}
+
+.monkey-card__paragon-ring-pivot--b {
+  transform: rotateX(62deg) rotateY(32deg);
+  animation: paragon-ring-sway-b 11s ease-in-out infinite;
+}
+
+.monkey-card__paragon-ring-pivot--c {
+  transform: rotateX(78deg) rotateY(-26deg);
+  animation: paragon-ring-sway-c 13s ease-in-out infinite;
+}
+
+.monkey-card__paragon-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 168%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid rgba(214, 120, 255, 0.72);
+  box-shadow:
+    0 0 10px rgba(180, 1, 254, 0.7),
+    0 0 22px rgba(15, 125, 254, 0.4),
+    inset 0 0 10px rgba(210, 0, 211, 0.35);
+  animation:
+    paragon-ring-orbit 48s linear infinite,
+    paragon-ring-breathe 4.2s ease-in-out infinite;
+}
+
+.monkey-card__paragon-ring-pivot--b .monkey-card__paragon-ring {
+  width: 148%;
+  border-color: rgba(94, 240, 255, 0.62);
+  box-shadow:
+    0 0 10px rgba(94, 240, 255, 0.55),
+    0 0 20px rgba(15, 125, 254, 0.35);
+  animation-duration: 56s, 5s;
+  animation-direction: reverse, alternate;
+}
+
+.monkey-card__paragon-ring-pivot--c .monkey-card__paragon-ring {
+  width: 192%;
+  border-color: rgba(255, 228, 150, 0.7);
+  box-shadow:
+    0 0 12px rgba(255, 214, 90, 0.55),
+    0 0 24px rgba(180, 1, 254, 0.35);
+  animation-duration: 64s, 4.6s;
+}
+
+@keyframes paragon-ring-orbit {
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+@keyframes paragon-ring-breathe {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes paragon-ring-sway-a {
+  0%,
+  100% {
+    transform: rotateX(70deg) rotateZ(-6deg);
+  }
+  50% {
+    transform: rotateX(76deg) rotateY(7deg) rotateZ(6deg);
+  }
+}
+
+@keyframes paragon-ring-sway-b {
+  0%,
+  100% {
+    transform: rotateX(60deg) rotateY(28deg) rotateZ(5deg);
+  }
+  50% {
+    transform: rotateX(66deg) rotateY(36deg) rotateZ(-5deg);
+  }
+}
+
+@keyframes paragon-ring-sway-c {
+  0%,
+  100% {
+    transform: rotateX(76deg) rotateY(-22deg) rotateZ(-4deg);
+  }
+  50% {
+    transform: rotateX(81deg) rotateY(-30deg) rotateZ(4deg);
+  }
+}
+
+.monkey-card__paragon-smoke {
+  position: absolute;
+  width: 4.6rem;
+  height: 3.1rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(186, 92, 255, 0.4),
+    rgba(88, 20, 160, 0.1) 52%,
+    transparent 76%
+  );
+  filter: blur(13px);
+  animation: paragon-smoke 5.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.62s);
+}
+
+.monkey-card__paragon-field--s4 .monkey-card__paragon-smoke,
+.monkey-card__paragon-field--s5 .monkey-card__paragon-smoke {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 220, 160, 0.34),
+    rgba(180, 1, 254, 0.14) 52%,
+    transparent 76%
+  );
+}
+
+.monkey-card__paragon-sparks {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.monkey-card__paragon-star {
+  --spark: 2.4rem;
+  position: absolute;
+  width: var(--spark);
+  height: var(--spark);
+  margin: calc(var(--spark) / -2) 0 0 calc(var(--spark) / -2);
+  overflow: visible;
+  color: #fff;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.75));
+  animation: paragon-twinkle 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.35s);
+}
+
+.monkey-card__paragon-star:nth-child(2) {
+  --spark: 1.7rem;
+}
+
+.monkey-card__paragon-star:nth-child(3) {
+  --spark: 2.05rem;
+}
+
+.monkey-card__paragon-star:nth-child(4) {
+  --spark: 1.55rem;
+}
+
+.monkey-card__paragon-star:nth-child(5) {
+  --spark: 2.2rem;
+}
+
+.monkey-card__paragon-sparks--s4 .monkey-card__paragon-star,
+.monkey-card__paragon-sparks--s5 .monkey-card__paragon-star {
+  color: #fff4c4;
+  filter: drop-shadow(0 0 3px rgba(255, 226, 138, 0.8));
+}
+
+@keyframes paragon-smoke {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(6%) scale(0.88);
+  }
+  50% {
+    opacity: 0.62;
+    transform: translateY(-14%) scale(1.06);
+  }
+}
+
+@keyframes paragon-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.72) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08) rotate(12deg);
+  }
+}
+
+.monkey-card__paragon-corner {
+  position: absolute;
+  top: 0;
+  right: min(0.28rem, 1.12cqi);
+  z-index: 10;
+  width: min(6.658rem, 26.632cqi);
+  pointer-events: none;
+}
+
+.monkey-card__paragon-ribbon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 0;
+  width: 3.355rem;
+  height: 11.65rem;
+  transform: translateX(-50%);
+  overflow: visible;
+  filter: drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28));
+}
+
+/* Thumbnails are a 400px face scaled down. Keep the same width as the big
+   card so it stays centered on the badge, but stop the tail shortly after
+   the icon so it doesn't eat the whole thumb. */
+.monkey-card--preview .monkey-card__paragon-ribbon {
+  width: 3.355rem;
+  height: 8.9rem;
+}
+
+.monkey-card__paragon-badge {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  margin-top: min(0.45rem, 1.8cqi);
+  isolation: isolate;
+}
+
+.monkey-card__paragon-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+}
+
+.monkey-card__paragon-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.monkey-card__paragon-shine-sweep,
+.monkey-card__paragon-shine-glint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  -webkit-mask-image: url("/images/ui/paragon-degree.webp");
+  mask-image: url("/images/ui/paragon-degree.webp");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.monkey-card__paragon-shine-sweep {
+  opacity: calc(var(--opacity) * 0.35 * var(--holo-mul, 1));
+  background: linear-gradient(
+    125deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.34) 50%,
+    transparent 68%
+  );
+  background-size: 220% 220%;
+  background-position: var(--px) var(--py);
+}
+
+.monkey-card__paragon-shine-glint {
+  opacity: calc(var(--opacity) * 0.4 * var(--holo-mul, 1));
+  background: radial-gradient(
+    130% 90% at var(--px) var(--py),
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 28%,
+    transparent 58%
+  );
+}
+
+.monkey-card__paragon-degree {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0.12em 0 0;
+  font-family: var(--font-btd), "Luckiest Guy", sans-serif;
+  font-size: min(1.921rem, 7.684cqi);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+  -webkit-text-stroke: min(6.9px, 1.725cqi) #000;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+.monkey-card__paragon-degree-sheen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: transparent;
+  -webkit-text-stroke: 0;
+  background: linear-gradient(
+    125deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 68%
+  );
+  background-size: 220% 220%;
+  background-position: var(--px) var(--py);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: calc(var(--opacity) * 0.45 * var(--holo-mul, 1));
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 .monkey-card__stage {
@@ -6084,12 +6736,21 @@ body:has(.zoomed-page) {
   filter: drop-shadow(0 22px 36px rgba(0, 0, 0, 0.5));
 }
 
-.pack-opener__dup-banner {
+.pack-opener__dup-stack {
   position: absolute;
   left: 50%;
-  bottom: 7%;
+  bottom: 6%;
   z-index: 6;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.pack-opener__dup-banner,
+.pack-opener__xp-banner {
   margin: 0;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
@@ -6100,7 +6761,12 @@ body:has(.zoomed-page) {
   font-size: 0.95rem;
   letter-spacing: 0.03em;
   white-space: nowrap;
-  pointer-events: none;
+}
+
+.pack-opener__xp-banner {
+  border-color: #d200d3;
+  color: #f4b4ff;
+  font-size: 0.88rem;
 }
 
 .pack-opener__card--enter {
@@ -7045,6 +7711,7 @@ body:has(.zoomed-page) {
   height: var(--card-preview-h);
   position: relative;
   overflow: hidden;
+  content-visibility: visible;
   border-radius: calc(22px * var(--card-preview-scale));
 }
 
@@ -10081,6 +10748,8 @@ body:has(.zoomed-page) {
   background: rgba(255, 255, 255, 0.055);
   transform: translateY(-1px);
   outline: none;
+  overflow: visible;
+  z-index: 6;
 }
 
 .board-card.is-you {
@@ -10100,6 +10769,13 @@ body:has(.zoomed-page) {
   color: #ffe08a;
 }
 
+.board-card__who {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .board-card__name {
   min-width: 0;
   display: flex;
@@ -10111,6 +10787,72 @@ body:has(.zoomed-page) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.player-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.rank-medal-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.rank-medal-wrap::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.4rem);
+  transform: translateX(-50%) translateY(-0.15rem);
+  width: max-content;
+  max-width: 16rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(12, 10, 18, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4f1ea;
+  font-family: var(--font-body, inherit);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+}
+
+.rank-medal-wrap:hover::after,
+.rank-medal-wrap:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.rank-medal {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.rank-medal--md {
+  width: 40px;
+  height: 40px;
+}
+
+.rank-medal--lg {
+  width: 56px;
+  height: 56px;
 }
 
 .board-card.is-you .board-card__name {
@@ -10808,6 +11550,75 @@ a.market-card__seller:hover {
   color: rgba(240, 240, 244, 0.7);
 }
 
+.card-lab__exchange {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: end center;
+}
+
+.card-lab__exchange-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(8, 28, 48, 0.62);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.card-lab__exchange-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 52rem);
+  max-height: min(92vh, 56rem);
+  overflow: auto;
+  padding: 1rem 1rem 2rem;
+  border-radius: 20px 20px 0 0;
+  background: #10141c;
+  box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.card-lab__exchange-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.card-lab__exchange-head h2 {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.card-lab__exchange-head p {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.7);
+  font-weight: 600;
+}
+
+.card-lab__exchange-empty {
+  margin: 1rem 0 0;
+  color: rgba(240, 240, 244, 0.7);
+}
+
+.trade-inbox__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.trade-inbox__price input {
+  width: 5.4rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 12, 20, 0.65);
+  color: inherit;
+}
+
 /* Trade room */
 .trade-page {
   width: min(var(--content-max), calc(100% - 2rem));
@@ -11248,6 +12059,13 @@ button.trade-offer-card:hover:not(:disabled) {
   font-size: 1.15rem;
   padding: 0.75rem 0.85rem;
   text-align: center;
+}
+
+.market-sell-price__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(244, 180, 255, 0.8);
 }
 
 .market-sell-price__dock {
@@ -12038,6 +12856,15 @@ button.trade-offer-card:hover:not(:disabled) {
   font-size: clamp(1.55rem, 4vw, 2rem);
 }
 
+.profile-home__meta h2.profile-home__name {
+  margin-bottom: 0.15rem;
+}
+
+.profile-home__meta > .player-badges {
+  display: inline-flex;
+  margin: 0 0 0.7rem;
+}
+
 .profile-home__actions {
   display: flex;
   flex-wrap: wrap;
@@ -12064,6 +12891,19 @@ button.trade-offer-card:hover:not(:disabled) {
 .profile-home__links a:hover {
   text-decoration: underline;
   text-underline-offset: 0.15em;
+}
+
+.profile-lab-hit {
+  margin-left: 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(240, 240, 244, 0.14) !important;
+  text-decoration: none !important;
+}
+
+.profile-lab-hit:hover {
+  color: rgba(210, 0, 211, 0.7) !important;
 }
 
 /* PFP editor modal */
@@ -13726,6 +14566,164 @@ button.hero-proc--action:focus-visible {
 @media (max-width: 520px) {
   .heroes-lab__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.paragon-lab {
+  --card-face-w: 400px;
+  --card-preview-w: 148px;
+  --card-preview-scale: 0.37;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+}
+
+.paragon-lab__main {
+  display: grid;
+  gap: 1.4rem;
+  padding: 0 1.1rem 3rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.paragon-lab__back a {
+  color: #9fd6ff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.paragon-lab__controls {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paragon-lab__controls label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.paragon-lab__controls select,
+.paragon-lab__slider input {
+  width: min(100%, 28rem);
+}
+
+.paragon-lab__meta {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.7);
+  font-weight: 700;
+}
+
+.paragon-lab__focus {
+  width: min(100%, 26rem);
+  justify-self: center;
+  padding: 2.2rem 1.8rem;
+  overflow: visible;
+}
+
+.paragon-lab__focus .monkey-card-scene {
+  width: min(100%, 22rem);
+  justify-self: center;
+}
+
+.paragon-lab__theater {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  overflow: visible;
+}
+
+.paragon-lab__theater-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(58, 2, 119, 0.42), transparent 58%),
+    rgba(4, 6, 14, 0.9);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.paragon-lab__theater-stage {
+  --card-face-w: min(68vw, calc(70vh * 2.5 / 3.5));
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: min(100%, calc(var(--card-face-w) + 12vw));
+  padding: 6vh 7vw 3vh;
+  overflow: visible;
+}
+
+.paragon-lab__theater-stage .monkey-card-scene {
+  width: min(100%, var(--card-face-w));
+  max-width: none;
+  overflow: visible;
+}
+
+.paragon-lab__theater-close {
+  justify-self: end;
+}
+
+.paragon-lab__theater-slider {
+  display: grid;
+  gap: 0.4rem;
+  width: min(100%, var(--card-face-w));
+  font-weight: 800;
+  text-align: center;
+}
+
+.paragon-lab__theater-slider input {
+  width: 100%;
+}
+
+.paragon-lab__stages {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.7rem;
+  justify-items: center;
+}
+
+.paragon-lab__stage {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  width: var(--card-preview-w);
+  padding: 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(12, 14, 22, 0.35);
+  color: inherit;
+  cursor: pointer;
+}
+
+.paragon-lab__stage .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  overflow: hidden;
+  border-radius: calc(22px * var(--card-preview-scale));
+}
+
+.paragon-lab__stage.is-active {
+  border-color: #d200d3;
+}
+
+.paragon-lab__stage span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .paragon-lab {
+    --card-preview-w: 120px;
+    --card-preview-scale: 0.3;
+  }
+
+  .paragon-lab__stages {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

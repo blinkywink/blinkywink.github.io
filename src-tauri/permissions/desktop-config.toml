@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-fetch-desktop-config"
+description = "Fetch the live desktop-config.json used for the version gate"
+commands.allow = ["fetch_desktop_config"]

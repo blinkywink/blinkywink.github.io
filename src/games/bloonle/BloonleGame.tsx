@@ -121,8 +121,8 @@ export function BloonleGame({
           </p>
           <h2>Guess the tower</h2>
           <p className="bloonle-prompt__sub">
-            Base &amp; tier-5 names · no spaces · {len} letters · {maxGuesses}{" "}
-            tries
+            Tower &amp; upgrade names · no spaces · {len} letters ·{" "}
+            {maxGuesses} tries
           </p>
         </div>
 

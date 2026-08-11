@@ -21,12 +21,14 @@ import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
 import { Marketplace } from "./components/Marketplace";
 import { PackOpenerTest } from "./components/PackOpenerTest";
+import { ParagonDegreeLab } from "./components/ParagonDegreeLab";
 import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { RouteFallback } from "./components/RouteFallback";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
+import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
 import {
@@ -148,6 +150,7 @@ function UserCollectionPage() {
     ownedHeroIds: string[];
     equippedHeroId: string | null;
     heroLevels: Record<string, number>;
+    badgeIds: string[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,6 +177,7 @@ function UserCollectionPage() {
           ownedHeroIds: profile.ownedHeroIds,
           equippedHeroId: profile.equippedHeroId,
           heroLevels: profile.heroLevels,
+          badgeIds: profile.badgeIds,
         });
         setLoading(false);
       })
@@ -465,6 +469,7 @@ function AppShell() {
           />
           <Route path="/marketplace/:listingId" element={<ListingPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/paragon-lab" element={<ParagonDegreeLab />} />
           <Route path="/trade/:tradeId" element={<TradeRoom />} />
           <Route path="/user/:username" element={<UserCollectionPage />} />
           <Route
@@ -638,6 +643,7 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <DesktopOnlineGate />
+      <DesktopUpdateGate />
       <HeroFxProvider>
         <AppShell />
       </HeroFxProvider>

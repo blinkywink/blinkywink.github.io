@@ -88,22 +88,24 @@ export function perfectRunBonus(runCash: number): number {
   return Math.round(runCash);
 }
 
-/** Bloonle daily solve = one full perfect quiz run. */
+/** Bloonle daily solve. */
 export function bloonleDailyReward(): number {
-  return perfectRunCash();
+  return 4000;
 }
 
-/** Practice puzzles pay a slice of the daily clear. */
+/** Practice puzzles pay less than the daily, but still worth grinding. */
 export function bloonlePracticeReward(): number {
-  return Math.max(50, Math.round(perfectRunCash() * 0.3));
+  return 1600;
 }
 
-/** First-try Bloonle solve pays double. */
+/** Faster solves pay more; first try is double. */
 export function bloonleSolveReward(
   mode: "daily" | "practice",
   guessCount: number,
 ): number {
   const base =
     mode === "daily" ? bloonleDailyReward() : bloonlePracticeReward();
-  return guessCount <= 1 ? base * 2 : base;
+  const guesses = Math.max(1, Math.floor(guessCount));
+  const mult = guesses <= 1 ? 2 : guesses === 2 ? 1.35 : guesses === 3 ? 1.15 : 1;
+  return Math.round(base * mult);
 }

@@ -7,7 +7,7 @@ type Props = {
   /** Soft motion — focus cards only. */
   animated?: boolean;
   /** Paragon backgrounds go denser / more chromatic than T5. */
-  intensity?: "standard" | "paragon";
+  intensity?: "standard" | "paragon" | "paragon-apex";
   className?: string;
 };
 
@@ -189,7 +189,7 @@ export function CardVisualizerBg({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const crazy = intensity === "paragon";
+    const crazy = intensity === "paragon" || intensity === "paragon-apex";
     const rng = mulberry32(hashSeed(`${seed}::bg::${intensity}`));
     const rand = () => rng();
     // Paragons only expand the color range — same layout density as T5
@@ -210,7 +210,11 @@ export function CardVisualizerBg({
     const isMode = (m: PrimaryMode) => m === mode;
 
     const accentCount =
-      seed === "dart-monkey-35" ? 1 + Math.floor(rand() * 2) : 1 + Math.floor(rand() * 3);
+      seed === "dart-monkey-35"
+        ? 1 + Math.floor(rand() * 2)
+        : intensity === "paragon-apex"
+          ? 3 + Math.floor(rand() * 2)
+          : 1 + Math.floor(rand() * 3);
     const accentPool = [...ACCENTS];
     const accents: AccentLayer[] = [];
     for (let i = 0; i < accentCount && accentPool.length; i++) {

@@ -4,6 +4,8 @@ import {
   clearGuestCards,
   loadGuestCardIds,
 } from "./guestCollection";
+import { clearGuestParagons, loadGuestParagons } from "./guestParagons";
+import { importParagonProgress } from "./paragonApi";
 import { loadGuestWallet, saveGuestWallet } from "./guestWallet";
 import { getAccessToken } from "./supabase";
 import { loadAppSession } from "../auth/session";
@@ -26,7 +28,12 @@ async function mergeOnce(): Promise<void> {
 
   const guestCards = loadGuestCardIds();
   const guestWallet = loadGuestWallet();
-  if (guestCards.length === 0 && guestWallet.coins <= 0) {
+  const guestParagons = loadGuestParagons();
+  if (
+    guestCards.length === 0 &&
+    guestWallet.coins <= 0 &&
+    Object.keys(guestParagons).length === 0
+  ) {
     return;
   }
 
@@ -35,6 +42,11 @@ async function mergeOnce(): Promise<void> {
       await awardCards(group);
     }
     clearGuestCards();
+  }
+
+  if (Object.keys(guestParagons).length > 0) {
+    await importParagonProgress(guestParagons);
+    clearGuestParagons();
   }
 
   if (guestWallet.coins > 0) {

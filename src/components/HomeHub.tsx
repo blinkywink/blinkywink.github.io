@@ -6,13 +6,8 @@ import {
   type ReactNode,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  DEFAULT_AVATAR_CROP,
-  normalizeAvatarCrop,
-  type AvatarCrop,
-} from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
-import { cached, CacheTtl } from "../lib/cache";
+import { fetchTopLeaderboard } from "../lib/leaderboardRanks";
 import {
   collectionPath,
   gamePath,
@@ -28,27 +23,18 @@ import {
   resolveTowerPackTheme,
   type PackDef,
 } from "../lib/packTheme";
-import { supabase } from "../lib/supabase";
 import { isDesktopShell } from "../lib/desktopOnline";
 import {
   DESKTOP_MAC_DMG,
   DESKTOP_WINDOWS_SETUP,
 } from "../lib/desktopDownloads";
 import { ArcadeHome } from "./ArcadeHome";
+import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 import {
   hasPlayerChrome,
-  normalizeAccentColor,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
-
-type BoardRow = {
-  id: string;
-  username: string;
-  coins_earned: number;
-  avatar: AvatarCrop;
-  accentColor: string | null;
-};
 
 const CARD_PEEK_IDS = [
   "dart-monkey-0-0-0",
@@ -108,7 +94,9 @@ function DestTile({
 /** Site hub. Games up top, feature tiles below. */
 export function HomeHub() {
   const navigate = useNavigate();
-  const [topPlayers, setTopPlayers] = useState<BoardRow[]>([]);
+  const [topPlayers, setTopPlayers] = useState<
+    Awaited<ReturnType<typeof fetchTopLeaderboard>>
+  >([]);
   const shopPeeks = useMemo(() => featuredShopPacks().slice(0, 3), []);
   const cardPeeks = useMemo(
     () =>
@@ -122,32 +110,7 @@ export function HomeHub() {
     let cancelled = false;
     void (async () => {
       try {
-        const rows = await cached(
-          "leaderboard:top",
-          CacheTtl.leaderboard,
-          async () => {
-            const { data, error } = await supabase
-              .from("profiles")
-              .select(
-                "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color",
-              )
-              .order("coins_earned", { ascending: false })
-              .limit(5);
-            if (error) throw new Error(error.message);
-            return (data ?? []).map((r) => ({
-              id: String(r.id),
-              username: String(r.username ?? "Player"),
-              coins_earned: Number(r.coins_earned) || 0,
-              avatar: normalizeAvatarCrop({
-                cardId: r.avatar_card_id ?? null,
-                zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
-                x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
-                y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
-              }),
-              accentColor: normalizeAccentColor(r.accent_color),
-            }));
-          },
-        );
+        const rows = (await fetchTopLeaderboard()).slice(0, 5);
         if (!cancelled) setTopPlayers(rows);
       } catch {
         if (!cancelled) setTopPlayers([]);
@@ -238,7 +201,7 @@ export function HomeHub() {
           <p className="home-hub__note">Leaderboard loading…</p>
         ) : (
           <div className="home-hub__row home-hub__row--players">
-            {topPlayers.map((row, i) => {
+            {topPlayers.map((row) => {
               const chrome = playerChromeStyle({
                 accentColor: row.accentColor,
               });
@@ -250,9 +213,14 @@ export function HomeHub() {
                   style={chromeOn ? chrome : undefined}
                   to={userCollectionPath(row.username)}
                 >
-                  <span className="home-hub__rank">{i + 1}</span>
+                  <span className="home-hub__rank">{row.rank}</span>
                   <UserAvatar crop={row.avatar} size={36} />
                   <strong>{row.username}</strong>
+                  <PlayerBadges
+                    rank={row.rank}
+                    badgeIds={row.badgeIds}
+                    size="sm"
+                  />
                 </Link>
               );
             })}

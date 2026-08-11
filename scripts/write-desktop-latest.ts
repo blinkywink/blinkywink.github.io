@@ -1,14 +1,17 @@
 /**
  * Write public/desktop-latest.json from signed Tauri updater artifacts.
- * Run after: npm run desktop:build && npm run desktop:build:windows
+ * Prefer: npm run desktop:publish  (also uploads the GitHub release)
  */
 import fs from "node:fs";
 import path from "node:path";
-import { DESKTOP_RELEASE_TAG_BASE } from "../src/lib/desktopDownloads.ts";
+import {
+  RELEASE_DOWNLOAD,
+  readDesktopVersion,
+  releaseTag,
+} from "./desktop-version.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_JSON = path.join(ROOT, "public", "desktop-latest.json");
-const TAURI_CONF = path.join(ROOT, "src-tauri", "tauri.conf.json");
 
 const MAC_DIRS = [
   path.join(ROOT, "src-tauri/target/release/bundle/macos"),
@@ -45,14 +48,8 @@ function readSig(artifactPath: string): string {
   return fs.readFileSync(sigPath, "utf8").trim();
 }
 
-const tauriConf = JSON.parse(fs.readFileSync(TAURI_CONF, "utf8")) as {
-  version?: string;
-};
-const version = String(tauriConf.version ?? "").trim();
-if (!version) {
-  console.error("src-tauri/tauri.conf.json is missing version");
-  process.exit(1);
-}
+const version = readDesktopVersion();
+const tag = releaseTag(version);
 
 const macTar = newestMatch(
   MAC_DIRS,
@@ -68,18 +65,20 @@ const winExe = newestMatch(
 const platforms: Record<string, PlatformEntry> = {};
 
 if (macTar) {
-  const signature = readSig(macTar);
-  const url = `${DESKTOP_RELEASE_TAG_BASE}/blinkywink-mac.app.tar.gz`;
-  platforms["darwin-aarch64"] = { signature, url };
+  platforms["darwin-aarch64"] = {
+    signature: readSig(macTar),
+    url: `${RELEASE_DOWNLOAD}/${tag}/blinkywink-mac.app.tar.gz`,
+  };
   console.log(`Mac updater: ${path.basename(macTar)}`);
 } else {
   console.warn("Skip Mac — no .app.tar.gz found");
 }
 
 if (winExe) {
-  const signature = readSig(winExe);
-  const url = `${DESKTOP_RELEASE_TAG_BASE}/blinkywink-windows-setup.exe`;
-  platforms["windows-x86_64"] = { signature, url };
+  platforms["windows-x86_64"] = {
+    signature: readSig(winExe),
+    url: `${RELEASE_DOWNLOAD}/${tag}/blinkywink-windows-setup.exe`,
+  };
   console.log(`Windows updater: ${path.basename(winExe)}`);
 } else {
   console.warn("Skip Windows — no NSIS .exe found");
@@ -94,7 +93,7 @@ if (!Object.keys(platforms).length) {
 
 const manifest = {
   version,
-  notes: "Update to the latest blinkywink.co desktop app.",
+  notes: `blinkywink.co desktop ${version}`,
   pub_date: new Date().toISOString(),
   platforms,
 };
@@ -102,18 +101,4 @@ const manifest = {
 fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
 fs.writeFileSync(OUT_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`\nWrote ${path.relative(ROOT, OUT_JSON)} (version ${version})`);
-console.log("\nUpload to the GitHub `beta` release:");
-if (macTar) {
-  console.log(`  ${macTar}`);
-  console.log("    as blinkywink-mac.app.tar.gz");
-}
-if (winExe) {
-  console.log(`  ${winExe}`);
-  console.log("    as blinkywink-windows-setup.exe");
-}
-console.log(`  ${OUT_JSON}`);
-console.log("    as latest.json");
-console.log("\nThen commit and push public/desktop-latest.json so auto-update can find it.");
-console.log(
-  "To force-kill older installs, raise minDesktopVersion in public/desktop-config.json and deploy the site.",
-);
+console.log("Upload with: npm run desktop:publish");

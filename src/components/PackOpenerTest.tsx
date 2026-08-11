@@ -10,6 +10,11 @@ import {
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
+import {
+  feedForDuplicate,
+  formatParagonFeedLine,
+  type ParagonFeed,
+} from "../lib/paragonProgress";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
 import {
   btd6Pack,
@@ -217,7 +222,7 @@ export function PackOpenerTest({
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
   const { profile, setCoinBalance } = useAuth();
-  const { awardCards, owned } = useCardCollection();
+  const { awardCards, applyParagonFeeds, owned } = useCardCollection();
   const {
     packPullMods,
     onObynExtra,
@@ -230,6 +235,9 @@ export function PackOpenerTest({
   const [pulls, setPulls] = useState<MonkeyCardSpec[]>([]);
   const [duplicates, setDuplicates] = useState<ReadonlySet<string>>(new Set());
   const [duplicateCash, setDuplicateCash] = useState(0);
+  const [paragonFeeds, setParagonFeeds] = useState<ReadonlyMap<string, ParagonFeed>>(
+    new Map(),
+  );
   const [godPack, setGodPack] = useState(false);
   const [index, setIndex] = useState(0);
   const [slash, setSlash] = useState<Pt[]>([]);
@@ -289,6 +297,7 @@ export function PackOpenerTest({
     duplicatesRef.current = new Set();
     setDuplicates(new Set());
     setDuplicateCash(0);
+    setParagonFeeds(new Map());
     setGodPack(false);
     setIndex(0);
     indexRef.current = 0;
@@ -319,6 +328,7 @@ export function PackOpenerTest({
     duplicatesRef.current = new Set();
     setDuplicates(new Set());
     setDuplicateCash(0);
+    setParagonFeeds(new Map());
     setGodPack(false);
     setIndex(0);
     indexRef.current = 0;
@@ -506,11 +516,18 @@ export function PackOpenerTest({
       const ownedAtOpen = owned;
       const dupIds = new Set<string>();
       const unlocked: MonkeyCardSpec[] = [];
+      const feeds: ParagonFeed[] = [];
+      const feedByCard = new Map<string, ParagonFeed>();
       let cash = 0;
       for (const card of cards) {
         if (ownedAtOpen.has(card.id)) {
           dupIds.add(card.id);
           cash += duplicateCashForCard(card, dupCashMods());
+          const feed = feedForDuplicate(card);
+          if (feed && ownedAtOpen.has(feed.paragonId)) {
+            feeds.push(feed);
+            feedByCard.set(card.id, feed);
+          }
         } else {
           unlocked.push(card);
         }
@@ -521,18 +538,26 @@ export function PackOpenerTest({
       duplicateCashRef.current = cash;
       duplicatesRef.current = dupIds;
       paidDupIndicesRef.current = new Set();
+      for (const card of cards) {
+        const img = new Image();
+        img.src = card.entity.image;
+      }
       setPulls(cards);
       setDuplicates(dupIds);
       setDuplicateCash(cash);
+      setParagonFeeds(feedByCard);
       setGodPack(isGod);
 
       if (unlocked.length) {
         void awardCards(unlocked.map((c) => c.id));
       }
+      if (feeds.length) {
+        void applyParagonFeeds(feeds);
+      }
       // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
     },
-    [awardCards, dupCashMods, owned, showCardAt],
+    [applyParagonFeeds, awardCards, dupCashMods, owned, showCardAt],
   );
 
   const completeCut = useCallback(
@@ -1069,10 +1094,17 @@ export function PackOpenerTest({
                       mode="focus"
                     />
                     {currentIsDup ? (
-                      <p className="pack-opener__dup-banner" role="status">
-                        Duplicate · +
-                        {duplicateCashForCard(current, dupCashMods())} Cash
-                      </p>
+                      <div className="pack-opener__dup-stack" role="status">
+                        <p className="pack-opener__dup-banner">
+                          Duplicate · +
+                          {duplicateCashForCard(current, dupCashMods())} Cash
+                        </p>
+                        {paragonFeeds.get(current.id) ? (
+                          <p className="pack-opener__xp-banner">
+                            {formatParagonFeedLine(paragonFeeds.get(current.id)!)}
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
                   </>
                 ) : null}
@@ -1142,10 +1174,16 @@ export function PackOpenerTest({
                     entity={card.entity}
                     pathLevels={card.pathLevels}
                     mode="preview"
+                    owned
+                    staticArt
                   />
                   <span>
                     {isDup
-                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}`
+                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}${
+                          paragonFeeds.get(card.id)
+                            ? ` · ${formatParagonFeedLine(paragonFeeds.get(card.id)!)}`
+                            : ""
+                        }`
                       : card.isParagon
                         ? `${card.tower} · Paragon`
                         : `${card.tower} · ${card.pathLevels.join("-")}`}

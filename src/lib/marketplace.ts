@@ -17,6 +17,8 @@ export type MarketplaceListing = {
   price: number;
   createdAt: string;
   status?: string;
+  paragonDegree?: number | null;
+  paragonXp?: number | null;
 };
 
 export type MarketOffer = {
@@ -76,15 +78,19 @@ async function profilesByIds(ids: string[]) {
   return map;
 }
 
+type ListingRow = {
+  id: string;
+  seller_id: string;
+  card_id: string;
+  price: number;
+  created_at: string;
+  status?: string;
+  paragon_degree?: number | null;
+  paragon_xp?: number | null;
+};
+
 function mapListing(
-  r: {
-    id: string;
-    seller_id: string;
-    card_id: string;
-    price: number;
-    created_at: string;
-    status?: string;
-  },
+  r: ListingRow,
   profiles: Map<string, { username: string; avatar: AvatarCrop }>,
 ): MarketplaceListing {
   const seller = profiles.get(String(r.seller_id));
@@ -97,8 +103,15 @@ function mapListing(
     price: Number(r.price) || 0,
     createdAt: String(r.created_at),
     status: r.status ? String(r.status) : undefined,
+    paragonDegree:
+      r.paragon_degree == null ? null : Number(r.paragon_degree) || 1,
+    paragonXp: r.paragon_xp == null ? null : Number(r.paragon_xp) || 0,
   };
 }
+
+const LISTING_COLS =
+  "id, seller_id, card_id, price, created_at, status, paragon_degree, paragon_xp";
+const LISTING_COLS_FALLBACK = "id, seller_id, card_id, price, created_at, status";
 
 /** Active listings newest-first. */
 export async function fetchMarketplaceListings(
@@ -108,16 +121,25 @@ export async function fetchMarketplaceListings(
     "market:listings",
     CacheTtl.listings,
     async () => {
-      const { data, error } = await supabase
+      const first = await supabase
         .from("marketplace_listings")
-        .select("id, seller_id, card_id, price, created_at, status")
+        .select(LISTING_COLS)
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(200);
 
-      if (error) throw new Error(error.message);
+      const result = first.error
+        ? await supabase
+            .from("marketplace_listings")
+            .select(LISTING_COLS_FALLBACK)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(200)
+        : first;
 
-      const rows = data ?? [];
+      if (result.error) throw new Error(result.error.message);
+
+      const rows = (result.data ?? []) as ListingRow[];
       const profiles = await profilesByIds([
         ...new Set(rows.map((r) => String(r.seller_id))),
       ]);
@@ -131,17 +153,25 @@ export async function fetchMarketplaceListings(
 export async function fetchMarketplaceListing(
   listingId: string,
 ): Promise<MarketplaceListing | null> {
-  const { data, error } = await supabase
+  const first = await supabase
     .from("marketplace_listings")
-    .select("id, seller_id, card_id, price, created_at, status")
+    .select(LISTING_COLS)
     .eq("id", listingId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
-  if (!data) return null;
+  const result = first.error
+    ? await supabase
+        .from("marketplace_listings")
+        .select(LISTING_COLS_FALLBACK)
+        .eq("id", listingId)
+        .maybeSingle()
+    : first;
 
-  const profiles = await profilesByIds([String(data.seller_id)]);
-  return mapListing(data, profiles);
+  if (result.error) throw new Error(result.error.message);
+  if (!result.data) return null;
+
+  const profiles = await profilesByIds([String(result.data.seller_id)]);
+  return mapListing(result.data as ListingRow, profiles);
 }
 
 export async function listCardForSale(
@@ -247,6 +277,43 @@ export async function fetchListingOffers(
   });
   if (error) throw new Error(error.message);
   return Array.isArray(data) ? (data as ListingOfferRow[]) : [];
+}
+
+export type MarketSaleNotice = {
+  id: string;
+  listingId: string;
+  cardId: string;
+  price: number;
+  buyerId: string;
+  buyerUsername: string;
+  createdAt: string;
+};
+
+export async function fetchMarketSaleNotices(
+  opts?: { force?: boolean },
+): Promise<MarketSaleNotice[]> {
+  requireSession();
+  return cached(
+    "market:sales:inbox",
+    CacheTtl.inbox,
+    async () => {
+      const { data, error } = await supabase.rpc("get_market_sale_notices");
+      if (error) throw new Error(error.message);
+      const raw = (data ?? {}) as { sales?: MarketSaleNotice[] };
+      return Array.isArray(raw.sales) ? raw.sales : [];
+    },
+    opts,
+  );
+}
+
+export async function ackMarketSaleNotices(ids: string[]): Promise<void> {
+  requireSession();
+  if (!ids.length) return;
+  const { error } = await supabase.rpc("ack_market_sale_notices", {
+    p_ids: ids,
+  });
+  if (error) throw new Error(error.message);
+  cacheInvalidate("market:sales");
 }
 
 /** Notify seller/buyer after offer mutations. */

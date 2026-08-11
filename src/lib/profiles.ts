@@ -10,6 +10,7 @@ import {
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
 } from "./profileHeroes";
+import { normalizeBadgeIds } from "./profileBadges";
 import { normalizeShowcaseIds } from "./profileShowcase";
 
 export type PublicProfile = {
@@ -21,6 +22,7 @@ export type PublicProfile = {
   ownedHeroIds: string[];
   equippedHeroId: string | null;
   heroLevels: Record<string, number>;
+  badgeIds: string[];
 };
 
 export type ProfileSearchHit = {
@@ -29,6 +31,7 @@ export type ProfileSearchHit = {
   coinsEarned: number;
   avatar: AvatarCrop;
   accentColor: string | null;
+  badgeIds: string[];
 };
 
 function escapeIlike(raw: string): string {
@@ -73,6 +76,7 @@ export async function fetchProfileByUsername(
         ? String(row.equipped_hero_id)
         : null,
       heroLevels: normalizeHeroLevels(row.hero_levels),
+      badgeIds: normalizeBadgeIds(row.badge_ids),
     };
   });
 }
@@ -89,7 +93,7 @@ export async function searchProfilesByUsername(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color",
+      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, profile_badges(badge_id)",
     )
     .ilike("username", pattern)
     .order("coins_earned", { ascending: false })
@@ -111,5 +115,8 @@ export async function searchProfilesByUsername(
       y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
     }),
     accentColor: normalizeAccentColor(row.accent_color),
+    badgeIds: normalizeBadgeIds(
+      (row as { profile_badges?: unknown }).profile_badges,
+    ),
   }));
 }

@@ -50,12 +50,20 @@ import {
   setSfxVolume,
   subscribeSfxVolume,
 } from "../lib/packSounds";
-import { collectionPath, shopPath, userCollectionPath } from "../lib/routes";
+import {
+  collectionPath,
+  paragonLabPath,
+  shopPath,
+  userCollectionPath,
+} from "../lib/routes";
+import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
+import { fetchBadgeIds } from "../lib/profileBadges";
 import { HeroCardFace } from "./HeroCollectionStrip";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { MonkeyCard } from "./MonkeyCard";
+import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 
 type EditorStep = "pick" | "crop";
@@ -74,8 +82,30 @@ export function ProfilePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [boardRank, setBoardRank] = useState<number | null>(null);
+  const [badgeIds, setBadgeIds] = useState<string[]>([]);
 
   useEffect(() => subscribeSfxVolume(setSfxVolumeState), []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setBoardRank(null);
+      setBadgeIds([]);
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      fetchLeaderboardRank(user.id),
+      fetchBadgeIds(user.id),
+    ]).then(([rank, badges]) => {
+      if (cancelled) return;
+      setBoardRank(rank);
+      setBadgeIds(badges);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const saved = useMemo(
     () => (profile ? avatarFromProfile(profile) : DEFAULT_AVATAR_CROP),
@@ -599,7 +629,8 @@ export function ProfilePage() {
             <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
           </div>
           <div className="profile-home__meta">
-            <h2>{user.username}</h2>
+            <h2 className="profile-home__name">{user.username}</h2>
+            <PlayerBadges rank={boardRank} badgeIds={badgeIds} size="lg" />
             <div className="profile-home__actions">
               <button
                 type="button"
@@ -623,6 +654,13 @@ export function ProfilePage() {
               <Link to={collectionPath()}>My cards</Link>
               <span aria-hidden="true">·</span>
               <Link to={userCollectionPath(user.username)}>Public page</Link>
+              <Link
+                to={paragonLabPath()}
+                className="profile-lab-hit"
+                title="Paragon degree lab"
+              >
+                zz
+              </Link>
             </p>
           </div>
         </section>

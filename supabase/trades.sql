@@ -592,7 +592,7 @@ begin
     on conflict do nothing;
   end if;
 
-  delete from public.trade_offers where trade_id = t.id;
+  -- Keep offer rows so both players still see what swapped.
 
   update public.trades
   set status = 'completed',

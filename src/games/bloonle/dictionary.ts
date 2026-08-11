@@ -14,16 +14,25 @@ export type BloonlePuzzle = {
   entity: TowerEntity;
 };
 
+const MIN_SLUG = 5;
+/** Long enough for variety; still a readable Wordle row. */
+const MAX_SLUG = 12;
+
+/** Formal / obvious titles that aren't fun to type as one blob. */
+function isExcludedName(name: string, slug: string): boolean {
+  if (slug.length < MIN_SLUG || slug.length > MAX_SLUG) return true;
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 4) return true;
+  if (/^the\s/i.test(name)) return true;
+  return false;
+}
+
 function buildPool(): BloonlePuzzle[] {
-  const raw = towerEntities.filter(
-    (e) => e.type === "tower" || (e.type === "upgrade" && e.tier === 5),
-  );
   const seen = new Set<string>();
   const out: BloonlePuzzle[] = [];
-  for (const entity of raw) {
+  for (const entity of towerEntities) {
     const slug = normalizeName(entity.name);
-    // Keep titles short enough for a readable Wordle board
-    if (slug.length < 5 || slug.length > 10 || seen.has(slug)) continue;
+    if (isExcludedName(entity.name, slug) || seen.has(slug)) continue;
     seen.add(slug);
     out.push({ slug, displayName: entity.name, entity });
   }
@@ -78,9 +87,17 @@ export function dayNumber(key: string): number {
   return Math.floor(Date.UTC(y!, m! - 1, d!) / 86_400_000);
 }
 
+function hashDay(key: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 export function puzzleForDay(key: string): BloonlePuzzle {
-  const idx = ((dayNumber(key) % BLOONLE_POOL.length) + BLOONLE_POOL.length) %
-    BLOONLE_POOL.length;
+  const idx = hashDay(key) % BLOONLE_POOL.length;
   return BLOONLE_POOL[idx]!;
 }
 

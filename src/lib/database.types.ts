@@ -101,6 +101,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      paragon_progress: {
+        Row: {
+          user_id: string;
+          card_id: string;
+          degree: number;
+          xp: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          card_id: string;
+          degree?: number;
+          xp?: number;
+          updated_at?: string;
+        };
+        Update: {
+          degree?: number;
+          xp?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      profile_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          granted_at: string;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          granted_at?: string;
+        };
+        Update: {
+          badge_id?: string;
+          granted_at?: string;
+        };
+        Relationships: [];
+      };
       owned_cards: {
         Row: OwnedCard;
         Insert: {
@@ -121,6 +160,8 @@ export type Database = {
           price: number;
           status: string;
           created_at: string;
+          paragon_degree?: number | null;
+          paragon_xp?: number | null;
         };
         Insert: {
           id?: string;
@@ -129,6 +170,8 @@ export type Database = {
           price: number;
           status?: string;
           created_at?: string;
+          paragon_degree?: number | null;
+          paragon_xp?: number | null;
         };
         Update: {
           status?: string;
@@ -199,6 +242,24 @@ export type Database = {
         Args: { p_card_ids: string[] };
         Returns: string[];
       };
+      get_player_paragons: {
+        Args: { p_user_id: string };
+        Returns: { card_id: string; degree: number; xp: number }[];
+      };
+      apply_paragon_feeds: {
+        Args: { p_feeds: unknown };
+        Returns: {
+          card_id: string;
+          degree: number;
+          xp: number;
+          xp_gained: number;
+          degrees_gained: number;
+        }[];
+      };
+      import_paragon_progress: {
+        Args: { p_rows: unknown };
+        Returns: { card_id: string; degree: number; xp: number }[];
+      };
       get_player_cards: {
         Args: { p_user_id: string };
         Returns: string[];
@@ -218,6 +279,7 @@ export type Database = {
           owned_hero_ids: string[] | null;
           equipped_hero_id: string | null;
           hero_levels: Record<string, number> | null;
+          badge_ids: string[] | null;
         }[];
       };
       buy_hero: {
@@ -291,6 +353,14 @@ export type Database = {
         Args: { p_listing_id: string };
         Returns: unknown;
       };
+      get_market_sale_notices: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      ack_market_sale_notices: {
+        Args: { p_ids: string[] };
+        Returns: number;
+      };
       request_trade: {
         Args: { p_username: string };
         Returns: string;
@@ -317,6 +387,22 @@ export type Database = {
       };
       set_trade_ready: {
         Args: { p_trade_id: string; p_ready: boolean };
+        Returns: unknown;
+      };
+      request_exchange: {
+        Args: { p_username: string; p_card_id: string };
+        Returns: string;
+      };
+      respond_exchange: {
+        Args: { p_exchange_id: string; p_accept: boolean; p_price: number };
+        Returns: string;
+      };
+      cancel_exchange: {
+        Args: { p_exchange_id: string };
+        Returns: boolean;
+      };
+      get_exchange_inbox: {
+        Args: Record<string, never>;
         Returns: unknown;
       };
       set_profile_avatar: {

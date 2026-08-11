@@ -10,14 +10,29 @@ import {
 import { useAuth } from "./AuthProvider";
 import { awardCards as persistAwardCards, fetchOwnedCardIds } from "../lib/awardCards";
 import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
+import {
+  applyParagonFeeds as persistParagonFeeds,
+  ensureParagonStates,
+  fetchOwnParagons,
+} from "../lib/paragonApi";
+import {
+  freshParagonState,
+  type ParagonApplyResult,
+  type ParagonFeed,
+  type ParagonState,
+} from "../lib/paragonProgress";
+import type { ParagonMap } from "../lib/guestParagons";
 
 type CardCollectionContextValue = {
   ready: boolean;
   owned: ReadonlySet<string>;
   owns: (cardId: string) => boolean;
   ownedCount: number;
+  paragons: ReadonlyMap<string, ParagonState>;
+  paragonOf: (cardId: string) => ParagonState | null;
   /** Persist unlocks; returns newly added ids. */
   awardCards: (cardIds: string[]) => Promise<string[]>;
+  applyParagonFeeds: (feeds: ParagonFeed[]) => Promise<ParagonApplyResult[]>;
   refresh: () => Promise<void>;
 };
 
@@ -29,10 +44,15 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const { ready: authReady, session, isGuest } = useAuth();
   const [ready, setReady] = useState(false);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
+  const [paragonMap, setParagonMap] = useState<ParagonMap>({});
 
   const refresh = useCallback(async () => {
-    const ids = await fetchOwnedCardIds();
+    const [ids, nextParagons] = await Promise.all([
+      fetchOwnedCardIds(),
+      fetchOwnParagons(),
+    ]);
     setOwnedIds(ids);
+    setParagonMap(await ensureParagonStates(ids, nextParagons));
   }, []);
 
   useEffect(() => {
@@ -43,9 +63,13 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       if (session?.userId) {
         await mergeGuestProgressIntoAccount();
       }
-      const ids = await fetchOwnedCardIds();
+      const [ids, nextParagons] = await Promise.all([
+        fetchOwnedCardIds(),
+        fetchOwnParagons(),
+      ]);
       if (cancelled) return;
       setOwnedIds(ids);
+      setParagonMap(await ensureParagonStates(ids, nextParagons));
     })();
     return () => {
       cancelled = true;
@@ -59,10 +83,37 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       for (const id of cardIds) next.add(id);
       return [...next];
     });
+    setParagonMap((prev) => {
+      const next = { ...prev };
+      for (const id of cardIds) {
+        if (id.endsWith("-paragon") && !next[id]) {
+          next[id] = freshParagonState();
+        }
+      }
+      return next;
+    });
     return added;
   }, []);
 
+  const applyParagonFeeds = useCallback(
+    async (feeds: ParagonFeed[]) => {
+      const ownedSet = new Set(ownedIds);
+      const { map, results } = await persistParagonFeeds(
+        feeds,
+        ownedSet,
+        paragonMap,
+      );
+      setParagonMap(map);
+      return results;
+    },
+    [ownedIds, paragonMap],
+  );
+
   const owned = useMemo(() => new Set(ownedIds), [ownedIds]);
+  const paragons = useMemo(
+    () => new Map(Object.entries(paragonMap)),
+    [paragonMap],
+  );
 
   const value = useMemo<CardCollectionContextValue>(
     () => ({
@@ -70,10 +121,13 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       owned,
       owns: (cardId: string) => owned.has(cardId),
       ownedCount: owned.size,
+      paragons,
+      paragonOf: (cardId: string) => paragons.get(cardId) ?? null,
       awardCards,
+      applyParagonFeeds,
       refresh,
     }),
-    [ready, owned, awardCards, refresh],
+    [ready, owned, paragons, awardCards, applyParagonFeeds, refresh],
   );
 
   return (
@@ -89,4 +143,8 @@ export function useCardCollection(): CardCollectionContextValue {
     throw new Error("useCardCollection must be used within CardCollectionProvider");
   }
   return ctx;
+}
+
+export function useCardCollectionOptional(): CardCollectionContextValue | null {
+  return useContext(CardCollectionContext);
 }

@@ -9,6 +9,7 @@ import {
   todaysDailyCard,
 } from "../lib/dailyReward";
 import { duplicateCashForCard } from "../lib/packPull";
+import { feedForDuplicate } from "../lib/paragonProgress";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
 import { MonkeyCard } from "./MonkeyCard";
 
@@ -28,7 +29,7 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
     ready,
     setCoinBalance,
   } = useAuth();
-  const { owned, awardCards } = useCardCollection();
+  const { owned, awardCards, applyParagonFeeds } = useCardCollection();
   const { dupCashMods } = useQuizHeroFx();
   const [cashBusy, setCashBusy] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
@@ -73,6 +74,10 @@ export function DailyClaimButton({ variant = "inline" }: Props) {
       const dup = duplicateCashForCard(reward.card, dupCashMods());
       const bal = await awardCoins(dup);
       if (bal != null) setCoinBalance(bal);
+      const feed = feedForDuplicate(reward.card);
+      if (feed && owned.has(feed.paragonId)) {
+        await applyParagonFeeds([feed]);
+      }
     } else {
       await awardCards([reward.card.id]);
     }

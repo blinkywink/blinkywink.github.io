@@ -59,6 +59,10 @@ export function profilePath(): string {
   return "/profile";
 }
 
+export function paragonLabPath(): string {
+  return "/profile/paragon-lab";
+}
+
 export function tradePath(tradeId: string): string {
   return `/trade/${encodeURIComponent(tradeId)}`;
 }

@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
+import type { AvatarCrop } from "../lib/avatar";
 import {
-  DEFAULT_AVATAR_CROP,
-  normalizeAvatarCrop,
-  type AvatarCrop,
-} from "../lib/avatar";
-import { supabase } from "../lib/supabase";
-import { cached, CacheTtl } from "../lib/cache";
+  fetchTopLeaderboard,
+  type LeaderboardEntry,
+} from "../lib/leaderboardRanks";
 import { searchProfilesByUsername } from "../lib/profiles";
 import {
   hasPlayerChrome,
-  normalizeAccentColor,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { PageHeader } from "./PageHeader";
+import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 
 export type LeaderboardPlayer = {
@@ -34,31 +32,11 @@ type Row = {
   accentColor: string | null;
   /** Global rank among top board, when known. */
   rank: number | null;
+  badgeIds: string[];
 };
 
-function mapProfileRow(r: {
-  id: string;
-  username: string;
-  coins_earned: number;
-  avatar_card_id: string | null;
-  avatar_zoom: number | null;
-  avatar_x: number | null;
-  avatar_y: number | null;
-  accent_color?: string | null;
-}, rank: number | null): Row {
-  return {
-    id: String(r.id),
-    username: String(r.username ?? "Player"),
-    coins_earned: Number(r.coins_earned) || 0,
-    avatar: normalizeAvatarCrop({
-      cardId: r.avatar_card_id ?? null,
-      zoom: r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
-      x: r.avatar_x ?? DEFAULT_AVATAR_CROP.x,
-      y: r.avatar_y ?? DEFAULT_AVATAR_CROP.y,
-    }),
-    accentColor: normalizeAccentColor(r.accent_color),
-    rank,
-  };
+function entryToRow(entry: LeaderboardEntry): Row {
+  return { ...entry };
 }
 
 export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
@@ -75,24 +53,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const next = await cached(
-        "leaderboard:top100",
-        CacheTtl.leaderboard,
-        async () => {
-          const { data, error: err } = await supabase
-            .from("profiles")
-            .select(
-              "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color",
-            )
-            .order("coins_earned", { ascending: false })
-            .limit(100);
-
-          if (err) throw new Error(err.message);
-          return (data ?? []).map((r, i) => mapProfileRow(r, i + 1));
-        },
-        { force },
-      );
-      setRows(next);
+      setRows((await fetchTopLeaderboard(force)).map(entryToRow));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
       setRows([]);
@@ -130,6 +91,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
               avatar: h.avatar,
               accentColor: h.accentColor,
               rank: null,
+              badgeIds: h.badgeIds,
             })),
           );
         } catch (err) {
@@ -253,11 +215,18 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                         {row.rank ?? "-"}
                       </span>
                       <UserAvatar crop={row.avatar} size={56} />
-                      <span className="board-card__name">
-                        {row.username}
-                        {mine ? (
-                          <span className="board-card__you">you</span>
-                        ) : null}
+                      <span className="board-card__who">
+                        <span className="board-card__name">
+                          {row.username}
+                          {mine ? (
+                            <span className="board-card__you">you</span>
+                          ) : null}
+                        </span>
+                        <PlayerBadges
+                          rank={row.rank}
+                          badgeIds={row.badgeIds}
+                          size="md"
+                        />
                       </span>
                       <span className="board-card__earned">
                         {row.coins_earned.toLocaleString("en-US")}

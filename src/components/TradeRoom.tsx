@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { fetchPlayerCardIds } from "../lib/awardCards";
+import { fetchPlayerParagons } from "../lib/paragonApi";
+import type { ParagonMap } from "../lib/guestParagons";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
   cancelTrade,
@@ -32,15 +34,28 @@ export function TradeRoom() {
   const [partnerOwned, setPartnerOwned] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [partnerParagons, setPartnerParagons] = useState<ParagonMap>({});
   const strippingRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!tradeId || !user) return;
     try {
       const next = await fetchTrade(tradeId);
-      setTrade(next);
+      setTrade((prev) => {
+        if (next.status !== "completed") return next;
+        return {
+          ...next,
+          myOffer: next.myOffer.length ? next.myOffer : (prev?.myOffer ?? []),
+          theirOffer: next.theirOffer.length
+            ? next.theirOffer
+            : (prev?.theirOffer ?? []),
+        };
+      });
       setLocalOffer((prev) => {
-        const incoming = next.myOffer;
+        const incoming =
+          next.status === "completed" && !next.myOffer.length
+            ? prev
+            : next.myOffer;
         if (
           prev.length === incoming.length &&
           prev.every((id, i) => id === incoming[i])
@@ -59,6 +74,7 @@ export function TradeRoom() {
       });
       setError(null);
       if (next.status === "completed") {
+        setStatus((prev) => prev ?? "Trade completed");
         void refreshCards();
       }
     } catch (err) {
@@ -74,6 +90,7 @@ export function TradeRoom() {
 
   useEffect(() => {
     if (!tradeId || !user) return;
+    if (trade?.status === "completed" || trade?.status === "cancelled") return;
     const poll = window.setInterval(() => void load(), 1500);
     const unsub = subscribeTradeChannel(tradeId, () => {
       void load();
@@ -82,7 +99,7 @@ export function TradeRoom() {
       window.clearInterval(poll);
       unsub();
     };
-  }, [tradeId, user, load]);
+  }, [tradeId, user, load, trade?.status]);
 
   const partnerId = useMemo(() => {
     if (!trade || !user) return null;
@@ -94,15 +111,23 @@ export function TradeRoom() {
   useEffect(() => {
     if (!partnerId) {
       setPartnerOwned(new Set());
+      setPartnerParagons({});
       return;
     }
     let cancelled = false;
-    void fetchPlayerCardIds(partnerId)
-      .then((ids) => {
-        if (!cancelled) setPartnerOwned(new Set(ids));
+    void Promise.all([
+      fetchPlayerCardIds(partnerId),
+      fetchPlayerParagons(partnerId),
+    ])
+      .then(([ids, nextParagons]) => {
+        if (cancelled) return;
+        setPartnerOwned(new Set(ids));
+        setPartnerParagons(nextParagons);
       })
       .catch(() => {
-        if (!cancelled) setPartnerOwned(new Set());
+        if (cancelled) return;
+        setPartnerOwned(new Set());
+        setPartnerParagons({});
       });
     return () => {
       cancelled = true;
@@ -200,11 +225,22 @@ export function TradeRoom() {
     setStatus(null);
     try {
       const next = await setTradeReady(tradeId, ready);
-      setTrade(next);
-      setLocalOffer(next.myOffer);
+      setTrade((prev) => {
+        if (next.status !== "completed") return next;
+        return {
+          ...next,
+          myOffer: next.myOffer.length ? next.myOffer : (prev?.myOffer ?? localOffer),
+          theirOffer: next.theirOffer.length
+            ? next.theirOffer
+            : (prev?.theirOffer ?? []),
+        };
+      });
+      setLocalOffer((prev) =>
+        next.status === "completed" && !next.myOffer.length ? prev : next.myOffer,
+      );
       await pingTrade(tradeId);
       if (next.status === "completed") {
-        setStatus("Trade complete, cards swapped!");
+        setStatus("Trade completed");
         void refreshCards();
       }
     } catch (err) {
@@ -275,7 +311,7 @@ export function TradeRoom() {
         title={`With ${partnerName}`}
         blurb={
           done
-            ? "Trade finished. Cards are in both collections."
+            ? "Trade completed. These are the cards that swapped."
             : active
               ? "Pick cards below, then Ready when the offers look good."
               : `This trade is ${trade.status}.`
@@ -285,7 +321,11 @@ export function TradeRoom() {
         {error ? (
           <p className="trade-banner trade-banner--err">{error}</p>
         ) : null}
-        {status ? (
+        {done ? (
+          <p className="trade-banner trade-banner--ok" role="status">
+            Trade completed
+          </p>
+        ) : status ? (
           <p className="trade-banner trade-banner--ok">{status}</p>
         ) : null}
 
@@ -294,8 +334,8 @@ export function TradeRoom() {
             <section className="trade-side">
               <header className="trade-side__head">
                 <h2>You · {localOffer.length}/8</h2>
-                <span className={iAmReady ? "is-ready" : ""}>
-                  {iAmReady ? "Ready" : "Not ready"}
+                <span className={done || iAmReady ? "is-ready" : ""}>
+                  {done ? "Completed" : iAmReady ? "Ready" : "Not ready"}
                 </span>
               </header>
               <div className="trade-offer-grid">
@@ -333,8 +373,8 @@ export function TradeRoom() {
                 <h2>
                   {partnerName} · {trade.theirOffer.length}/8
                 </h2>
-                <span className={theyReady ? "is-ready" : ""}>
-                  {theyReady ? "Ready" : "Not ready"}
+                <span className={done || theyReady ? "is-ready" : ""}>
+                  {done ? "Completed" : theyReady ? "Ready" : "Not ready"}
                 </span>
               </header>
               <div className="trade-offer-grid">
@@ -352,6 +392,11 @@ export function TradeRoom() {
                           mode="preview"
                           owned
                           staticArt
+                          degree={
+                            card.isParagon
+                              ? (partnerParagons[id]?.degree ?? 1)
+                              : undefined
+                          }
                         />
                       </div>
                     );

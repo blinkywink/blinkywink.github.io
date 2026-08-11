@@ -1197,7 +1197,7 @@
       143,
       253
     ],
-    "icon": null
+    "icon": "/images/upgrade-icons/ice-monkey-paragon.webp"
   },
   "ice-monkey-21": {
     "primary": "#059fea",
@@ -6590,5 +6590,277 @@
       200
     ],
     "icon": "/images/upgrade-icons/beast-handler-35.webp"
+  },
+  "druid-paragon": {
+    "primary": "#68c606",
+    "secondary": "#8bd31a",
+    "colors": [
+      "#68c606",
+      "#8bd31a",
+      "#c8a021",
+      "#846607"
+    ],
+    "rgb": [
+      104,
+      198,
+      6
+    ],
+    "icon": "/images/upgrade-icons/druid-paragon.webp"
+  },
+  "skywarden-000": {
+    "primary": "#c46618",
+    "secondary": "#a84707",
+    "colors": [
+      "#c46618",
+      "#a84707",
+      "#2799c7",
+      "#d88131"
+    ],
+    "rgb": [
+      196,
+      102,
+      24
+    ],
+    "icon": "/images/upgrade-icons/skywarden-000.webp"
+  },
+  "skywarden-11": {
+    "primary": "#60c101",
+    "secondary": "#015aac",
+    "colors": [
+      "#60c101",
+      "#015aac",
+      "#1777be",
+      "#489302"
+    ],
+    "rgb": [
+      96,
+      193,
+      1
+    ],
+    "icon": "/images/upgrade-icons/skywarden-11.webp"
+  },
+  "skywarden-12": {
+    "primary": "#7cd21a",
+    "secondary": "#a0e22c",
+    "colors": [
+      "#7cd21a",
+      "#a0e22c",
+      "#65a319",
+      "#316408"
+    ],
+    "rgb": [
+      124,
+      210,
+      26
+    ],
+    "icon": "/images/upgrade-icons/skywarden-12.webp"
+  },
+  "skywarden-13": {
+    "primary": "#0263ad",
+    "secondary": "#2280be",
+    "colors": [
+      "#0263ad",
+      "#2280be",
+      "#a3e434",
+      "#38a1d1"
+    ],
+    "rgb": [
+      2,
+      99,
+      173
+    ],
+    "icon": "/images/upgrade-icons/skywarden-13.webp"
+  },
+  "skywarden-14": {
+    "primary": "#01d3c2",
+    "secondary": "#07b094",
+    "colors": [
+      "#01d3c2",
+      "#07b094",
+      "#84d622",
+      "#0c8c68"
+    ],
+    "rgb": [
+      1,
+      211,
+      194
+    ],
+    "icon": "/images/upgrade-icons/skywarden-14.webp"
+  },
+  "skywarden-15": {
+    "primary": "#196539",
+    "secondary": "#2a7e54",
+    "colors": [
+      "#196539",
+      "#2a7e54",
+      "#459c79",
+      "#60be9c"
+    ],
+    "rgb": [
+      25,
+      101,
+      57
+    ],
+    "icon": "/images/upgrade-icons/skywarden-15.webp"
+  },
+  "skywarden-21": {
+    "primary": "#fecd01",
+    "secondary": "#fcf722",
+    "colors": [
+      "#fecd01",
+      "#fcf722",
+      "#f1d13c",
+      "#f9ea6a"
+    ],
+    "rgb": [
+      254,
+      205,
+      1
+    ],
+    "icon": "/images/upgrade-icons/skywarden-21.webp"
+  },
+  "skywarden-22": {
+    "primary": "#feba01",
+    "secondary": "#fdf610",
+    "colors": [
+      "#feba01",
+      "#fdf610",
+      "#fae844",
+      "#fefb7d"
+    ],
+    "rgb": [
+      254,
+      186,
+      1
+    ],
+    "icon": "/images/upgrade-icons/skywarden-22.webp"
+  },
+  "skywarden-23": {
+    "primary": "#fe9201",
+    "secondary": "#019ddd",
+    "colors": [
+      "#fe9201",
+      "#019ddd",
+      "#c79f04",
+      "#82d301"
+    ],
+    "rgb": [
+      254,
+      146,
+      1
+    ],
+    "icon": "/images/upgrade-icons/skywarden-23.webp"
+  },
+  "skywarden-24": {
+    "primary": "#d8b004",
+    "secondary": "#efd902",
+    "colors": [
+      "#d8b004",
+      "#efd902",
+      "#b68e02",
+      "#976601"
+    ],
+    "rgb": [
+      216,
+      176,
+      4
+    ],
+    "icon": "/images/upgrade-icons/skywarden-24.webp"
+  },
+  "skywarden-25": {
+    "primary": "#eda104",
+    "secondary": "#feda01",
+    "colors": [
+      "#eda104",
+      "#feda01",
+      "#db6d03",
+      "#ba8d0c"
+    ],
+    "rgb": [
+      237,
+      161,
+      4
+    ],
+    "icon": "/images/upgrade-icons/skywarden-25.webp"
+  },
+  "skywarden-31": {
+    "primary": "#028ffe",
+    "secondary": "#10a3db",
+    "colors": [
+      "#028ffe",
+      "#10a3db",
+      "#014aff",
+      "#0170d5"
+    ],
+    "rgb": [
+      2,
+      143,
+      254
+    ],
+    "icon": "/images/upgrade-icons/skywarden-31.webp"
+  },
+  "skywarden-32": {
+    "primary": "#0498fa",
+    "secondary": "#0281d1",
+    "colors": [
+      "#0498fa",
+      "#0281d1",
+      "#05d9fa",
+      "#015aac"
+    ],
+    "rgb": [
+      4,
+      152,
+      250
+    ],
+    "icon": "/images/upgrade-icons/skywarden-32.webp"
+  },
+  "skywarden-33": {
+    "primary": "#0193fd",
+    "secondary": "#02b4dc",
+    "colors": [
+      "#0193fd",
+      "#02b4dc",
+      "#02d9fe",
+      "#0369da"
+    ],
+    "rgb": [
+      1,
+      147,
+      253
+    ],
+    "icon": "/images/upgrade-icons/skywarden-33.webp"
+  },
+  "skywarden-34": {
+    "primary": "#038ffe",
+    "secondary": "#06c6e9",
+    "colors": [
+      "#038ffe",
+      "#06c6e9",
+      "#0677d6",
+      "#03faff"
+    ],
+    "rgb": [
+      3,
+      143,
+      254
+    ],
+    "icon": "/images/upgrade-icons/skywarden-34.webp"
+  },
+  "skywarden-35": {
+    "primary": "#d60403",
+    "secondary": "#064582",
+    "colors": [
+      "#d60403",
+      "#064582",
+      "#e12523",
+      "#a40f0c"
+    ],
+    "rgb": [
+      214,
+      4,
+      3
+    ],
+    "icon": "/images/upgrade-icons/skywarden-35.webp"
   }
 }

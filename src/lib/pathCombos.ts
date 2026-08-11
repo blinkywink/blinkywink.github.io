@@ -68,8 +68,13 @@ function findBase(tower: string): TowerEntity | null {
   return towerEntities.find((e) => e.tower === tower && e.type === "tower") ?? null;
 }
 
-function findParagon(tower: string): TowerEntity | null {
+export function findParagon(tower: string): TowerEntity | null {
   return towerEntities.find((e) => e.tower === tower && e.type === "paragon") ?? null;
+}
+
+/** Collectible id for that tower's Paragon card (`ninja-monkey-paragon`). */
+export function paragonCardId(tower: string): string {
+  return `${towerIdSlug(tower)}-paragon`;
 }
 
 function findUpgrade(

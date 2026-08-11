@@ -34,6 +34,10 @@ const TOWER_ALIASES: Record<string, string[]> = {
   mer: ["mermonkey"],
   merm: ["mermonkey"],
   desperado: ["desperado"],
+  sky: ["skywarden"],
+  warden: ["skywarden"],
+  archer: ["skywarden"],
+  skywarden: ["skywarden"],
 };
 
 export function normalizeSearch(s: string): string {

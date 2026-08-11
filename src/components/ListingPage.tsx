@@ -15,6 +15,7 @@ import {
   type MarketplaceListing,
 } from "../lib/marketplace";
 import { formatPathLevels, maxPathTier } from "../lib/pathCombos";
+import { suggestedParagonValue } from "../lib/paragonProgress";
 import { playBuy } from "../lib/packSounds";
 import { marketplacePath, userCollectionPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
@@ -48,6 +49,7 @@ export function ListingPage() {
   const [busy, setBusy] = useState(false);
   const [offerInput, setOfferInput] = useState("");
   const [offerOpen, setOfferOpen] = useState(false);
+  const [justPurchased, setJustPurchased] = useState(false);
 
   const load = useCallback(async () => {
     if (!listingId) return;
@@ -70,6 +72,7 @@ export function ListingPage() {
   }, [listingId, user, isGuest]);
 
   useEffect(() => {
+    setJustPurchased(false);
     void load();
   }, [load]);
 
@@ -84,7 +87,7 @@ export function ListingPage() {
   );
 
   const mine = Boolean(user && listing && user.id === listing.sellerId);
-  const active = listing?.status === "active";
+  const active = listing?.status === "active" && !justPurchased;
   const alreadyOwn = listing ? owned.has(listing.cardId) : false;
   const myOffer = offers.find((o) => o.buyerId === user?.id) ?? null;
   const canBuy =
@@ -114,9 +117,11 @@ export function ListingPage() {
       const bal = await buyListing(listing.id);
       playBuy();
       setCoinBalance(bal);
+      await notifyMarketPartner(listing.sellerId);
       await Promise.all([refreshCards(), refreshProfile()]);
-      setStatus("Bought, card added to your collection.");
-      await load();
+      setJustPurchased(true);
+      setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
+      setStatus("Purchased! Card added to your collection.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Purchase failed.");
     }
@@ -232,7 +237,13 @@ export function ListingPage() {
           ← Market
         </Link>
         <PageHeader
-          eyebrow={active ? "For sale" : listing.status ?? "Listing"}
+          eyebrow={
+            justPurchased
+              ? "Purchased"
+              : active
+                ? "For sale"
+                : listing.status ?? "Listing"
+          }
           title={card?.entity.name ?? listing.cardId}
           blurb={
             card
@@ -262,6 +273,7 @@ export function ListingPage() {
                 pathLevels={card.pathLevels}
                 mode="focus"
                 owned
+                degree={card.isParagon ? (listing.paragonDegree ?? 1) : undefined}
               />
             </>
           ) : (
@@ -279,6 +291,9 @@ export function ListingPage() {
             />
             <span className="listing-ask__time">
               Posted {formatPostedAt(listing.createdAt)}
+              {card?.isParagon
+                ? ` · Degree ${listing.paragonDegree ?? 1} · est. ${suggestedParagonValue(listing.paragonDegree ?? 1).toLocaleString()} Cash`
+                : ""}
             </span>
           </div>
 
@@ -293,7 +308,12 @@ export function ListingPage() {
             </span>
           </Link>
 
-          {!active ? (
+          {justPurchased ? (
+            <p className="listing-note">
+              Purchased for <CashAmount amount={listing.price} size={14} />.
+              It&apos;s in your collection.
+            </p>
+          ) : !active ? (
             <p className="listing-note">This listing is no longer active.</p>
           ) : mine ? (
             <div className="listing-actions">

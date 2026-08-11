@@ -9,6 +9,7 @@ import {
   type MarketplaceListing,
 } from "../lib/marketplace";
 import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
+import { suggestedParagonValue } from "../lib/paragonProgress";
 import { userCollectionPath, listingPath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
@@ -60,7 +61,7 @@ const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 export function Marketplace({ onBack: _onBack }: Props) {
   const navigate = useNavigate();
   const { user, isGuest } = useAuth();
-  const { owned, refresh: refreshCards } = useCardCollection();
+  const { owned, paragons, refresh: refreshCards } = useCardCollection();
   const [tab, setTab] = useState<Tab>("browse");
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,6 +216,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
             pathLevels={card.pathLevels}
             mode="preview"
             owned
+            degree={card.isParagon ? (row.paragonDegree ?? 1) : undefined}
             onSelect={openListing}
           />
         ) : (
@@ -236,7 +238,9 @@ export function Marketplace({ onBack: _onBack }: Props) {
               <CashAmount amount={row.price} size={16} />
             </button>
             <span className="market-card__time">
-              {formatPostedAt(row.createdAt)}
+              {card?.isParagon
+                ? `Deg ${row.paragonDegree ?? 1} · ${formatPostedAt(row.createdAt)}`
+                : formatPostedAt(row.createdAt)}
             </span>
           </div>
           {mode === "browse" ? (
@@ -439,6 +443,13 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   setSelected(new Set([id]));
                   setError(null);
                   setStatus(null);
+                  const spec = cardSpecById(id);
+                  if (spec?.isParagon) {
+                    const deg = paragons.get(id)?.degree ?? 1;
+                    setPriceInput(String(suggestedParagonValue(deg)));
+                  } else {
+                    setPriceInput("100");
+                  }
                   setSellStep("price");
                   window.scrollTo(0, 0);
                 }}
@@ -469,6 +480,15 @@ export function Marketplace({ onBack: _onBack }: Props) {
                       autoFocus
                     />
                   </label>
+                  {sellCard?.isParagon ? (
+                    <p className="market-sell-price__hint">
+                      Degree {paragons.get(sellCard.id)?.degree ?? 1} · suggested{" "}
+                      {suggestedParagonValue(
+                        paragons.get(sellCard.id)?.degree ?? 1,
+                      ).toLocaleString()}{" "}
+                      Cash
+                    </p>
+                  ) : null}
                 </div>
                 <div className="market-sell-price__dock">
                   <button

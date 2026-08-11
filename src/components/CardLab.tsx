@@ -5,6 +5,8 @@ import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
 import type { TowerEntity } from "../data/types";
 import { fetchPlayerCardIds } from "../lib/awardCards";
+import { fetchPlayerParagons } from "../lib/paragonApi";
+import type { ParagonMap } from "../lib/guestParagons";
 import type { AvatarCrop } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
@@ -13,6 +15,8 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
+import { requestExchange } from "../lib/exchanges";
+import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
 import { pingInbox, requestTrade } from "../lib/trades";
 import {
   hasPlayerChrome,
@@ -22,6 +26,9 @@ import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { EquippedHeroPanel } from "./HeroCollectionStrip";
 import { HeroesLab } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
+import { OwnedCardPicker } from "./OwnedCardPicker";
+import { ParagonXpBar } from "./ParagonXpBar";
+import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 import {
   normalizeOwnedHeroIds,
@@ -48,6 +55,7 @@ export type CollectionViewer = {
   ownedHeroIds?: string[];
   equippedHeroId?: string | null;
   heroLevels?: Record<string, number>;
+  badgeIds?: string[];
 };
 
 type Props = {
@@ -130,12 +138,15 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
-  const { owned: myOwned } = useCardCollection();
+  const [exchangeOpen, setExchangeOpen] = useState(false);
+  const { owned: myOwned, paragonOf } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
     null,
   );
+  const [remoteParagons, setRemoteParagons] = useState<ParagonMap>({});
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
+  const [viewerRank, setViewerRank] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>(() =>
     initial?.heroes
@@ -164,6 +175,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   useEffect(() => {
     if (!viewer) {
       setRemoteOwned(null);
+      setRemoteParagons({});
       setRemoteLoading(false);
       setRemoteError(null);
       return;
@@ -176,10 +188,14 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     setTierHighFirst(true);
     setQuery("");
     setFocused(null);
-    void fetchPlayerCardIds(viewer.userId)
-      .then((ids) => {
+    void Promise.all([
+      fetchPlayerCardIds(viewer.userId),
+      fetchPlayerParagons(viewer.userId),
+    ])
+      .then(([ids, nextParagons]) => {
         if (cancelled) return;
         setRemoteOwned(new Set(ids));
+        setRemoteParagons(nextParagons);
         setRemoteLoading(false);
       })
       .catch((err: unknown) => {
@@ -188,6 +204,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           err instanceof Error ? err.message : "Could not load collection.",
         );
         setRemoteOwned(new Set());
+        setRemoteParagons({});
         setRemoteLoading(false);
       });
     return () => {
@@ -195,8 +212,26 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
     };
   }, [viewer?.userId]);
 
+  useEffect(() => {
+    if (!viewer?.userId) {
+      setViewerRank(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchLeaderboardRank(viewer.userId).then((rank) => {
+      if (!cancelled) setViewerRank(rank);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewer?.userId]);
+
   const owned = viewer ? (remoteOwned ?? new Set<string>()) : myOwned;
   const isRemote = Boolean(viewer);
+  const cardDegree = (card: MonkeyCardSpec): number | undefined => {
+    if (!card.isParagon || !isRemote) return undefined;
+    return remoteParagons[card.id]?.degree ?? 1;
+  };
   const ownerLabel = viewer?.username ?? "You";
   const canRequestTrade =
     Boolean(viewer) &&
@@ -213,6 +248,15 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
   );
   const chromeOn = isRemote && hasPlayerChrome(chromeStyle);
 
+  const sharedOwned = useMemo(() => {
+    const next = new Set<string>();
+    if (!isRemote) return next;
+    for (const id of myOwned) {
+      if (owned.has(id)) next.add(id);
+    }
+    return next;
+  }, [isRemote, myOwned, owned]);
+
   async function onRequestTrade() {
     if (!viewer || tradeBusy) return;
     setTradeBusy(true);
@@ -223,6 +267,23 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
       setTradeMsg(`Trade request sent to ${viewer.username}.`);
     } catch (err) {
       setTradeMsg(err instanceof Error ? err.message : "Could not send request.");
+    }
+    setTradeBusy(false);
+  }
+
+  async function onRequestExchange(cardIds: string[]) {
+    if (!viewer || tradeBusy) return;
+    const cardId = cardIds[0];
+    if (!cardId) return;
+    setTradeBusy(true);
+    setTradeMsg(null);
+    try {
+      await requestExchange(viewer.username, cardId);
+      await pingInbox(viewer.userId).catch(() => undefined);
+      setExchangeOpen(false);
+      setTradeMsg(`Exchange request sent to ${viewer.username}.`);
+    } catch (err) {
+      setTradeMsg(err instanceof Error ? err.message : "Could not send exchange.");
     }
     setTradeBusy(false);
   }
@@ -365,12 +426,81 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               pathLevels={focused.pathLevels}
               mode="focus"
               owned
+              degree={cardDegree(focused)}
             />
+            {focused.isParagon ? (
+              <ParagonXpBar
+                degree={
+                  isRemote
+                    ? (remoteParagons[focused.id]?.degree ?? 1)
+                    : (paragonOf(focused.id)?.degree ?? 1)
+                }
+                xp={
+                  isRemote
+                    ? (remoteParagons[focused.id]?.xp ?? 0)
+                    : (paragonOf(focused.id)?.xp ?? 0)
+                }
+              />
+            ) : null}
           </div>
         </div>,
         document.body,
       )
     : null;
+
+  const exchangePortal =
+    exchangeOpen && viewer
+      ? createPortal(
+          <div
+            className="card-lab__exchange"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Exchange a card with ${viewer.username}`}
+          >
+            <button
+              type="button"
+              className="card-lab__exchange-backdrop"
+              aria-label="Close"
+              onClick={() => setExchangeOpen(false)}
+            />
+            <div className="card-lab__exchange-panel">
+              <div className="card-lab__exchange-head">
+                <div>
+                  <p className="eyebrow">Exchange</p>
+                  <h2>Swap a copy with {viewer.username}</h2>
+                  <p>
+                    Pick a card you both own. They set a Cash fee — or make it
+                    free.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setExchangeOpen(false)}
+                >
+                  ✕ Close
+                </button>
+              </div>
+              {sharedOwned.size === 0 ? (
+                <p className="card-lab__exchange-empty">
+                  You don’t share any cards with {viewer.username} yet.
+                </p>
+              ) : (
+                <OwnedCardPicker
+                  owned={sharedOwned}
+                  selectedIds={new Set()}
+                  onConfirm={(ids) => void onRequestExchange(ids)}
+                  confirmLabel={tradeBusy ? "Sending…" : "Send exchange"}
+                  multi={false}
+                  maxSelected={1}
+                  disabled={tradeBusy}
+                />
+              )}
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
   // ——— Tower picker ———
   if (view.kind === "towers") {
@@ -392,6 +522,11 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
             <div className="card-lab__titles">
               <p className="eyebrow">Collection</p>
               <h1>{ownerLabel}</h1>
+              <PlayerBadges
+                rank={viewerRank}
+                badgeIds={viewer?.badgeIds}
+                size="lg"
+              />
               <p className="card-lab__blurb">Loading cards…</p>
             </div>
           </header>
@@ -432,6 +567,13 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               ) : null}
               {isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}
             </h1>
+            {isRemote ? (
+              <PlayerBadges
+                rank={viewerRank}
+                badgeIds={viewer?.badgeIds}
+                size="lg"
+              />
+            ) : null}
             {isRemote && !remoteError ? (
               <>
                 <div className="player-showcase">
@@ -445,6 +587,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
+                          degree={cardDegree(card)}
                           onSelect={() => {
                             playCardFocus();
                             setFocused(card);
@@ -482,6 +625,17 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                   onClick={() => void onRequestTrade()}
                 >
                   {tradeBusy ? "Sending…" : "Request trade"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  disabled={tradeBusy}
+                  onClick={() => {
+                    setTradeMsg(null);
+                    setExchangeOpen(true);
+                  }}
+                >
+                  Request exchange
                 </button>
                 {tradeMsg ? (
                   <p className="card-lab__trade-msg">{tradeMsg}</p>
@@ -575,6 +729,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
           </div>
         </div>
         {focusPortal}
+        {exchangePortal}
       </div>
     );
   }
@@ -659,6 +814,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
                 mode="preview"
                 owned
                 highlight={highlightIds.has(card.id)}
+                degree={cardDegree(card)}
                 onSelect={() => {
                   playCardFocus();
                   setFocused(card);
@@ -669,6 +825,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
         )}
 
         {focusPortal}
+        {exchangePortal}
       </div>
     );
   }
@@ -725,6 +882,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
               mode="preview"
               owned={isOwned}
               highlight={highlightIds.has(card.id)}
+              degree={isOwned ? cardDegree(card) : undefined}
               onSelect={() => {
                 if (!isOwned) return;
                 playCardFocus();
@@ -741,6 +899,7 @@ export function CardLab({ onBack, initial, viewer = null }: Props) {
       </p>
 
       {focusPortal}
+      {exchangePortal}
     </div>
   );
 }

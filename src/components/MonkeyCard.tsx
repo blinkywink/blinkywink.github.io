@@ -1,14 +1,21 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useCardCollectionOptional } from "../auth/CardCollectionProvider";
 import cardAccents from "../data/cardAccents.json";
 import type { TowerEntity } from "../data/types";
 import {
   formatPathLevels,
   investedPathTiers,
+  paragonCardId,
   pathLevelsFromEntity,
   towerIdSlug,
   upgradeEntityId,
   type PathLevels,
 } from "../lib/pathCombos";
+import {
+  clampParagonDegree,
+  PARAGON_MIN_DEGREE,
+  paragonStage,
+} from "../lib/paragonProgress";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
 type Accent = {
@@ -32,6 +39,8 @@ type Props = {
   onSelect?: () => void;
   /** Skip canvas visualizer (tiny avatars / dense lists). */
   staticArt?: boolean;
+  /** Paragon degree 1–100. Falls back to the signed-in collection. */
+  degree?: number;
 };
 
 const accents = cardAccents as unknown as Record<string, Accent>;
@@ -53,6 +62,8 @@ const PARAGON_ACCENT = {
   ],
   icon: "/images/ui/paragon-icon.webp",
 };
+
+const PARAGON_DEGREE_ICON = "/images/ui/paragon-degree.webp";
 
 /** Effective upgrade ladder: 0 base → 5 T5 → 6 paragon. */
 function effectTier(entity: TowerEntity, levels: PathLevels): number {
@@ -157,6 +168,56 @@ function darkenHex(hex: string, amount: number): string {
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
+type ParagonFxPt = { x: string; y: string };
+
+const PARAGON_SMOKE: ParagonFxPt[] = [
+  { x: "-8%", y: "14%" },
+  { x: "86%", y: "10%" },
+  { x: "-6%", y: "58%" },
+  { x: "88%", y: "64%" },
+  { x: "18%", y: "-7%" },
+  { x: "62%", y: "96%" },
+  { x: "-4%", y: "34%" },
+  { x: "90%", y: "38%" },
+];
+
+const PARAGON_STARS: ParagonFxPt[] = [
+  { x: "-5%", y: "16%" },
+  { x: "96%", y: "10%" },
+  { x: "8%", y: "-5%" },
+  { x: "92%", y: "78%" },
+  { x: "22%", y: "98%" },
+];
+
+function paragonFxStyle(pt: ParagonFxPt, i: number): React.CSSProperties {
+  return { left: pt.x, top: pt.y, ["--i" as string]: i };
+}
+
+function ParagonRings({ stage }: { stage: number }) {
+  return (
+    <div
+      className={`monkey-card__paragon-rings monkey-card__paragon-rings--s${stage}`}
+      aria-hidden
+    >
+      <div className="monkey-card__paragon-rings-space">
+        <span className="monkey-card__paragon-ring-pivot monkey-card__paragon-ring-pivot--a">
+          <span className="monkey-card__paragon-ring" />
+        </span>
+        {stage >= 2 ? (
+          <span className="monkey-card__paragon-ring-pivot monkey-card__paragon-ring-pivot--b">
+            <span className="monkey-card__paragon-ring" />
+          </span>
+        ) : null}
+        {stage >= 4 ? (
+          <span className="monkey-card__paragon-ring-pivot monkey-card__paragon-ring-pivot--c">
+            <span className="monkey-card__paragon-ring" />
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /** Full-art collectible card from real tower/upgrade data. */
 export function MonkeyCard({
   entity,
@@ -166,6 +227,7 @@ export function MonkeyCard({
   highlight = false,
   onSelect,
   staticArt = false,
+  degree: degreeProp,
 }: Props) {
   const isPreview = mode === "preview";
   const locked = !owned;
@@ -181,6 +243,16 @@ export function MonkeyCard({
   const [active, setActive] = useState(false);
 
   const isParagon = entity.type === "paragon";
+  const collection = useCardCollectionOptional();
+  const ownedDegree = isParagon
+    ? collection?.paragonOf(paragonCardId(entity.tower))?.degree
+    : undefined;
+  const paragonDegree = isParagon
+    ? clampParagonDegree(
+        degreeProp ?? (!locked ? ownedDegree : undefined) ?? PARAGON_MIN_DEGREE,
+      )
+    : PARAGON_MIN_DEGREE;
+  const stage = isParagon ? paragonStage(paragonDegree) : 0;
   const pathLevels = pathLevelsProp ?? pathLevelsFromEntity(entity);
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
@@ -193,10 +265,10 @@ export function MonkeyCard({
       accents[id]?.icon ?? `/images/upgrade-icons/${id}.webp`;
 
     if (isParagon) {
-      const icons: { key: string; src: string }[] = [];
-      icons.push({ key: "upgrade", src: iconFor(entity.id) });
-      icons.push({ key: "paragon", src: PARAGON_ACCENT.icon });
-      return icons;
+      return [
+        { key: "upgrade", src: iconFor(entity.id) },
+        { key: "paragon", src: PARAGON_ACCENT.icon },
+      ];
     }
 
     const slug = towerIdSlug(entity.tower);
@@ -267,9 +339,16 @@ export function MonkeyCard({
       ["--accent-g" as string]: String(g),
       ["--accent-b" as string]: String(b),
       ["--accent-strength" as string]: String(strength),
-      ["--holo-mul" as string]: holo ? String(Math.min(1, (tier - 2) / 4)) : "0",
+      ["--holo-mul" as string]: holo
+        ? String(
+            Math.min(
+              1,
+              (tier - 2) / 4 + (isParagon ? stage * 0.08 : 0),
+            ),
+          )
+        : "0",
     } as React.CSSProperties;
-  }, [accent, strength, palette, isParagon, primary, secondary, holo, tier]);
+  }, [accent, strength, palette, isParagon, primary, secondary, holo, tier, stage]);
 
   const applyPoint = useCallback((clientX: number, clientY: number) => {
     const scene = sceneRef.current;
@@ -394,9 +473,24 @@ export function MonkeyCard({
           },
           onPointerLeave: reset,
           onPointerCancel: reset,
+          ...(onSelect
+            ? {
+                role: "button" as const,
+                tabIndex: 0,
+                onClick: () => onSelect(),
+                onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect();
+                  }
+                },
+              }
+            : {}),
         };
 
-  const tierClass = isParagon ? "monkey-card--paragon" : `monkey-card--t${tier}`;
+  const tierClass = isParagon
+    ? `monkey-card--paragon monkey-card--paragon-s${stage}`
+    : `monkey-card--t${tier}`;
   const pathLabel = isParagon ? "Paragon" : formatPathLevels(pathLevels);
 
   return (
@@ -407,11 +501,34 @@ export function MonkeyCard({
         isPreview ? "monkey-card-scene--preview" : "",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
+        isParagon && !isPreview && stage > 0
+          ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
+          : "",
       ]
         .filter(Boolean)
         .join(" ")}
       {...interactiveProps}
     >
+      {isParagon && !isPreview && stage > 0 ? (
+        <div
+          className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
+          aria-hidden
+        >
+          {PARAGON_SMOKE.slice(
+            0,
+            stage >= 5 ? 8 : stage >= 4 ? 6 : stage >= 2 ? 4 : 3,
+          ).map((p, i) => (
+            <i
+              key={`sm${i}`}
+              className="monkey-card__paragon-smoke"
+              style={paragonFxStyle(p, i)}
+            />
+          ))}
+        </div>
+      ) : null}
+      {isParagon && !isPreview && stage > 0 ? (
+        <ParagonRings stage={stage} />
+      ) : null}
       <div
         ref={cardRef}
         style={accentStyle}
@@ -461,7 +578,7 @@ export function MonkeyCard({
               src={entity.image}
               alt=""
               draggable={false}
-              loading={isPreview ? "lazy" : "eager"}
+              loading={isPreview && !staticArt ? "lazy" : "eager"}
               decoding="async"
             />
             {tier >= 2 ? (
@@ -504,8 +621,81 @@ export function MonkeyCard({
           </div>
         </div>
 
+        {isParagon && stage > 0 ? (
+          <div
+            className={`monkey-card__paragon-aura monkey-card__paragon-aura--s${stage}`}
+            aria-hidden
+          />
+        ) : null}
+
+        {isParagon ? (
+          <div className="monkey-card__paragon-corner">
+            <svg
+              className="monkey-card__paragon-ribbon"
+              viewBox="0 0 56 176"
+              aria-hidden
+              preserveAspectRatio="none"
+            >
+              <path fill="#d200d3" d="M0 0h56v176L28 152 0 176V0z" />
+              <path
+                fill="none"
+                stroke="#3a0277"
+                strokeWidth="4"
+                strokeLinejoin="miter"
+                strokeLinecap="butt"
+                d="M2 0v174l26-24 26 24V0"
+              />
+            </svg>
+            <div className="monkey-card__paragon-badge">
+              <img
+                className="monkey-card__paragon-mark"
+                src={PARAGON_DEGREE_ICON}
+                alt=""
+                draggable={false}
+              />
+              <span className="monkey-card__paragon-degree">
+                {paragonDegree}
+                {holo ? (
+                  <span className="monkey-card__paragon-degree-sheen" aria-hidden>
+                    {paragonDegree}
+                  </span>
+                ) : null}
+              </span>
+              {holo ? (
+                <div className="monkey-card__paragon-shine" aria-hidden="true">
+                  <div className="monkey-card__paragon-shine-sweep" />
+                  <div className="monkey-card__paragon-shine-glint" />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         <div className="monkey-card__edge" aria-hidden="true" />
       </div>
+      {isParagon && !isPreview && stage > 0 ? (
+        <div
+          className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
+          aria-hidden
+        >
+          {PARAGON_STARS.slice(
+            0,
+            stage >= 5 ? 5 : stage >= 4 ? 4 : stage >= 2 ? 3 : 2,
+          ).map((p, i) => (
+            <svg
+              key={`st${i}`}
+              className="monkey-card__paragon-star"
+              viewBox="0 0 32 32"
+              style={paragonFxStyle(p, i)}
+            >
+              <path
+                fill="currentColor"
+                d="M16 0C16.7 9.6 22.4 15.3 32 16 22.4 16.7 16.7 22.4 16 32 15.3 22.4 9.6 16.7 0 16 9.6 15.3 15.3 9.6 16 0Z"
+              />
+            </svg>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
