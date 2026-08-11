@@ -62,6 +62,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+#variable_conflict use_column
 declare
   uid uuid := public.current_account_id();
   rec record;
@@ -108,8 +109,8 @@ begin
       continue;
     end if;
     if not exists (
-      select 1 from public.owned_cards
-      where user_id = uid and card_id = rec.paragon_id
+      select 1 from public.owned_cards oc
+      where oc.user_id = uid and oc.card_id = rec.paragon_id
     ) then
       continue;
     end if;
@@ -117,8 +118,8 @@ begin
     perform pg_advisory_xact_lock(hashtext(uid::text || ':' || rec.paragon_id));
 
     select * into cur
-    from public.paragon_progress
-    where user_id = uid and card_id = rec.paragon_id
+    from public.paragon_progress pp
+    where pp.user_id = uid and pp.card_id = rec.paragon_id
     for update;
 
     if not found then
@@ -164,6 +165,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+#variable_conflict use_column
 declare
   uid uuid := public.current_account_id();
   rec record;
@@ -214,8 +216,8 @@ begin
       continue;
     end if;
     if not exists (
-      select 1 from public.owned_cards
-      where user_id = uid and card_id = rec.card_id
+      select 1 from public.owned_cards oc
+      where oc.user_id = uid and oc.card_id = rec.card_id
     ) then
       continue;
     end if;
@@ -223,8 +225,8 @@ begin
     perform pg_advisory_xact_lock(hashtext(uid::text || ':' || rec.card_id));
 
     select * into cur
-    from public.paragon_progress
-    where user_id = uid and card_id = rec.card_id
+    from public.paragon_progress pp
+    where pp.user_id = uid and pp.card_id = rec.card_id
     for update;
 
     if not found then

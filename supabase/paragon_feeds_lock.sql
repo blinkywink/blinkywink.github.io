@@ -37,8 +37,8 @@ begin
     group by trim(x.card_id)
   loop
     if not exists (
-      select 1 from public.owned_cards
-      where user_id = uid and card_id = rec.card_id
+      select 1 from public.owned_cards oc
+      where oc.user_id = uid and oc.card_id = rec.card_id
     ) then
       continue;
     end if;
@@ -46,8 +46,8 @@ begin
     perform pg_advisory_xact_lock(hashtext(uid::text || ':' || rec.card_id));
 
     select * into cur
-    from public.paragon_progress
-    where user_id = uid and card_id = rec.card_id
+    from public.paragon_progress pp
+    where pp.user_id = uid and pp.card_id = rec.card_id
     for update;
 
     if not found then
