@@ -3,6 +3,7 @@ type Props = {
   /** Decorative mark before the title. Pass empty string to hide. */
   icon?: string;
   round?: number;
+  /** Omit for endless games (shows ROUND N only). */
   roundsPerRun?: number;
   freePlay?: boolean;
 };
@@ -31,7 +32,9 @@ export function GameHeader({
             ROUND {round}
             <span className="muted"> / {roundsPerRun}</span>
           </p>
-        ) : null
+        ) : (
+          <p className="game-header__round">ROUND {round}</p>
+        )
       ) : null}
     </header>
   );

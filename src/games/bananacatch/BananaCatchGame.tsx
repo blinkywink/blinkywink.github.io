@@ -23,7 +23,12 @@ import { useCatchBgm } from "./useCatchBgm";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
+  onRunEnd?: (info: {
+    cleared: boolean;
+    coinsEarned: number;
+    /** Bananas caught (high-score metric). */
+    score: number;
+  }) => void;
 };
 
 /** WKWebView / Tauri desktop does not support pointer lock reliably. */
@@ -164,9 +169,13 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     prevPhase.current = state.phase;
     if (was === "lost") return;
     if (state.phase === "lost") {
-      onRunEnd?.({ cleared: state.cleared, coinsEarned: state.cashEarned });
+      onRunEnd?.({
+        cleared: state.cleared,
+        coinsEarned: state.cashEarned,
+        score: state.bananas,
+      });
     }
-  }, [state.phase, state.cleared, state.cashEarned, onRunEnd]);
+  }, [state.phase, state.cleared, state.cashEarned, state.bananas, onRunEnd]);
 
   // Track lock state; Esc exits pointer lock natively.
   useEffect(() => {

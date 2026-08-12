@@ -1,14 +1,19 @@
 import { useEffect, useRef, type CSSProperties } from "react";
-import { useAuth } from "../../auth/AuthProvider";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
-import { CAMO_IMAGE } from "./config";
+import { CAMO_IMAGE, recallSecondsForRound } from "./config";
 import { useCamoDetection } from "./useCamoDetection";
 
 type Props = {
   onBack: () => void;
-  onRunEnd?: (info: { cleared: boolean; correctCount: number; coinsEarned: number }) => void;
+  onRunEnd?: (info: {
+    cleared: boolean;
+    correctCount: number;
+    coinsEarned: number;
+    /** Rounds survived (high-score metric). */
+    score: number;
+  }) => void;
 };
 
 export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
@@ -17,13 +22,9 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
     toggleCell,
     submit,
     goNext,
-    buyContinue,
     continueCost,
-    roundsPerRun,
     maxLives,
-    recallSeconds,
   } = useCamoDetection();
-  const { profile } = useAuth();
   const runEndNotified = useRef(false);
 
   useEffect(() => {
@@ -32,12 +33,19 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
       onRunEnd?.({
         cleared: state.clearedRun,
         correctCount: state.correct,
-        coinsEarned:
-          (state.lastRun?.score ?? 0) * (state.perfectRun ? 2 : 1),
+        coinsEarned: state.lastRun?.score ?? 0,
+        score: state.answered,
       });
     }
     if (state.phase !== "results") runEndNotified.current = false;
-  }, [state.phase, state.clearedRun, state.correct, state.lastRun, state.perfectRun, onRunEnd]);
+  }, [
+    state.phase,
+    state.clearedRun,
+    state.correct,
+    state.answered,
+    state.lastRun,
+    onRunEnd,
+  ]);
 
   useEffect(() => {
     if (state.phase !== "recalling") return;
@@ -67,17 +75,13 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
     return (
       <div className="camo-page">
         <ResultsScreen
-          coinsEarned={state.lastRun.score * (state.perfectRun ? 2 : 1)}
+          coinsEarned={state.lastRun.score}
           cleared={state.clearedRun}
-          perfect={state.perfectRun}
-          continueAvailable={!state.freePlay && !state.clearedRun}
+          perfect={false}
+          continueAvailable={false}
           continueCost={continueCost}
-          canAffordContinue={(profile?.coins ?? 0) >= continueCost}
-          continueBusy={state.continueBusy}
-          continueError={state.continueError}
-          onContinue={() => {
-            void buyContinue();
-          }}
+          canAffordContinue={false}
+          onContinue={() => undefined}
           onBack={onBack}
         />
       </div>
@@ -90,17 +94,14 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
   const grid = state.round.grid;
   const cells = grid * grid;
   const attemptsUsed = maxLives - state.lives;
+  const recallSeconds = recallSecondsForRound(state.round.round);
   const secondsLeft = Math.ceil(state.timeLeftMs / 1000);
   const timerPct = Math.max(
     0,
     Math.min(100, (state.timeLeftMs / (recallSeconds * 1000)) * 100),
   );
   const urgent = recalling && state.timeLeftMs <= 3000;
-  const endLabel =
-    state.lives <= 0 ||
-    (!state.freePlay && state.round.round >= roundsPerRun)
-      ? "DONE"
-      : "NEXT";
+  const endLabel = state.lives <= 0 ? "DONE" : "NEXT";
 
   const camoSet = new Set(state.round.camo);
   const pickedSet = revealed
@@ -123,7 +124,6 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
         title="CAMO DETECTION"
         icon=""
         round={state.round.round}
-        roundsPerRun={roundsPerRun}
         freePlay={state.freePlay}
       />
 

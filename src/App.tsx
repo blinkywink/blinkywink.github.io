@@ -17,6 +17,7 @@ import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CashAmount } from "./components/CurrencyChip";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { LoadingDots } from "./components/LoadingDots";
+import { EndlessHaulCard } from "./components/EndlessHaulCard";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
@@ -43,6 +44,11 @@ import {
   pickRewardTowerPackChoices,
   type PackDef,
 } from "./lib/packTheme";
+import {
+  submitEndlessGameScore,
+  type EndlessGameId,
+  type GameScoreReport,
+} from "./lib/gameScores";
 import { fetchPublicPlayerPage } from "./lib/playerPage";
 import { recordHeroClear } from "./lib/profileHeroes";
 import { heroById } from "./data/heroes";
@@ -252,6 +258,11 @@ function AppShell() {
   const [bonusToast, setBonusToast] = useState<string | null>(null);
   const [showBackToGames, setShowBackToGames] = useState(false);
   const [runCashEarned, setRunCashEarned] = useState(0);
+  const [endlessHaul, setEndlessHaul] = useState<{
+    gameId: EndlessGameId;
+    report: GameScoreReport | null;
+    loading: boolean;
+  } | null>(null);
 
   const creditHeroClear = useCallback(
     async (cleared: boolean) => {
@@ -316,8 +327,23 @@ function AppShell() {
     setShowBackToGames(true);
   }, []);
 
+  const beginEndlessHaul = useCallback(
+    (gameId: EndlessGameId, score: number) => {
+      setEndlessHaul({ gameId, report: null, loading: true });
+      void submitEndlessGameScore(gameId, score).then((report) => {
+        setEndlessHaul({ gameId, report, loading: false });
+      });
+    },
+    [],
+  );
+
   const queueClearAndBonusPacks = useCallback(
-    (opts: { cleared: boolean; wantBonus: boolean }) => {
+    (opts: {
+      cleared: boolean;
+      wantBonus: boolean;
+      /** Endless games always open Nice Haul even with no packs. */
+      alwaysHaul?: boolean;
+    }) => {
       const free = opts.cleared ? pickRewardTowerPack(owned) : null;
       const exclude = new Set(free?.tower ? [free.tower] : []);
       const choices = opts.wantBonus
@@ -327,7 +353,6 @@ function AppShell() {
       setShowBackToGames(false);
 
       // Stay on the game route. Pack / picker overlays cover the results UI.
-      // Failures with no packs leave the results panel alone.
       if (free) {
         setRewardPack({ pack: free, reason: "clear" });
         setBonusChoices(choices.length ? choices : null);
@@ -337,6 +362,7 @@ function AppShell() {
       } else {
         setRewardPack(null);
         setBonusChoices(null);
+        if (opts.alwaysHaul) setShowBackToGames(true);
       }
     },
     [owned],
@@ -344,14 +370,14 @@ function AppShell() {
 
   const quizRewardHandlers = useMemo(() => {
     const make =
-      (game: FeaturedBonusGame) =>
+      (game: Exclude<FeaturedBonusGame, "camodetection" | "bananacatch">) =>
       (info: {
         cleared: boolean;
         correctCount: number;
         coinsEarned: number;
       }) => {
+        setEndlessHaul(null);
         setRunCashEarned(info.coinsEarned);
-        // Packs / fail state first so we never flash results then yank the route.
         queueClearAndBonusPacks({
           cleared: info.cleared,
           wantBonus: earnsQuizBonusPack(info.correctCount),
@@ -364,9 +390,33 @@ function AppShell() {
       geoguessr: make("geoguessr"),
       pricecheck: make("pricecheck"),
       orderup: make("orderup"),
-      camodetection: make("camodetection"),
     };
   }, [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks]);
+
+  const onCamoDetectionRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      correctCount: number;
+      coinsEarned: number;
+      score: number;
+    }) => {
+      setRunCashEarned(info.coinsEarned);
+      beginEndlessHaul("camodetection", info.score);
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared,
+        alwaysHaul: true,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("camodetection", info.cleared);
+    },
+    [
+      settleFeaturedBonus,
+      creditHeroClear,
+      queueClearAndBonusPacks,
+      beginEndlessHaul,
+    ],
+  );
 
   const offerBloonleBonus = useCallback(
     (guesses: number) => {
@@ -392,6 +442,7 @@ function AppShell() {
 
   const onSweeperRunEnd = useCallback(
     (info: { cleared: boolean; coinsEarned: number }) => {
+      setEndlessHaul(null);
       setRunCashEarned(info.coinsEarned);
       queueClearAndBonusPacks({
         cleared: info.cleared,
@@ -404,20 +455,28 @@ function AppShell() {
   );
 
   const onBananaCatchRunEnd = useCallback(
-    (info: { cleared: boolean; coinsEarned: number }) => {
+    (info: { cleared: boolean; coinsEarned: number; score: number }) => {
       setRunCashEarned(info.coinsEarned);
+      beginEndlessHaul("bananacatch", info.score);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
+        alwaysHaul: true,
       });
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("bananacatch", info.cleared);
     },
-    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+    [
+      settleFeaturedBonus,
+      creditHeroClear,
+      queueClearAndBonusPacks,
+      beginEndlessHaul,
+    ],
   );
 
   const onBloonHeroRunEnd = useCallback(
     (info: { cleared: boolean; didWell: boolean; coinsEarned: number }) => {
+      setEndlessHaul(null);
       setRunCashEarned(info.coinsEarned);
       queueClearAndBonusPacks({
         cleared: info.cleared,
@@ -521,7 +580,7 @@ function AppShell() {
               <LazyGame>
                 <CamoDetectionGame
                   onBack={goGames}
-                  onRunEnd={quizRewardHandlers.camodetection}
+                  onRunEnd={onCamoDetectionRunEnd}
                 />
               </LazyGame>
             }
@@ -592,26 +651,40 @@ function AppShell() {
       ) : null}
 
       {showBackToGames && !rewardPack && !bonusChoices ? (
-        <div className="rewards-done" role="dialog" aria-label="Rewards claimed">
-          <div className="rewards-done__card">
-            <p className="eyebrow">Rewards claimed</p>
-            <h2>Nice haul</h2>
-            <div className="rewards-done__cash">
-              <CashAmount amount={runCashEarned} size={28} />
-              <span className="rewards-done__cash-label">Cash earned</span>
+        endlessHaul ? (
+          <EndlessHaulCard
+            gameId={endlessHaul.gameId}
+            cashEarned={runCashEarned}
+            report={endlessHaul.report}
+            loading={endlessHaul.loading}
+            onBack={() => {
+              setShowBackToGames(false);
+              setEndlessHaul(null);
+              navigate(gamesPath());
+            }}
+          />
+        ) : (
+          <div className="rewards-done" role="dialog" aria-label="Rewards claimed">
+            <div className="rewards-done__card">
+              <p className="eyebrow">Rewards claimed</p>
+              <h2>Nice haul</h2>
+              <div className="rewards-done__cash">
+                <CashAmount amount={runCashEarned} size={28} />
+                <span className="rewards-done__cash-label">Cash earned</span>
+              </div>
+              <button
+                type="button"
+                className="btn btn--primary btn--lg"
+                onClick={() => {
+                  setShowBackToGames(false);
+                  navigate(gamesPath());
+                }}
+              >
+                Back to Games
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn btn--primary btn--lg"
-              onClick={() => {
-                setShowBackToGames(false);
-                navigate(gamesPath());
-              }}
-            >
-              Back to Games
-            </button>
           </div>
-        </div>
+        )
       ) : null}
     </>
   );

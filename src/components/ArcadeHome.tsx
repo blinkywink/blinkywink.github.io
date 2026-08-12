@@ -485,8 +485,8 @@ export function ArcadeHome({
     {
       id: "camodetection" as const,
       title: "CAMO DETECTION",
-      blurb: "Remember where the camo bloons flashed.",
-      label: "Camo Detection, Remember where the camo bloons flashed",
+      blurb: "Endless memory challenge. Spot the camo before time runs out.",
+      label: "Camo Detection, Endless memory challenge with camo bloons",
       preview: <CamoPreview />,
     },
     {

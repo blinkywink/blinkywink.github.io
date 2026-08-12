@@ -141,6 +141,25 @@ export type Database = {
         };
         Relationships: [];
       };
+      game_high_scores: {
+        Row: {
+          user_id: string;
+          game_id: string;
+          score: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          game_id: string;
+          score: number;
+          updated_at?: string;
+        };
+        Update: {
+          score?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       owned_cards: {
         Row: OwnedCard;
         Insert: {
@@ -462,6 +481,10 @@ export type Database = {
           p_song_length?: number | null;
         };
         Returns: boolean;
+      };
+      submit_game_score: {
+        Args: { p_game_id: string; p_score: number };
+        Returns: Record<string, unknown>;
       };
       get_bloonhero_recent_plays: {
         Args: { p_limit?: number };

@@ -3,8 +3,13 @@ import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
-import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
-import { CAMO_CONFIG, pointsForCorrect } from "./config";
+import { SHARED_RUN } from "../rewards";
+import {
+  CAMO_CLEAR_ROUNDS,
+  CAMO_CONFIG,
+  pointsForCorrect,
+  recallSecondsForRound,
+} from "./config";
 import { createCamoRound, type CamoRound } from "./generateRound";
 import {
   loadBestScores,
@@ -44,7 +49,6 @@ type State = {
   bests: BestScores;
   resumeRound: number | null;
   clearedRun: boolean;
-  perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
   timeLeftMs: number;
@@ -54,8 +58,8 @@ function freshRound(n: number): CamoRound {
   return createCamoRound(n);
 }
 
-function recallMs(): number {
-  return CAMO_CONFIG.recallSeconds * 1000;
+function recallMs(round: number): number {
+  return recallSecondsForRound(round) * 1000;
 }
 
 function initialState(): State {
@@ -76,10 +80,9 @@ function initialState(): State {
     bests: loadBestScores(),
     resumeRound: null,
     clearedRun: false,
-    perfectRun: false,
     continueError: null,
     continueBusy: false,
-    timeLeftMs: recallMs(),
+    timeLeftMs: recallMs(1),
   };
 }
 
@@ -105,17 +108,7 @@ function toRunStats(s: State): RunStats {
 function finishRun(
   s: State,
   opts: { resumeRound: number; cleared: boolean },
-  onPerfectBonus?: (bonus: number) => void,
 ): State {
-  const perfect = isFlawlessClear({
-    cleared: opts.cleared,
-    freePlay: s.freePlay,
-    lives: s.lives,
-    maxLives: CAMO_CONFIG.maxLives,
-  });
-  const bonus = perfect ? perfectRunBonus(s.score) : 0;
-  if (bonus > 0) onPerfectBonus?.(bonus);
-
   const run = toRunStats(s);
   const bests = mergeBests(run, s.bests);
   saveBestScores(bests);
@@ -127,7 +120,6 @@ function finishRun(
     feedback: null,
     resumeRound: opts.resumeRound,
     clearedRun: opts.cleared,
-    perfectRun: perfect,
     continueError: null,
     continueBusy: false,
     timeLeftMs: 0,
@@ -143,12 +135,16 @@ export function useCamoDetection() {
   setCoinBalanceRef.current = setCoinBalance;
   const profileRef = useRef(profile);
   profileRef.current = profile;
-  const settling = useRef(false);
+  const streakBonusPctRef = useRef(streakBonusPct);
+  streakBonusPctRef.current = streakBonusPct;
+  const onCorrectCashRef = useRef(onCorrectCash);
+  onCorrectCashRef.current = onCorrectCash;
+  const onGwenStreakProcRef = useRef(onGwenStreakProc);
+  onGwenStreakProcRef.current = onGwenStreakProc;
 
   // Flash camo, then open recall.
   useEffect(() => {
     if (state.phase !== "watching") return;
-    settling.current = false;
     setState((s) => (s.flashOn ? s : { ...s, flashOn: true }));
     const hide = window.setTimeout(() => {
       setState((s) => {
@@ -164,7 +160,7 @@ export function useCamoDetection() {
           phase: "recalling",
           flashOn: false,
           picked: new Set(),
-          timeLeftMs: recallMs(),
+          timeLeftMs: recallMs(s.round.round),
         };
       });
     }, state.round.flashMs + 220);
@@ -185,18 +181,17 @@ export function useCamoDetection() {
   }, []);
 
   const settle = useCallback((timedOut: boolean) => {
+    let awardPoints = 0;
+    let awardStreak = 0;
+    let awardBonusPct = 0;
     setState((s) => {
-      if (s.phase !== "recalling" || settling.current) return s;
-      settling.current = true;
+      if (s.phase !== "recalling") return s;
+      const bonusPct = streakBonusPctRef.current;
       const ok = !timedOut && setsEqual(s.picked, s.round.camo);
       const streak = ok ? s.streak + 1 : 0;
       const bestStreak = Math.max(s.bestStreak, streak);
       const points = ok
-        ? pointsForCorrect(
-            s.round.round,
-            streak,
-            streak >= 2 ? streakBonusPct : 0,
-          )
+        ? pointsForCorrect(s.round.round, streak, streak >= 2 ? bonusPct : 0)
         : 0;
       const lives = ok ? s.lives : s.lives - 1;
       const feedback: Feedback = {
@@ -206,17 +201,11 @@ export function useCamoDetection() {
         camo: s.round.camo,
         timedOut: timedOut || undefined,
       };
-
       if (ok && points > 0) {
-        void awardCoins(points).then((balance) => {
-          if (balance != null) setCoinBalanceRef.current(balance);
-        });
-        void onCorrectCash(setCoinBalanceRef.current);
-        if (streak >= 2 && streakBonusPct > 0) {
-          onGwenStreakProc(streak);
-        }
+        awardPoints = points;
+        awardStreak = streak;
+        awardBonusPct = bonusPct;
       }
-
       return {
         ...s,
         phase: "reveal",
@@ -231,7 +220,16 @@ export function useCamoDetection() {
         flashOn: false,
       };
     });
-  }, [onCorrectCash, onGwenStreakProc, streakBonusPct]);
+    if (awardPoints > 0) {
+      void awardCoins(awardPoints).then((balance) => {
+        if (balance != null) setCoinBalanceRef.current(balance);
+      });
+      void onCorrectCashRef.current(setCoinBalanceRef.current);
+      if (awardStreak >= 2 && awardBonusPct > 0) {
+        onGwenStreakProcRef.current(awardStreak);
+      }
+    }
+  }, []);
 
   const submit = useCallback(() => {
     settle(false);
@@ -242,13 +240,15 @@ export function useCamoDetection() {
     if (state.phase !== "recalling") return;
     let raf = 0;
     let last = performance.now();
+    let timedOut = false;
     const tick = (now: number) => {
       const dt = now - last;
       last = now;
       setState((s) => {
         if (s.phase !== "recalling") return s;
         const next = Math.max(0, s.timeLeftMs - dt);
-        if (next <= 0 && s.timeLeftMs > 0) {
+        if (next <= 0 && s.timeLeftMs > 0 && !timedOut) {
+          timedOut = true;
           queueMicrotask(() => settle(true));
           return { ...s, timeLeftMs: 0 };
         }
@@ -263,36 +263,23 @@ export function useCamoDetection() {
   const goNext = useCallback(() => {
     setState((s) => {
       if (s.phase !== "reveal") return s;
-      const awardBonus = (bonus: number) => {
-        void awardCoins(bonus).then((balance) => {
-          if (balance != null) setCoinBalanceRef.current(balance);
-        });
-      };
       if (s.lives <= 0) {
-        return finishRun(
-          s,
-          { resumeRound: s.round.round + 1, cleared: false },
-          awardBonus,
-        );
+        const rounds = s.answered;
+        return finishRun(s, {
+          resumeRound: s.round.round + 1,
+          cleared: rounds >= CAMO_CLEAR_ROUNDS,
+        });
       }
 
-      if (!s.freePlay && s.round.round >= CAMO_CONFIG.roundsPerRun) {
-        return finishRun(
-          s,
-          { resumeRound: s.round.round + 1, cleared: true },
-          awardBonus,
-        );
-      }
-
-      settling.current = false;
+      const nextRound = s.round.round + 1;
       return {
         ...s,
         phase: "watching",
-        round: freshRound(s.round.round + 1),
+        round: freshRound(nextRound),
         picked: new Set(),
         feedback: null,
         flashOn: true,
-        timeLeftMs: recallMs(),
+        timeLeftMs: recallMs(nextRound),
       };
     });
   }, []);
@@ -327,7 +314,6 @@ export function useCamoDetection() {
     }
     setCoinBalanceRef.current(balance);
 
-    settling.current = false;
     setState((s) => {
       const resumeRound = s.resumeRound ?? s.round.round + 1;
       return {
@@ -341,17 +327,15 @@ export function useCamoDetection() {
         flashOn: true,
         resumeRound: null,
         clearedRun: false,
-        perfectRun: false,
         continueBusy: false,
         continueError: null,
         lastRun: null,
-        timeLeftMs: recallMs(),
+        timeLeftMs: recallMs(resumeRound),
       };
     });
   }, []);
 
   const playAgain = useCallback(() => {
-    settling.current = false;
     setState(initialState());
   }, []);
 
@@ -364,17 +348,9 @@ export function useCamoDetection() {
       playAgain,
       buyContinue,
       continueCost: SHARED_RUN.continueCost,
-      roundsPerRun: CAMO_CONFIG.roundsPerRun,
       maxLives: CAMO_CONFIG.maxLives,
-      recallSeconds: CAMO_CONFIG.recallSeconds,
+      clearRounds: CAMO_CLEAR_ROUNDS,
     }),
-    [
-      state,
-      toggleCell,
-      submit,
-      goNext,
-      playAgain,
-      buyContinue,
-    ],
+    [state, toggleCell, submit, goNext, playAgain, buyContinue],
   );
 }
