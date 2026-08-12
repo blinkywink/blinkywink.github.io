@@ -8787,19 +8787,24 @@ body:has(.zoomed-page) {
 
 .bloonle-board {
   --bloonle-n: 10;
+  --bloonle-rows: 6;
   --tile-gap: 0.3rem;
   --board-pad: 0.4rem;
-  container-type: inline-size;
+  /* Width + height so all 6 rows always fit on any device */
+  container-type: size;
   container-name: bloonle-board;
-  /* Size from board width only (cqi) — never height %, which made desktop tiny */
   --tile: min(
     4.5rem,
     calc(
       (100cqi - 2 * var(--board-pad) - (var(--bloonle-n) - 1) * var(--tile-gap)) /
         var(--bloonle-n)
+    ),
+    calc(
+      (100cqh - 2 * var(--board-pad) - (var(--bloonle-rows) - 1) * var(--tile-gap)) /
+        var(--bloonle-rows)
     )
   );
-  flex: 1 1 auto;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8807,8 +8812,7 @@ body:has(.zoomed-page) {
   gap: var(--tile-gap);
   min-width: 0;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
   padding: 0.35rem var(--board-pad);
@@ -9013,6 +9017,10 @@ body:has(.zoomed-page) {
       calc(
         (100cqi - 2 * var(--board-pad) - (var(--bloonle-n) - 1) * var(--tile-gap)) /
           var(--bloonle-n)
+      ),
+      calc(
+        (100cqh - 2 * var(--board-pad) - (var(--bloonle-rows) - 1) * var(--tile-gap)) /
+          var(--bloonle-rows)
       )
     );
   }
@@ -9033,6 +9041,42 @@ body:has(.zoomed-page) {
 
   .bloonle-keyboard {
     padding-inline: 0.15rem;
+  }
+}
+
+/* Short phones: shrink chrome so the 6-row board keeps room */
+@media (max-height: 740px) {
+  .bloonle-prompt h2 {
+    font-size: 1rem;
+  }
+
+  .bloonle-prompt__sub {
+    font-size: 0.72rem;
+  }
+
+  .bloonle-toast {
+    min-height: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .bloonle-key {
+    --key-h: clamp(2rem, 5.2dvh, 2.55rem);
+  }
+
+  .bloonle-keyboard {
+    gap: 0.18rem;
+    padding-bottom: 0.1rem;
+  }
+}
+
+@media (max-height: 640px) {
+  .bloonle-prompt__sub {
+    display: none;
+  }
+
+  .bloonle-key {
+    --key-h: clamp(1.85rem, 4.6dvh, 2.35rem);
+    font-size: clamp(0.72rem, 2vw, 0.88rem);
   }
 }
 

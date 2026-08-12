@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { isTypingTarget } from "../../lib/keyboard";
 import { bloonleSolveReward } from "../rewards";
@@ -151,7 +151,12 @@ export function BloonleGame({
 
         <div
           className="bloonle-board"
-          style={{ ["--bloonle-n" as string]: len }}
+          style={
+            {
+              ["--bloonle-n" as string]: len,
+              ["--bloonle-rows" as string]: maxGuesses,
+            } as CSSProperties
+          }
         >
           {Array.from({ length: maxGuesses }, (_, row) => {
             const guess = state.guesses[row];
