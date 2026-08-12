@@ -244,7 +244,13 @@ export async function createStemPlayer(
       return d;
     },
     get currentTime() {
-      return master.currentTime;
+      // Prefer a still-playing stem so a short song.* doesn't freeze the clock.
+      if (!master.ended) return master.currentTime;
+      let t = master.currentTime;
+      for (const el of elements) {
+        if (!el.ended && el.currentTime > t) t = el.currentTime;
+      }
+      return t;
     },
     set currentTime(t: number) {
       const clamped = Math.max(0, t);
@@ -257,10 +263,11 @@ export async function createStemPlayer(
       }
     },
     get paused() {
-      return master.paused;
+      return elements.every((el) => el.paused || el.ended);
     },
     get ended() {
-      return master.ended;
+      // Don't treat a short song.* stem ending as the whole pack finishing.
+      return elements.length > 0 && elements.every((el) => el.ended);
     },
     async play() {
       if (!useSimpleAudio) ensureGraph();

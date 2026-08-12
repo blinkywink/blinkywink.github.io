@@ -541,7 +541,13 @@ export function useBloonHero() {
               ? player.duration
               : 0;
           const fromMeta = (hit.song_length || 0) / 1000;
-          durationRef.current = Math.max(fromAudio, fromMeta, chartEnd);
+          const fromIni = loaded.songLengthSec || 0;
+          durationRef.current = Math.max(
+            fromAudio,
+            fromMeta,
+            fromIni,
+            chartEnd,
+          );
           setState((prev) =>
             prev.phase === "ready" || prev.phase === "playing"
               ? { ...prev, duration: durationRef.current }
@@ -549,8 +555,10 @@ export function useBloonHero() {
           );
         };
         refreshAudioLength();
-        player.master.addEventListener("loadedmetadata", refreshAudioLength);
-        player.master.addEventListener("durationchange", refreshAudioLength);
+        for (const el of player.stems) {
+          el.addEventListener("loadedmetadata", refreshAudioLength);
+          el.addEventListener("durationchange", refreshAudioLength);
+        }
         const onlyGuitar =
           loaded.availableInstruments.length === 1 &&
           loaded.availableInstruments[0] === "guitar";
@@ -1158,8 +1166,10 @@ export function useBloonHero() {
         void player.play();
       }
 
-      if (audioStarted && player && !player.paused) {
+      if (audioStarted && player && !pausedRef.current) {
         const delay = (songRef.current?.delayMs || 0) / 1000;
+        // Keep advancing after a short master stem ends — other stems / declared
+        // length may still have outro left (player.paused can flip true on ended).
         const sample = player.currentTime - delay;
         now = advanceSongClock(clockRef.current, sample, wallMs / 1000);
       }
@@ -1371,21 +1381,25 @@ export function useBloonHero() {
       }
 
       const livesAfter = stateRef.current.lives;
-      // End when the packed audio finishes. Never cut on last-chart-note or a
-      // half-reported opus duration while Encore/ini says the track is longer.
+      // End when every stem finishes, or we hit a trusted reported/declared length.
+      // Never treat a short song.* master alone as the pack ending (see StemPlayer.ended).
       const declaredLen = Math.max(durationRef.current, chartEndRef.current);
       const reportedLen =
         player && Number.isFinite(player.duration) && player.duration > 0
           ? player.duration
           : 0;
       const audioPos = player?.currentTime ?? 0;
+      const clockPos = Math.max(now, audioPos);
       const trustReported =
-        reportedLen > 1 && reportedLen >= Math.max(1, declaredLen) * 0.9;
+        reportedLen > 1 && reportedLen >= Math.max(1, declaredLen) * 0.95;
       const songDone =
         audioStarted &&
         !!player &&
         (player.ended ||
-          (trustReported && audioPos >= reportedLen - 0.12));
+          (trustReported && audioPos >= reportedLen - 0.12) ||
+          (declaredLen > 1 &&
+            clockPos >= declaredLen - 0.2 &&
+            audioPos >= declaredLen - 0.5));
 
       if (livesAfter <= 0 && now >= 0) {
         finishRun({ died: true });

@@ -19,6 +19,8 @@ export type LoadedSong = {
   stemFiles: { name: string; data: Uint8Array }[];
   artUrl: string | null;
   delayMs: number;
+  /** Pack song.ini length in seconds (0 if missing). */
+  songLengthSec: number;
   ini: Record<string, string>;
   availableInstruments: PlayableInstrument[];
   /** Vocal chart notes for lip-sync (independent of play instrument). */
@@ -27,6 +29,13 @@ export type LoadedSong = {
   lyrics: LyricPhrase[];
   setInstrument: (instrument: PlayableInstrument) => ParsedChart;
 };
+
+/** Clone Hero / Encore song_length is usually milliseconds. */
+export function songLengthSecFromIni(ini: Record<string, string>): number {
+  const raw = Number(ini.song_length || ini.songlength || 0);
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+  return raw > 1000 ? raw / 1000 : raw;
+}
 
 async function readStreamAll(
   stream: ReadableStream<Uint8Array>,
@@ -141,6 +150,7 @@ export async function loadSongFromSng(
   const ini = parseIni(iniText);
   const delayMs = Number(ini.delay || 0) || 0;
   const offsetSec = Number(ini.chart_offset || 0) || 0;
+  const songLengthSec = songLengthSecFromIni(ini);
 
   const chartBytes =
     files.get("notes.chart") ??
@@ -237,6 +247,7 @@ export async function loadSongFromSng(
     stemFiles,
     artUrl,
     delayMs,
+    songLengthSec,
     ini,
     availableInstruments,
     vocalsNotes,
