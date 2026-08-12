@@ -69,16 +69,17 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
           Tap to pop clear tiles · right-click / long-press to flag red bloons
         </p>
 
-        <div
-          className="sweeper-board"
-          style={{
-            ["--sweeper-cols" as string]: state.cfg.cols,
-            ["--sweeper-rows" as string]: state.cfg.rows,
-          }}
-          role="grid"
-          aria-label="Bloons sweeper board"
-          onContextMenu={(e) => e.preventDefault()}
-        >
+        <div className="sweeper-stage">
+          <div
+            className="sweeper-board"
+            style={{
+              ["--sweeper-cols" as string]: state.cfg.cols,
+              ["--sweeper-rows" as string]: state.cfg.rows,
+            }}
+            role="grid"
+            aria-label="Bloons sweeper board"
+            onContextMenu={(e) => e.preventDefault()}
+          >
           {state.board.map((row, r) =>
             row.map((cell, c) => {
               const showMine =
@@ -138,6 +139,7 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
               );
             }),
           )}
+          </div>
         </div>
 
         {state.status === "won" ? (

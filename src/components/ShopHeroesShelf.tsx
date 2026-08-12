@@ -18,6 +18,7 @@ import {
   preloadHeroEquipVo,
   preloadPackSounds,
 } from "../lib/packSounds";
+import { isTypingTarget } from "../lib/keyboard";
 import { CurrencyChip } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
@@ -94,8 +95,7 @@ export function ShopHeroesShelf() {
         return;
       }
       if (e.code !== "Space" && e.key !== " ") return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (isTypingTarget(e.target)) return;
       e.preventDefault();
       if (e.repeat || busy || owned.has(focused.id)) return;
       void onUnlock();

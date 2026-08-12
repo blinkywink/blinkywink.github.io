@@ -8,6 +8,7 @@ import {
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
+import { isTypingTarget } from "../../lib/keyboard";
 import { playBloonPop } from "../../lib/packSounds";
 import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
@@ -119,6 +120,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     if (capturingLane == null) return;
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.key === "Escape") {

@@ -25,6 +25,19 @@ export const PLAYER_HEIGHT = 100;
 /** Monkey gif has lots of empty corners, keep the catch body tighter. */
 export const PLAYER_HIT = { wFrac: 0.52, hFrac: 0.55, yLift: 8 };
 
+/** Design field size used for responsive sprite / speed scaling. */
+export const CATCH_REF_W = 560;
+export const CATCH_REF_H = 420;
+
+/** Scale gameplay px with the live field so phones aren't huge/tiny. */
+export function catchUiScale(fieldW: number, fieldH: number): number {
+  if (fieldW <= 0 || fieldH <= 0) return 1;
+  return Math.min(
+    1.12,
+    Math.max(0.52, Math.min(fieldW / CATCH_REF_W, fieldH / CATCH_REF_H)),
+  );
+}
+
 export type DropKind =
   | "banana"
   | "red"
@@ -126,8 +139,11 @@ export const PINK_UNLOCK_S = 32;
 export const MOAB_UNLOCK_S = 48;
 export const BFB_UNLOCK_S = 70;
 
-export function drawSizeFor(kind: DropKind): { w: number; h: number } {
-  const scale = KIND_SCALE[kind];
+export function drawSizeFor(
+  kind: DropKind,
+  ui = 1,
+): { w: number; h: number } {
+  const scale = KIND_SCALE[kind] * ui;
   const aspect = KIND_ASPECT[kind];
   if (aspect >= 1) return { w: scale, h: scale / aspect };
   return { w: scale * aspect, h: scale };

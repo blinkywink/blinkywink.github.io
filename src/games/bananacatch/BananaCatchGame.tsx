@@ -17,6 +17,7 @@ import {
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   RED_BLOON_IMAGE,
+  catchUiScale,
 } from "./config";
 import { useBananaCatch, type DropKind } from "./useBananaCatch";
 import { useCatchBgm } from "./useCatchBgm";
@@ -233,6 +234,10 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     }
   }
 
+  const ui = catchUiScale(state.fieldW, state.fieldH);
+  const playerW = PLAYER_WIDTH * ui;
+  const playerH = PLAYER_HEIGHT * ui;
+
   return (
     <div className={`catch-page${done ? " is-done" : ""}`}>
       <GameHeader title="BANANA CATCH" icon="" />
@@ -316,8 +321,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             alt=""
             draggable={false}
             style={{
-              width: PLAYER_WIDTH,
-              height: PLAYER_HEIGHT,
+              width: playerW,
+              height: playerH,
               left: `${state.playerX * 100}%`,
             }}
           />

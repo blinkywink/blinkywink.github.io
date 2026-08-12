@@ -2,6 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
+import { isTypingTarget } from "../../lib/keyboard";
 import { CAMO_IMAGE, recallSecondsForRound } from "./config";
 import { useCamoDetection } from "./useCamoDetection";
 
@@ -50,6 +51,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     if (state.phase !== "recalling") return;
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       if (e.key === "Enter") {
         e.preventDefault();
         submit();
@@ -62,6 +64,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     if (state.phase !== "reveal") return;
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         goNext();

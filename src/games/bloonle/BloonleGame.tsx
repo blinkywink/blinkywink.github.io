@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { GameHeader } from "../../components/GameHeader";
+import { isTypingTarget } from "../../lib/keyboard";
+import { bloonleSolveReward } from "../rewards";
 import { dayNumber, type LetterMark } from "./dictionary";
 import { useBloonle } from "./useBloonle";
 
@@ -8,7 +10,7 @@ type Props = {
   /** Fired once when solved in ≤3 guesses. */
   onFastSolve?: (guessCount: number) => void;
   /** Fired once when a round ends (win or lose). */
-  onRunEnd?: (info: { cleared: boolean }) => void;
+  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
 };
 
 const ROWS = [
@@ -76,18 +78,31 @@ export function BloonleGame({
     if (was !== "playing") return;
     if (state.status === "won") {
       const guesses = state.guesses.length;
+      // Award is applied async; compute the same payout for Nice Haul now.
+      const coinsEarned =
+        state.reward > 0
+          ? state.reward
+          : bloonleSolveReward(state.mode, guesses);
       if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
-      onRunEnd?.({ cleared: true });
+      onRunEnd?.({ cleared: true, coinsEarned });
       return;
     }
     if (state.status === "lost") {
-      onRunEnd?.({ cleared: false });
+      onRunEnd?.({ cleared: false, coinsEarned: 0 });
     }
-  }, [state.status, state.guesses.length, onFastSolve, onRunEnd]);
+  }, [
+    state.status,
+    state.guesses.length,
+    state.mode,
+    state.reward,
+    onFastSolve,
+    onRunEnd,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isTypingTarget(e.target)) return;
       if (e.key === "Enter") {
         e.preventDefault();
         if (done) playNext();

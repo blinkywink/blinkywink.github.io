@@ -431,7 +431,9 @@ function AppShell() {
   );
 
   const onBloonleRunEnd = useCallback(
-    (info: { cleared: boolean }) => {
+    (info: { cleared: boolean; coinsEarned: number }) => {
+      setEndlessHaul(null);
+      setRunCashEarned(info.coinsEarned);
       void (async () => {
         await creditHeroClear(info.cleared);
         void settleFeaturedBonus("bloonle", info.cleared);

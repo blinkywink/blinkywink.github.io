@@ -22,6 +22,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
+import { isTypingTarget } from "../lib/keyboard";
 import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
 import { spendCoins } from "../lib/spendCoins";
@@ -707,8 +708,7 @@ export function PackOpenerTest({
         return;
       }
       if (e.code !== "Space" && e.key !== " ") return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (isTypingTarget(e.target)) return;
       e.preventDefault();
       spaceHeldRef.current = true;
       if (buyBusy) return;

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { formatPathLevels } from "../../lib/pathCombos";
+import { isTypingTarget } from "../../lib/keyboard";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
@@ -122,6 +123,7 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     if (state.phase !== "playing") return;
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
         e.preventDefault();
         guess("left");
@@ -137,6 +139,7 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     if (state.phase !== "reveal") return;
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         goNext();

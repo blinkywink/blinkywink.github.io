@@ -26,6 +26,7 @@ import {
   SPAWN_BLOON_MS_MIN,
   SPAWN_BLOON_MS_START,
   drawSizeFor,
+  catchUiScale,
   isBlimp,
   type DropKind,
 } from "./config";
@@ -94,8 +95,9 @@ function makeDropAt(
     swayFreq?: number;
     swayPhase?: number;
   },
+  ui: number,
 ): Drop {
-  const { w, h } = drawSizeFor(kind);
+  const { w, h } = drawSizeFor(kind, ui);
   const spanW = spanFor(kind, w, h);
   const half = spanW * 0.5;
   const anchorX = clamp(opts.x, half, Math.max(half, fieldW - half));
@@ -113,14 +115,14 @@ function makeDropAt(
     kind,
     x: anchorX,
     y: opts.y ?? -heightFor(kind, w, h),
-    vy: KIND_SPEED[kind],
+    vy: KIND_SPEED[kind] * ui,
     w,
     h,
     rot,
     spin,
     damage: KIND_DAMAGE[kind],
     anchorX,
-    swayAmp: opts.swayAmp ?? 0,
+    swayAmp: (opts.swayAmp ?? 0) * ui,
     swayFreq: opts.swayFreq ?? 0,
     swayPhase: opts.swayPhase ?? 0,
   };
@@ -157,21 +159,28 @@ function spawnFormation(
   fieldW: number,
   elapsed: number,
   nextId: () => number,
+  ui: number,
 ): Drop[] {
   const kind = pickOrdinary(elapsed);
-  const { w, h } = drawSizeFor(kind);
+  const { w, h } = drawSizeFor(kind, ui);
   const gap = w * 1.35;
   const patternRoll = Math.random();
 
   // ~40% stay as a lone float (sometimes with a little sway)
   if (patternRoll < 0.38) {
     return [
-      makeDropAt(kind, fieldW, nextId, {
-        x: rand(w, Math.max(w, fieldW - w)),
-        swayAmp: Math.random() < 0.45 ? rand(18, 42) : 0,
-        swayFreq: rand(1.6, 2.6),
-        swayPhase: rand(0, Math.PI * 2),
-      }),
+      makeDropAt(
+        kind,
+        fieldW,
+        nextId,
+        {
+          x: rand(w, Math.max(w, fieldW - w)),
+          swayAmp: Math.random() < 0.45 ? rand(18, 42) : 0,
+          swayFreq: rand(1.6, 2.6),
+          swayPhase: rand(0, Math.PI * 2),
+        },
+        ui,
+      ),
     ];
   }
 
@@ -190,10 +199,16 @@ function spawnFormation(
     const totalW = (count - 1) * gap;
     const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
     return Array.from({ length: count }, (_, i) =>
-      makeDropAt(kind, fieldW, nextId, {
-        x: startX + i * gap,
-        ...sharedSway,
-      }),
+      makeDropAt(
+        kind,
+        fieldW,
+        nextId,
+        {
+          x: startX + i * gap,
+          ...sharedSway,
+        },
+        ui,
+      ),
     );
   }
 
@@ -207,12 +222,18 @@ function spawnFormation(
     for (let row = 0; row < 2; row++) {
       for (let i = 0; i < count; i++) {
         out.push(
-          makeDropAt(kind, fieldW, nextId, {
-            x: startX + i * gap + (row === 1 ? gap * 0.35 : 0),
-            y: -h - row * rowGap,
-            ...sharedSway,
-            swayPhase: phase + row * 0.35,
-          }),
+          makeDropAt(
+            kind,
+            fieldW,
+            nextId,
+            {
+              x: startX + i * gap + (row === 1 ? gap * 0.35 : 0),
+              y: -h - row * rowGap,
+              ...sharedSway,
+              swayPhase: phase + row * 0.35,
+            },
+            ui,
+          ),
         );
       }
     }
@@ -229,11 +250,17 @@ function spawnFormation(
     for (let row = 0; row < 2; row++) {
       for (let i = 0; i < count; i++) {
         out.push(
-          makeDropAt(kind, fieldW, nextId, {
-            x: startX + i * tight,
-            y: -h - row * (h * 0.85),
-            ...sharedSway,
-          }),
+          makeDropAt(
+            kind,
+            fieldW,
+            nextId,
+            {
+              x: startX + i * tight,
+              y: -h - row * (h * 0.85),
+              ...sharedSway,
+            },
+            ui,
+          ),
         );
       }
     }
@@ -244,13 +271,19 @@ function spawnFormation(
   const count = 4 + Math.floor(Math.random() * 3);
   const x = rand(w, Math.max(w, fieldW - w));
   return Array.from({ length: count }, (_, i) =>
-    makeDropAt(kind, fieldW, nextId, {
-      x,
-      y: -h - i * (h * 1.1),
-      swayAmp: swayAmp * 0.85,
-      swayFreq,
-      swayPhase: phase + i * 0.55,
-    }),
+    makeDropAt(
+      kind,
+      fieldW,
+      nextId,
+      {
+        x,
+        y: -h - i * (h * 1.1),
+        swayAmp: swayAmp * 0.85,
+        swayFreq,
+        swayPhase: phase + i * 0.55,
+      },
+      ui,
+    ),
   );
 }
 
@@ -419,6 +452,10 @@ export function useBananaCatch() {
       const s = stateRef.current;
       const { fieldW, fieldH } = s;
       const t = elapsedRef.current;
+      const ui = catchUiScale(fieldW, fieldH);
+      const playerW = PLAYER_WIDTH * ui;
+      const playerH = PLAYER_HEIGHT * ui;
+      const margin = 40 * ui;
 
       const ramp = Math.min(1.4, t / 40);
       const bananaInterval =
@@ -439,18 +476,24 @@ export function useBananaCatch() {
 
       if (bananaTimerRef.current <= 0 && fieldW > 0) {
         spawn.push(
-          makeDropAt("banana", fieldW, nextId, {
-            x: rand(40, Math.max(40, fieldW - 40)),
-            swayAmp: rand(10, 28),
-            swayFreq: rand(1.2, 2),
-            swayPhase: rand(0, Math.PI * 2),
-          }),
+          makeDropAt(
+            "banana",
+            fieldW,
+            nextId,
+            {
+              x: rand(margin, Math.max(margin, fieldW - margin)),
+              swayAmp: rand(10, 28),
+              swayFreq: rand(1.2, 2),
+              swayPhase: rand(0, Math.PI * 2),
+            },
+            ui,
+          ),
         );
         bananaTimerRef.current = bananaInterval * rand(0.75, 1.15);
       }
 
       if (bloonTimerRef.current <= 0 && fieldW > 0) {
-        spawn.push(...spawnFormation(fieldW, t, nextId));
+        spawn.push(...spawnFormation(fieldW, t, nextId, ui));
         // Extra pause after a big formation so the screen can breathe
         const justBig = spawn.length >= 6;
         bloonTimerRef.current =
@@ -465,9 +508,15 @@ export function useBananaCatch() {
         );
         if (kind && gapOk && !blimpAlive) {
           spawn.push(
-            makeDropAt(kind, fieldW, nextId, {
-              x: rand(fieldW * 0.2, fieldW * 0.8),
-            }),
+            makeDropAt(
+              kind,
+              fieldW,
+              nextId,
+              {
+                x: rand(fieldW * 0.2, fieldW * 0.8),
+              },
+              ui,
+            ),
           );
           lastBlimpAtRef.current = t;
           blimpTimerRef.current = blimpInterval * rand(0.95, 1.25);
@@ -482,11 +531,15 @@ export function useBananaCatch() {
         (targetXRef.current - playerXRef.current) * lerp;
 
       const playerCenterX = playerXRef.current * fieldW;
-      const hitW = PLAYER_WIDTH * PLAYER_HIT.wFrac;
-      const hitH = PLAYER_HEIGHT * PLAYER_HIT.hFrac;
+      const hitW = playerW * PLAYER_HIT.wFrac;
+      const hitH = playerH * PLAYER_HIT.hFrac;
       const playerLeft = playerCenterX - hitW / 2;
       const playerTop =
-        fieldH - PLAYER_HEIGHT - 10 + PLAYER_HIT.yLift + (PLAYER_HEIGHT - hitH) * 0.35;
+        fieldH -
+        playerH -
+        10 * ui +
+        PLAYER_HIT.yLift * ui +
+        (playerH - hitH) * 0.35;
 
       let bananas = s.bananas;
       let lives = s.lives;

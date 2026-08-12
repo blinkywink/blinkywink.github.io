@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { isTypingTarget } from "../../lib/keyboard";
 import { playBloonPop, preloadPackSounds } from "../../lib/packSounds";
 import {
   APPROACH_S,
@@ -1454,6 +1455,7 @@ export function useBloonHero() {
     if (state.phase !== "playing") return;
     const down = new Set<string>();
     const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       if (e.key === "Escape") {
         e.preventDefault();
         if (e.repeat) return;
