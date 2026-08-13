@@ -8,6 +8,7 @@ import { cardSpecById } from "../lib/cardCatalog";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { profilePath } from "../lib/routes";
 import { CurrencyChip } from "./CurrencyChip";
+import { OPEN_AUTH_EVENT, type OpenAuthDetail } from "./HowToPlayOverlay";
 import { UserAvatar } from "./UserAvatar";
 
 type Mode = "signin" | "signup";
@@ -63,6 +64,17 @@ export function AccountBar() {
     if (!user) setMenuOpen(false);
   }, [user]);
 
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<OpenAuthDetail>).detail;
+      setMode(detail?.mode === "signin" ? "signin" : "signup");
+      setError(null);
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_AUTH_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_AUTH_EVENT, onOpen);
+  }, []);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -110,11 +122,11 @@ export function AccountBar() {
           <h2 id="auth-modal-title">
             {mode === "signin" ? "Sign in" : "Create account"}
           </h2>
-          <p className="auth-modal__blurb">
-            {mode === "signup"
-              ? "Create an account to save progress. New players start with 5,000 Cash."
-              : "Username + password only, no email. Sign in to sync Cash and cards."}
-          </p>
+            <p className="auth-modal__blurb">
+              {mode === "signup"
+                ? "Create an account to save progress. New players start with 5,000 Cash. There is no email, so please do not forget your username and password!"
+                : "Username + password only, no email. Sign in to sync Cash and cards."}
+            </p>
 
           <div className="auth-modal__tabs">
             <button

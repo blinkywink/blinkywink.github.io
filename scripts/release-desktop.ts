@@ -63,6 +63,12 @@ run("git", [
   "src-tauri/Cargo.toml",
   "src-tauri/Cargo.lock",
   "public/desktop-latest.json",
+  "public/desktop-config.json",
+  "public/downloads/latest.json",
+  "scripts/with-updater-key.ts",
+  "scripts/publish-desktop-release.ts",
+  "scripts/desktop-version.ts",
+  "src/lib/appVersion.ts",
 ]);
 const commit = spawnSync(
   "git",

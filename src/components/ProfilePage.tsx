@@ -19,6 +19,7 @@ import {
 } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
+import { APP_VERSION } from "../lib/appVersion";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import {
   prefetchCardFaceImage,
@@ -835,6 +836,13 @@ export function ProfilePage() {
           )}
         </section>
       </main>
+      <footer className="profile-page__footer">
+        <p>
+          v. {APP_VERSION}
+          <span aria-hidden> · </span>
+          thanks for playing!
+        </p>
+      </footer>
       {editor}
       {showcaseEditor}
     </div>

@@ -119,7 +119,7 @@ async function paintZoomedPreview(
   );
 }
 
-function ZoomedPreview() {
+export function ZoomedPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

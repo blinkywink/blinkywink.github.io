@@ -69,6 +69,12 @@ export function writeDesktopVersion(version: string) {
   };
   pkg.version = version;
   fs.writeFileSync(PACKAGE_JSON, `${JSON.stringify(pkg, null, 2)}\n`);
+
+  const appVersionPath = path.join(ROOT, "src", "lib", "appVersion.ts");
+  fs.writeFileSync(
+    appVersionPath,
+    `/** Site / app version shown in UI. Kept in sync by writeDesktopVersion. */\nexport const APP_VERSION = "${version}";\n`,
+  );
 }
 
 export function releaseTag(version: string): string {

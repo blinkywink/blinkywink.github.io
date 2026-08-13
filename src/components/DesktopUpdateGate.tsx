@@ -165,20 +165,20 @@ export function DesktopUpdateGate() {
         ) : (
           <div className="desktop-online-gate__actions">
             <a
-              href={mac}
-              className="btn btn--primary"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Download Mac
-            </a>
-            <a
               href={win}
               className="btn btn--primary"
               target="_blank"
               rel="noopener noreferrer"
             >
               Download Windows
+            </a>
+            <a
+              href={mac}
+              className="btn btn--primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Download Mac
             </a>
             <button type="button" className="btn" onClick={() => void run()}>
               Retry
