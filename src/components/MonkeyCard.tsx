@@ -546,7 +546,7 @@ export function MonkeyCard({
         isPreview ? "monkey-card-scene--preview" : "",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
-        isParagon && !isPreview && stage > 0
+        isParagon && !isPreview
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
       ]
@@ -554,14 +554,14 @@ export function MonkeyCard({
         .join(" ")}
       {...interactiveProps}
     >
-      {isParagon && !isPreview && stage > 0 ? (
+      {isParagon && !isPreview ? (
         <div
           className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
           aria-hidden
         >
           {PARAGON_SMOKE.slice(
             0,
-            stage >= 5 ? 8 : stage >= 4 ? 6 : stage >= 2 ? 4 : 3,
+            stage >= 5 ? 8 : stage >= 4 ? 6 : stage >= 2 ? 4 : stage >= 1 ? 3 : 2,
           ).map((p, i) => (
             <i
               key={`sm${i}`}
@@ -571,8 +571,8 @@ export function MonkeyCard({
           ))}
         </div>
       ) : null}
-      {isParagon && !isPreview && stage > 0 ? (
-        <ParagonRings stage={stage} />
+      {isParagon && !isPreview && stage >= 0 ? (
+        <ParagonRings stage={Math.max(1, stage) as 1 | 2 | 3 | 4 | 5} />
       ) : null}
       <div
         ref={cardRef}
@@ -722,7 +722,7 @@ export function MonkeyCard({
           </div>
         </div>
 
-        {isParagon && stage > 0 ? (
+        {isParagon ? (
           <div
             className={`monkey-card__paragon-aura monkey-card__paragon-aura--s${stage}`}
             aria-hidden
@@ -731,14 +731,14 @@ export function MonkeyCard({
 
         <div className="monkey-card__edge" aria-hidden="true" />
       </div>
-      {isParagon && !isPreview && stage > 0 ? (
+      {isParagon && !isPreview ? (
         <div
           className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
           aria-hidden
         >
           {PARAGON_STARS.slice(
             0,
-            stage >= 5 ? 5 : stage >= 4 ? 4 : stage >= 2 ? 3 : 2,
+            stage >= 5 ? 5 : stage >= 4 ? 4 : stage >= 2 ? 3 : stage >= 1 ? 2 : 1,
           ).map((p, i) => (
             <svg
               key={`st${i}`}

@@ -138,13 +138,10 @@ export function useZoomedGame() {
   useEffect(() => {
     if (didApplyHeroInit.current) return;
     didApplyHeroInit.current = true;
+    // Don't reshuffle round 1 here — swapping the challenge while the
+    // canvas is still loading the first pick can grade the wrong map/tower.
     resetRunFlags();
-    setState((s) =>
-      s.score === 0 && s.answeredCount === 0 && s.challenge?.round === 1
-        ? { ...s, challenge: makeChallenge(1) }
-        : s,
-    );
-  }, [makeChallenge, resetRunFlags]);
+  }, [resetRunFlags]);
 
   const preloadChallenge = useCallback(async (c: Challenge) => {
     try {

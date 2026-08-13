@@ -9,10 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "./AuthProvider";
+import { useHeroFx } from "./HeroFxProvider";
 import {
   awardCards as persistAwardCards,
   fetchOwnedCopies,
 } from "../lib/awardCards";
+import { cardSpecById } from "../lib/cardCatalog";
 import {
   feedForCardId,
   mergeParagonMaps,
@@ -64,6 +66,9 @@ const CardCollectionContext = createContext<CardCollectionContextValue | null>(
 export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const { ready: authReady, session, isGuest, profile, refreshProfile } =
     useAuth();
+  const { notifyParagonDegree } = useHeroFx();
+  const notifyParagonRef = useRef(notifyParagonDegree);
+  notifyParagonRef.current = notifyParagonDegree;
   const [ready, setReady] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
@@ -189,6 +194,19 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return added;
   }, []);
 
+  const announceDegreeUps = useCallback((results: ParagonApplyResult[]) => {
+    for (const r of results) {
+      if (r.degreesGained <= 0) continue;
+      const spec = cardSpecById(r.cardId);
+      notifyParagonRef.current({
+        cardId: r.cardId,
+        name: spec?.entity.name ?? "Paragon",
+        degree: r.degree,
+        portrait: spec?.entity.image ?? "/images/ui/paragon-icon.webp",
+      });
+    }
+  }, []);
+
   const applyParagonFeeds = useCallback(async (feeds: ParagonFeed[]) => {
     const run = async () => {
       const ownedSet = new Set([
@@ -209,6 +227,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       );
       paragonRef.current = map;
       setParagonMap(map);
+      announceDegreeUps(results);
       return results;
     };
     const next = feedQueue.current.then(run, run);
@@ -217,7 +236,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       () => undefined,
     );
     return next;
-  }, []);
+  }, [announceDegreeUps]);
 
   const feedParagonsFromCards = useCallback(
     async (cardIds: string[], newIds: string[] = []) => {
@@ -248,6 +267,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
         );
         paragonRef.current = map;
         setParagonMap(map);
+        announceDegreeUps(results);
         return results;
       };
       const next = feedQueue.current.then(run, run);
@@ -257,7 +277,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       );
       return next;
     },
-    [],
+    [announceDegreeUps],
   );
 
   const owned = useMemo(() => new Set(ownedIds), [ownedIds]);

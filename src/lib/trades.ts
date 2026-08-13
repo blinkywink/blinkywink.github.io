@@ -27,6 +27,8 @@ export type TradeState = {
   recipientReady: boolean;
   myOffer: string[];
   theirOffer: string[];
+  myCash: number;
+  theirCash: number;
   updatedAt: string;
   createdAt: string;
 };
@@ -72,6 +74,8 @@ function asTradeState(raw: unknown): TradeState {
     recipientReady: Boolean(r.recipientReady),
     myOffer,
     theirOffer,
+    myCash: Math.max(0, Math.floor(Number(r.myCash) || 0)),
+    theirCash: Math.max(0, Math.floor(Number(r.theirCash) || 0)),
     updatedAt: String(r.updatedAt ?? ""),
     createdAt: String(r.createdAt ?? ""),
   };
@@ -143,11 +147,13 @@ export async function fetchTrade(tradeId: string): Promise<TradeState> {
 export async function setTradeOffer(
   tradeId: string,
   cardIds: string[],
+  cash = 0,
 ): Promise<void> {
   requireSession();
   const { error } = await supabase.rpc("set_trade_offer", {
     p_trade_id: tradeId,
     p_card_ids: cardIds,
+    p_cash: Math.max(0, Math.floor(cash)),
   });
   if (error) throw new Error(error.message);
 }

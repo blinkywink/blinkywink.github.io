@@ -29,6 +29,13 @@ import {
   setProfileAccent,
 } from "../lib/profileCosmetics";
 import {
+  PROFILE_BACKGROUNDS,
+  PROFILE_BG_CHANGE_COST,
+  PROFILE_BG_COST,
+  normalizeBackgroundId,
+} from "../lib/profileBackgrounds";
+import { setProfileBackground } from "../lib/profileBackgroundApi";
+import {
   SHOWCASE_CHANGE_COST,
   SHOWCASE_MAX,
   SHOWCASE_SLOT_COST,
@@ -77,6 +84,7 @@ export function ProfilePage() {
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
   const [colorDraft, setColorDraft] = useState("#F0C84A");
+  const [bgDraft, setBgDraft] = useState("monkey-meadow");
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,9 +134,13 @@ export function ProfilePage() {
     [profile],
   );
 
+  const bgUnlocked = Boolean(profile?.bg_unlocked);
+  const bgArtId = normalizeBackgroundId(profile?.bg_art_id);
+
   const chromeOn = hasPlayerChrome(
     playerChromeStyle({
       accentColor: cosmetics.accentColor,
+      bgArtId,
     }),
   );
 
@@ -177,6 +189,10 @@ export function ProfilePage() {
     const next = cosmetics.accentColor ?? "#F0C84A";
     setColorDraft(next);
   }, [cosmetics.accentColor]);
+
+  useEffect(() => {
+    setBgDraft(bgArtId ?? "monkey-meadow");
+  }, [bgArtId]);
 
   useEffect(() => {
     if (!editorOpen && !showcaseOpen) return;
@@ -353,6 +369,32 @@ export function ProfilePage() {
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save color.");
+    }
+    setBusy(false);
+  }
+
+  async function onSaveBackground() {
+    const next = normalizeBackgroundId(bgDraft);
+    if (!next) {
+      setError("Pick a valid background.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const balance = await setProfileBackground(next);
+      setCoinBalance(balance);
+      await refreshProfile();
+      setStatus(
+        bgUnlocked
+          ? `Background updated (−${PROFILE_BG_CHANGE_COST.toLocaleString()} Cash).`
+          : `Unlocked profile background for ${PROFILE_BG_COST.toLocaleString()} Cash.`,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not save background.",
+      );
     }
     setBusy(false);
   }
@@ -620,11 +662,12 @@ export function ProfilePage() {
         ) : null}
 
         <section
-          className={`profile-home${chromeOn || cosmetics.accentUnlocked ? " has-player-chrome" : ""}`}
+          className={`profile-home${chromeOn || cosmetics.accentUnlocked || bgUnlocked ? " has-player-chrome" : ""}`}
           style={
-            chromeOn || cosmetics.accentUnlocked
+            chromeOn || cosmetics.accentUnlocked || bgUnlocked
               ? playerChromeStyle({
                   accentColor: cosmetics.accentColor ?? colorDraft,
+                  bgArtId: bgArtId ?? bgDraft,
                 })
               : undefined
           }
@@ -696,7 +739,7 @@ export function ProfilePage() {
             <div>
               <h3>Profile cosmetics</h3>
               <p>
-                Custom color for your page and leaderboard chip.
+                Custom color and background for your page and collection.
               </p>
             </div>
           </div>
@@ -740,6 +783,55 @@ export function ProfilePage() {
                       ? PROFILE_ACCENT_CHANGE_COST
                       : PROFILE_ACCENT_COST
                   }
+                  size={16}
+                />
+              </button>
+            </div>
+
+            <div className="profile-cosmetics__card">
+              <div className="profile-cosmetics__card-head">
+                <h4>Background</h4>
+                <span className="profile-cosmetics__price">
+                  {bgUnlocked
+                    ? "Shows on public profile & Cards"
+                    : "One-time unlock"}
+                </span>
+              </div>
+              <div className="profile-bg-picks" role="listbox" aria-label="Background art">
+                {PROFILE_BACKGROUNDS.map((bg) => {
+                  const selected = bgDraft === bg.id;
+                  return (
+                    <button
+                      key={bg.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      className={`profile-bg-pick${selected ? " is-selected" : ""}`}
+                      disabled={busy}
+                      title={bg.name}
+                      onClick={() => setBgDraft(bg.id)}
+                      style={{ backgroundImage: `url("${bg.src}")` }}
+                    >
+                      <span>{bg.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="btn btn--secondary profile-cosmetics__buy"
+                disabled={
+                  busy ||
+                  (bgUnlocked
+                    ? (profile?.coins ?? 0) < PROFILE_BG_CHANGE_COST ||
+                      bgDraft === bgArtId
+                    : (profile?.coins ?? 0) < PROFILE_BG_COST)
+                }
+                onClick={() => void onSaveBackground()}
+              >
+                {bgUnlocked ? "Save" : "Unlock"}
+                <CashAmount
+                  amount={bgUnlocked ? PROFILE_BG_CHANGE_COST : PROFILE_BG_COST}
                   size={16}
                 />
               </button>

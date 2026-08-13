@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { TowerEntity } from "../data/types";
 import { byTower, towerEntities } from "../data/towers";
+import { prefersKeyboardAutofocus } from "../lib/focus";
 import { normalizeSearch, rankEntityMatch } from "../utils/searchEntities";
 
 type Props = {
@@ -47,7 +48,7 @@ export function AnswerSearch({
   }, [roundKey]);
 
   useEffect(() => {
-    if (!disabled && !pickedTower) {
+    if (!disabled && !pickedTower && prefersKeyboardAutofocus()) {
       const t = window.setTimeout(() => inputRef.current?.focus(), 40);
       return () => window.clearTimeout(t);
     }

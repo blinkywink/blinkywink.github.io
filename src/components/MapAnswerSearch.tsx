@@ -8,6 +8,7 @@ import {
 } from "react";
 import { maps } from "../data/maps";
 import type { MapEntity } from "../data/types";
+import { prefersKeyboardAutofocus } from "../lib/focus";
 import { normalizeSearch } from "../utils/searchEntities";
 
 type Props = {
@@ -58,7 +59,7 @@ export function MapAnswerSearch({
   }, [roundKey]);
 
   useEffect(() => {
-    if (!disabled) {
+    if (!disabled && prefersKeyboardAutofocus()) {
       const t = window.setTimeout(() => inputRef.current?.focus(), 40);
       return () => window.clearTimeout(t);
     }

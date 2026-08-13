@@ -2629,6 +2629,11 @@ body:has(.zoomed-page) {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .guess-skip {
@@ -3163,9 +3168,11 @@ body:has(.zoomed-page) {
 
 .answer-search {
   width: min(100%, 520px);
+  max-width: 100%;
   margin: 0 auto;
   position: relative;
   z-index: 5;
+  box-sizing: border-box;
 }
 
 .answer-search__label {
@@ -3181,10 +3188,14 @@ body:has(.zoomed-page) {
 
 .answer-search__field {
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .answer-search__input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   min-height: 2.85rem;
   padding: 0.65rem 0.95rem;
   border-radius: 14px;
@@ -4044,6 +4055,20 @@ body:has(.zoomed-page) {
   z-index: 0;
 }
 
+.card-lab.has-player-chrome .card-lab__atmosphere {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 8, 12, 0.72) 0%,
+      rgba(8, 8, 12, 0.88) 55%,
+      rgba(8, 8, 12, 0.94) 100%
+    ),
+    var(--player-bg-image, none) center / cover no-repeat,
+    radial-gradient(circle at 50% 18%, rgba(63, 173, 74, 0.28), transparent 36%),
+    radial-gradient(circle at 18% 78%, rgba(255, 255, 255, 0.06), transparent 28%),
+    radial-gradient(circle at 88% 70%, rgba(47, 159, 224, 0.2), transparent 26%);
+}
+
 .card-lab > * {
   position: relative;
   z-index: 1;
@@ -4270,6 +4295,22 @@ body:has(.zoomed-page) {
   border-color: rgba(220, 220, 230, 0.45);
   background: #1a1a22;
   outline: none;
+}
+
+.card-lab__tower-btn.is-complete {
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(255, 255, 255, 0.28),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.02) 42%,
+      rgba(255, 255, 255, 0.1)
+    ),
+    #14141c;
 }
 
 .card-lab__tower-btn img {
@@ -4509,6 +4550,7 @@ body:has(.zoomed-page) {
   justify-items: center;
   gap: 0.75rem;
   width: min(100%, calc(var(--card-face-w) + 20px));
+  overflow: visible;
 }
 
 .card-focus__close {
@@ -4518,6 +4560,7 @@ body:has(.zoomed-page) {
 .card-focus__panel .monkey-card-scene {
   width: min(100%, var(--card-face-w));
   max-width: none;
+  overflow: visible;
 }
 
 .paragon-xp-bar {
@@ -5330,8 +5373,9 @@ body:has(.zoomed-page) {
   top: 0;
   left: 50%;
   z-index: 0;
-  width: 3.355rem;
-  height: 11.65rem;
+  /* Author face is 400px wide; keep ribbon proportional on focus + thumbs. */
+  width: 13.42cqi;
+  height: 46.6cqi;
   transform: translateX(-50%);
   overflow: visible;
   filter: drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28));
@@ -5341,8 +5385,8 @@ body:has(.zoomed-page) {
    card so it stays centered on the badge, but stop the tail shortly after
    the icon so it doesn't eat the whole thumb. */
 .monkey-card--preview .monkey-card__paragon-ribbon {
-  width: 3.355rem;
-  height: 8.9rem;
+  width: 13.42cqi;
+  height: 35.6cqi;
 }
 
 .monkey-card__paragon-badge {
@@ -11978,15 +12022,57 @@ a.market-card__seller:hover {
   color: #9de0b5;
 }
 
-.trade-chip-list {
-  display: grid;
-  gap: 0.4rem;
+.trade-cash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trade-cash__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.trade-cash__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.trade-cash__field input {
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #121218;
+  color: #f0f0f4;
+  font-weight: 700;
+}
+
+.trade-cash__none {
+  font-size: 0.85rem;
+  color: rgba(240, 240, 244, 0.4);
 }
 
 .trade-empty {
-  margin: 0;
+  grid-column: 1 / -1;
+  margin: 0.35rem 0;
+  text-align: center;
+  font-size: 0.85rem;
   color: rgba(240, 240, 244, 0.45);
-  font-size: 0.9rem;
+}
+
+.trade-chip-list {
+  display: grid;
+  gap: 0.4rem;
 }
 
 .trade-actions {
@@ -12251,15 +12337,16 @@ button.card-chip:hover:not(:disabled) {
 
 .trade-offer-grid {
   --card-face-w: 400px;
-  --card-preview-w: 104px;
-  --card-preview-scale: 0.26;
+  --card-preview-w: 88px;
+  --card-preview-scale: 0.22;
   --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-preview-w), 1fr));
-  gap: 0.45rem;
+  grid-template-columns: repeat(4, var(--card-preview-w));
+  gap: 0.35rem;
+  justify-content: center;
   justify-items: center;
-  max-height: 11.5rem;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .trade-offer-card {
@@ -12924,7 +13011,14 @@ button.trade-offer-card:hover:not(:disabled) {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
-  max-width: 28rem;
+  max-width: 36rem;
+}
+
+@media (min-width: 720px) {
+  .profile-cosmetics__grid {
+    grid-template-columns: 1fr 1fr;
+    max-width: none;
+  }
 }
 
 .profile-cosmetics__card {
@@ -12991,6 +13085,47 @@ button.trade-offer-card:hover:not(:disabled) {
   width: fit-content;
 }
 
+.profile-bg-picks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.profile-bg-pick {
+  appearance: none;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background-color: #121218;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.profile-bg-pick span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.2rem 0.25rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #f0f0f4;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+}
+
+.profile-bg-pick.is-selected {
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 14px rgba(255, 255, 255, 0.22);
+}
+
 .profile-cosmetics__empty {
   margin: 0;
   font-weight: 700;
@@ -13009,11 +13144,17 @@ button.trade-offer-card:hover:not(:disabled) {
 .profile-home.has-player-chrome {
   border-color: color-mix(in srgb, var(--player-accent) 55%, transparent);
   background:
+    linear-gradient(
+      180deg,
+      rgba(8, 8, 12, 0.55) 0%,
+      rgba(8, 8, 12, 0.82) 100%
+    ),
     radial-gradient(
       circle at 18% 20%,
       rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
       transparent 55%
     ),
+    var(--player-bg-image, none) center / cover no-repeat,
     rgba(255, 255, 255, 0.03);
   box-shadow:
     0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
@@ -13622,6 +13763,20 @@ button.hero-proc--action:focus-visible {
 }
 .hero-proc--gold {
   border-color: rgba(240, 200, 74, 0.55);
+}
+
+.hero-proc--paragon {
+  border-color: rgba(210, 0, 211, 0.55);
+  background:
+    linear-gradient(
+      120deg,
+      rgba(58, 2, 119, 0.55),
+      rgba(10, 10, 14, 0.94) 48%,
+      rgba(15, 125, 254, 0.28)
+    );
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.45),
+    0 0 22px rgba(180, 1, 254, 0.28);
 }
 
 .hero-proc__img {
@@ -14298,6 +14453,27 @@ button.hero-proc--action:focus-visible {
   font-size: 1.23rem;
   font-weight: 650;
   line-height: 1.2;
+}
+
+.equipped-hero--card {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 16px;
+  padding: 0.55rem 0.75rem 0.65rem;
+  max-width: 11rem;
+}
+
+.equipped-hero__meta {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: rgba(240, 240, 244, 0.62);
+}
+
+.equipped-hero__meta strong {
+  color: rgba(240, 240, 244, 0.92);
 }
 
 .equipped-hero__img {

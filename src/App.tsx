@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, lazy, Suspense, type ReactNode } from "react";
 import {
-  BrowserRouter,
   Navigate,
   Route,
   Routes,
@@ -11,7 +10,6 @@ import {
 import { useCardCollection } from "./auth/CardCollectionProvider";
 import { useAuth } from "./auth/AuthProvider";
 import { useHeroFx } from "./auth/HeroFxProvider";
-import { HeroFxProvider } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CashAmount } from "./components/CurrencyChip";
@@ -224,6 +222,7 @@ function UserCollectionPage() {
         equippedHeroId: profile.equippedHeroId,
         heroLevels: profile.heroLevels,
         badgeIds: profile.badgeIds,
+        bgArtId: profile.bgArtId,
       }}
       viewerCollection={{
         ownedIds: page.ownedIds,
@@ -702,14 +701,12 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <DesktopOnlineGate />
       <DesktopUpdateGate />
       <LivePlayerSync />
-      <HeroFxProvider>
-        <AppShell />
-      </HeroFxProvider>
-    </BrowserRouter>
+      <AppShell />
+    </>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { prefersKeyboardAutofocus } from "../lib/focus";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { profilePath } from "../lib/routes";
 import { CurrencyChip } from "./CurrencyChip";
@@ -148,7 +149,7 @@ export function AccountBar() {
                 maxLength={24}
                 required
                 placeholder="username"
-                autoFocus
+                autoFocus={prefersKeyboardAutofocus()}
               />
             </label>
             <label>

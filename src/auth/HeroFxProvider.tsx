@@ -31,7 +31,7 @@ export type HeroProc = {
   heroId: string;
   message: string;
   portrait: string;
-  theme?: "default" | "ice" | "fire" | "nature" | "gold";
+  theme?: "default" | "ice" | "fire" | "nature" | "gold" | "paragon";
   /** Tap opens Cards → Heroes (optionally focused on this hero). */
   openHeroes?: boolean;
 };
@@ -43,6 +43,12 @@ type HeroFxValue = {
     message: string;
     theme?: HeroProc["theme"];
     openHeroes?: boolean;
+  }) => void;
+  notifyParagonDegree: (input: {
+    cardId: string;
+    name: string;
+    degree: number;
+    portrait: string;
   }) => void;
 };
 
@@ -116,6 +122,29 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
     [profile?.hero_levels],
   );
 
+  const notifyParagonDegree = useCallback(
+    (input: {
+      cardId: string;
+      name: string;
+      degree: number;
+      portrait: string;
+    }) => {
+      const id = ++procSeq;
+      const proc: HeroProc = {
+        id,
+        heroId: input.cardId,
+        message: `Your ${input.name} has reached paragon degree ${input.degree}!`,
+        portrait: input.portrait,
+        theme: "paragon",
+      };
+      setProcs((list) => [...list.slice(-2), proc]);
+      window.setTimeout(() => {
+        setProcs((list) => list.filter((p) => p.id !== id));
+      }, 4200);
+    },
+    [],
+  );
+
   // Surface persistent "ready to level" when profile shows any owned hero ready.
   useEffect(() => {
     if (!profile) return;
@@ -157,8 +186,8 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ equipped, notifyHeroProc }),
-    [equipped, notifyHeroProc],
+    () => ({ equipped, notifyHeroProc, notifyParagonDegree }),
+    [equipped, notifyHeroProc, notifyParagonDegree],
   );
 
   return (
@@ -205,6 +234,7 @@ export function useHeroFx(): HeroFxValue {
     return {
       equipped: null,
       notifyHeroProc: () => {},
+      notifyParagonDegree: () => {},
     };
   }
   return ctx;

@@ -143,9 +143,10 @@ export function useGeoguessr() {
   useEffect(() => {
     if (runInitialized.current) return;
     runInitialized.current = true;
+    // Keep the challenge from useState — regenerating here raced the
+    // canvas and could show map A while grading against map B.
     resetRunFlags();
-    setState((s) => ({ ...s, challenge: makeMapChallenge(1) }));
-  }, [resetRunFlags, makeMapChallenge]);
+  }, [resetRunFlags]);
 
   const preloadChallenge = useCallback(async (c: MapChallenge) => {
     try {

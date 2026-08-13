@@ -58,6 +58,7 @@ export type CollectionViewer = {
   equippedHeroId?: string | null;
   heroLevels?: Record<string, number>;
   badgeIds?: string[];
+  bgArtId?: string | null;
 };
 
 export type ViewerCollection = {
@@ -266,8 +267,9 @@ export function CardLab({
   const owned = viewer ? (remoteOwned ?? new Set<string>()) : myOwned;
   const isRemote = Boolean(viewer);
   const cardDegree = (card: MonkeyCardSpec): number | undefined => {
-    if (!card.isParagon || !isRemote) return undefined;
-    return remoteParagons[card.id]?.degree ?? 1;
+    if (!card.isParagon) return undefined;
+    if (isRemote) return remoteParagons[card.id]?.degree ?? 1;
+    return paragonOf(card.id)?.degree ?? 1;
   };
   const cardSeed = (card: MonkeyCardSpec): number | undefined => {
     if (!isRemote) return undefined;
@@ -283,11 +285,22 @@ export function CardLab({
   const chromeStyle = useMemo(
     () =>
       playerChromeStyle({
-        accentColor: viewer?.accentColor,
+        accentColor: isRemote
+          ? viewer?.accentColor
+          : (profile?.accent_color ?? null),
+        bgArtId: isRemote
+          ? viewer?.bgArtId
+          : (profile?.bg_art_id ?? null),
       }),
-    [viewer?.accentColor],
+    [
+      isRemote,
+      viewer?.accentColor,
+      viewer?.bgArtId,
+      profile?.accent_color,
+      profile?.bg_art_id,
+    ],
   );
-  const chromeOn = isRemote && hasPlayerChrome(chromeStyle);
+  const chromeOn = hasPlayerChrome(chromeStyle);
 
   const sharedOwned = useMemo(() => {
     const next = new Set<string>();
@@ -630,6 +643,7 @@ export function CardLab({
                 <EquippedHeroPanel
                   equippedHeroId={viewer?.equippedHeroId}
                   heroLevels={viewer?.heroLevels}
+                  size="md"
                 />
               </>
             ) : null}
@@ -711,7 +725,6 @@ export function CardLab({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Dart Monkey, Ninja, Military…"
               autoComplete="off"
-              autoFocus
             />
           </label>
 
@@ -727,7 +740,7 @@ export function CardLab({
                   key={tower.name}
                   type="button"
                   role="listitem"
-                  className="card-lab__tower-btn"
+                  className={`card-lab__tower-btn${ownedN >= tower.cardCount && tower.cardCount > 0 ? " is-complete" : ""}`}
                   onClick={() => {
                     setQuery("");
                     setTierHighFirst(false);

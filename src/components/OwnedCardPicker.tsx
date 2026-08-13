@@ -330,7 +330,7 @@ export function OwnedCardPicker({
                     key={tower.name}
                     type="button"
                     role="listitem"
-                    className="card-lab__tower-btn"
+                    className={`card-lab__tower-btn${ownedN >= tower.cardCount && tower.cardCount > 0 ? " is-complete" : ""}`}
                     disabled={ownedN === 0}
                     onClick={() => {
                       setQuery("");

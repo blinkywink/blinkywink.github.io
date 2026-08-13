@@ -1,7 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CardCollectionProvider } from "./auth/CardCollectionProvider";
+import { HeroFxProvider } from "./auth/HeroFxProvider";
 import App from "./App";
 import { supabaseConfigured } from "./lib/supabase";
 import "@fontsource/fredoka/latin-500.css";
@@ -37,9 +39,13 @@ function renderApp() {
   createRoot(root).render(
     <StrictMode>
       <AuthProvider>
-        <CardCollectionProvider>
-          <App />
-        </CardCollectionProvider>
+        <BrowserRouter>
+          <HeroFxProvider>
+            <CardCollectionProvider>
+              <App />
+            </CardCollectionProvider>
+          </HeroFxProvider>
+        </BrowserRouter>
       </AuthProvider>
     </StrictMode>,
   );

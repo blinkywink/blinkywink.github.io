@@ -35,17 +35,22 @@ export function ChallengeImage({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const baseTransform = useRef<TransformParams | null>(null);
+  const baseKey = useRef("");
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    baseTransform.current = null;
-  }, [seed, imageSrc, difficulty]);
+  const onTransformChangeRef = useRef(onTransformChange);
+  onTransformChangeRef.current = onTransformChange;
 
   useEffect(() => {
     let cancelled = false;
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const key = `${seed}|${imageSrc}|${difficulty.tier}`;
+    if (baseKey.current !== key) {
+      baseKey.current = key;
+      baseTransform.current = null;
+    }
 
     setReady(false);
     setError(null);
@@ -53,6 +58,8 @@ export function ChallengeImage({
     void (async () => {
       try {
         const img = await preloadImage(imageSrc);
+        if (cancelled || baseKey.current !== key) return;
+
         if (!baseTransform.current) {
           baseTransform.current = generateTransform(img, difficulty);
         }
@@ -62,13 +69,15 @@ export function ChallengeImage({
           img.naturalHeight,
           zoomOutSteps,
         );
+        if (cancelled || baseKey.current !== key) return;
+
         await renderChallenge(canvas, imageSrc, difficulty, 640, transform);
-        if (!cancelled) {
-          setReady(true);
-          onTransformChange?.(transform);
-        }
+        if (cancelled || baseKey.current !== key) return;
+
+        setReady(true);
+        onTransformChangeRef.current?.(transform);
       } catch (err) {
-        if (!cancelled) {
+        if (!cancelled && baseKey.current === key) {
           setError(err instanceof Error ? err.message : "Failed to render");
         }
       }
@@ -77,7 +86,7 @@ export function ChallengeImage({
     return () => {
       cancelled = true;
     };
-  }, [imageSrc, difficulty, seed, zoomOutSteps, onTransformChange]);
+  }, [imageSrc, difficulty, seed, zoomOutSteps]);
 
   return (
     <div
@@ -95,7 +104,7 @@ export function ChallengeImage({
         className="challenge-canvas"
         width={640}
         height={640}
-        aria-label="Zoomed mystery tower"
+        aria-label="Zoomed mystery challenge"
       />
       {!ready && !error ? (
         <div className="challenge-frame__loading" aria-hidden="true">
@@ -123,7 +132,9 @@ export function ChallengeImage({
           <div className="challenge-flash__veil" />
           <div className="challenge-flash__mark">✓</div>
           {flashPoints != null ? (
-            <div className="challenge-flash__points">+{flashPoints}</div>
+            <div className="challenge-flash__points">
+              +{flashPoints.toLocaleString()}
+            </div>
           ) : null}
         </div>
       ) : null}

@@ -78,11 +78,14 @@ export function xpToNextDegree(degree: number): number {
   return Math.round(2400 * d ** 1.18 + 800);
 }
 
-/** 0 = deg 1–19 … 5 = deg 100. A new exclusive look every 20 degrees. */
+/** 0 = deg 1–19, 1 = 20–39 … 4 = 80–99, 5 = deg 100. */
 export function paragonStage(degree: number): 0 | 1 | 2 | 3 | 4 | 5 {
   const d = clampParagonDegree(degree);
   if (d >= PARAGON_MAX_DEGREE) return 5;
-  return Math.floor((d - 1) / PARAGON_STAGE_EVERY) as 0 | 1 | 2 | 3 | 4;
+  return Math.min(
+    4,
+    Math.floor(d / PARAGON_STAGE_EVERY),
+  ) as 0 | 1 | 2 | 3 | 4;
 }
 
 export function paragonStageLabel(degree: number): string {
