@@ -1,6 +1,6 @@
 [package]
 name = "bloon-arcade"
-version = "1.0.2"
+version = "1.0.3"
 description = "blinkywink.co desktop shell (same web app + bundled assets)"
 authors = ["blinkywink"]
 license = ""
