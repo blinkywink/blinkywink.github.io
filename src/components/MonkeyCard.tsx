@@ -639,9 +639,9 @@ export function MonkeyCard({
               src={entity.image}
               alt=""
               draggable={false}
-              loading={isPreview && !staticArt ? "lazy" : "eager"}
-              decoding={staticArt ? "sync" : "async"}
-              fetchPriority={staticArt || !isPreview ? "high" : "auto"}
+              loading={bake || !isPreview || staticArt ? "eager" : "lazy"}
+              decoding={staticArt || bake ? "sync" : "async"}
+              fetchPriority={staticArt || bake || !isPreview ? "high" : "auto"}
               onError={(e) => {
                 if (portraitTries.current >= 2) return;
                 portraitTries.current += 1;

@@ -55,13 +55,13 @@ export function UserAvatar({
       return;
     }
     let cancelled = false;
-    setSrc(null);
+    // Keep prior src / tower art visible — do not flash blank while baking.
     void getCardFaceImageUrl(cardId, opts)
       .then((url) => {
         if (!cancelled) setSrc(url);
       })
       .catch(() => {
-        if (!cancelled) setSrc(null);
+        /* leave tower-art fallback */
       });
     return () => {
       cancelled = true;
@@ -101,6 +101,7 @@ export function UserAvatar({
     : 1.25;
   const x = Number.isFinite(crop?.x) ? Math.min(1, Math.max(0, crop!.x)) : 0.5;
   const y = Number.isFinite(crop?.y) ? Math.min(1, Math.max(0, crop!.y)) : 0.38;
+  const mediaSrc = src ?? card.entity.image ?? null;
 
   return (
     <span
@@ -117,10 +118,10 @@ export function UserAvatar({
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
     >
-      {src ? (
+      {mediaSrc ? (
         <img
-          className="user-avatar__media"
-          src={src}
+          className={`user-avatar__media${src ? "" : " user-avatar__media--pending"}`}
+          src={mediaSrc}
           alt=""
           draggable={false}
           decoding="async"
