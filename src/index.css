@@ -4951,7 +4951,7 @@ body:has(.zoomed-page) {
 }
 
 .monkey-card--paragon .monkey-card__head--overlay {
-  padding-right: min(7.22rem, 28.88cqi);
+  padding-right: min(5.6rem, 24cqi);
 }
 
 .monkey-card__paragon-aura {
@@ -5353,13 +5353,15 @@ body:has(.zoomed-page) {
   top: 0;
   right: min(0.28rem, 1.12cqi);
   z-index: 12;
-  width: min(6.658rem, 26.632cqi);
+  /* Cap in rem so large focus cards don't grow a huge bookmark. */
+  width: min(5.1rem, 22cqi);
   pointer-events: none;
   transform: translateZ(48px);
 }
 
 .monkey-card--preview .monkey-card__paragon-corner {
   transform: none;
+  width: min(5.1rem, 22cqi);
 }
 
 .monkey-card__paragon-ribbon {
@@ -5367,20 +5369,17 @@ body:has(.zoomed-page) {
   top: 0;
   left: 50%;
   z-index: 0;
-  /* Author face is 400px wide; keep ribbon proportional on focus + thumbs. */
-  width: 13.42cqi;
-  height: 46.6cqi;
+  /* % of the corner (rem-capped) — never the full card width. */
+  width: 52%;
+  height: 132%;
   transform: translateX(-50%);
   overflow: visible;
   filter: drop-shadow(0 4px 6px rgba(20, 0, 40, 0.28));
 }
 
-/* Thumbnails are a 400px face scaled down. Keep the same width as the big
-   card so it stays centered on the badge, but stop the tail shortly after
-   the icon so it doesn't eat the whole thumb. */
 .monkey-card--preview .monkey-card__paragon-ribbon {
-  width: 13.42cqi;
-  height: 35.6cqi;
+  width: 52%;
+  height: 128%;
 }
 
 .monkey-card__paragon-badge {
@@ -5455,13 +5454,13 @@ body:has(.zoomed-page) {
   margin: 0;
   padding: 0.12em 0 0;
   font-family: var(--font-btd), "Luckiest Guy", sans-serif;
-  font-size: min(1.921rem, 7.684cqi);
+  font-size: min(1.45rem, 6.2cqi);
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1;
   text-align: center;
   color: #fff;
-  -webkit-text-stroke: min(6.9px, 1.725cqi) #000;
+  -webkit-text-stroke: min(5.2px, 1.3cqi) #000;
   paint-order: stroke fill;
   text-shadow: none;
 }
@@ -11975,6 +11974,7 @@ a.market-card__seller:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
+  align-items: stretch;
 }
 
 @media (max-width: 720px) {
@@ -11984,6 +11984,10 @@ a.market-card__seller:hover {
 }
 
 .trade-side {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.55rem;
+  min-height: 0;
   padding: 0.75rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
@@ -11995,7 +11999,7 @@ a.market-card__seller:hover {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0;
 }
 
 .trade-side__head h2 {
@@ -12014,46 +12018,6 @@ a.market-card__seller:hover {
 
 .trade-side__head span.is-ready {
   color: #9de0b5;
-}
-
-.trade-cash {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem 0.75rem;
-  margin-top: 0.35rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.trade-cash__label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(240, 240, 244, 0.55);
-}
-
-.trade-cash__field {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.trade-cash__field input {
-  width: 6.5rem;
-  padding: 0.4rem 0.5rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #121218;
-  color: #f0f0f4;
-  font-weight: 700;
-}
-
-.trade-cash__none {
-  font-size: 0.85rem;
-  color: rgba(240, 240, 244, 0.4);
 }
 
 .trade-empty {
@@ -12339,6 +12303,9 @@ button.card-chip:hover:not(:disabled) {
   gap: 0.35rem;
   justify-content: center;
   justify-items: center;
+  align-content: start;
+  /* Reserve ~2 card rows for a stable offer grid. */
+  min-height: calc(var(--card-preview-h) * 2 + 0.35rem + 0.4rem);
   max-height: none;
   overflow: visible;
 }

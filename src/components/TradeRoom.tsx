@@ -21,7 +21,6 @@ import { collectionPath, marketplacePath } from "../lib/routes";
 import { PageHeader } from "./PageHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
-import { CashAmount } from "./CurrencyChip";
 import { ParagonXpBar } from "./ParagonXpBar";
 
 type FocusedOffer = {
@@ -43,15 +42,20 @@ export function TradeRoom() {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [localOffer, setLocalOffer] = useState<string[]>([]);
-  const [localCash, setLocalCash] = useState(0);
-  const [cashDraft, setCashDraft] = useState("0");
   const [focused, setFocused] = useState<FocusedOffer | null>(null);
   const [partnerOwned, setPartnerOwned] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [partnerParagons, setPartnerParagons] = useState<ParagonMap>({});
   const strippingRef = useRef(false);
-  const cashDirtyRef = useRef(false);
+  const settledRef = useRef(false);
+
+  const settleComplete = useCallback(() => {
+    setStatus("Trade completed");
+    if (settledRef.current) return;
+    settledRef.current = true;
+    void refreshCards();
+  }, [refreshCards]);
 
   const load = useCallback(async () => {
     if (!tradeId || !user) return;
@@ -88,23 +92,18 @@ export function TradeRoom() {
         }
         return incoming;
       });
-      setLocalCash(next.myCash);
-      // Don't clobber the input while the player is editing Cash.
-      if (!cashDirtyRef.current) {
-        setCashDraft(String(next.myCash));
-      }
       setError(null);
       if (next.status === "completed") {
-        setStatus((prev) => prev ?? "Trade completed");
-        void refreshCards();
+        settleComplete();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load trade.");
     }
     setLoading(false);
-  }, [tradeId, user, refreshCards]);
+  }, [tradeId, user, settleComplete]);
 
   useEffect(() => {
+    settledRef.current = false;
     setLoading(true);
     void load();
   }, [load]);
@@ -203,24 +202,14 @@ export function TradeRoom() {
   }, [partnerOwned, trade?.theirOffer]);
 
   const syncOffer = useCallback(
-    async (
-      next: string[],
-      cash = localCash,
-      opts: { commitCashDraft?: boolean } = {},
-    ) => {
+    async (next: string[]) => {
       if (!tradeId) return;
-      const cashAmt = Math.max(0, Math.floor(cash));
       setBusy(true);
       setError(null);
       setStatus(null);
       try {
-        await setTradeOffer(tradeId, next, cashAmt);
+        await setTradeOffer(tradeId, next);
         setLocalOffer(next);
-        setLocalCash(cashAmt);
-        if (opts.commitCashDraft || !cashDirtyRef.current) {
-          setCashDraft(String(cashAmt));
-          cashDirtyRef.current = false;
-        }
         await pingTrade(tradeId);
         await load();
       } catch (err) {
@@ -229,7 +218,7 @@ export function TradeRoom() {
       }
       setBusy(false);
     },
-    [tradeId, load, localCash],
+    [tradeId, load],
   );
 
   // Drop offer cards that became invalid if partner stopped offering a duplicate.
@@ -261,16 +250,6 @@ export function TradeRoom() {
       ? localOffer.filter((id) => id !== cardId)
       : [...localOffer, cardId];
     void syncOffer(next);
-  }
-
-  function commitCash() {
-    const next = Math.max(0, Math.floor(Number(cashDraft) || 0));
-    setCashDraft(String(next));
-    if (next === localCash) {
-      cashDirtyRef.current = false;
-      return;
-    }
-    void syncOffer(localOffer, next, { commitCashDraft: true });
   }
 
   function openMine(id: string) {
@@ -318,8 +297,7 @@ export function TradeRoom() {
       );
       await pingTrade(tradeId);
       if (next.status === "completed") {
-        setStatus("Trade completed");
-        void refreshCards();
+        settleComplete();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update ready.");
@@ -454,12 +432,10 @@ export function TradeRoom() {
         {error ? (
           <p className="trade-banner trade-banner--err">{error}</p>
         ) : null}
-        {done ? (
+        {done || status ? (
           <p className="trade-banner trade-banner--ok" role="status">
-            Trade completed
+            {status ?? "Trade completed"}
           </p>
-        ) : status ? (
-          <p className="trade-banner trade-banner--ok">{status}</p>
         ) : null}
 
         <div className="trade-summary">
@@ -501,43 +477,6 @@ export function TradeRoom() {
                       </button>
                     );
                   })
-                )}
-              </div>
-              <div className="trade-cash">
-                <span className="trade-cash__label">Your Cash offer</span>
-                {active ? (
-                  <label className="trade-cash__field">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      step={100}
-                      value={cashDraft}
-                      disabled={busy}
-                      onChange={(e) => {
-                        cashDirtyRef.current = true;
-                        setCashDraft(e.target.value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          commitCash();
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={busy}
-                      onClick={commitCash}
-                    >
-                      Update
-                    </button>
-                  </label>
-                ) : localCash > 0 ? (
-                  <CashAmount amount={localCash} size={18} />
-                ) : (
-                  <span className="trade-cash__none">None</span>
                 )}
               </div>
             </section>
@@ -583,14 +522,6 @@ export function TradeRoom() {
                   })
                 )}
               </div>
-              <div className="trade-cash">
-                <span className="trade-cash__label">Their Cash offer</span>
-                {trade.theirCash > 0 ? (
-                  <CashAmount amount={trade.theirCash} size={18} />
-                ) : (
-                  <span className="trade-cash__none">None</span>
-                )}
-              </div>
             </section>
           </div>
 
@@ -631,7 +562,7 @@ export function TradeRoom() {
                   setError("Max 8 cards on your side.");
                   return;
                 }
-                void syncOffer(ids, localCash);
+                void syncOffer(ids);
               }}
             />
           </section>
