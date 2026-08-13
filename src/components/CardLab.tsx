@@ -557,7 +557,6 @@ export function CardLab({
     if (isRemote && remoteLoading) {
       return (
         <div className="card-lab">
-                    <div className="card-lab__atmosphere" aria-hidden="true" />
           <LoadingDots label="Loading collection" className="card-lab__loading" />
         </div>
       );
@@ -568,7 +567,6 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-                <div className="card-lab__atmosphere" aria-hidden="true" />
         <header
           className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
         >
@@ -785,7 +783,6 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-                <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
           <button
             type="button"
@@ -874,7 +871,6 @@ export function CardLab({
       className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
       style={chromeOn ? chromeStyle : undefined}
       >
-            <div className="card-lab__atmosphere" aria-hidden="true" />
       <header className="card-lab__header">
         <button
           type="button"

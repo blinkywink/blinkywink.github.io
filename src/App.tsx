@@ -181,7 +181,6 @@ function UserCollectionPage() {
   if (loading) {
     return (
       <div className="card-lab">
-        <div className="card-lab__atmosphere" aria-hidden="true" />
         <LoadingDots label="Loading player" className="card-lab__loading" />
       </div>
     );
@@ -190,7 +189,6 @@ function UserCollectionPage() {
   if (error || !page) {
     return (
       <div className="card-lab">
-        <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
           <button
             type="button"

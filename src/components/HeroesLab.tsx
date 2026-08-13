@@ -187,7 +187,6 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
   if (selected) {
     return (
       <div className="card-lab heroes-lab heroes-lab--focus">
-        <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
           <button
             type="button"
@@ -376,7 +375,6 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
   // ——— Grid ———
   return (
     <div className="card-lab heroes-lab">
-      <div className="card-lab__atmosphere" aria-hidden="true" />
       <header className="card-lab__header">
         <button
           type="button"
