@@ -587,6 +587,15 @@ export function CardLab({
               {isRemote && viewer?.avatar ? (
                 <UserAvatar
                   crop={viewer.avatar}
+                  face={
+                    viewer.avatar.cardId
+                      ? {
+                          degree: remoteParagons[viewer.avatar.cardId]?.degree,
+                          visualSeed:
+                            remoteSeeds[viewer.avatar.cardId] ?? null,
+                        }
+                      : null
+                  }
                   size={56}
                   alt=""
                   className="card-lab__avatar"

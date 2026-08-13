@@ -40,6 +40,11 @@ type Props = {
   onSelect?: () => void;
   /** Skip canvas visualizer (tiny avatars / dense lists). */
   staticArt?: boolean;
+  /**
+   * Offscreen PFP bake: show focus-tier FX (paragon rings / holo / visualizer)
+   * even when laid out as a preview-sized face.
+   */
+  bake?: boolean;
   /** Paragon degree 1–100. Falls back to the signed-in collection. */
   degree?: number;
   /** Per-copy art seed. Falls back to the signed-in collection. */
@@ -230,10 +235,12 @@ export function MonkeyCard({
   highlight = false,
   onSelect,
   staticArt = false,
+  bake = false,
   degree: degreeProp,
   visualSeed: visualSeedProp,
 }: Props) {
   const isPreview = mode === "preview";
+  const showFx = !isPreview || bake;
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -269,13 +276,17 @@ export function MonkeyCard({
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
-  const desktopPreview = isPreview && isDesktopShell();
-  const [fxOn, setFxOn] = useState(!isPreview);
+  const desktopPreview = isPreview && isDesktopShell() && !bake;
+  const [fxOn, setFxOn] = useState(showFx);
   const visualizer =
     usesVisualizer(tier) && !staticArt && !desktopPreview && fxOn;
-  const holo = usesHoloFx(tier) && !isPreview;
+  const holo = usesHoloFx(tier) && showFx;
 
   useEffect(() => {
+    if (bake) {
+      setFxOn(true);
+      return;
+    }
     if (desktopPreview || staticArt || !usesVisualizer(tier)) {
       setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
       return;
@@ -292,7 +303,7 @@ export function MonkeyCard({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [desktopPreview, isPreview, staticArt, tier]);
+  }, [bake, desktopPreview, isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -546,7 +557,7 @@ export function MonkeyCard({
         isPreview ? "monkey-card-scene--preview" : "",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
-        isParagon && !isPreview && stage >= 1
+        isParagon && showFx && stage >= 1
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
       ]
@@ -554,7 +565,7 @@ export function MonkeyCard({
         .join(" ")}
       {...interactiveProps}
     >
-      {isParagon && !isPreview && stage >= 1 ? (
+      {isParagon && showFx && stage >= 1 ? (
         <div
           className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
           aria-hidden
@@ -571,7 +582,7 @@ export function MonkeyCard({
           ))}
         </div>
       ) : null}
-      {isParagon && !isPreview && stage >= 1 ? (
+      {isParagon && showFx && stage >= 1 ? (
         <ParagonRings stage={stage} />
       ) : null}
       <div
@@ -579,7 +590,7 @@ export function MonkeyCard({
         style={accentStyle}
         className={`monkey-card monkey-card--fullart ${isPreview ? "monkey-card--preview" : ""} ${tierClass} ${visualizer ? "monkey-card--visualizer" : "monkey-card--flat-bg"} ${active ? "is-active" : ""} ${locked ? "monkey-card--locked" : ""}`}
       >
-        {!isPreview ? (
+        {showFx ? (
           <>
             <div className="monkey-card__glow" aria-hidden="true" />
             <div className="monkey-card__shadow" aria-hidden="true" />
@@ -596,7 +607,7 @@ export function MonkeyCard({
                     : `${entity.id}-${pathLabel}`
                 }
                 colors={palette}
-                animated={!isPreview}
+                animated={showFx}
                 intensity={isParagon ? "paragon" : "standard"}
               />
             ) : (
@@ -731,7 +742,7 @@ export function MonkeyCard({
 
         <div className="monkey-card__edge" aria-hidden="true" />
       </div>
-      {isParagon && !isPreview && stage >= 1 ? (
+      {isParagon && showFx && stage >= 1 ? (
         <div
           className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
           aria-hidden

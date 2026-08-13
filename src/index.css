@@ -12670,6 +12670,30 @@ button.card-chip:hover:not(:disabled) {
   height: 55%;
 }
 
+/* Offscreen full-card bake for PFPs (see cardFaceImage.ts). */
+.card-face-raster .monkey-card-scene--preview {
+  position: relative;
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  overflow: hidden;
+  /* Keep square card bounds in the bitmap so crop can use the corners. */
+  border-radius: 0;
+  cursor: default;
+  touch-action: none;
+}
+
+.card-face-raster .monkey-card-scene--preview > .monkey-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--card-face-w);
+  height: calc(var(--card-face-w) * 3.5 / 2.5);
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
+  /* Bake the face rect; circular crop happens in .user-avatar. */
+  border-radius: 0;
+}
+
 .card-lab__title-row {
   display: flex;
   align-items: center;
@@ -14432,119 +14456,6 @@ button.hero-proc--action:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--hero-primary, #f0c84a) 70%, white);
   outline-offset: 4px;
   border-radius: 10px;
-}
-
-.profile-heroes { margin-top: 1.5rem; }
-
-.profile-heroes__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-}
-
-.profile-heroes__head h3 { margin: 0 0 0.25rem; }
-
-.profile-heroes__head p,
-.profile-heroes__empty {
-  margin: 0;
-  color: rgba(240, 240, 244, 0.65);
-  font-size: 0.92rem;
-}
-
-.profile-heroes__current {
-  margin-top: 0.9rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-}
-
-.profile-heroes__current-meta {
-  display: grid;
-  gap: 0.2rem;
-  min-width: min(16rem, 100%);
-}
-
-.profile-heroes__current-meta strong {
-  font-size: 1.1rem;
-}
-
-.profile-heroes__current-meta span {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: rgba(240, 200, 74, 0.9);
-}
-
-.profile-heroes__current-meta p {
-  margin: 0.25rem 0 0;
-  font-size: 0.88rem;
-  line-height: 1.35;
-  color: rgba(240, 240, 244, 0.65);
-}
-
-.profile-heroes__picker-note {
-  margin: 0 0 0.85rem;
-  font-size: 0.9rem;
-  color: rgba(240, 240, 244, 0.65);
-}
-
-.profile-heroes__picker {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: 0.75rem;
-}
-
-.profile-heroes__none,
-.profile-heroes__pick {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: center;
-  padding: 0.55rem 0.4rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-  color: inherit;
-  cursor: pointer;
-}
-
-.profile-heroes__none {
-  min-height: 8.5rem;
-  place-content: center;
-  font-weight: 800;
-  color: rgba(240, 240, 244, 0.7);
-}
-
-.profile-heroes__none.is-selected,
-.profile-heroes__pick.is-selected {
-  border-color: rgba(240, 200, 74, 0.7);
-  box-shadow: 0 0 0 2px rgba(240, 200, 74, 0.18);
-}
-
-.profile-heroes__pick .hero-card {
-  pointer-events: none;
-  width: 6.75rem;
-}
-
-.profile-heroes__pick-name {
-  font-size: 0.8rem;
-  font-weight: 850;
-  text-align: center;
-}
-
-.profile-heroes__pick-lvl {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: rgba(240, 200, 74, 0.88);
-}
-
-.profile-heroes__grid--cards {
-  margin-top: 0.9rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 1rem;
-  justify-items: center;
 }
 
 @media (max-width: 900px) {

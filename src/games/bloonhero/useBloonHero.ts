@@ -79,6 +79,8 @@ export type ActiveNote = ChartNote & {
   result?: Judge;
   holding: boolean;
   releasedEarly: boolean;
+  /** Cash paid when this note was hit (for early-release clawback). */
+  hitPay?: number;
   hitWallMs?: number;
   dartDurMs?: number;
   hitY?: number;
@@ -868,23 +870,29 @@ export function useBloonHero() {
       keysDownRef.current.delete(lane);
       pressedRef.current.delete(lane);
       let changed = false;
+      let claw = 0;
       for (const n of notesRef.current) {
         if (!n.holding || n.lane !== lane || n.releasedEarly) continue;
         const now = songTimeRef.current;
         if (now < n.t + n.dur - 0.08) {
+          // Early release: soft penalty only — keep combo, do not count a miss.
           n.releasedEarly = true;
           n.holding = false;
           changed = true;
-          setState((prev) => ({
-            ...prev,
-            combo: 0,
-            lastJudge: "miss",
-            emptyStreak: 0,
-          }));
+          claw += Math.round((n.hitPay ?? 0) * 0.1);
         } else {
           n.holding = false;
           changed = true;
         }
+      }
+      if (claw > 0) {
+        hitCashRef.current = Math.max(0, hitCashRef.current - claw);
+        pendingCashRef.current = Math.max(0, pendingCashRef.current - claw);
+        const pools = heroCashPools(durationRef.current);
+        setState((prev) => ({
+          ...prev,
+          cashEarned: clampRunCash(prev.cashEarned - claw, pools.max),
+        }));
       }
       if (changed) rebuildHolding();
     },
@@ -933,25 +941,36 @@ export function useBloonHero() {
       }
 
       const punishEmpty = () => {
-        const streak = stateRef.current.emptyStreak + 1;
-        let lives = stateRef.current.lives;
-        if (streak > 0 && streak % EMPTY_STREAK_PER_LIFE === 0) {
-          lives = Math.max(0, lives - 1);
-        }
         burstIdRef.current += 1;
         const burstId = burstIdRef.current;
-        const next = {
-          ...stateRef.current,
-          combo: 0,
-          lives,
-          emptyStreak: streak,
-          lastJudge: "miss" as const,
-          burst: { lane, judge: "miss" as const, id: burstId },
-        };
-        stateRef.current = next;
-        setState(next);
+        // Preview death from the current ref; React will compose the real update below.
+        const previewStreak = stateRef.current.emptyStreak + 1;
+        let previewLives = stateRef.current.lives;
+        if (
+          previewStreak > 0 &&
+          previewStreak % EMPTY_STREAK_PER_LIFE === 0
+        ) {
+          previewLives = Math.max(0, previewLives - 1);
+        }
+        setState((prev) => {
+          const streak = prev.emptyStreak + 1;
+          let lives = prev.lives;
+          if (streak > 0 && streak % EMPTY_STREAK_PER_LIFE === 0) {
+            lives = Math.max(0, lives - 1);
+          }
+          const next = {
+            ...prev,
+            combo: 0,
+            lives,
+            emptyStreak: streak,
+            lastJudge: "miss" as const,
+            burst: { lane, judge: "miss" as const, id: burstId },
+          };
+          stateRef.current = next;
+          return next;
+        });
         spawnHitFlash(lane, "miss");
-        if (lives <= 0) {
+        if (previewLives <= 0) {
           finishRun({ died: true });
         }
       };
@@ -998,11 +1017,12 @@ export function useBloonHero() {
       );
       hitCashRef.current += pay;
       pendingCashRef.current += pay;
+      best.hitPay = pay;
       burstIdRef.current += 1;
       const burstId = burstIdRef.current;
       setState((prev) => {
         const combo = prev.combo + 1;
-        return {
+        const next = {
           ...prev,
           combo,
           maxCombo: Math.max(prev.maxCombo, combo),
@@ -1014,6 +1034,8 @@ export function useBloonHero() {
           emptyStreak: 0,
           burst: { lane, judge, id: burstId },
         };
+        stateRef.current = next;
+        return next;
       });
       window.setTimeout(() => {
         setState((prev) =>
@@ -1339,46 +1361,55 @@ export function useBloonHero() {
           hud.at = wallMs;
           const add = hud.count;
           hud.count = 0;
+          const laneForBurst = hud.lane;
           burstIdRef.current += 1;
-          const next = {
-            ...stateRef.current,
-            miss: stateRef.current.miss + add,
-            combo: 0,
-            lastJudge: "miss" as const,
-            burst:
-              hud.lane >= 0
-                ? {
-                    lane: hud.lane,
-                    judge: "miss" as const,
-                    id: burstIdRef.current,
-                  }
-                : stateRef.current.burst,
-          };
-          stateRef.current = next;
-          setState(next);
+          const burstId = burstIdRef.current;
+          // Functional update: don't clobber a hit that landed this same frame.
+          setState((prev) => {
+            const next = {
+              ...prev,
+              miss: prev.miss + add,
+              combo: 0,
+              lastJudge: "miss" as const,
+              burst:
+                laneForBurst >= 0
+                  ? {
+                      lane: laneForBurst,
+                      judge: "miss" as const,
+                      id: burstId,
+                    }
+                  : prev.burst,
+            };
+            stateRef.current = next;
+            return next;
+          });
         }
       } else if (missHudAccumRef.current.count > 0 && wallMs - missHudAccumRef.current.at > 80) {
         const hud = missHudAccumRef.current;
         const add = hud.count;
         hud.count = 0;
         hud.at = wallMs;
+        const laneForBurst = hud.lane;
         burstIdRef.current += 1;
-        const next = {
-          ...stateRef.current,
-          miss: stateRef.current.miss + add,
-          combo: 0,
-          lastJudge: "miss" as const,
-          burst:
-            hud.lane >= 0
-              ? {
-                  lane: hud.lane,
-                  judge: "miss" as const,
-                  id: burstIdRef.current,
-                }
-              : stateRef.current.burst,
-        };
-        stateRef.current = next;
-        setState(next);
+        const burstId = burstIdRef.current;
+        setState((prev) => {
+          const next = {
+            ...prev,
+            miss: prev.miss + add,
+            combo: 0,
+            lastJudge: "miss" as const,
+            burst:
+              laneForBurst >= 0
+                ? {
+                    lane: laneForBurst,
+                    judge: "miss" as const,
+                    id: burstId,
+                  }
+                : prev.burst,
+          };
+          stateRef.current = next;
+          return next;
+        });
       }
 
       const livesAfter = stateRef.current.lives;

@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { useCardCollectionOptional } from "../auth/CardCollectionProvider";
 import { prefersKeyboardAutofocus } from "../lib/focus";
+import { cardSpecById } from "../lib/cardCatalog";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { profilePath } from "../lib/routes";
 import { CurrencyChip } from "./CurrencyChip";
@@ -13,6 +15,7 @@ type Mode = "signin" | "signup";
 export function AccountBar() {
   const { ready, user, profile, displayName, signIn, signUp, signOut } =
     useAuth();
+  const collection = useCardCollectionOptional();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -187,6 +190,16 @@ export function AccountBar() {
 
   if (user) {
     const avatar = profile ? avatarFromProfile(profile) : null;
+    const avatarId = avatar?.cardId ?? null;
+    const avatarSpec = avatarId ? cardSpecById(avatarId) : null;
+    const avatarFace = avatarId
+      ? {
+          degree: avatarSpec?.isParagon
+            ? (collection?.paragonOf(avatarId)?.degree ?? 1)
+            : undefined,
+          visualSeed: collection?.visualSeedOf(avatarId) ?? null,
+        }
+      : null;
     return (
       <div className="account-bar">
         {profile ? (
@@ -201,7 +214,7 @@ export function AccountBar() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <UserAvatar crop={avatar} size={48} />
+            <UserAvatar crop={avatar} face={avatarFace} size={48} />
           </button>
           {menuOpen ? (
             <div className="account-menu__dropdown" role="menu">

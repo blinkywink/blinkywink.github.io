@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -20,6 +21,10 @@ import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import {
+  prefetchCardFaceImage,
+  type CardFaceBakeOpts,
+} from "../lib/cardFaceImage";
+import {
   PROFILE_ACCENT_CHANGE_COST,
   PROFILE_ACCENT_COST,
   cosmeticsFromProfile,
@@ -38,13 +43,6 @@ import {
   showcaseSlotsFromProfile,
 } from "../lib/profileShowcase";
 import {
-  heroLevelFromProfile,
-  normalizeHeroLevels,
-  normalizeOwnedHeroIds,
-  shoppableHeroes,
-} from "../lib/profileHeroes";
-import { heroBlurb } from "../lib/heroEffects";
-import {
   getSfxVolume,
   playCardFocus,
   setSfxVolume,
@@ -52,12 +50,10 @@ import {
 } from "../lib/packSounds";
 import {
   collectionPath,
-  shopPath,
   userCollectionPath,
 } from "../lib/routes";
 import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
 import { fetchBadgeIds } from "../lib/profileBadges";
-import { HeroCardFace } from "./HeroCollectionStrip";
 import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
@@ -70,7 +66,7 @@ type EditorStep = "pick" | "crop";
 export function ProfilePage() {
   const { ready, user, profile, isGuest, refreshProfile, setCoinBalance } =
     useAuth();
-  const { owned } = useCardCollection();
+  const { owned, paragonOf, visualSeedOf } = useCardCollection();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorStep, setEditorStep] = useState<EditorStep>("pick");
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
@@ -111,6 +107,27 @@ export function ProfilePage() {
     [profile],
   );
 
+  const faceForCard = useCallback(
+    (cardId: string | null | undefined) => {
+      if (!cardId) return null;
+      const spec = cardSpecById(cardId);
+      return {
+        degree: spec?.isParagon ? (paragonOf(cardId)?.degree ?? 1) : undefined,
+        visualSeed: visualSeedOf(cardId),
+      };
+    },
+    [paragonOf, visualSeedOf],
+  );
+
+  const savedFace = useMemo(
+    () => faceForCard(saved.cardId),
+    [faceForCard, saved.cardId],
+  );
+  const draftFace = useMemo(
+    () => faceForCard(draft.cardId),
+    [faceForCard, draft.cardId],
+  );
+
   const savedShowcase = useMemo(
     () => (profile ? showcaseFromProfile(profile) : []),
     [profile],
@@ -145,33 +162,16 @@ export function ProfilePage() {
     [visibleShowcase],
   );
 
-  const ownedHeroIds = useMemo(
-    () => normalizeOwnedHeroIds(profile?.owned_hero_ids),
-    [profile?.owned_hero_ids],
-  );
-  const heroLevels = useMemo(
-    () => normalizeHeroLevels(profile?.hero_levels),
-    [profile?.hero_levels],
-  );
-  const equippedHeroId = profile?.equipped_hero_id
-    ? String(profile.equipped_hero_id)
-    : null;
-  const ownedHeroes = useMemo(
-    () => shoppableHeroes().filter((h) => ownedHeroIds.includes(h.id)),
-    [ownedHeroIds],
-  );
-
-  const equippedHero = useMemo(() => {
-    if (!equippedHeroId) return null;
-    return ownedHeroes.find((h) => h.id === equippedHeroId) ?? null;
-  }, [equippedHeroId, ownedHeroes]);
-
   const pickSelected = useMemo(
     () => new Set(draft.cardId ? [draft.cardId] : []),
     [draft.cardId],
   );
 
   const draftCard = draft.cardId ? cardSpecById(draft.cardId) : null;
+
+  useEffect(() => {
+    if (saved.cardId) prefetchCardFaceImage(saved.cardId, savedFace ?? undefined);
+  }, [saved.cardId, savedFace]);
 
   useEffect(() => {
     const next = cosmetics.accentColor ?? "#F0C84A";
@@ -417,7 +417,8 @@ export function ProfilePage() {
             {editorStep === "pick" ? (
               <div className="pfp-editor__body pfp-editor__body--pick">
                 <p className="pfp-editor__hint">
-                  Pick any card you own. You’ll crop it next.
+                  Pick any card you own. Next you’ll pan and zoom anywhere on the
+                  full card.
                 </p>
                 <OwnedCardPicker
                   owned={owned}
@@ -427,6 +428,7 @@ export function ProfilePage() {
                   onConfirm={(ids) => {
                     const cardId = ids[0];
                     if (!cardId) return;
+                    prefetchCardFaceImage(cardId, faceForCard(cardId) ?? undefined);
                     setDraft({
                       cardId,
                       zoom: DEFAULT_AVATAR_CROP.zoom,
@@ -440,7 +442,7 @@ export function ProfilePage() {
             ) : (
               <div className="pfp-editor__body pfp-editor__body--crop">
                 <div className="pfp-editor__crop-layout">
-                  <CropEditor crop={draft} onChange={setDraft} />
+                  <CropEditor crop={draft} face={draftFace} onChange={setDraft} />
 
                   <aside className="pfp-editor__side">
                     {draftCard ? (
@@ -461,15 +463,15 @@ export function ProfilePage() {
                       <p>How it looks</p>
                       <div className="pfp-editor__preview-row">
                         <div>
-                          <UserAvatar crop={draft} size={72} />
+                          <UserAvatar crop={draft} face={draftFace} size={72} />
                           <span>Header</span>
                         </div>
                         <div>
-                          <UserAvatar crop={draft} size={56} />
+                          <UserAvatar crop={draft} face={draftFace} size={56} />
                           <span>Board</span>
                         </div>
                         <div>
-                          <UserAvatar crop={draft} size={40} />
+                          <UserAvatar crop={draft} face={draftFace} size={40} />
                           <span>Small</span>
                         </div>
                       </div>
@@ -630,7 +632,12 @@ export function ProfilePage() {
           }
         >
           <div className="profile-home__avatar-wrap">
-            <UserAvatar crop={saved} size={168} alt={`${user.username} avatar`} />
+            <UserAvatar
+              crop={saved}
+              face={savedFace}
+              size={168}
+              alt={`${user.username} avatar`}
+            />
           </div>
           <div className="profile-home__meta">
             <h2 className="profile-home__name">{user.username}</h2>
@@ -747,51 +754,6 @@ export function ProfilePage() {
           </div>
         </section>
 
-        <section className="profile-heroes">
-          <div className="profile-heroes__head">
-            <div>
-              <h3>Hero</h3>
-              <p>
-                Passive bonuses from your equipped hero. Unlock and equip heroes in
-                the{" "}
-                <Link to={shopPath()}>Shop</Link>.
-              </p>
-            </div>
-          </div>
-          {ownedHeroes.length === 0 ? (
-            <p className="profile-heroes__empty">
-              No heroes unlocked yet. Visit the{" "}
-              <Link to={shopPath()}>Shop</Link>.
-            </p>
-          ) : equippedHero ? (
-            <div className="profile-heroes__current">
-              <HeroCardFace
-                hero={equippedHero}
-                level={heroLevelFromProfile(heroLevels, equippedHero.id)}
-                equipped
-                size="md"
-              />
-              <div className="profile-heroes__current-meta">
-                <strong>{equippedHero.name}</strong>
-                <span>
-                  Level {heroLevelFromProfile(heroLevels, equippedHero.id)}
-                </span>
-                <p>
-                  {heroBlurb(
-                    equippedHero.id,
-                    heroLevelFromProfile(heroLevels, equippedHero.id),
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p className="profile-heroes__empty">
-              No hero equipped. Open the{" "}
-              <Link to={shopPath()}>Shop</Link> to equip one.
-            </p>
-          )}
-        </section>
-
         <section className="profile-showcase-edit">
           <div className="profile-showcase-edit__head">
             <div>
@@ -881,9 +843,11 @@ export function ProfilePage() {
 
 function CropEditor({
   crop,
+  face,
   onChange,
 }: {
   crop: AvatarCrop;
+  face?: CardFaceBakeOpts | null;
   onChange: (next: AvatarCrop) => void;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -943,7 +907,12 @@ function CropEditor({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <UserAvatar crop={crop} size={340} className="avatar-crop__live" />
+        <UserAvatar
+          crop={crop}
+          face={face}
+          size={340}
+          className="avatar-crop__live"
+        />
         <div className="avatar-crop__ring" aria-hidden />
         {!dragging ? (
           <p className="avatar-crop__drag-hint">Drag to move</p>

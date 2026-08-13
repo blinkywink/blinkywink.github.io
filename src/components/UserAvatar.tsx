@@ -1,5 +1,10 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { AvatarCrop } from "../lib/avatar";
+import {
+  getCardFaceImageUrl,
+  peekCardFaceImageUrl,
+  type CardFaceBakeOpts,
+} from "../lib/cardFaceImage";
 import { cardSpecById } from "../lib/cardCatalog";
 
 type Props = {
@@ -7,21 +12,63 @@ type Props = {
   size?: number;
   className?: string;
   alt?: string;
+  /** Degree / art seed for the card copy (paragon FX, visualizer). */
+  face?: CardFaceBakeOpts | null;
 };
 
 /**
- * Circular PFP — image fills the circle (object-fit + focal zoom).
- * Same math at any resolution / DPR (no nested card scales).
+ * Circular PFP — full card baked to one bitmap, then cropped like a photo.
+ * Every size shares the same image so previews stay accurate.
  */
 export function UserAvatar({
   crop,
   size = 36,
   className = "",
   alt = "",
+  face,
 }: Props) {
-  const card = crop?.cardId ? cardSpecById(crop.cardId) : null;
+  const cardId = crop?.cardId ?? null;
+  const card = cardId ? cardSpecById(cardId) : null;
+  const degree = face?.degree;
+  const visualSeed = face?.visualSeed;
+  const bakeOpts: CardFaceBakeOpts | undefined =
+    degree != null || visualSeed != null
+      ? { degree, visualSeed }
+      : undefined;
 
-  if (!card || !crop?.cardId) {
+  const [src, setSrc] = useState<string | null>(() =>
+    cardId ? peekCardFaceImageUrl(cardId, bakeOpts) : null,
+  );
+
+  useEffect(() => {
+    if (!cardId || !card) {
+      setSrc(null);
+      return;
+    }
+    const opts: CardFaceBakeOpts | undefined =
+      degree != null || visualSeed != null
+        ? { degree, visualSeed }
+        : undefined;
+    const peeked = peekCardFaceImageUrl(cardId, opts);
+    if (peeked) {
+      setSrc(peeked);
+      return;
+    }
+    let cancelled = false;
+    setSrc(null);
+    void getCardFaceImageUrl(cardId, opts)
+      .then((url) => {
+        if (!cancelled) setSrc(url);
+      })
+      .catch(() => {
+        if (!cancelled) setSrc(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cardId, card, degree, visualSeed]);
+
+  if (!card || !cardId) {
     return (
       <span
         className={`user-avatar user-avatar--fallback ${className}`.trim()}
@@ -49,11 +96,11 @@ export function UserAvatar({
     );
   }
 
-  const zoom = Number.isFinite(crop.zoom)
-    ? Math.min(4, Math.max(1, crop.zoom))
+  const zoom = Number.isFinite(crop?.zoom)
+    ? Math.min(4, Math.max(1, crop!.zoom))
     : 1.25;
-  const x = Number.isFinite(crop.x) ? Math.min(1, Math.max(0, crop.x)) : 0.5;
-  const y = Number.isFinite(crop.y) ? Math.min(1, Math.max(0, crop.y)) : 0.38;
+  const x = Number.isFinite(crop?.x) ? Math.min(1, Math.max(0, crop!.x)) : 0.5;
+  const y = Number.isFinite(crop?.y) ? Math.min(1, Math.max(0, crop!.y)) : 0.38;
 
   return (
     <span
@@ -70,13 +117,15 @@ export function UserAvatar({
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
     >
-      <img
-        className="user-avatar__media"
-        src={card.entity.image}
-        alt=""
-        draggable={false}
-        decoding="async"
-      />
+      {src ? (
+        <img
+          className="user-avatar__media"
+          src={src}
+          alt=""
+          draggable={false}
+          decoding="async"
+        />
+      ) : null}
     </span>
   );
 }

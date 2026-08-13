@@ -33,6 +33,7 @@
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-updater": "^2.10.1",
+    "html-to-image": "^1.11.13",
     "midi-file": "^1.2.4",
     "parse-sng": "^4.0.3",
     "react": "^19.2.8",
