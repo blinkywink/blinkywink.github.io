@@ -28,6 +28,7 @@ pub fn run() {
         )?;
       }
       app.handle().plugin(tauri_plugin_process::init())?;
+      app.handle().plugin(tauri_plugin_opener::init())?;
       #[cfg(any(target_os = "macos", windows, target_os = "linux"))]
       app
         .handle()

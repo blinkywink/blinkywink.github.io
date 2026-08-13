@@ -7,6 +7,11 @@ import {
   type FeaturedBonusGame,
 } from "../lib/featuredBonus";
 import { preloadImage } from "../utils/imageProcessing";
+import {
+  DISCORD_INVITE_URL,
+  YOUTUBE_CHANNEL_URL,
+} from "../lib/openExternal";
+import { ExternalLink } from "./ExternalLink";
 
 export type GameId =
   | "zoomed"
@@ -552,15 +557,14 @@ export function ArcadeHome({
 
       {!embed ? (
         <footer className="arcade__footer">
-          <p>
-            made by:{" "}
-            <a
-              href="https://youtube.com/@blinkywink"
-              target="_blank"
-              rel="noreferrer"
-            >
-              blinkywink
-            </a>
+          <p className="arcade__footer-links">
+            <span>
+              made by:{" "}
+              <ExternalLink href={YOUTUBE_CHANNEL_URL}>blinkywink</ExternalLink>
+            </span>
+            <ExternalLink href={DISCORD_INVITE_URL}>
+              Join the discord
+            </ExternalLink>
           </p>
           <p>BTD6 Creator code: blinky</p>
         </footer>

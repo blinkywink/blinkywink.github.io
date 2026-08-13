@@ -10,7 +10,9 @@ import { prefersKeyboardAutofocus } from "../lib/focus";
 import { btd6Pack } from "../lib/packTheme";
 import { BoosterPack } from "./BoosterPack";
 import { DesktopDownloadButtons } from "./DesktopDownloadButtons";
+import { ExternalLink } from "./ExternalLink";
 import { ZoomedPreview } from "./ArcadeHome";
+import { DISCORD_INVITE_URL } from "../lib/openExternal";
 
 export const OPEN_AUTH_EVENT = "ba:open-auth";
 
@@ -301,6 +303,12 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
                 get a better experience.
               </p>
               <DesktopDownloadButtons className="howto-play__downloads" />
+              <ExternalLink
+                href={DISCORD_INVITE_URL}
+                className="btn btn--secondary howto-play__discord"
+              >
+                Join the discord
+              </ExternalLink>
               <p className="howto-play__fun">Have fun!</p>
             </div>
             <div className="howto-play__actions">

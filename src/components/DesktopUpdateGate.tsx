@@ -11,6 +11,7 @@ import {
 } from "../lib/desktopDownloads";
 import { dailyTowerPicks, dayStamp } from "../lib/packTheme";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
+import { ExternalLink } from "./ExternalLink";
 
 type GateStatus = "idle" | "updating" | "blocked";
 
@@ -164,22 +165,12 @@ export function DesktopUpdateGate() {
           </div>
         ) : (
           <div className="desktop-online-gate__actions">
-            <a
-              href={win}
-              className="btn btn--primary"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <ExternalLink href={win} className="btn btn--primary">
               Download Windows
-            </a>
-            <a
-              href={mac}
-              className="btn btn--primary"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            </ExternalLink>
+            <ExternalLink href={mac} className="btn btn--primary">
               Download Mac
-            </a>
+            </ExternalLink>
             <button type="button" className="btn" onClick={() => void run()}>
               Retry
             </button>

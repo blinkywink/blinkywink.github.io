@@ -28,9 +28,14 @@ import {
   subscribeRemoteFeatured,
 } from "../lib/remoteShop";
 import { isDesktopShell } from "../lib/desktopOnline";
+import {
+  DISCORD_INVITE_URL,
+  YOUTUBE_CHANNEL_URL,
+} from "../lib/openExternal";
 import { useAuth } from "../auth/AuthProvider";
 import { ArcadeHome } from "./ArcadeHome";
 import { DesktopDownloadButtons } from "./DesktopDownloadButtons";
+import { ExternalLink } from "./ExternalLink";
 import { HowToPlayOverlay } from "./HowToPlayOverlay";
 import { UserAvatar } from "./UserAvatar";
 import {
@@ -297,15 +302,12 @@ export function HomeHub() {
       ) : null}
 
       <footer className="arcade__footer">
-        <p>
-          made by:{" "}
-          <a
-            href="https://youtube.com/@blinkywink"
-            target="_blank"
-            rel="noreferrer"
-          >
-            blinkywink
-          </a>
+        <p className="arcade__footer-links">
+          <span>
+            made by:{" "}
+            <ExternalLink href={YOUTUBE_CHANNEL_URL}>blinkywink</ExternalLink>
+          </span>
+          <ExternalLink href={DISCORD_INVITE_URL}>Join the discord</ExternalLink>
         </p>
         <p>BTD6 Creator code: blinky</p>
       </footer>
