@@ -66,26 +66,33 @@ function copy(src: string, destName: string): string {
 }
 
 function gh(args: string[]) {
-  const result = spawnSync("gh", args, { stdio: "inherit" });
+  // Cursor/sandbox GH_TOKEN often lacks release scope; prefer keyring auth.
+  const env = { ...process.env };
+  delete env.GH_TOKEN;
+  const result = spawnSync("gh", args, { stdio: "inherit", env });
   if (result.status !== 0) {
     throw new Error(`gh ${args.join(" ")} failed`);
   }
 }
 
 function releaseExists(tag: string): boolean {
+  const env = { ...process.env };
+  delete env.GH_TOKEN;
   const result = spawnSync(
     "gh",
     ["release", "view", tag, "--repo", REPO],
-    { stdio: "pipe" },
+    { stdio: "pipe", env },
   );
   return result.status === 0;
 }
 
 function listReleaseTags(): string[] {
+  const env = { ...process.env };
+  delete env.GH_TOKEN;
   const result = spawnSync(
     "gh",
     ["release", "list", "--repo", REPO, "--limit", "100", "--json", "tagName"],
-    { encoding: "utf8" },
+    { encoding: "utf8", env },
   );
   if (result.status !== 0) {
     throw new Error("gh release list failed");
@@ -96,6 +103,8 @@ function listReleaseTags(): string[] {
 
 /** Drop every GitHub release except the one we just published. */
 function deleteOlderReleases(keepTag: string) {
+  const env = { ...process.env };
+  delete env.GH_TOKEN;
   for (const oldTag of listReleaseTags()) {
     if (oldTag === keepTag) continue;
     console.log(`Deleting old release ${oldTag}`);
@@ -110,7 +119,7 @@ function deleteOlderReleases(keepTag: string) {
         "--yes",
         "--cleanup-tag",
       ],
-      { stdio: "inherit" },
+      { stdio: "inherit", env },
     );
     if (del.status !== 0) {
       console.warn(`Could not delete ${oldTag} - continuing`);
@@ -125,12 +134,21 @@ function deleteOlderLocalBuilds(keepVersion: string) {
     path.join(ROOT, "src-tauri/target/release/bundle/nsis"),
     path.join(ROOT, "src-tauri/target/release/bundle/dmg"),
     path.join(ROOT, "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg"),
+    path.join(ROOT, "src-tauri/target/release/bundle/macos"),
+    path.join(ROOT, "src-tauri/target/aarch64-apple-darwin/release/bundle/macos"),
   ];
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
     for (const name of fs.readdirSync(dir)) {
-      if (!/\.(exe|dmg|sig)$/i.test(name)) continue;
       if (name.includes(keepVersion)) continue;
+      // Only purge prior versioned installers (…_0.9.10_….dmg / …-setup.exe + .sig).
+      // Unversioned updater tarballs (blinkywink.co.app.tar.gz) are the current build.
+      const versioned =
+        /\d+\.\d+\.\d+/.test(name) &&
+        (/\.(exe|dmg)$/i.test(name) ||
+          /\.(exe|dmg)\.sig$/i.test(name) ||
+          /\.app\.tar\.gz(\.sig)?$/i.test(name));
+      if (!versioned) continue;
       const full = path.join(dir, name);
       try {
         fs.unlinkSync(full);

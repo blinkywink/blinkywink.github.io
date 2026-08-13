@@ -1,6 +1,8 @@
 /**
  * Run a command with TAURI_SIGNING_* set from src-tauri/.updater-key.
  * Usage: tsx scripts/with-updater-key.ts tauri build --bundles dmg
+ *
+ * Sets CI=true so the Mac DMG bundler skips Finder AppleScript (no DMG window popup).
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -23,6 +25,8 @@ if (!fs.existsSync(keyPath)) {
 process.env.TAURI_SIGNING_PRIVATE_KEY = fs.readFileSync(keyPath, "utf8");
 process.env.TAURI_SIGNING_PRIVATE_KEY_PATH = keyPath;
 process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD ??= "";
+// bundle_dmg.sh opens a Finder window unless CI=true (--skip-jenkins).
+process.env.CI = "true";
 
 const args = process.argv.slice(2);
 if (!args.length) {
