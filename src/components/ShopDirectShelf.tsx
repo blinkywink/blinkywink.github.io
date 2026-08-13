@@ -27,7 +27,7 @@ type FocusedDeal = {
 };
 
 export function ShopDirectShelf() {
-  const { isGuest, profile, setCoinBalance } = useAuth();
+  const { isGuest, profile, setCoinBalance, refreshProfile } = useAuth();
   const { owned, refresh: refreshCards, feedParagonsFromCards } = useCardCollection();
   const [listings, setListings] = useState<ShopDirectListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +114,7 @@ export function ShopDirectShelf() {
       setListings(result.listings);
       const wasNew = !owned.has(card.id);
       await refreshCards();
+      void refreshProfile();
       await feedParagonsFromCards([card.id], wasNew ? [card.id] : []);
       setStatus(
         `Bought ${card.entity.name} for ${result.price.toLocaleString()} Cash.`,

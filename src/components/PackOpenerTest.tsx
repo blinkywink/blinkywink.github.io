@@ -224,7 +224,7 @@ export function PackOpenerTest({
 }: Props) {
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
-  const { profile, setCoinBalance } = useAuth();
+  const { profile, setCoinBalance, refreshProfile } = useAuth();
   const { awardCards, feedParagonsFromCards, owned } = useCardCollection();
   const { setParagonNoticeDeferral } = useHeroFx();
   const {
@@ -445,7 +445,7 @@ export function PackOpenerTest({
     }
     buyLockRef.current = true;
     setBuyBusy(true);
-    const balance = await spendCoins(charge);
+    const balance = await spendCoins(charge, { shop: true });
     buyLockRef.current = false;
     setBuyBusy(false);
     if (balance == null) {
@@ -454,12 +454,14 @@ export function PackOpenerTest({
     }
     playBuy();
     setCoinBalance(balance);
+    void refreshProfile();
     setPhaseBoth("sealed");
   }, [
     mode,
     pack.kind,
     price,
     profile?.coins,
+    refreshProfile,
     setCoinBalance,
     trySaudaDiscount,
   ]);
@@ -652,7 +654,7 @@ export function PackOpenerTest({
     }
     buyLockRef.current = true;
     setBuyBusy(true);
-    const balance = await spendCoins(charge);
+    const balance = await spendCoins(charge, { shop: true });
     if (balance == null) {
       buyLockRef.current = false;
       setBuyBusy(false);
@@ -661,6 +663,7 @@ export function PackOpenerTest({
       return;
     }
     setCoinBalance(balance);
+    void refreshProfile();
     resetToSealed();
     playBuy();
     later(() => {
@@ -674,6 +677,7 @@ export function PackOpenerTest({
     pack.kind,
     price,
     profile?.coins,
+    refreshProfile,
     reset,
     resetToSealed,
     setCoinBalance,

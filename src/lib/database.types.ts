@@ -5,6 +5,8 @@ export type Profile = {
   coins: number;
   /** Lifetime Cash earned (never decreases on spend). */
   coins_earned: number;
+  /** Lifetime Cash spent in the shop (packs, direct shelf, heroes). */
+  shop_spent?: number | null;
   /** Unused premium currency column (kept in DB; not shown in UI). */
   monkey_money: number;
   /** UTC date (YYYY-MM-DD) of last daily Cash claim, or null. */
@@ -57,6 +59,7 @@ export type Database = {
           username: string;
           coins?: number;
           coins_earned?: number;
+          shop_spent?: number;
           monkey_money?: number;
           last_daily_claim?: string | null;
           last_daily_card_claim?: string | null;
@@ -237,7 +240,7 @@ export type Database = {
         Returns: number;
       };
       spend_coins: {
-        Args: { p_amount: number };
+        Args: { p_amount: number; p_shop?: boolean };
         Returns: number;
       };
       get_shop_direct_listings: {

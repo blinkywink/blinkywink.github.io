@@ -17,6 +17,11 @@ import {
 import { formatPathLevels, maxPathTier } from "../lib/pathCombos";
 import { suggestedParagonValue } from "../lib/paragonProgress";
 import { playBuy } from "../lib/packSounds";
+import {
+  MARKET_SHOP_SPEND_REQUIRED,
+  shopSpendRemaining,
+  shopSpendUnlocked,
+} from "../lib/marketShopGate";
 import { marketplacePath, userCollectionPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
@@ -98,12 +103,17 @@ export function ListingPage() {
   const active = listing?.status === "active" && !justPurchased;
   const alreadyOwn = listing ? owned.has(listing.cardId) : false;
   const myOffer = offers.find((o) => o.buyerId === user?.id) ?? null;
+  const marketUnlocked = shopSpendUnlocked(profile?.shop_spent);
+  const marketSpendLeft = shopSpendRemaining(profile?.shop_spent);
   const canBuy =
     active &&
     !mine &&
     !isGuest &&
     !alreadyOwn &&
+    marketUnlocked &&
     (profile?.coins ?? 0) >= (listing?.price ?? Infinity);
+  const canOffer =
+    active && !mine && !isGuest && !alreadyOwn && marketUnlocked;
 
   const pathLabel = card
     ? card.isParagon
@@ -361,6 +371,31 @@ export function ListingPage() {
             <p className="listing-note">Sign in to buy or make an offer.</p>
           ) : alreadyOwn ? (
             <p className="listing-note">You already own this card.</p>
+          ) : !marketUnlocked ? (
+            <div className="listing-actions">
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled
+                aria-disabled="true"
+                title={`Spend ${MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the shop first`}
+              >
+                Buy for <CashAmount amount={listing.price} size={16} />
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                disabled
+                aria-disabled="true"
+              >
+                Make offer
+              </button>
+              <p className="listing-note">
+                Spend {MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the
+                shop before buying on the market.{" "}
+                {marketSpendLeft.toLocaleString()} Cash left to unlock.
+              </p>
+            </div>
           ) : (
             <div className="listing-actions">
               <button
@@ -400,7 +435,7 @@ export function ListingPage() {
                     <button
                       type="button"
                       className="btn btn--secondary"
-                      disabled={busy}
+                      disabled={busy || !canOffer}
                       onClick={() => setOfferOpen(true)}
                     >
                       Make offer
@@ -428,7 +463,7 @@ export function ListingPage() {
                         <button
                           type="button"
                           className="btn btn--primary btn--sm"
-                          disabled={busy}
+                          disabled={busy || !canOffer}
                           onClick={() => void onMakeOffer()}
                         >
                           Send offer

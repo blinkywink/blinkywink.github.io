@@ -31,6 +31,7 @@ function profileFromGuest(coins: number): Profile {
     username: "Guest",
     coins,
     coins_earned: coins,
+    shop_spent: 0,
     monkey_money: 0,
     last_daily_claim: null,
     last_daily_card_claim: null,

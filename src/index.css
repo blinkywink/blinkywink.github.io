@@ -124,6 +124,12 @@ p {
   box-shadow: none !important;
 }
 
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
 .btn--sm {
   padding: 0.45rem 0.85rem;
   font-size: 0.9rem;
