@@ -6,7 +6,6 @@ import {
 } from "./avatar";
 import { cached, CacheTtl } from "./cache";
 import { normalizeAccentColor } from "./profileCosmetics";
-import { normalizeBackgroundId } from "./profileBackgrounds";
 import {
   normalizeHeroLevels,
   normalizeOwnedHeroIds,
@@ -24,7 +23,6 @@ export type PublicProfile = {
   equippedHeroId: string | null;
   heroLevels: Record<string, number>;
   badgeIds: string[];
-  bgArtId: string | null;
 };
 
 export type ProfileSearchHit = {
@@ -79,9 +77,6 @@ export async function fetchProfileByUsername(
         : null,
       heroLevels: normalizeHeroLevels(row.hero_levels),
       badgeIds: normalizeBadgeIds(row.badge_ids),
-      bgArtId: normalizeBackgroundId(
-        (row as { bg_art_id?: unknown }).bg_art_id,
-      ),
     };
   });
 }

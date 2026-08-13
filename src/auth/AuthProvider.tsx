@@ -48,8 +48,6 @@ function profileFromGuest(coins: number): Profile {
     equipped_hero_id: null,
     hero_levels: {},
     hero_clear_progress: {},
-    bg_unlocked: false,
-    bg_art_id: null,
     created_at: now,
     updated_at: now,
   };

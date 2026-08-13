@@ -4055,18 +4055,12 @@ body:has(.zoomed-page) {
   z-index: 0;
 }
 
-.card-lab.has-player-chrome .card-lab__atmosphere {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(8, 8, 12, 0.72) 0%,
-      rgba(8, 8, 12, 0.88) 55%,
-      rgba(8, 8, 12, 0.94) 100%
-    ),
-    var(--player-bg-image, none) center / cover no-repeat,
-    radial-gradient(circle at 50% 18%, rgba(63, 173, 74, 0.28), transparent 36%),
-    radial-gradient(circle at 18% 78%, rgba(255, 255, 255, 0.06), transparent 28%),
-    radial-gradient(circle at 88% 70%, rgba(47, 159, 224, 0.2), transparent 26%);
+/* Keep atmosphere full-bleed behind content.
+   `.card-lab > *` sets position:relative — that must not win here. */
+.card-lab > .card-lab__atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
 }
 
 .card-lab > * {
@@ -12360,11 +12354,7 @@ button.card-chip:hover:not(:disabled) {
   cursor: pointer;
 }
 
-.trade-offer-card.is-locked {
-  cursor: default;
-}
-
-button.trade-offer-card:hover:not(:disabled) {
+button.trade-offer-card:hover {
   border-color: rgba(240, 200, 74, 0.45);
 }
 
@@ -13011,14 +13001,7 @@ button.trade-offer-card:hover:not(:disabled) {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
-  max-width: 36rem;
-}
-
-@media (min-width: 720px) {
-  .profile-cosmetics__grid {
-    grid-template-columns: 1fr 1fr;
-    max-width: none;
-  }
+  max-width: 28rem;
 }
 
 .profile-cosmetics__card {
@@ -13085,47 +13068,6 @@ button.trade-offer-card:hover:not(:disabled) {
   width: fit-content;
 }
 
-.profile-bg-picks {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.4rem;
-}
-
-.profile-bg-pick {
-  appearance: none;
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  background-color: #121218;
-  background-size: cover;
-  background-position: center;
-  cursor: pointer;
-  overflow: hidden;
-  padding: 0;
-}
-
-.profile-bg-pick span {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 0.2rem 0.25rem;
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-align: center;
-  color: #f0f0f4;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
-}
-
-.profile-bg-pick.is-selected {
-  border-color: rgba(255, 255, 255, 0.92);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.4),
-    0 0 14px rgba(255, 255, 255, 0.22);
-}
-
 .profile-cosmetics__empty {
   margin: 0;
   font-weight: 700;
@@ -13144,17 +13086,11 @@ button.trade-offer-card:hover:not(:disabled) {
 .profile-home.has-player-chrome {
   border-color: color-mix(in srgb, var(--player-accent) 55%, transparent);
   background:
-    linear-gradient(
-      180deg,
-      rgba(8, 8, 12, 0.55) 0%,
-      rgba(8, 8, 12, 0.82) 100%
-    ),
     radial-gradient(
       circle at 18% 20%,
       rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.22),
       transparent 55%
     ),
-    var(--player-bg-image, none) center / cover no-repeat,
     rgba(255, 255, 255, 0.03);
   box-shadow:
     0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.2),
@@ -14453,27 +14389,6 @@ button.hero-proc--action:focus-visible {
   font-size: 1.23rem;
   font-weight: 650;
   line-height: 1.2;
-}
-
-.equipped-hero--card {
-  flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 16px;
-  padding: 0.55rem 0.75rem 0.65rem;
-  max-width: 11rem;
-}
-
-.equipped-hero__meta {
-  margin: 0;
-  text-align: center;
-  font-size: 0.82rem;
-  line-height: 1.25;
-  color: rgba(240, 240, 244, 0.62);
-}
-
-.equipped-hero__meta strong {
-  color: rgba(240, 240, 244, 0.92);
 }
 
 .equipped-hero__img {

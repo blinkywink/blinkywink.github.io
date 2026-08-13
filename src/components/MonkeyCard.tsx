@@ -546,7 +546,7 @@ export function MonkeyCard({
         isPreview ? "monkey-card-scene--preview" : "",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
-        isParagon && !isPreview
+        isParagon && !isPreview && stage >= 1
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
       ]
@@ -554,14 +554,14 @@ export function MonkeyCard({
         .join(" ")}
       {...interactiveProps}
     >
-      {isParagon && !isPreview ? (
+      {isParagon && !isPreview && stage >= 1 ? (
         <div
           className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
           aria-hidden
         >
           {PARAGON_SMOKE.slice(
             0,
-            stage >= 5 ? 8 : stage >= 4 ? 6 : stage >= 2 ? 4 : stage >= 1 ? 3 : 2,
+            stage >= 5 ? 8 : stage >= 4 ? 6 : stage >= 2 ? 4 : 3,
           ).map((p, i) => (
             <i
               key={`sm${i}`}
@@ -571,8 +571,8 @@ export function MonkeyCard({
           ))}
         </div>
       ) : null}
-      {isParagon && !isPreview && stage >= 0 ? (
-        <ParagonRings stage={Math.max(1, stage) as 1 | 2 | 3 | 4 | 5} />
+      {isParagon && !isPreview && stage >= 1 ? (
+        <ParagonRings stage={stage} />
       ) : null}
       <div
         ref={cardRef}
@@ -731,14 +731,14 @@ export function MonkeyCard({
 
         <div className="monkey-card__edge" aria-hidden="true" />
       </div>
-      {isParagon && !isPreview ? (
+      {isParagon && !isPreview && stage >= 1 ? (
         <div
           className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
           aria-hidden
         >
           {PARAGON_STARS.slice(
             0,
-            stage >= 5 ? 5 : stage >= 4 ? 4 : stage >= 2 ? 3 : stage >= 1 ? 2 : 1,
+            stage >= 5 ? 5 : stage >= 4 ? 4 : stage >= 2 ? 3 : 2,
           ).map((p, i) => (
             <svg
               key={`st${i}`}

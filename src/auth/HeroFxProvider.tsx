@@ -50,6 +50,11 @@ type HeroFxValue = {
     degree: number;
     portrait: string;
   }) => void;
+  /**
+   * While deferred, paragon degree-up toasts queue and flush when deferral
+   * ends (e.g. after a pack finish screen).
+   */
+  setParagonNoticeDeferral: (deferred: boolean) => void;
 };
 
 const HeroFxContext = createContext<HeroFxValue | null>(null);
@@ -77,6 +82,15 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [procs, setProcs] = useState<HeroProc[]>([]);
   const readyNotified = useRef<Set<string>>(new Set());
+  const deferParagonRef = useRef(false);
+  const pendingParagonRef = useRef<
+    {
+      cardId: string;
+      name: string;
+      degree: number;
+      portrait: string;
+    }[]
+  >([]);
 
   const equipped = useMemo(() => {
     if (!profile) return null;
@@ -86,6 +100,29 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
       hero_levels: normalizeHeroLevels(profile.hero_levels),
     });
   }, [profile]);
+
+  const pushParagonProc = useCallback(
+    (input: {
+      cardId: string;
+      name: string;
+      degree: number;
+      portrait: string;
+    }) => {
+      const id = ++procSeq;
+      const proc: HeroProc = {
+        id,
+        heroId: input.cardId,
+        message: `Your ${input.name} has reached paragon degree ${input.degree}!`,
+        portrait: input.portrait,
+        theme: "paragon",
+      };
+      setProcs((list) => [...list.slice(-2), proc]);
+      window.setTimeout(() => {
+        setProcs((list) => list.filter((p) => p.id !== id));
+      }, 4200);
+    },
+    [],
+  );
 
   const notifyHeroProc = useCallback(
     (input: {
@@ -129,20 +166,24 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
       degree: number;
       portrait: string;
     }) => {
-      const id = ++procSeq;
-      const proc: HeroProc = {
-        id,
-        heroId: input.cardId,
-        message: `Your ${input.name} has reached paragon degree ${input.degree}!`,
-        portrait: input.portrait,
-        theme: "paragon",
-      };
-      setProcs((list) => [...list.slice(-2), proc]);
-      window.setTimeout(() => {
-        setProcs((list) => list.filter((p) => p.id !== id));
-      }, 4200);
+      if (deferParagonRef.current) {
+        pendingParagonRef.current.push(input);
+        return;
+      }
+      pushParagonProc(input);
     },
-    [],
+    [pushParagonProc],
+  );
+
+  const setParagonNoticeDeferral = useCallback(
+    (deferred: boolean) => {
+      deferParagonRef.current = deferred;
+      if (deferred) return;
+      const pending = pendingParagonRef.current;
+      pendingParagonRef.current = [];
+      for (const item of pending) pushParagonProc(item);
+    },
+    [pushParagonProc],
   );
 
   // Surface persistent "ready to level" when profile shows any owned hero ready.
@@ -186,8 +227,18 @@ export function HeroFxProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ equipped, notifyHeroProc, notifyParagonDegree }),
-    [equipped, notifyHeroProc, notifyParagonDegree],
+    () => ({
+      equipped,
+      notifyHeroProc,
+      notifyParagonDegree,
+      setParagonNoticeDeferral,
+    }),
+    [
+      equipped,
+      notifyHeroProc,
+      notifyParagonDegree,
+      setParagonNoticeDeferral,
+    ],
   );
 
   return (
@@ -235,6 +286,7 @@ export function useHeroFx(): HeroFxValue {
       equipped: null,
       notifyHeroProc: () => {},
       notifyParagonDegree: () => {},
+      setParagonNoticeDeferral: () => {},
     };
   }
   return ctx;

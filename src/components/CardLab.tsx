@@ -58,7 +58,6 @@ export type CollectionViewer = {
   equippedHeroId?: string | null;
   heroLevels?: Record<string, number>;
   badgeIds?: string[];
-  bgArtId?: string | null;
 };
 
 export type ViewerCollection = {
@@ -275,6 +274,7 @@ export function CardLab({
     if (!isRemote) return undefined;
     return remoteSeeds[card.id];
   };
+
   const ownerLabel = viewer?.username ?? "You";
   const canRequestTrade =
     Boolean(viewer) &&
@@ -288,17 +288,8 @@ export function CardLab({
         accentColor: isRemote
           ? viewer?.accentColor
           : (profile?.accent_color ?? null),
-        bgArtId: isRemote
-          ? viewer?.bgArtId
-          : (profile?.bg_art_id ?? null),
       }),
-    [
-      isRemote,
-      viewer?.accentColor,
-      viewer?.bgArtId,
-      profile?.accent_color,
-      profile?.bg_art_id,
-    ],
+    [isRemote, viewer?.accentColor, profile?.accent_color],
   );
   const chromeOn = hasPlayerChrome(chromeStyle);
 
@@ -566,7 +557,7 @@ export function CardLab({
     if (isRemote && remoteLoading) {
       return (
         <div className="card-lab">
-          <div className="card-lab__atmosphere" aria-hidden="true" />
+                    <div className="card-lab__atmosphere" aria-hidden="true" />
           <LoadingDots label="Loading collection" className="card-lab__loading" />
         </div>
       );
@@ -577,7 +568,7 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-        <div className="card-lab__atmosphere" aria-hidden="true" />
+                <div className="card-lab__atmosphere" aria-hidden="true" />
         <header
           className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
         >
@@ -776,12 +767,14 @@ export function CardLab({
   // ——— Heroes manage / upgrade ———
   if (view.kind === "heroes" && !isRemote) {
     return (
-      <HeroesLab
-        initialHeroId={initial?.heroId}
-        onBack={() => {
-          setView({ kind: "towers" });
-        }}
-      />
+      <>
+                <HeroesLab
+          initialHeroId={initial?.heroId}
+          onBack={() => {
+            setView({ kind: "towers" });
+          }}
+        />
+      </>
     );
   }
 
@@ -792,7 +785,7 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-        <div className="card-lab__atmosphere" aria-hidden="true" />
+                <div className="card-lab__atmosphere" aria-hidden="true" />
         <header className="card-lab__header">
           <button
             type="button"
@@ -880,8 +873,8 @@ export function CardLab({
     <div
       className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
       style={chromeOn ? chromeStyle : undefined}
-    >
-      <div className="card-lab__atmosphere" aria-hidden="true" />
+      >
+            <div className="card-lab__atmosphere" aria-hidden="true" />
       <header className="card-lab__header">
         <button
           type="button"

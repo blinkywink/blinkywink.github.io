@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
@@ -6,6 +7,7 @@ import { fetchPlayerCardIds } from "../lib/awardCards";
 import { fetchPlayerParagons } from "../lib/paragonApi";
 import type { ParagonMap } from "../lib/guestParagons";
 import { cardSpecById } from "../lib/cardCatalog";
+import type { MonkeyCardSpec } from "../lib/pathCombos";
 import {
   cancelTrade,
   fetchTrade,
@@ -20,12 +22,21 @@ import { PageHeader } from "./PageHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { CashAmount } from "./CurrencyChip";
+import { ParagonXpBar } from "./ParagonXpBar";
+
+type FocusedOffer = {
+  card: MonkeyCardSpec;
+  degree?: number;
+  xp?: number;
+  /** Own offer cards can be removed from the focus sheet. */
+  canRemove?: boolean;
+};
 
 export function TradeRoom() {
   const { tradeId = "" } = useParams();
   const navigate = useNavigate();
   const { user, isGuest } = useAuth();
-  const { owned, refresh: refreshCards } = useCardCollection();
+  const { owned, paragonOf, refresh: refreshCards } = useCardCollection();
   const [trade, setTrade] = useState<TradeState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +45,13 @@ export function TradeRoom() {
   const [localOffer, setLocalOffer] = useState<string[]>([]);
   const [localCash, setLocalCash] = useState(0);
   const [cashDraft, setCashDraft] = useState("0");
+  const [focused, setFocused] = useState<FocusedOffer | null>(null);
   const [partnerOwned, setPartnerOwned] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [partnerParagons, setPartnerParagons] = useState<ParagonMap>({});
   const strippingRef = useRef(false);
+  const cashDirtyRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!tradeId || !user) return;
@@ -76,7 +89,10 @@ export function TradeRoom() {
         return incoming;
       });
       setLocalCash(next.myCash);
-      setCashDraft(String(next.myCash));
+      // Don't clobber the input while the player is editing Cash.
+      if (!cashDirtyRef.current) {
+        setCashDraft(String(next.myCash));
+      }
       setError(null);
       if (next.status === "completed") {
         setStatus((prev) => prev ?? "Trade completed");
@@ -105,6 +121,20 @@ export function TradeRoom() {
       unsub();
     };
   }, [tradeId, user, load, trade?.status]);
+
+  useEffect(() => {
+    if (!focused) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFocused(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [focused]);
 
   const partnerId = useMemo(() => {
     if (!trade || !user) return null;
@@ -173,7 +203,11 @@ export function TradeRoom() {
   }, [partnerOwned, trade?.theirOffer]);
 
   const syncOffer = useCallback(
-    async (next: string[], cash = localCash) => {
+    async (
+      next: string[],
+      cash = localCash,
+      opts: { commitCashDraft?: boolean } = {},
+    ) => {
       if (!tradeId) return;
       const cashAmt = Math.max(0, Math.floor(cash));
       setBusy(true);
@@ -183,7 +217,10 @@ export function TradeRoom() {
         await setTradeOffer(tradeId, next, cashAmt);
         setLocalOffer(next);
         setLocalCash(cashAmt);
-        setCashDraft(String(cashAmt));
+        if (opts.commitCashDraft || !cashDirtyRef.current) {
+          setCashDraft(String(cashAmt));
+          cashDirtyRef.current = false;
+        }
         await pingTrade(tradeId);
         await load();
       } catch (err) {
@@ -224,6 +261,39 @@ export function TradeRoom() {
       ? localOffer.filter((id) => id !== cardId)
       : [...localOffer, cardId];
     void syncOffer(next);
+  }
+
+  function commitCash() {
+    const next = Math.max(0, Math.floor(Number(cashDraft) || 0));
+    setCashDraft(String(next));
+    if (next === localCash) {
+      cashDirtyRef.current = false;
+      return;
+    }
+    void syncOffer(localOffer, next, { commitCashDraft: true });
+  }
+
+  function openMine(id: string) {
+    const card = cardSpecById(id);
+    if (!card) return;
+    const para = card.isParagon ? paragonOf(id) : null;
+    setFocused({
+      card,
+      degree: para?.degree,
+      xp: para?.xp,
+      canRemove: trade?.status === "active",
+    });
+  }
+
+  function openTheirs(id: string) {
+    const card = cardSpecById(id);
+    if (!card) return;
+    const para = card.isParagon ? partnerParagons[id] : null;
+    setFocused({
+      card,
+      degree: para?.degree ?? (card.isParagon ? 1 : undefined),
+      xp: para?.xp ?? 0,
+    });
   }
 
   async function onReady(ready: boolean) {
@@ -312,6 +382,61 @@ export function TradeRoom() {
   const done = trade.status === "completed";
   const active = trade.status === "active";
 
+  const focusPortal = focused
+    ? createPortal(
+        <div
+          className="card-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={focused.card.entity.name}
+        >
+          <button
+            type="button"
+            className="card-focus__backdrop"
+            aria-label="Close"
+            onClick={() => setFocused(null)}
+          />
+          <div className="card-focus__panel">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm card-focus__close"
+              onClick={() => setFocused(null)}
+            >
+              ✕ Close
+            </button>
+            <MonkeyCard
+              entity={focused.card.entity}
+              pathLevels={focused.card.pathLevels}
+              mode="focus"
+              owned
+              degree={focused.degree}
+            />
+            {focused.card.isParagon ? (
+              <ParagonXpBar
+                degree={focused.degree ?? 1}
+                xp={focused.xp ?? 0}
+              />
+            ) : null}
+            {focused.canRemove ? (
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                disabled={busy}
+                onClick={() => {
+                  const id = focused.card.id;
+                  setFocused(null);
+                  toggleCard(id);
+                }}
+              >
+                Remove from offer
+              </button>
+            ) : null}
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="trade-page">
       <PageHeader
@@ -358,9 +483,8 @@ export function TradeRoom() {
                         key={id}
                         type="button"
                         className="trade-offer-card"
-                        disabled={!active || busy}
-                        title="Remove from offer"
-                        onClick={() => toggleCard(id)}
+                        title="View card"
+                        onClick={() => openMine(id)}
                       >
                         <MonkeyCard
                           entity={card.entity}
@@ -368,6 +492,11 @@ export function TradeRoom() {
                           mode="preview"
                           owned
                           staticArt
+                          degree={
+                            card.isParagon
+                              ? (paragonOf(id)?.degree ?? 1)
+                              : undefined
+                          }
                         />
                       </button>
                     );
@@ -385,30 +514,24 @@ export function TradeRoom() {
                       step={100}
                       value={cashDraft}
                       disabled={busy}
-                      onChange={(e) => setCashDraft(e.target.value)}
-                      onBlur={() => {
-                        const next = Math.max(
-                          0,
-                          Math.floor(Number(cashDraft) || 0),
-                        );
-                        setCashDraft(String(next));
-                        if (next !== localCash) void syncOffer(localOffer, next);
+                      onChange={(e) => {
+                        cashDirtyRef.current = true;
+                        setCashDraft(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitCash();
+                        }
                       }}
                     />
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
                       disabled={busy}
-                      onClick={() => {
-                        const next = Math.max(
-                          0,
-                          Math.floor(Number(cashDraft) || 0),
-                        );
-                        setCashDraft(String(next));
-                        void syncOffer(localOffer, next);
-                      }}
+                      onClick={commitCash}
                     >
-                      Set
+                      Update
                     </button>
                   </label>
                 ) : localCash > 0 ? (
@@ -436,7 +559,13 @@ export function TradeRoom() {
                     const card = cardSpecById(id);
                     if (!card) return null;
                     return (
-                      <div key={id} className="trade-offer-card is-locked">
+                      <button
+                        key={id}
+                        type="button"
+                        className="trade-offer-card"
+                        title="View card"
+                        onClick={() => openTheirs(id)}
+                      >
                         <MonkeyCard
                           entity={card.entity}
                           pathLevels={card.pathLevels}
@@ -449,7 +578,7 @@ export function TradeRoom() {
                               : undefined
                           }
                         />
-                      </div>
+                      </button>
                     );
                   })
                 )}
@@ -508,6 +637,7 @@ export function TradeRoom() {
           </section>
         ) : null}
       </main>
+      {focusPortal}
     </div>
   );
 }

@@ -222,7 +222,6 @@ function UserCollectionPage() {
         equippedHeroId: profile.equippedHeroId,
         heroLevels: profile.heroLevels,
         badgeIds: profile.badgeIds,
-        bgArtId: profile.bgArtId,
       }}
       viewerCollection={{
         ownedIds: page.ownedIds,

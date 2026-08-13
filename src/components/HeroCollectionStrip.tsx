@@ -35,11 +35,11 @@ export function EquippedHeroPanel({
   equippedHeroId,
   heroLevels,
   className = "",
-  size = "sm",
 }: {
   equippedHeroId?: string | null;
   heroLevels?: Levels;
   className?: string;
+  /** Kept for call-site compat; chip size is fixed. */
   size?: "sm" | "md" | "lg";
 }) {
   const levels = useMemo(() => normalizeHeroLevels(heroLevels), [heroLevels]);
@@ -48,18 +48,17 @@ export function EquippedHeroPanel({
   if (!hero) return null;
   const level = heroLevelFromProfile(levels, hero.id);
   return (
-    <div className={`equipped-hero equipped-hero--card ${className}`.trim()}>
-      <HeroCardFace
-        hero={hero}
-        level={level}
-        equipped
-        size={size}
-        mode="preview"
+    <div className={`equipped-hero ${className}`.trim()}>
+      <img
+        className="equipped-hero__img"
+        src={heroPortraitForLevel(hero, level)}
+        alt=""
+        draggable={false}
       />
-      <p className="equipped-hero__meta">
+      <span>
         Equipped <strong>{hero.name}</strong>
         <span className="equipped-hero__lvl">Lv {level}</span>
-      </p>
+      </span>
     </div>
   );
 }

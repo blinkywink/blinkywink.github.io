@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cacheInvalidate } from "./cache";
-import { profileBackgroundById } from "./profileBackgrounds";
 
 export const PROFILE_ACCENT_COST = 25_000;
 export const PROFILE_ACCENT_CHANGE_COST = 500;
@@ -40,30 +39,22 @@ function hexToRgb(hex: string): [number, number, number] {
 /** CSS vars for profile chrome / leaderboard chips / public pages. */
 export function playerChromeStyle(input: {
   accentColor?: string | null;
-  bgArtId?: string | null;
 }): CSSProperties {
   const accent = normalizeAccentColor(input.accentColor);
-  const bg = profileBackgroundById(input.bgArtId);
-  const out: Record<string, string> = {};
+  if (!accent) return {};
 
-  if (accent) {
-    const rgb = hexToRgb(accent);
-    out["--player-accent"] = accent;
-    out["--player-accent-2"] = accent;
-    out["--player-accent-r"] = String(rgb[0]);
-    out["--player-accent-g"] = String(rgb[1]);
-    out["--player-accent-b"] = String(rgb[2]);
-  }
-  if (bg) {
-    out["--player-bg-image"] = `url("${bg.src}")`;
-  }
-
-  return out as CSSProperties;
+  const rgb = hexToRgb(accent);
+  return {
+    ["--player-accent" as string]: accent,
+    ["--player-accent-2" as string]: accent,
+    ["--player-accent-r" as string]: String(rgb[0]),
+    ["--player-accent-g" as string]: String(rgb[1]),
+    ["--player-accent-b" as string]: String(rgb[2]),
+  } as CSSProperties;
 }
 
 export function hasPlayerChrome(style: CSSProperties): boolean {
-  const vars = style as Record<string, string>;
-  return Boolean(vars["--player-accent"] || vars["--player-bg-image"]);
+  return Boolean((style as Record<string, string>)["--player-accent"]);
 }
 
 export async function setProfileAccent(color: string): Promise<number> {

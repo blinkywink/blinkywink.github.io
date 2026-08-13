@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
+import { useHeroFx } from "../auth/HeroFxProvider";
 import { towers } from "../data/towers";
 import {
   buildTowerCardSpecs,
@@ -225,6 +226,7 @@ export function PackOpenerTest({
   const price = packPrice(pack);
   const { profile, setCoinBalance } = useAuth();
   const { awardCards, feedParagonsFromCards, owned } = useCardCollection();
+  const { setParagonNoticeDeferral } = useHeroFx();
   const {
     packPullMods,
     onObynExtra,
@@ -361,6 +363,19 @@ export function PackOpenerTest({
     }
     return clearTimers;
   }, [open, pack.id, mode, reset]);
+
+  // Hold degree-up toasts until the pack summary (or close), not mid-reveal.
+  useEffect(() => {
+    if (!open) {
+      setParagonNoticeDeferral(false);
+      return;
+    }
+    setParagonNoticeDeferral(phase !== "shop" && phase !== "done");
+  }, [open, phase, setParagonNoticeDeferral]);
+
+  useEffect(() => {
+    return () => setParagonNoticeDeferral(false);
+  }, [setParagonNoticeDeferral]);
 
   /** Credit Cash for one revealed duplicate (header +/- pops with the card). */
   const awardDupCashForIndex = useCallback(

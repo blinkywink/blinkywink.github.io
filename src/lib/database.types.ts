@@ -36,10 +36,6 @@ export type Profile = {
   hero_levels?: Record<string, number> | null;
   /** Clears toward next paid level-up while that hero is equipped. */
   hero_clear_progress?: Record<string, number> | null;
-  /** One-time unlock for profile / collection background art. */
-  bg_unlocked?: boolean | null;
-  /** Active background art id, or null. */
-  bg_art_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -430,10 +426,6 @@ export type Database = {
           p_cash?: number;
         };
         Returns: boolean;
-      };
-      set_profile_background: {
-        Args: { p_bg_id: string };
-        Returns: number;
       };
       set_trade_ready: {
         Args: { p_trade_id: string; p_ready: boolean };
