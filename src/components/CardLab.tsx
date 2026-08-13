@@ -15,6 +15,7 @@ import {
   sortCardSpecs,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
+import { needsVisualSeed } from "../lib/cardVisualSeed";
 import { requestExchange } from "../lib/exchanges";
 import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
 import { pingInbox, requestTrade } from "../lib/trades";
@@ -293,11 +294,12 @@ export function CardLab({
   );
   const chromeOn = hasPlayerChrome(chromeStyle);
 
+  // Only T5+ / paragons have unique art seeds — lower tiers are identical copies.
   const sharedOwned = useMemo(() => {
     const next = new Set<string>();
     if (!isRemote) return next;
     for (const id of myOwned) {
-      if (owned.has(id)) next.add(id);
+      if (owned.has(id) && needsVisualSeed(id)) next.add(id);
     }
     return next;
   }, [isRemote, myOwned, owned]);
@@ -319,7 +321,7 @@ export function CardLab({
   async function onRequestExchange(cardIds: string[]) {
     if (!viewer || tradeBusy) return;
     const cardId = cardIds[0];
-    if (!cardId) return;
+    if (!cardId || !needsVisualSeed(cardId)) return;
     setTradeBusy(true);
     setTradeMsg(null);
     try {
@@ -519,7 +521,8 @@ export function CardLab({
                   <p className="eyebrow">Exchange</p>
                   <h2>Swap a copy with {viewer.username}</h2>
                   <p>
-                    Pick a card you both own. They name a Cash fee, then you
+                    Only Tier 5+ cards and paragons are unique — pick one you
+                    both own to swap art seeds. They name a Cash fee, then you
                     accept or decline. Nothing moves until you agree.
                   </p>
                 </div>
@@ -533,7 +536,8 @@ export function CardLab({
               </div>
               {sharedOwned.size === 0 ? (
                 <p className="card-lab__exchange-empty">
-                  You don’t share any cards with {viewer.username} yet.
+                  You don’t share any Tier 5+ or paragon cards with{" "}
+                  {viewer.username} yet.
                 </p>
               ) : (
                 <OwnedCardPicker

@@ -45,11 +45,10 @@ export function saveLocalBestScore(gameId: EndlessGameId, score: number): number
   return next;
 }
 
-function normalizeReport(
+function normalizeServerReport(
   gameId: EndlessGameId,
   score: number,
   raw: unknown,
-  localBest: number,
 ): GameScoreReport {
   const data = (raw && typeof raw === "object" ? raw : {}) as Record<
     string,
@@ -72,16 +71,16 @@ function normalizeReport(
     })
     .filter((row) => row.rank > 0);
 
-  const bestScore = Math.max(
-    localBest,
-    Number(data.bestScore) || 0,
-    score,
-  );
+  const bestScore = Math.max(Number(data.bestScore) || 0, score);
+  // Account best wins — never OR with this browser's cookie/localStorage.
+  const isNewBest = Boolean(data.isNewBest);
+  saveLocalBestScore(gameId, bestScore);
+
   return {
     gameId,
     score,
     bestScore,
-    isNewBest: Boolean(data.isNewBest) || score > localBest,
+    isNewBest,
     rank: data.rank == null ? null : Number(data.rank) || null,
     neighbors,
   };
@@ -115,12 +114,13 @@ export async function submitEndlessGameScore(
       p_score: scored,
     });
     if (error) throw new Error(error.message);
-    return normalizeReport(gameId, scored, data, prevLocal);
+    return normalizeServerReport(gameId, scored, data);
   } catch (err) {
     console.warn(
       "submit_game_score failed",
       err instanceof Error ? err.message : err,
     );
+    // Offline fallback only — still prefer any known local (may lag the account).
     return {
       gameId,
       score: scored,
