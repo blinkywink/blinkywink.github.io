@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.4",
-  "version": "1.0.4",
-  "shopDay": "2026-8-13",
+  "minDesktopVersion": "1.0.5",
+  "version": "1.0.5",
+  "shopDay": "2026-8-14",
   "featuredTowers": [
-    "Mortar Monkey",
-    "Monkey Ace",
-    "Ninja Monkey"
+    "Beast Handler",
+    "Bomb Shooter",
+    "Spike Factory"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",
