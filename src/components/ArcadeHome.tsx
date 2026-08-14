@@ -456,7 +456,7 @@ export function ArcadeHome({
       id: "bloonle" as const,
       title: "BLOONLE",
       blurb: "Bloons worldle including all base towers and 5th tiers.",
-      label: "Bloonle, Daily Wordle with tower names",
+      label: "Bloonle, Daily Wordle with base towers and T5s",
       preview: <BloonlePreview />,
     },
     {

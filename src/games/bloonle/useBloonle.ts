@@ -30,7 +30,7 @@ type Persisted = {
   reward: number;
 };
 
-const STORAGE_KEY = "bloon-arcade:bloonle:daily:v2";
+const STORAGE_KEY = "bloon-arcade:bloonle:daily:v3";
 
 function loadPersisted(day: string): Persisted | null {
   try {

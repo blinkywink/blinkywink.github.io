@@ -27,10 +27,16 @@ function isExcludedName(name: string, slug: string): boolean {
   return false;
 }
 
+function isBloonleEntity(entity: TowerEntity): boolean {
+  if (entity.type === "tower") return true;
+  return entity.type === "upgrade" && entity.tier === 5;
+}
+
 function buildPool(): BloonlePuzzle[] {
   const seen = new Set<string>();
   const out: BloonlePuzzle[] = [];
   for (const entity of towerEntities) {
+    if (!isBloonleEntity(entity)) continue;
     const slug = normalizeName(entity.name);
     if (isExcludedName(entity.name, slug) || seen.has(slug)) continue;
     seen.add(slug);

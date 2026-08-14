@@ -136,9 +136,21 @@ export function BloonleGame({
           </p>
           <h2>Guess the tower</h2>
           <p className="bloonle-prompt__sub">
-            Tower &amp; upgrade names · no spaces · {len} letters ·{" "}
+            Base towers and T5 upgrades · no spaces · {len} letters ·{" "}
             {maxGuesses} tries
           </p>
+          {!done && state.guesses.length >= 2 ? (
+            <div className="bloonle-hints" aria-live="polite">
+              <p className="bloonle-hints__label">Hints</p>
+              <p>
+                It is a{" "}
+                {state.puzzle.entity.type === "tower" ? "base tower" : "T5"}
+              </p>
+              {state.guesses.length >= 4 ? (
+                <p>It is {state.puzzle.entity.category}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {state.toast ? (
