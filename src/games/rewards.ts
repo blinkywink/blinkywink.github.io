@@ -88,24 +88,25 @@ export function perfectRunBonus(runCash: number): number {
   return Math.round(runCash);
 }
 
-/** Bloonle daily solve. */
+/** Bloonle daily solve — hard cap. */
 export function bloonleDailyReward(): number {
-  return 4000;
+  return 3000;
 }
 
-/** Practice puzzles pay less than the daily, but still worth grinding. */
+/** Practice puzzles — hard cap. */
 export function bloonlePracticeReward(): number {
-  return 1600;
+  return 2500;
 }
 
-/** Faster solves pay more; first try is double. */
+/** Faster solves pay more, never above the mode cap. First try is the max. */
 export function bloonleSolveReward(
   mode: "daily" | "practice",
   guessCount: number,
 ): number {
-  const base =
+  const cap =
     mode === "daily" ? bloonleDailyReward() : bloonlePracticeReward();
   const guesses = Math.max(1, Math.floor(guessCount));
-  const mult = guesses <= 1 ? 2 : guesses === 2 ? 1.35 : guesses === 3 ? 1.15 : 1;
-  return Math.round(base * mult);
+  const mult =
+    guesses <= 1 ? 1 : guesses === 2 ? 0.85 : guesses === 3 ? 0.7 : 0.55;
+  return Math.min(cap, Math.round(cap * mult));
 }

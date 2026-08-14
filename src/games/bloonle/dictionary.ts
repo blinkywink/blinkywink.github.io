@@ -79,15 +79,12 @@ export const BLOONLE_CONFIG = {
   },
 } as const;
 
-/** Local calendar day key YYYY-MM-DD. */
+/** UTC calendar day key YYYY-MM-DD (matches daily Cash claims). */
 export function todayKey(now = new Date()): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return now.toISOString().slice(0, 10);
 }
 
-/** Days since UTC epoch for the local calendar date. */
+/** Days since UTC epoch for the calendar date key. */
 export function dayNumber(key: string): number {
   const [y, m, d] = key.split("-").map(Number);
   return Math.floor(Date.UTC(y!, m! - 1, d!) / 86_400_000);
@@ -142,7 +139,9 @@ export function evaluateGuess(guess: string, answer: string): LetterMark[] {
 }
 
 export function nextMidnightMs(now = new Date()): number {
-  const next = new Date(now);
-  next.setHours(24, 0, 0, 0);
-  return next.getTime();
+  return Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+  );
 }

@@ -334,14 +334,7 @@ function BloonHeroPreview() {
               src={BLOON_IMAGES[lane.id]}
               alt=""
               draggable={false}
-              style={{ ["--d" as string]: `${0.12 + lane.id * 0.22}s` }}
-            />
-            <img
-              className="game-preview__hero-note game-preview__hero-note--b"
-              src={BLOON_IMAGES[lane.id]}
-              alt=""
-              draggable={false}
-              style={{ ["--d" as string]: `${1.05 + lane.id * 0.18}s` }}
+              style={{ ["--d" as string]: `${lane.id * 0.58}s` }}
             />
             <img
               className="game-preview__hero-receptor"

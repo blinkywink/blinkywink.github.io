@@ -254,6 +254,8 @@ export function useBloonHero() {
   const resumeAtRef = useRef<number | null>(null);
   const singingRef = useRef(false);
   const talkingRef = useRef(false);
+  const talkHoldUntilRef = useRef(0);
+  const singHoldUntilRef = useRef(0);
   const vocalsNotesRef = useRef<ChartNote[] | null>(null);
   const vocalsScanRef = useRef(0);
 
@@ -755,7 +757,10 @@ export function useBloonHero() {
     leadInRef.current = leadInSeconds(120);
     originRef.current = performance.now();
     songTimeRef.current = -leadInRef.current;
-    lastCountdownRef.current = "4";
+    singingRef.current = false;
+    talkingRef.current = false;
+    talkHoldUntilRef.current = 0;
+    singHoldUntilRef.current = 0;
     clockRef.current = { baseAudio: 0, baseWall: 0, lastSample: -1 };
     keysDownRef.current.clear();
     pressedRef.current.clear();
@@ -1223,6 +1228,10 @@ export function useBloonHero() {
             i += 1;
           }
         }
+        if (talking) talkHoldUntilRef.current = now + 0.12;
+        else if (now < talkHoldUntilRef.current) talking = true;
+        if (open) singHoldUntilRef.current = now + 0.06;
+        else if (now < singHoldUntilRef.current) open = true;
         if (
           open !== singingRef.current ||
           talking !== talkingRef.current
@@ -1256,14 +1265,19 @@ export function useBloonHero() {
 
       const fill = progressFillRef.current;
       if (fill) {
+        const audioLen =
+          player && Number.isFinite(player.duration) && player.duration > 1
+            ? player.duration
+            : durationRef.current;
+        const audioPos =
+          audioStarted && player
+            ? player.currentTime
+            : Math.max(0, now);
         const p = Math.min(
-          100,
-          Math.max(
-            0,
-            (Math.max(0, now) / Math.max(1, durationRef.current)) * 100,
-          ),
+          1,
+          Math.max(0, audioPos / Math.max(0.001, audioLen)),
         );
-        fill.style.transform = `scaleX(${p / 100})`;
+        fill.style.transform = `scaleX(${p})`;
       }
 
       let holdsChanged = false;

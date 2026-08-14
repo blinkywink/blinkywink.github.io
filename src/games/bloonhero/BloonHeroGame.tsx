@@ -1,10 +1,12 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
   type FormEvent,
+  type MouseEvent,
 } from "react";
+import { useAuth } from "../../auth/AuthProvider";
 import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
@@ -14,11 +16,17 @@ import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
   enchorArtUrl,
   diffScoreFor,
-  expertMaxNpsFor,
-  expertNotesFor,
   hitHasVocals,
   playableInstrumentsOnHit,
+  type EnchorHit,
 } from "./enchorApi";
+import {
+  compactFavoriteHit,
+  fetchAccountFavorites,
+  loadLocalFavorites,
+  persistAccountFavorite,
+  saveLocalFavorites,
+} from "./favorites";
 import { INSTRUMENT_LABEL } from "./instruments";
 import { recentPlayToHit } from "./recentPlays";
 import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
@@ -39,30 +47,94 @@ function formatKey(k: string): string {
   return k;
 }
 
-function formatDiffPips(score: number): string {
-  return "●".repeat(score) + "○".repeat(Math.max(0, 6 - score));
+function DiffPips({ score }: { score: number | null }) {
+  if (score == null) return null;
+  const n = Math.min(6, Math.max(0, Math.round(score)));
+  return (
+    <span className="hero-results__diff" aria-label={`Difficulty ${n} of 6`}>
+      {Array.from({ length: 6 }, (_, i) => (
+        <span
+          key={i}
+          className={`hero-results__pip${i < n ? " is-on" : ""}`}
+        />
+      ))}
+    </span>
+  );
 }
 
-function DiffLine({
-  label,
-  score,
-  nps,
-  notes,
-}: {
-  label: string;
-  score: number | null;
-  nps: number | null;
-  notes: number | null;
-}) {
-  const bits: string[] = [];
-  if (score != null) bits.push(`${score}/6 ${formatDiffPips(score)}`);
-  if (nps != null) bits.push(`${nps} nps`);
-  if (notes != null) bits.push(`${notes.toLocaleString()} notes`);
-  if (!bits.length) return null;
+function songDiffScore(hit: EnchorHit): number | null {
+  const guitar = diffScoreFor(hit, "guitar");
+  const vocals = hitHasVocals(hit) ? diffScoreFor(hit, "vocals") : null;
+  if (guitar != null && vocals != null) return Math.round((guitar + vocals) / 2);
+  return guitar ?? vocals;
+}
+
+function useSnapCardList(
+  deps: unknown[],
+  capPx: () => number,
+) {
+  const ref = useRef<HTMLUListElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const fit = () => {
+      const items = Array.from(el.children) as HTMLElement[];
+      if (!items.length) {
+        el.style.maxHeight = "";
+        return;
+      }
+      const gap = Number.parseFloat(getComputedStyle(el).rowGap) || 0;
+      const limit = capPx();
+      let height = 0;
+      let n = 0;
+      for (const item of items) {
+        const h = item.getBoundingClientRect().height;
+        const next = n === 0 ? h : height + gap + h;
+        if (n > 0 && next > limit + 0.5) break;
+        height = next;
+        n += 1;
+      }
+      const nextH = `${Math.ceil(height)}px`;
+      if (el.style.maxHeight !== nextH) el.style.maxHeight = nextH;
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, deps);
+
+  return ref;
+}
+
+function SongArt({ md5 }: { md5: string | null | undefined }) {
+  const src = enchorArtUrl(md5);
   return (
-    <span className="hero-results__diff">
-      <em>{label}</em> {bits.join(" · ")}
+    <span className="hero-results__art" aria-hidden>
+      {src ? (
+        <img src={src} alt="" decoding="async" draggable={false} />
+      ) : null}
     </span>
+  );
+}
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        d="M12 3.4 14.7 9l6.3.7-4.7 4.3 1.3 6.2L12 17.3 6.4 20.2 7.7 14 3 9.7 9.3 9z"
+      />
+    </svg>
   );
 }
 
@@ -99,10 +171,59 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     togglePause,
   } = useBloonHero();
 
+  const { user, isGuest } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capturingLane, setCapturingLane] = useState<number | null>(null);
   const [vocalsOnly, setVocalsOnly] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [favorites, setFavorites] = useState<EnchorHit[]>(() =>
+    loadLocalFavorites(null),
+  );
   const prevPhase = useRef(state.phase);
+
+  useEffect(() => {
+    const uid = user?.id ?? null;
+    setFavorites(loadLocalFavorites(uid));
+    if (isGuest || !uid) return;
+    let cancelled = false;
+    void fetchAccountFavorites()
+      .then((hits) => {
+        if (cancelled) return;
+        setFavorites(hits);
+        saveLocalFavorites(uid, hits);
+      })
+      .catch((err: unknown) => {
+        console.warn(
+          "Bloon Hero favorites not loaded:",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, isGuest]);
+
+  const favSet = new Set(favorites.map((h) => h.md5.toLowerCase()));
+
+  const toggleFavorite = (hit: EnchorHit, e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const compact = compactFavoriteHit(hit);
+    const on = !favSet.has(compact.md5);
+    const next = on
+      ? [compact, ...favorites.filter((h) => h.md5 !== compact.md5)]
+      : favorites.filter((h) => h.md5 !== compact.md5);
+    setFavorites(next);
+    saveLocalFavorites(user?.id ?? null, next);
+    if (!isGuest) {
+      void persistAccountFavorite(compact, on).catch((err: unknown) => {
+        console.warn(
+          "Bloon Hero favorite not saved:",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+  };
 
   useEffect(() => {
     const was = prevPhase.current;
@@ -185,10 +306,21 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const resuming =
     playing && state.paused && state.countdown != null;
   const showRecent =
-    state.recentLoading || state.recentPlays.length > 0;
+    !favoritesOnly &&
+    state.results.length === 0 &&
+    (state.recentLoading || state.recentPlays.length > 0);
+  const sourceHits = favoritesOnly ? favorites : state.results;
   const displayedResults = vocalsOnly
-    ? state.results.filter((hit) => hitHasVocals(hit))
-    : state.results;
+    ? sourceHits.filter((hit) => hitHasVocals(hit))
+    : sourceHits;
+  const resultsListRef = useSnapCardList(
+    [displayedResults.length, favoritesOnly, vocalsOnly],
+    () => Math.min(window.innerHeight * 0.48, 26 * 16),
+  );
+  const recentListRef = useSnapCardList(
+    [state.recentPlays.length, showRecent],
+    () => 16 * 16,
+  );
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -442,6 +574,18 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               >
                 Vocals
               </button>
+              <button
+                type="button"
+                className={`btn btn--ghost hero-search__filter${
+                  favoritesOnly ? " is-on" : ""
+                }`}
+                aria-pressed={favoritesOnly}
+                aria-label="Show favorited songs"
+                onClick={() => setFavoritesOnly((v) => !v)}
+              >
+                <StarIcon filled={favoritesOnly} />
+                Favorites
+              </button>
             </form>
             {volumeSlider}
             {state.error ? <p className="hero-browse__err">{state.error}</p> : null}
@@ -451,81 +595,74 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             ) : null}
 
-            {state.results.length > 0 ? (
+            {favoritesOnly || state.results.length > 0 ? (
               <h3 className="hero-browse__results-title">
-                Search results
+                {favoritesOnly ? "Favorites" : "Search results"}
                 {vocalsOnly
                   ? ` · ${displayedResults.length} with vocals`
-                  : null}
+                  : favoritesOnly
+                    ? ` · ${displayedResults.length}`
+                    : null}
               </h3>
             ) : null}
+            {favoritesOnly && favorites.length === 0 ? (
+              <p className="hero-browse__err">
+                Star a song to save it
+                {isGuest ? " on this device" : " to your account"}.
+              </p>
+            ) : null}
             {vocalsOnly &&
-            state.results.length > 0 &&
+            sourceHits.length > 0 &&
             displayedResults.length === 0 ? (
               <p className="hero-browse__err">
                 No vocal charts in these results. Try another search or turn
                 off the Vocals filter.
               </p>
             ) : null}
-            <ul className="hero-results">
+            <ul ref={resultsListRef} className="hero-results">
               {displayedResults.map((hit) => {
                 const instruments = playableInstrumentsOnHit(hit);
-                const notes = expertNotesFor(hit, "guitar");
-                const guitarDiff = diffScoreFor(hit, "guitar");
-                const guitarNps = expertMaxNpsFor(hit, "guitar");
-                const vocalsDiff = instruments.includes("vocals")
-                  ? diffScoreFor(hit, "vocals")
-                  : null;
-                const cover = enchorArtUrl(hit.albumArtMd5);
+                const starred = favSet.has(hit.md5.toLowerCase());
                 return (
-                  <li key={`${hit.md5}-${hit.chartId}`}>
+                  <li
+                    key={`${hit.md5}-${hit.chartId}`}
+                    className="hero-results__item"
+                  >
                     <button
                       type="button"
-                      className="hero-results__item"
+                      className="hero-results__pick"
                       onClick={() => void pickSong(hit)}
                       disabled={state.phase === "loading"}
                     >
-                      <span
-                        className="hero-results__art"
-                        style={
-                          cover
-                            ? ({
-                                backgroundImage: `url(${cover})`,
-                              } as CSSProperties)
-                            : undefined
-                        }
-                        aria-hidden
-                      />
+                      <SongArt md5={hit.albumArtMd5} />
                       <span className="hero-results__meta">
                         <strong>
                           {hit.artist}, {hit.name}
                         </strong>
+                        <DiffPips score={songDiffScore(hit)} />
                         <span>
                           {hit.charter ? `charter ${hit.charter}` : "charter ?"}
                           {hit.song_length
                             ? ` · ${Math.round(hit.song_length / 1000)}s`
                             : ""}
                         </span>
-                        <DiffLine
-                          label="Guitar"
-                          score={guitarDiff}
-                          nps={guitarNps}
-                          notes={notes}
-                        />
-                        {instruments.includes("vocals") ? (
-                          <DiffLine
-                            label="Vocals"
-                            score={vocalsDiff}
-                            nps={null}
-                            notes={null}
-                          />
-                        ) : null}
                         <span className="hero-results__inst">
                           {instruments
                             .map((i) => INSTRUMENT_LABEL[i])
                             .join(" · ")}
                         </span>
                       </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`hero-results__star${starred ? " is-on" : ""}`}
+                      aria-label={
+                        starred ? "Remove from favorites" : "Add to favorites"
+                      }
+                      aria-pressed={starred}
+                      onClick={(e) => toggleFavorite(hit, e)}
+                    >
+                      <StarIcon filled={starred} />
                     </button>
                   </li>
                 );
@@ -538,28 +675,25 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 {state.recentLoading && !state.recentPlays.length ? (
                   <p className="hero-browse__loading">Loading recent picks…</p>
                 ) : (
-                  <ul className="hero-results hero-results--recent">
+                  <ul
+                    ref={recentListRef}
+                    className="hero-results hero-results--recent"
+                  >
                     {state.recentPlays.map((row) => {
-                      const cover = enchorArtUrl(row.albumArtMd5);
+                      const hit = recentPlayToHit(row);
+                      const starred = favSet.has(row.md5.toLowerCase());
                       return (
-                        <li key={`${row.md5}-${row.id}`}>
+                        <li
+                          key={`${row.md5}-${row.id}`}
+                          className="hero-results__item"
+                        >
                           <button
                             type="button"
-                            className="hero-results__item"
-                            onClick={() => void pickSong(recentPlayToHit(row))}
+                            className="hero-results__pick"
+                            onClick={() => void pickSong(hit)}
                             disabled={state.phase === "loading"}
                           >
-                            <span
-                              className="hero-results__art"
-                              style={
-                                cover
-                                  ? ({
-                                      backgroundImage: `url(${cover})`,
-                                    } as CSSProperties)
-                                  : undefined
-                              }
-                              aria-hidden
-                            />
+                            <SongArt md5={row.albumArtMd5} />
                             <span className="hero-results__meta">
                               <strong>
                                 {row.artist}, {row.songName}
@@ -574,6 +708,19 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                                 {relativePlayAge(row.playedAt)}
                               </span>
                             </span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`hero-results__star${starred ? " is-on" : ""}`}
+                            aria-label={
+                              starred
+                                ? "Remove from favorites"
+                                : "Add to favorites"
+                            }
+                            aria-pressed={starred}
+                            onClick={(e) => toggleFavorite(hit, e)}
+                          >
+                            <StarIcon filled={starred} />
                           </button>
                         </li>
                       );
@@ -632,11 +779,14 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   aria-hidden
                 >
                   <img
-                    src={
-                      state.singing
-                        ? "/images/bloonhero/dart-monkey-open.webp?v=4"
-                        : "/images/bloonhero/dart-monkey-closed.webp?v=4"
-                    }
+                    className={!state.singing ? "is-on" : ""}
+                    src="/images/bloonhero/dart-monkey-closed.webp?v=4"
+                    alt=""
+                    draggable={false}
+                  />
+                  <img
+                    className={state.singing ? "is-on" : ""}
+                    src="/images/bloonhero/dart-monkey-open.webp?v=4"
                     alt=""
                     draggable={false}
                   />

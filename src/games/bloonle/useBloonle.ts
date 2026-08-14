@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "../../auth/AuthProvider";
+import { useAuth, utcToday } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
+import { claimBloonleDaily } from "../../lib/bloonleDaily";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { bloonleSolveReward } from "../rewards";
 import {
@@ -129,12 +130,17 @@ function makePracticeState(recentSlugs: string[], day: string): State {
 }
 
 export function useBloonle() {
-  const { setCoinBalance } = useAuth();
+  const { setCoinBalance, profile, isGuest, refreshProfile, ready } = useAuth();
   const { onCorrectCash } = useQuizHeroFx();
   const [state, setState] = useState<State>(makeDailyState);
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
   const toastTimer = useRef<number | null>(null);
+  const isGuestRef = useRef(isGuest);
+  isGuestRef.current = isGuest;
+  const accountDailyReady = isGuest || (ready && Boolean(profile));
+  const alreadyClaimedToday =
+    !isGuest && Boolean(profile?.last_bloonle_day) && profile?.last_bloonle_day === utcToday();
 
   // Midnight rollover → new daily
   useEffect(() => {
@@ -187,6 +193,15 @@ export function useBloonle() {
       already: boolean,
     ) => {
       if (already) return { awarded: true, reward: 0 };
+      if (mode === "daily" && !isGuestRef.current) {
+        const claimed = await claimBloonleDaily(_guessCount);
+        if (!claimed) return { awarded: false, reward: 0 };
+        if (claimed.coins != null) setCoinBalanceRef.current(claimed.coins);
+        void refreshProfile();
+        const reward = claimed.already ? 0 : claimed.amount;
+        if (reward > 0) void onCorrectCash(setCoinBalanceRef.current);
+        return { awarded: true, reward };
+      }
       const reward = bloonleSolveReward(mode, _guessCount);
       if (reward <= 0) return { awarded: true, reward: 0 };
       const balance = await awardCoins(reward);
@@ -194,12 +209,36 @@ export function useBloonle() {
       void onCorrectCash(setCoinBalanceRef.current);
       return { awarded: true, reward };
     },
-    [onCorrectCash],
+    [onCorrectCash, refreshProfile],
   );
+
+  // Account already collected today's daily on another client — skip the puzzle.
+  useEffect(() => {
+    if (!alreadyClaimedToday) return;
+    const day = utcToday();
+    setState((s) => {
+      if (s.mode !== "daily" || s.day !== day) return s;
+      if (s.awarded && s.status !== "playing") return s;
+      persistDaily(
+        s.day,
+        s.guesses,
+        "won",
+        true,
+        s.reward,
+      );
+      return {
+        ...s,
+        status: "won",
+        awarded: true,
+        current: "",
+      };
+    });
+  }, [alreadyClaimedToday, persistDaily]);
 
   const submit = useCallback(() => {
     setState((s) => {
       if (s.status !== "playing") return s;
+      if (s.mode === "daily" && !accountDailyReady) return s;
       const len = s.puzzle.slug.length;
       if (s.current.length < len) {
         queueMicrotask(() => showToast("Not enough letters"));
@@ -268,10 +307,11 @@ export function useBloonle() {
     if (!/^[a-z]$/.test(letter)) return;
     setState((s) => {
       if (s.status !== "playing") return s;
+      if (s.mode === "daily" && !accountDailyReady) return s;
       if (s.current.length >= s.puzzle.slug.length) return s;
       return { ...s, current: s.current + letter };
     });
-  }, []);
+  }, [accountDailyReady]);
 
   const backspace = useCallback(() => {
     setState((s) => {

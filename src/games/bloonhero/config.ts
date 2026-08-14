@@ -26,10 +26,8 @@ export const EMPTY_STREAK_PER_LIFE = 8;
  */
 export const DART_SPEED_PX_S = 3400;
 
-/** Perfect-clear cash for a 3-minute song. */
-export const HERO_CASH_AT_3MIN = 1800;
-/** Perfect-clear cash for a 6-minute song. */
-export const HERO_CASH_AT_6MIN = 4000;
+/** Perfect-clear cash per minute of song. */
+export const HERO_CASH_PER_MIN = 800;
 /** Soft floor / ceiling so tiny intros and marathon charts stay sane. */
 export const HERO_CASH_MIN = 400;
 export const HERO_CASH_MAX = 8000;
@@ -47,14 +45,11 @@ export type HeroCashPools = {
 };
 
 /**
- * Max cash for a perfect clear, scaled by song length.
- * Anchors: 3 min → 1800, 6 min → 4000 (linear between / beyond).
+ * Max cash for a perfect clear: 800 Cash per minute of song.
  */
 export function heroMaxCashForDuration(durationSec: number): number {
   const minutes = Math.max(0, durationSec) / 60;
-  const slope = (HERO_CASH_AT_6MIN - HERO_CASH_AT_3MIN) / 3; // per minute
-  const intercept = HERO_CASH_AT_3MIN - slope * 3;
-  const raw = intercept + slope * minutes;
+  const raw = HERO_CASH_PER_MIN * minutes;
   return Math.round(Math.min(HERO_CASH_MAX, Math.max(HERO_CASH_MIN, raw)));
 }
 

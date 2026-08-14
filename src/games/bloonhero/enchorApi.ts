@@ -85,8 +85,9 @@ export function diffScoreFor(
 ): number | null {
   const raw =
     instrument === "vocals" ? hit.diff_vocals : hit.diff_guitar;
-  if (raw == null || raw < 0) return null;
-  return Math.min(6, Math.max(0, Math.round(raw)));
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.min(6, Math.max(0, Math.round(n)));
 }
 
 /** Expert max notes-per-second for an instrument. */

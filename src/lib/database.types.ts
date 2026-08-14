@@ -13,6 +13,8 @@ export type Profile = {
   last_daily_claim: string | null;
   /** UTC date (YYYY-MM-DD) of last daily card claim, or null. */
   last_daily_card_claim?: string | null;
+  /** UTC date (YYYY-MM-DD) of last Bloonle daily Cash claim, or null. */
+  last_bloonle_day?: string | null;
   /** Owned card id used as profile picture, or null. */
   avatar_card_id: string | null;
   avatar_zoom: number;
@@ -63,6 +65,7 @@ export type Database = {
           monkey_money?: number;
           last_daily_claim?: string | null;
           last_daily_card_claim?: string | null;
+          last_bloonle_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -87,6 +90,7 @@ export type Database = {
           monkey_money?: number;
           last_daily_claim?: string | null;
           last_daily_card_claim?: string | null;
+          last_bloonle_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -477,6 +481,15 @@ export type Database = {
           last_daily_card_claim: string;
         };
       };
+      claim_bloonle_daily: {
+        Args: { p_guess_count: number };
+        Returns: {
+          already: boolean;
+          amount: number;
+          coins: number;
+          last_bloonle_day: string;
+        };
+      };
       record_bloonhero_play: {
         Args: {
           p_md5: string;
@@ -487,6 +500,14 @@ export type Database = {
           p_charter?: string | null;
           p_song_length?: number | null;
         };
+        Returns: boolean;
+      };
+      get_bloonhero_favorites: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      set_bloonhero_favorite: {
+        Args: { p_md5: string; p_hit: unknown; p_on: boolean };
         Returns: boolean;
       };
       submit_game_score: {

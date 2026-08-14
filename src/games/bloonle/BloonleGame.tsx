@@ -213,12 +213,17 @@ export function BloonleGame({
               </p>
               <h3>{state.puzzle.displayName}</h3>
               <p className="bloonle-result__slug">{state.puzzle.slug}</p>
-              {state.status === "won" && state.guesses.length === 1 ? (
+              {state.status === "won" &&
+              isDaily &&
+              state.awarded &&
+              state.reward === 0 ? (
                 <p className="bloonle-result__pack">
-                  First try, Cash doubled!
+                  Already collected today
                 </p>
               ) : null}
-              {state.status === "won" && state.guesses.length <= 3 ? (
+              {state.status === "won" &&
+              state.guesses.length > 0 &&
+              state.guesses.length <= 3 ? (
                 <p className="bloonle-result__pack">
                   Fast solve, pick a bonus pack!
                 </p>
