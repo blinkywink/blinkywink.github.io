@@ -78,13 +78,6 @@ export function ParagonDegreeLab() {
             onClick={() => setTheater(false)}
           />
           <div className="paragon-lab__theater-stage">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm paragon-lab__theater-close"
-              onClick={() => setTheater(false)}
-            >
-              ✕ Close
-            </button>
             <MonkeyCard
               entity={entity}
               pathLevels={[5, 5, 5]}

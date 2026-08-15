@@ -19,7 +19,7 @@ import {
   preloadPackSounds,
 } from "../lib/packSounds";
 import { isTypingTarget } from "../lib/keyboard";
-import { CurrencyChip } from "./CurrencyChip";
+import { CashAmount } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
 /** Shop shelf: unlock base heroes only. Level-up / equip live on Cards → Heroes. */
@@ -132,14 +132,6 @@ export function ShopHeroesShelf() {
             onClick={closeFocus}
           />
           <div className="card-focus__panel shop-hero-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              disabled={busy}
-              onClick={closeFocus}
-            >
-              ✕ Close
-            </button>
             <HeroCardFace
               hero={focused}
               level={focusLevel}
@@ -152,7 +144,6 @@ export function ShopHeroesShelf() {
               {heroBlurb(focused.id, focusLevel)}
             </p>
             <div className="pack-opener__buy shop-hero-focus__buy">
-              {!focusMine ? <CurrencyChip amount={focusPrice} /> : null}
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to unlock.</p>
               ) : focusMine ? (
@@ -167,15 +158,17 @@ export function ShopHeroesShelf() {
                     disabled={busy || !canBuy}
                     onClick={() => void onUnlock()}
                   >
-                    {busy ? "Unlocking…" : "Unlock · Space"}
+                    {busy ? (
+                      "Unlocking…"
+                    ) : (
+                      <>
+                        Unlock for <CashAmount amount={focusPrice} size={22} />
+                      </>
+                    )}
                   </button>
                   {buyError ? (
                     <p className="pack-opener__buy-error">{buyError}</p>
-                  ) : (
-                    <p className="pack-opener__buy-note">
-                      Balance {(profile?.coins ?? 0).toLocaleString()} Cash
-                    </p>
-                  )}
+                  ) : null}
                 </>
               )}
               {focusMine && buyError ? (

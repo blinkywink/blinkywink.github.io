@@ -424,10 +424,11 @@ export function CardLab({
   }, [view]);
 
   useEffect(() => {
-    if (!focused && view.kind === "towers") return;
+    if (!focused && !exchangeOpen && view.kind === "towers") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (focused) setFocused(null);
+      if (exchangeOpen) setExchangeOpen(false);
+      else if (focused) setFocused(null);
       else if (view.kind !== "towers") {
         setQuery("");
         setView({ kind: "towers" });
@@ -435,7 +436,7 @@ export function CardLab({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focused, view.kind]);
+  }, [exchangeOpen, focused, view.kind]);
 
   useEffect(() => {
     if (!focused) return;
@@ -466,13 +467,6 @@ export function CardLab({
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              onClick={() => setFocused(null)}
-            >
-              ✕ Close
-            </button>
             <MonkeyCard
               entity={focused.entity}
               pathLevels={focused.pathLevels}
@@ -527,13 +521,6 @@ export function CardLab({
                     accept or decline. Nothing moves until you agree.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => setExchangeOpen(false)}
-                >
-                  ✕ Close
-                </button>
               </div>
               {sharedOwned.size === 0 ? (
                 <p className="card-lab__exchange-empty">

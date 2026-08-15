@@ -111,14 +111,6 @@ export function AccountBar() {
           onClick={() => setOpen(false)}
         />
         <div className="auth-modal__panel">
-          <button
-            type="button"
-            className="auth-modal__close"
-            aria-label="Close"
-            onClick={() => setOpen(false)}
-          >
-            ×
-          </button>
           <h2 id="auth-modal-title">
             {mode === "signin" ? "Sign in" : "Create account"}
           </h2>

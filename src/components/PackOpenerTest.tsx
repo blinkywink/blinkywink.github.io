@@ -30,7 +30,7 @@ import { playBuy, playCardFocus, playCardWhoosh, playPackParagon, playPackRare, 
 import { preloadImages } from "../lib/preloadImages";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
-import { CashAmount, CurrencyChip } from "./CurrencyChip";
+import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 import { ParagonXpBar } from "./ParagonXpBar";
 import {
@@ -978,20 +978,8 @@ export function PackOpenerTest({
       {phase !== "done" ? (
         <div
           className={`pack-opener__arena ${phase === "sealed" ? "is-slashing" : ""} ${phase === "shop" ? "is-shop" : ""}${godPack ? " is-god" : ""}`}
-          onPointerDown={phase === "sealed" ? onSlashDown : undefined}
-          onPointerMove={phase === "sealed" ? onSlashMove : undefined}
-          onPointerUp={phase === "sealed" ? onSlashUp : undefined}
-          onPointerCancel={phase === "sealed" ? onSlashUp : undefined}
         >
           <div className="pack-opener__panel">
-            <button
-              type="button"
-              className="pack-opener__close btn btn--ghost btn--sm"
-              onClick={handleClose}
-            >
-              ✕ Close
-            </button>
-
             {godPack &&
             (phase === "enter" || phase === "ready" || phase === "exit") ? (
               <p className="pack-opener__god-title" role="status">
@@ -1008,7 +996,13 @@ export function PackOpenerTest({
               </p>
             ) : null}
 
-            <div className="pack-opener__stage">
+            <div
+              className="pack-opener__stage"
+              onPointerDown={phase === "sealed" ? onSlashDown : undefined}
+              onPointerMove={phase === "sealed" ? onSlashMove : undefined}
+              onPointerUp={phase === "sealed" ? onSlashUp : undefined}
+              onPointerCancel={phase === "sealed" ? onSlashUp : undefined}
+            >
             {showPack ? (
               <div
                 className="booster-wrap"
@@ -1198,27 +1192,33 @@ export function PackOpenerTest({
 
           {phase === "shop" ? (
             <div className="pack-opener__buy">
-              {price > 0 ? <CurrencyChip amount={price} /> : <span>Free</span>}
               <button
                 type="button"
                 className="btn btn--primary btn--lg"
                 disabled={buyBusy}
                 onClick={() => void purchase()}
               >
-                {buyBusy
-                  ? "Buying…"
-                  : price <= 0
-                    ? "Open · Space"
-                    : "Purchase · Space"}
+                {buyBusy ? (
+                  "Buying…"
+                ) : price <= 0 ? (
+                  "Open"
+                ) : (
+                  <>
+                    Purchase for{" "}
+                    <CashAmount
+                      amount={
+                        pack.kind === "btd6"
+                          ? trySaudaDiscount(price).price
+                          : price
+                      }
+                      size={22}
+                    />
+                  </>
+                )}
               </button>
               {buyError ? (
                 <p className="pack-opener__buy-error">{buyError}</p>
-              ) : (
-                <p className="pack-opener__buy-note">
-                  Balance {(profile?.coins ?? 0).toLocaleString()} · dupes scale
-                  by tier
-                </p>
-              )}
+              ) : null}
             </div>
           ) : null}
           </div>
@@ -1228,13 +1228,6 @@ export function PackOpenerTest({
           className={`pack-opener__done${packChromeOn ? " has-player-chrome" : ""}`}
           style={packChrome}
         >
-          <button
-            type="button"
-            className="pack-opener__close btn btn--ghost btn--sm"
-            onClick={handleClose}
-          >
-            ✕ Close
-          </button>
           <h2>{godPack ? "GOD PACK!" : "Pack summary"}</h2>
           {duplicates.size > 0 ? (
             <p className="pack-opener__done-stats">
@@ -1300,13 +1293,6 @@ export function PackOpenerTest({
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              onClick={() => setFocused(null)}
-            >
-              ✕ Close
-            </button>
             <MonkeyCard
               entity={focused.entity}
               pathLevels={focused.pathLevels}

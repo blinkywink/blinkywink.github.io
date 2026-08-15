@@ -4,7 +4,6 @@ import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
-  formatPathLevels,
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import {
@@ -16,7 +15,7 @@ import {
 } from "../lib/shopDirect";
 import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { isTypingTarget } from "../lib/keyboard";
-import { CashAmount, CurrencyChip } from "./CurrencyChip";
+import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
 const POLL_MS = 8_000;
@@ -169,14 +168,6 @@ export function ShopDirectShelf() {
             onClick={closeFocus}
           />
           <div className="card-focus__panel shop-direct-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              disabled={busy}
-              onClick={closeFocus}
-            >
-              ✕ Close
-            </button>
             <MonkeyCard
               entity={focused.card.entity}
               pathLevels={focused.card.pathLevels}
@@ -184,7 +175,6 @@ export function ShopDirectShelf() {
               owned
             />
             <div className="pack-opener__buy shop-direct-focus__buy">
-              <CurrencyChip amount={focused.listing.price} />
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to buy.</p>
               ) : mineFocused ? (
@@ -197,17 +187,21 @@ export function ShopDirectShelf() {
                     disabled={busy}
                     onClick={() => void onPurchase()}
                   >
-                    {busy ? "Buying…" : "Purchase · Space"}
+                    {busy ? (
+                      "Buying…"
+                    ) : (
+                      <>
+                        Purchase for{" "}
+                        <CashAmount
+                          amount={focused.listing.price}
+                          size={22}
+                        />
+                      </>
+                    )}
                   </button>
                   {buyError ? (
                     <p className="pack-opener__buy-error">{buyError}</p>
-                  ) : (
-                    <p className="pack-opener__buy-note">
-                      Balance {(profile?.coins ?? 0).toLocaleString()} ·{" "}
-                      {formatPathLevels(focused.card.pathLevels)} ·{" "}
-                      {focused.card.tower} · T{focused.listing.tier}
-                    </p>
-                  )}
+                  ) : null}
                 </>
               )}
             </div>

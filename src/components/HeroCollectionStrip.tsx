@@ -174,14 +174,6 @@ export function HeroCollectionShelf({
             onClick={closeFocus}
           />
           <div className="card-focus__panel shop-hero-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              disabled={busy}
-              onClick={closeFocus}
-            >
-              ✕ Close
-            </button>
             <HeroCardFace
               hero={focused}
               level={focusLevel}

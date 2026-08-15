@@ -375,13 +375,6 @@ export function TradeRoom() {
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__close"
-              onClick={() => setFocused(null)}
-            >
-              ✕ Close
-            </button>
             <MonkeyCard
               entity={focused.card.entity}
               pathLevels={focused.card.pathLevels}
