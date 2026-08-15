@@ -67,6 +67,10 @@ function isRareCard(card: MonkeyCardSpec | null | undefined): boolean {
   return card.isParagon || maxPathTier(card.pathLevels) >= 5;
 }
 
+function isCompactPackUi(): boolean {
+  return window.matchMedia("(max-width: 820px)").matches;
+}
+
 function spaceHoldGate(card: MonkeyCardSpec | null | undefined): SpaceHoldGate {
   if (!card) return "none";
   if (isRareCard(card)) return "rare";
@@ -425,7 +429,7 @@ export function PackOpenerTest({
     onClose();
   };
 
-  const handleDone = () => {
+  const finishPack = useCallback(() => {
     flushUnpaidDupCash();
     const result = {
       pack,
@@ -436,6 +440,10 @@ export function PackOpenerTest({
     reset();
     onClose();
     onFinished?.(result);
+  }, [flushUnpaidDupCash, onClose, onFinished, pack, reset]);
+
+  const handleDone = () => {
+    finishPack();
   };
 
   const purchase = useCallback(async () => {
@@ -697,6 +705,10 @@ export function PackOpenerTest({
   const nextCard = useCallback(() => {
     const next = indexRef.current + 1;
     if (next >= pullsRef.current.length) {
+      if (isCompactPackUi()) {
+        finishPack();
+        return;
+      }
       setPhaseBoth("done");
       // Holding Space through the last card should buy another without a re-tap.
       // Reward packs are free post-game grants — not purchasable again.
@@ -710,7 +722,7 @@ export function PackOpenerTest({
       return;
     }
     showCardAt(next);
-  }, [buyAnother, mode, showCardAt]);
+  }, [buyAnother, finishPack, mode, showCardAt]);
 
   const flingAway = useCallback(
     (dir?: { x: number; y: number }) => {
