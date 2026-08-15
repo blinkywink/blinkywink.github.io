@@ -14,6 +14,8 @@ import { pullPackCards, duplicateCashForCard } from "../lib/packPull";
 import {
   feedForCard,
   formatParagonFeedLine,
+  PARAGON_MAX_DEGREE,
+  PARAGON_MIN_DEGREE,
   type ParagonFeed,
 } from "../lib/paragonProgress";
 import { useQuizHeroFx } from "../lib/quizHeroFx";
@@ -579,6 +581,8 @@ export function PackOpenerTest({
         if (!dupIds.has(card.id)) continue;
         const feed = feedForCard(card);
         if (!feed || !ownedParagons.has(feed.paragonId)) continue;
+        const ownedDegree = paragonOf(feed.paragonId)?.degree ?? PARAGON_MIN_DEGREE;
+        if (ownedDegree >= PARAGON_MAX_DEGREE) continue;
         feeds.push(feed);
         feedByCard.set(card.id, feed);
       }
@@ -604,7 +608,7 @@ export function PackOpenerTest({
       // Duplicate Cash is awarded per revealed card in showCardAt.
       showCardAt(0);
     },
-    [awardCards, dupCashMods, feedParagonsFromCards, owned, showCardAt],
+    [awardCards, dupCashMods, feedParagonsFromCards, owned, paragonOf, showCardAt],
   );
 
   const completeCut = useCallback(
@@ -706,7 +710,13 @@ export function PackOpenerTest({
     const next = indexRef.current + 1;
     if (next >= pullsRef.current.length) {
       if (isCompactPackUi()) {
-        finishPack();
+        if (mode === "reward") {
+          finishPack();
+        } else {
+          flushUnpaidDupCash();
+          reset();
+          onClose();
+        }
         return;
       }
       setPhaseBoth("done");
@@ -722,7 +732,7 @@ export function PackOpenerTest({
       return;
     }
     showCardAt(next);
-  }, [buyAnother, finishPack, mode, showCardAt]);
+  }, [buyAnother, finishPack, flushUnpaidDupCash, mode, onClose, reset, showCardAt]);
 
   const flingAway = useCallback(
     (dir?: { x: number; y: number }) => {
@@ -1155,6 +1165,9 @@ export function PackOpenerTest({
                       entity={current.entity}
                       pathLevels={current.pathLevels}
                       mode="focus"
+                      degree={
+                        current.isParagon ? PARAGON_MIN_DEGREE : undefined
+                      }
                     />
                     {currentIsDup || paragonFeeds.get(current.id) ? (
                       <div className="pack-opener__dup-stack" role="status">
@@ -1244,6 +1257,7 @@ export function PackOpenerTest({
                     mode="preview"
                     owned
                     staticArt
+                    degree={card.isParagon ? PARAGON_MIN_DEGREE : undefined}
                     onSelect={() => {
                       playCardFocus();
                       setFocused(card);
