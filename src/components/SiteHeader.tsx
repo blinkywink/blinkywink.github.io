@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   getLogoHomeId,
@@ -25,7 +25,7 @@ export function SiteHeader() {
   const menuId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  function onCardsNavClick(e: MouseEvent<HTMLAnchorElement>) {
+  function onCardsNavClick(e: ReactMouseEvent<HTMLAnchorElement>) {
     if (pathname !== "/collection") return;
     e.preventDefault();
     navigate("/collection", {
@@ -45,7 +45,7 @@ export function SiteHeader() {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMenuOpen(false);
     }
-    function onPointer(e: MouseEvent | TouchEvent) {
+    function onPointer(e: Event) {
       const el = wrapRef.current;
       if (!el || !(e.target instanceof Node)) return;
       if (!el.contains(e.target)) setMenuOpen(false);

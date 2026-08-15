@@ -381,7 +381,6 @@ export function MonkeyCard({
   bake = false,
   degree: degreeProp,
   visualSeed: visualSeedProp,
-  richPreview = false,
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
