@@ -122,6 +122,8 @@ begin
     raise exception 'Missing listing';
   end if;
 
+  perform public._assert_shop_spend_unlocked(buyer);
+
   select * into listing
   from public.marketplace_listings
   where id = p_listing_id

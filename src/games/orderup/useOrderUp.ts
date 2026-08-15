@@ -202,19 +202,27 @@ export function useOrderUp() {
     if (state.phase !== "playing") return;
     let raf = 0;
     let last = performance.now();
+    let left = ORDER_UP_CONFIG.timerSeconds * 1000;
+    let shownSec = Math.ceil(left / 1000);
     const tick = (now: number) => {
-      const dt = now - last;
+      const dt = Math.min(48, now - last);
       last = now;
-      setState((s) => {
-        if (s.phase !== "playing") return s;
-        const next = Math.max(0, s.timeLeftMs - dt);
-        if (next <= 0 && s.timeLeftMs > 0) {
-          // defer lock so we don't nest setState oddly
+      left = Math.max(0, left - dt);
+      if (left <= 0) {
+        setState((s) => {
+          if (s.phase !== "playing" || s.timeLeftMs <= 0) return s;
           queueMicrotask(() => lockIn());
           return { ...s, timeLeftMs: 0 };
-        }
-        return { ...s, timeLeftMs: next };
-      });
+        });
+        return;
+      }
+      const sec = Math.ceil(left / 1000);
+      if (sec !== shownSec) {
+        shownSec = sec;
+        setState((s) =>
+          s.phase === "playing" ? { ...s, timeLeftMs: left } : s,
+        );
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

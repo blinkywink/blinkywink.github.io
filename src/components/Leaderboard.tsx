@@ -12,7 +12,6 @@ import {
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { LoadingDots } from "./LoadingDots";
-import { PageHeader } from "./PageHeader";
 import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 
@@ -203,15 +202,9 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
 
   return (
     <div className="board-page">
-      <PageHeader
-        eyebrow="Players"
-        title="Leaderboard"
-        blurb="Lifetime Cash earned · tap a player to view cards"
-      />
       <main className="board-main">
         <div className="board-toolbar">
           <label className="board-search">
-            <span className="board-search__label">Search players</span>
             <input
               type="search"
               value={query}
@@ -219,6 +212,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
               placeholder="Username…"
               autoComplete="off"
               spellCheck={false}
+              aria-label="Search players"
             />
           </label>
           <button

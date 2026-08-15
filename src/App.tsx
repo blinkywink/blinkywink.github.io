@@ -54,7 +54,6 @@ import {
   collectionPath,
   gamePath,
   gamesPath,
-  leaderboardPath,
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
@@ -131,21 +130,14 @@ function ShopRoute() {
 }
 
 function CollectionPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const initial = (location.state as CollectionLocationState) ?? null;
 
-  return (
-    <CardLab
-      initial={initial}
-      onBack={() => navigate("/")}
-    />
-  );
+  return <CardLab initial={initial} />;
 }
 
 function UserCollectionPage() {
   const { username = "" } = useParams();
-  const navigate = useNavigate();
   const [page, setPage] = useState<Awaited<
     ReturnType<typeof fetchPublicPlayerPage>
   >>(null);
@@ -190,13 +182,6 @@ function UserCollectionPage() {
     return (
       <div className="card-lab">
         <header className="card-lab__header">
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => navigate(leaderboardPath())}
-          >
-            ← Leaderboard
-          </button>
           <div className="card-lab__titles">
             <p className="eyebrow">Collection</p>
             <h1>{username || "Player"}</h1>
@@ -227,7 +212,6 @@ function UserCollectionPage() {
         paragons: page.paragons,
         rank: page.rank,
       }}
-      onBack={() => navigate(leaderboardPath())}
     />
   );
 }
@@ -279,12 +263,10 @@ function AppShell() {
       await refreshProfile();
       const name = heroById(result.heroId)?.name ?? "Hero";
       if (result.ready) {
-        notifyHeroProc({
-          heroId: result.heroId,
-          message: `${name}: level-up unlocked! Tap to upgrade`,
-          openHeroes: true,
-        });
-      } else if (result.required > 0) {
+        // HeroFxProvider toasts once when profile shows a ready level-up.
+        return;
+      }
+      if (result.required > 0) {
         notifyHeroProc({
           heroId: result.heroId,
           message: `${name}: ${result.progress}/${result.required} clears`,

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { cardSpecById } from "../lib/cardCatalog";
+import { categoryShell } from "../lib/cardCategoryTheme";
 import {
   ackMarketSaleNotices,
   fetchMarketOfferInbox,
@@ -361,6 +362,21 @@ export function TradeInbox() {
     return cardSpecById(cardId)?.entity.name ?? "Card";
   }
 
+  function InboxThumb({ cardId }: { cardId: string }) {
+    const card = cardSpecById(cardId);
+    if (!card) return null;
+    return (
+      <img
+        className="trade-inbox__thumb"
+        src={card.entity.image}
+        alt=""
+        width={40}
+        height={40}
+        style={{ ["--card-shell" as string]: categoryShell(card.entity.category) }}
+      />
+    );
+  }
+
 
   return (
     <div className="trade-inbox" ref={wrapRef}>
@@ -399,19 +415,10 @@ export function TradeInbox() {
               <h3>Sold</h3>
               <ul>
                 {sales.map((item) => {
-                  const card = cardSpecById(item.cardId);
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
-                        {card ? (
-                          <img
-                            className="trade-inbox__thumb"
-                            src={card.entity.image}
-                            alt=""
-                            width={40}
-                            height={40}
-                          />
-                        ) : null}
+                        <InboxThumb cardId={item.cardId} />
                         <span>
                           <strong>{offerCardLabel(item.cardId)}</strong> sold
                           {item.buyerUsername ? (
@@ -445,19 +452,10 @@ export function TradeInbox() {
               <h3>Market offers</h3>
               <ul>
                 {offers.incoming.map((item) => {
-                  const card = cardSpecById(item.cardId);
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
-                        {card ? (
-                          <img
-                            className="trade-inbox__thumb"
-                            src={card.entity.image}
-                            alt=""
-                            width={40}
-                            height={40}
-                          />
-                        ) : null}
+                        <InboxThumb cardId={item.cardId} />
                         <span>
                           <strong>{item.partnerUsername}</strong> offered{" "}
                           <CashAmount amount={item.offerPrice} size={15} /> for{" "}
@@ -546,21 +544,12 @@ export function TradeInbox() {
               <h3>Exchange requests</h3>
               <ul>
                 {exchanges.incoming.map((item) => {
-                  const card = cardSpecById(item.cardId);
                   const paragon = item.cardId.endsWith("-paragon");
                   const offered = item.status === "offered";
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
-                        {card ? (
-                          <img
-                            className="trade-inbox__thumb"
-                            src={card.entity.image}
-                            alt=""
-                            width={40}
-                            height={40}
-                          />
-                        ) : null}
+                        <InboxThumb cardId={item.cardId} />
                         <span>
                           {offered ? (
                             <>

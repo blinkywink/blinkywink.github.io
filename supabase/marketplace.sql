@@ -8,7 +8,7 @@ create table if not exists public.marketplace_listings (
   price integer not null,
   status text not null default 'active',
   created_at timestamptz not null default now(),
-  constraint marketplace_listings_price_ok check (price between 10 and 1000000),
+  constraint marketplace_listings_price_ok check (price between 10 and 10000000),
   constraint marketplace_listings_card_id_len check (
     char_length(card_id) between 3 and 80
   ),
@@ -56,12 +56,14 @@ begin
     raise exception 'Not authenticated';
   end if;
 
+  perform public._assert_shop_spend_unlocked(uid);
+
   cleaned := trim(coalesce(p_card_id, ''));
   if char_length(cleaned) < 3 or char_length(cleaned) > 80 then
     raise exception 'Invalid card';
   end if;
-  if p_price is null or p_price < 10 or p_price > 1000000 then
-    raise exception 'Price must be between 10 and 1,000,000';
+  if p_price is null or p_price < 10 or p_price > 10000000 then
+    raise exception 'Price must be between 10 and 10,000,000';
   end if;
 
   select count(*) into active_count
@@ -157,6 +159,8 @@ begin
   if p_listing_id is null then
     raise exception 'Missing listing';
   end if;
+
+  perform public._assert_shop_spend_unlocked(buyer);
 
   select * into listing
   from public.marketplace_listings

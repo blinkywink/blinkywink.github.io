@@ -1,27 +1,62 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towers as baseTowers } from "../data/towers";
-import { cardSpecById, matchesCardQuery } from "../lib/cardCatalog";
+import { cardSpecById, matchesCardQuery, allCardSpecs } from "../lib/cardCatalog";
 import {
   fetchMarketplaceListingsPage,
   fetchMyMarketplaceListings,
   listCardForSale,
   MARKET_PAGE_SIZE,
+  MAX_MARKET_PRICE,
   type MarketplaceListing,
 } from "../lib/marketplace";
-import { maxPathTier, type MonkeyCardSpec } from "../lib/pathCombos";
-import { suggestedParagonValue } from "../lib/paragonProgress";
+import { maxPathTier, sortCardSpecs, type MonkeyCardSpec } from "../lib/pathCombos";
+import { suggestedListingRange, formatListingRange } from "../lib/listingValue";
+import {
+  MARKET_SHOP_SPEND_REQUIRED,
+  shopSpendRemaining,
+  shopSpendUnlocked,
+} from "../lib/marketShopGate";
 import { userCollectionPath, listingPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
 import { LoadingDots } from "./LoadingDots";
 import { MonkeyCard } from "./MonkeyCard";
-import { OwnedCardPicker } from "./OwnedCardPicker";
-import { PageHeader } from "./PageHeader";
 import { UserAvatar } from "./UserAvatar";
+import { VisibleCardGrid } from "./VisibleCardGrid";
 
 type Tab = "browse" | "sell" | "mine";
+
+type SellErrorBoundaryState = { error: string | null };
+
+class SellErrorBoundary extends Component<
+  { children: ReactNode },
+  SellErrorBoundaryState
+> {
+  state: SellErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: unknown): SellErrorBoundaryState {
+    return {
+      error: error instanceof Error ? error.message : "Could not open Sell.",
+    };
+  }
+
+  render() {
+    if (this.state.error) {
+      return <p className="market-banner market-banner--err">{this.state.error}</p>;
+    }
+    return this.props.children;
+  }
+}
 
 type SortKey =
   | "newest"
@@ -64,8 +99,8 @@ const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 
 export function Marketplace({ onBack: _onBack }: Props) {
   const navigate = useNavigate();
-  const { user, isGuest, refreshProfile } = useAuth();
-  const { owned, paragons, refresh: refreshCards } = useCardCollection();
+  const { user, isGuest, profile, refreshProfile } = useAuth();
+  const { owned, paragons, visualSeedOf, refresh: refreshCards } = useCardCollection();
   const [tab, setTab] = useState<Tab>("browse");
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [myListings, setMyListings] = useState<MarketplaceListing[]>([]);
@@ -80,11 +115,15 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sellStep, setSellStep] = useState<"pick" | "price">("pick");
   const [priceInput, setPriceInput] = useState("100");
+  const [sellQuery, setSellQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [hideOwned, setHideOwned] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
   const loadingMoreRef = useRef(false);
+  const marketUnlocked = shopSpendUnlocked(profile?.shop_spent);
+  const marketSpendLeft = shopSpendRemaining(profile?.shop_spent);
 
   useEffect(() => {
     const q = query.trim();
@@ -192,9 +231,10 @@ export function Marketplace({ onBack: _onBack }: Props) {
   );
 
   const browsedListings = useMemo(() => {
-    let rows = listings.filter(
-      (row) => !owned.has(row.cardId) || row.sellerId === user?.id,
-    );
+    let rows = listings;
+    if (hideOwned) {
+      rows = rows.filter((row) => !owned.has(row.cardId));
+    }
 
     if (sortKey !== "tier-desc" && sortKey !== "tier-asc" && sortKey !== "tower") {
       return rows;
@@ -225,14 +265,49 @@ export function Marketplace({ onBack: _onBack }: Props) {
         a.price - b.price
       );
     });
-  }, [listings, sortKey, owned, user?.id]);
+  }, [listings, sortKey, hideOwned, owned]);
+
+  const sellOwnedCards = useMemo(() => {
+    const q = sellQuery.trim().toLowerCase();
+    let list = allCardSpecs().filter((c) => owned.has(c.id));
+    if (q) list = list.filter((c) => matchesCardQuery(c, q));
+    return list.slice().sort(sortCardSpecs).reverse();
+  }, [owned, sellQuery]);
+
+  const beginSell = (id: string) => {
+    if (!marketUnlocked) return;
+    setSelected(new Set([id]));
+    setError(null);
+    setStatus(null);
+    const spec = cardSpecById(id);
+    if (spec) {
+      const deg = spec.isParagon ? (paragons.get(id)?.degree ?? 1) : 1;
+      setPriceInput(String(suggestedListingRange(spec, deg).mid));
+    } else {
+      setPriceInput("100");
+    }
+    setSellStep("price");
+    window.scrollTo(0, 0);
+  };
 
   const sellCardId = [...selected][0] ?? null;
   const sellCard = sellCardId ? cardSpecById(sellCardId) : null;
+  const sellRange = sellCard
+    ? suggestedListingRange(
+        sellCard,
+        sellCard.isParagon ? (paragons.get(sellCard.id)?.degree ?? 1) : 1,
+      )
+    : null;
 
   const postListings = async (cardIds?: string[]) => {
     if (isGuest || !user) {
       setError("Sign in to sell cards.");
+      return;
+    }
+    if (!marketUnlocked) {
+      setError(
+        `Spend ${MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the shop before listing cards.`,
+      );
       return;
     }
     const price = Math.round(Number(priceInput));
@@ -240,8 +315,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setError("Price must be at least 10 Cash.");
       return;
     }
-    if (price > 1_000_000) {
-      setError("Price can't be over 1,000,000 Cash.");
+    if (price > MAX_MARKET_PRICE) {
+      setError(`Price can't be over ${MAX_MARKET_PRICE.toLocaleString()} Cash.`);
       return;
     }
     const toList = cardIds?.length ? cardIds : [...selected];
@@ -332,10 +407,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
 
   return (
     <div className="market-page">
-      <PageHeader
-        title="Marketplace"
-        blurb="Buy and sell cards from other players."
-      />
       <main className="market-main">
         <div className="market-tabs" role="tablist" aria-label="Marketplace">
           {(
@@ -369,6 +440,12 @@ export function Marketplace({ onBack: _onBack }: Props) {
 
         {isGuest ? (
           <p className="market-banner">Sign in to buy or sell cards.</p>
+        ) : !marketUnlocked ? (
+          <p className="market-banner">
+            Spend {MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the shop
+            before buying or listing on the market.{" "}
+            {marketSpendLeft.toLocaleString()} Cash left to unlock.
+          </p>
         ) : null}
 
         {error ? (
@@ -428,6 +505,14 @@ export function Marketplace({ onBack: _onBack }: Props) {
                     ))}
                   </select>
                 </label>
+                <label className="market-toolbar__check">
+                  <input
+                    type="checkbox"
+                    checked={hideOwned}
+                    onChange={(e) => setHideOwned(e.target.checked)}
+                  />
+                  Hide cards I own
+                </label>
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm market-refresh"
@@ -453,84 +538,64 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </div>
         ) : null}
 
-        {loading ? (
-          <LoadingDots label="Loading marketplace" />
-        ) : tab === "browse" ? (
-          browsedListings.length === 0 ? (
-            <p className="market-empty">
-              {listings.length === 0
-                ? debouncedQuery
-                  ? "No listings match that search."
-                  : "No listings yet. Be the first to sell."
-                : "No listings match that search."}
-            </p>
-          ) : (
-            <>
-              <div className="market-section-head">
-                <h3>
-                  {sortKey === "newest" ? "Recently posted" : "Listings"}
-                </h3>
-                <span>
-                  {browsedListings.length}
-                  {hasMore ? "+" : ""} for sale
-                  {towerFilter !== "all" ? ` · ${towerFilter}` : ""}
-                </span>
-              </div>
-              <div className="market-grid">
-                {browsedListings.map((row) => renderListing(row, "browse"))}
-              </div>
-              {hasMore ? (
-                <div ref={sentinelRef} className="market-more">
-                  {loadingMore ? (
-                    <LoadingDots label="Loading more listings" />
-                  ) : null}
-                </div>
-              ) : null}
-            </>
-          )
-        ) : tab === "mine" ? (
-          myListings.length === 0 ? (
-            <p className="market-empty">
-              You have no active listings. Open Sell to post cards.
-            </p>
-          ) : (
-            <div className="market-grid">
-              {myListings
-                .filter((row) => {
-                  const q = query.trim().toLowerCase();
-                  if (!q) return true;
-                  const card = cardSpecById(row.cardId);
-                  return card ? matchesCardQuery(card, q) : true;
-                })
-                .map((row) => renderListing(row, "mine"))}
-            </div>
-          )
-        ) : (
+        {tab === "sell" ? (
+          <SellErrorBoundary>
           <div className="market-sell-pick">
-            {sellStep === "pick" ? (
-              <OwnedCardPicker
-                owned={owned}
-                selectedIds={selected}
-                multi={false}
-                disabled={busyId != null || isGuest}
-                confirmLabel="Next"
-                onConfirm={(ids) => {
-                  const id = ids[0];
-                  if (!id) return;
-                  setSelected(new Set([id]));
-                  setError(null);
-                  setStatus(null);
-                  const spec = cardSpecById(id);
-                  if (spec?.isParagon) {
-                    const deg = paragons.get(id)?.degree ?? 1;
-                    setPriceInput(String(suggestedParagonValue(deg)));
-                  } else {
-                    setPriceInput("100");
-                  }
-                  setSellStep("price");
-                  window.scrollTo(0, 0);
-                }}
-              />
+            {!marketUnlocked && !isGuest ? (
+              <p className="market-empty">
+                Spend {MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the
+                shop before you can list cards. {marketSpendLeft.toLocaleString()}{" "}
+                Cash left to unlock.
+              </p>
+            ) : sellStep === "pick" ? (
+              <>
+                <p className="market-sell-pick__lead">
+                  Pick a card from your collection to list.
+                </p>
+                <label className="market-search">
+                  <span className="market-search__label">Search your cards</span>
+                  <input
+                    type="search"
+                    value={sellQuery}
+                    onChange={(e) => setSellQuery(e.target.value)}
+                    placeholder="Tower name, upgrade…"
+                    autoComplete="off"
+                  />
+                </label>
+                {sellOwnedCards.length === 0 ? (
+                  <p className="market-empty">
+                    {isGuest
+                      ? "Sign in to sell cards."
+                      : sellQuery.trim()
+                        ? "No owned cards match that search."
+                        : "You have no cards to list."}
+                  </p>
+                ) : (
+                  <VisibleCardGrid
+                    items={sellOwnedCards}
+                    getKey={(c) => c.id}
+                    resetKey={sellQuery}
+                    renderItem={(card) => (
+                      <MonkeyCard
+                        entity={card.entity}
+                        pathLevels={card.pathLevels}
+                        mode="preview"
+                        owned
+                        degree={
+                          card.isParagon
+                            ? (paragons.get(card.id)?.degree ?? 1)
+                            : undefined
+                        }
+                        onSelect={
+                          busyId != null || isGuest || !marketUnlocked
+                            ? undefined
+                            : () => beginSell(card.id)
+                        }
+                      />
+                    )}
+                  />
+                )}
+              </>
             ) : (
               <div className="market-sell-price">
                 {sellCard ? (
@@ -540,6 +605,12 @@ export function Marketplace({ onBack: _onBack }: Props) {
                       pathLevels={sellCard.pathLevels}
                       mode="preview"
                       owned
+                      degree={
+                        sellCard.isParagon
+                          ? (paragons.get(sellCard.id)?.degree ?? 1)
+                          : undefined
+                      }
+                      visualSeed={visualSeedOf(sellCard.id)}
                     />
                   </div>
                 ) : null}
@@ -550,24 +621,27 @@ export function Marketplace({ onBack: _onBack }: Props) {
                     <input
                       type="number"
                       min={10}
-                      max={1000000}
+                      max={MAX_MARKET_PRICE}
                       step={10}
                       value={priceInput}
                       onChange={(e) => setPriceInput(e.target.value)}
                       autoFocus
                     />
                   </label>
-                  {sellCard?.isParagon ? (
+                  {sellRange ? (
                     <p className="market-sell-price__hint">
-                      Degree {paragons.get(sellCard.id)?.degree ?? 1} · suggested{" "}
-                      {suggestedParagonValue(
-                        paragons.get(sellCard.id)?.degree ?? 1,
-                      ).toLocaleString()}{" "}
-                      Cash
+                      Suggested range {formatListingRange(sellRange)} Cash
+                      {sellCard?.isParagon
+                        ? ` · degree ${paragons.get(sellCard.id)?.degree ?? 1}`
+                        : ""}
                     </p>
                   ) : null}
                 </div>
                 <div className="market-sell-price__dock">
+                  <p className="market-sell-price__note">
+                    Listing this card takes it out of your collection until you
+                    delete the listing.
+                  </p>
                   <button
                     type="button"
                     className="btn btn--ghost"
@@ -593,6 +667,61 @@ export function Marketplace({ onBack: _onBack }: Props) {
               </div>
             )}
           </div>
+          </SellErrorBoundary>
+        ) : loading ? (
+          <LoadingDots label="Loading marketplace" />
+        ) : tab === "browse" ? (
+          browsedListings.length === 0 ? (
+            <p className="market-empty">
+              {listings.length === 0
+                ? debouncedQuery
+                  ? "No listings match that search."
+                  : "No listings yet. Be the first to sell."
+                : hideOwned
+                  ? "No listings left after hiding cards you already own."
+                  : "No listings match that search."}
+            </p>
+          ) : (
+            <>
+              <div className="market-section-head">
+                <h3>
+                  {sortKey === "newest" ? "Recently posted" : "Listings"}
+                </h3>
+                <span>
+                  {browsedListings.length}
+                  {hasMore ? "+" : ""} for sale
+                  {towerFilter !== "all" ? ` · ${towerFilter}` : ""}
+                </span>
+              </div>
+              <div className="market-grid">
+                {browsedListings.map((row) => renderListing(row, "browse"))}
+              </div>
+              {hasMore ? (
+                <div ref={sentinelRef} className="market-more">
+                  {loadingMore ? (
+                    <LoadingDots label="Loading more listings" />
+                  ) : null}
+                </div>
+              ) : null}
+            </>
+          )
+        ) : (
+          myListings.length === 0 ? (
+            <p className="market-empty">
+              You have no active listings. Open Sell to post cards.
+            </p>
+          ) : (
+            <div className="market-grid">
+              {myListings
+                .filter((row) => {
+                  const q = query.trim().toLowerCase();
+                  if (!q) return true;
+                  const card = cardSpecById(row.cardId);
+                  return card ? matchesCardQuery(card, q) : true;
+                })
+                .map((row) => renderListing(row, "mine"))}
+            </div>
+          )
         )}
       </main>
     </div>

@@ -99,10 +99,6 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
   const attemptsUsed = maxLives - state.lives;
   const recallSeconds = recallSecondsForRound(state.round.round);
   const secondsLeft = Math.ceil(state.timeLeftMs / 1000);
-  const timerPct = Math.max(
-    0,
-    Math.min(100, (state.timeLeftMs / (recallSeconds * 1000)) * 100),
-  );
   const urgent = recalling && state.timeLeftMs <= 3000;
   const endLabel = state.lives <= 0 ? "DONE" : "NEXT";
 
@@ -161,7 +157,8 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
               <div className="orderup-timer__track">
                 <div
                   className="orderup-timer__fill"
-                  style={{ width: `${timerPct}%` }}
+                  key={state.round.round}
+                  style={{ animationDuration: `${recallSeconds}s` }}
                 />
               </div>
               <span className="orderup-timer__num">{secondsLeft}</span>

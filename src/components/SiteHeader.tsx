@@ -1,5 +1,10 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  getLogoHomeId,
+  logoHomePage,
+  subscribeLogoHome,
+} from "../lib/logoHome";
 import { AccountBar } from "./AccountBar";
 import { TradeInbox } from "./TradeInbox";
 
@@ -14,9 +19,22 @@ const NAV = [
 /** Fixed top bar — brand + main nav + account, stays on every screen. */
 export function SiteHeader() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoHome, setLogoHome] = useState(() => logoHomePage(getLogoHomeId()));
   const menuId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  function onCardsNavClick(e: MouseEvent<HTMLAnchorElement>) {
+    if (pathname !== "/collection") return;
+    e.preventDefault();
+    navigate("/collection", {
+      replace: true,
+      state: { cardsHome: Date.now() },
+    });
+  }
+
+  useEffect(() => subscribeLogoHome((id) => setLogoHome(logoHomePage(id))), []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -46,9 +64,9 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header__inner">
         <Link
-          to="/"
+          to={logoHome.path}
           className="site-header__brand"
-          aria-label="blinkywink.co home"
+          aria-label={`Go to ${logoHome.label}`}
         >
           <img
             className="site-header__logo"
@@ -66,6 +84,8 @@ export function SiteHeader() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === "/collection"}
+              onClick={item.to === "/collection" ? onCardsNavClick : undefined}
               className={({ isActive }) =>
                 `site-nav__link${isActive ? " is-active" : ""}`
               }
@@ -101,6 +121,8 @@ export function SiteHeader() {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    end={item.to === "/collection"}
+                    onClick={item.to === "/collection" ? onCardsNavClick : undefined}
                     className={({ isActive }) =>
                       `site-nav-mobile__link${isActive ? " is-active" : ""}`
                     }

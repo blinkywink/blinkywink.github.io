@@ -1,5 +1,7 @@
 import { formatPathLevels, type MonkeyCardSpec } from "../lib/pathCombos";
+import { categoryShell } from "../lib/cardCategoryTheme";
 import { cardSpecById } from "../lib/cardCatalog";
+import type { CSSProperties } from "react";
 
 type Props = {
   cardId?: string;
@@ -33,6 +35,9 @@ export function CardChip({
   const path = card.isParagon
     ? "Paragon"
     : formatPathLevels(card.pathLevels);
+  const chrome = {
+    ["--card-shell" as string]: categoryShell(card.entity.category),
+  } as CSSProperties;
   const body = (
     <>
       <img
@@ -55,13 +60,14 @@ export function CardChip({
   );
 
   if (locked || !onClick) {
-    return <div className="card-chip is-locked">{body}</div>;
+    return <div className="card-chip is-locked" style={chrome}>{body}</div>;
   }
 
   return (
     <button
       type="button"
       className={`card-chip${selected ? " is-selected" : ""}`}
+      style={chrome}
       disabled={disabled}
       onClick={onClick}
     >

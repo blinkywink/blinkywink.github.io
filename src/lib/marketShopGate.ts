@@ -1,4 +1,4 @@
-/** Cash that must be spent in the shop before marketplace buys / offers. */
+/** Cash that must be spent in the shop before marketplace buys, offers, or listings. */
 export const MARKET_SHOP_SPEND_REQUIRED = 5000;
 
 export function shopSpendUnlocked(shopSpent: number | null | undefined): boolean {

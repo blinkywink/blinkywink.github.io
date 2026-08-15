@@ -24,12 +24,18 @@ import {
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
 import { isTypingTarget } from "../lib/keyboard";
-import { playBuy, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardFocus, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
-import { CurrencyChip } from "./CurrencyChip";
+import { CashAmount, CurrencyChip } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
+import { ParagonXpBar } from "./ParagonXpBar";
+import {
+  cosmeticsFromProfile,
+  hasPlayerChrome,
+  playerChromeStyle,
+} from "../lib/profileCosmetics";
 
 const SLASH_NEED = 90;
 const SWIPE_NEED = 42;
@@ -225,7 +231,7 @@ export function PackOpenerTest({
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
   const { profile, setCoinBalance, refreshProfile } = useAuth();
-  const { awardCards, feedParagonsFromCards, owned } = useCardCollection();
+  const { awardCards, feedParagonsFromCards, owned, paragonOf } = useCardCollection();
   const { setParagonNoticeDeferral } = useHeroFx();
   const {
     packPullMods,
@@ -250,6 +256,9 @@ export function PackOpenerTest({
   const [exitDir, setExitDir] = useState({ x: 0, y: -1 });
   const [buyBusy, setBuyBusy] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
+  const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
+  const focusedRef = useRef<MonkeyCardSpec | null>(null);
+  focusedRef.current = focused;
 
   const phaseRef = useRef<Phase>("shop");
   const drawing = useRef(false);
@@ -321,6 +330,8 @@ export function PackOpenerTest({
     preloadRef.current = [];
     setBuyBusy(false);
     setBuyError(null);
+    setFocused(null);
+    focusedRef.current = null;
   }, []);
 
   /** Clear open-state and jump to sealed (after a successful rebuy). */
@@ -557,10 +568,9 @@ export function PackOpenerTest({
         if (card.isParagon) ownedParagons.add(card.id);
       }
       for (const card of cards) {
+        if (!dupIds.has(card.id)) continue;
         const feed = feedForCard(card);
         if (!feed || !ownedParagons.has(feed.paragonId)) continue;
-        // First copy of the Paragon itself is the unlock, not a feed.
-        if (card.isParagon && !ownedAtOpen.has(card.id)) continue;
         feeds.push(feed);
         feedByCard.set(card.id, feed);
       }
@@ -721,6 +731,11 @@ export function PackOpenerTest({
       if (e.key === "Escape") {
         e.preventDefault();
         if (buyBusy) return;
+        if (focusedRef.current) {
+          setFocused(null);
+          focusedRef.current = null;
+          return;
+        }
         flushUnpaidDupCash();
         reset();
         onClose();
@@ -739,6 +754,7 @@ export function PackOpenerTest({
       } else if (p === "ready") {
         if (spaceCanFling(e)) flingAway();
       } else if (p === "done") {
+        if (focusedRef.current) return;
         // Fresh Space only. Hold-through repacks are queued in nextCard —
         // key-repeat here was double-charging packs.
         if (mode !== "reward" && !e.repeat) void buyAnother();
@@ -909,6 +925,11 @@ export function PackOpenerTest({
     const len = Math.hypot(nx, ny) || 1;
     return { x: (nx / len) * 22, y: (ny / len) * 22 };
   })();
+
+  const packChrome = playerChromeStyle({
+    accentColor: cosmeticsFromProfile(profile ?? {}).accentColor,
+  });
+  const packChromeOn = hasPlayerChrome(packChrome);
 
   return createPortal(
     <div
@@ -1127,8 +1148,14 @@ export function PackOpenerTest({
                       <div className="pack-opener__dup-stack" role="status">
                         {currentIsDup ? (
                           <p className="pack-opener__dup-banner">
-                            Duplicate · +
-                            {duplicateCashForCard(current, dupCashMods())} Cash
+                            Duplicate. +
+                            <CashAmount
+                              amount={duplicateCashForCard(
+                                current,
+                                dupCashMods(),
+                              )}
+                              size={15}
+                            />
                           </p>
                         ) : null}
                         {paragonFeeds.get(current.id) ? (
@@ -1172,7 +1199,10 @@ export function PackOpenerTest({
           </div>
         </div>
       ) : (
-        <div className="pack-opener__done">
+        <div
+          className={`pack-opener__done${packChromeOn ? " has-player-chrome" : ""}`}
+          style={packChrome}
+        >
           <button
             type="button"
             className="pack-opener__close btn btn--ghost btn--sm"
@@ -1180,20 +1210,14 @@ export function PackOpenerTest({
           >
             ✕ Close
           </button>
-          <h2>{godPack ? "GOD PACK!" : "Pack opened"}</h2>
-          <p>
-            {pulls.length} card{pulls.length === 1 ? "" : "s"}
-            {godPack ? " · all T5+" : ""}
-            {duplicateCash > 0
-              ? ` · ${duplicates.size} duplicate${duplicates.size === 1 ? "" : "s"} → +${duplicateCash} Cash`
-              : ""}
-            {" · "}
-            {pack.kind === "btd6"
-              ? "all towers"
-              : pack.kind === "category"
-                ? `${pack.category} towers`
-                : pack.tower}
-          </p>
+          <h2>{godPack ? "GOD PACK!" : "Pack summary"}</h2>
+          {duplicates.size > 0 ? (
+            <p className="pack-opener__done-stats">
+              {duplicates.size} duplicate
+              {duplicates.size === 1 ? "" : "s"}. +
+              <CashAmount amount={duplicateCash} size={18} />
+            </p>
+          ) : null}
           <div className="pack-opener__summary-grid">
             {pulls.map((card, i) => {
               const isDup = duplicates.has(card.id);
@@ -1208,17 +1232,11 @@ export function PackOpenerTest({
                     mode="preview"
                     owned
                     staticArt
+                    onSelect={() => {
+                      playCardFocus();
+                      setFocused(card);
+                    }}
                   />
-                  <span>
-                    {isDup
-                      ? `Duplicate · +${duplicateCashForCard(card, dupCashMods())}`
-                      : card.isParagon
-                        ? `${card.tower} · Paragon`
-                        : `${card.tower} · ${card.pathLevels.join("-")}`}
-                    {paragonFeeds.get(card.id)
-                      ? ` · ${formatParagonFeedLine(paragonFeeds.get(card.id)!)}`
-                      : ""}
-                  </span>
                 </div>
               );
             })}
@@ -1242,6 +1260,45 @@ export function PackOpenerTest({
           </div>
         </div>
       )}
+      {focused ? (
+        <div
+          className="card-focus pack-opener__focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={focused.entity.name}
+        >
+          <button
+            type="button"
+            className="card-focus__backdrop"
+            aria-label="Close"
+            onClick={() => setFocused(null)}
+          />
+          <div className="card-focus__panel">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm card-focus__close"
+              onClick={() => setFocused(null)}
+            >
+              ✕ Close
+            </button>
+            <MonkeyCard
+              entity={focused.entity}
+              pathLevels={focused.pathLevels}
+              mode="focus"
+              owned
+              degree={
+                focused.isParagon ? paragonOf(focused.id)?.degree : undefined
+              }
+            />
+            {focused.isParagon ? (
+              <ParagonXpBar
+                degree={paragonOf(focused.id)?.degree ?? 1}
+                xp={paragonOf(focused.id)?.xp ?? 0}
+              />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>,
     document.body,
   );

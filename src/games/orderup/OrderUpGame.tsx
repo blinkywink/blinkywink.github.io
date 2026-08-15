@@ -226,10 +226,6 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
       : "NEXT";
 
   const secondsLeft = Math.ceil(state.timeLeftMs / 1000);
-  const timerPct = Math.max(
-    0,
-    Math.min(100, (state.timeLeftMs / (timerSeconds * 1000)) * 100),
-  );
   const urgent = playing && state.timeLeftMs <= 3000;
 
   const correctRank = new Map(
@@ -264,7 +260,8 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
               <div className="orderup-timer__track">
                 <div
                   className="orderup-timer__fill"
-                  style={{ width: `${timerPct}%` }}
+                  key={state.round.round}
+                  style={{ animationDuration: `${timerSeconds}s` }}
                 />
               </div>
               <span className="orderup-timer__num">{secondsLeft}</span>

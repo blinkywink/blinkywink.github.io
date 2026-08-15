@@ -249,7 +249,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
         ]);
         const unlockedSet = new Set(newIds);
         const feeds = cardIds.flatMap((id) => {
-          if (id.endsWith("-paragon") && unlockedSet.has(id)) return [];
+          if (unlockedSet.has(id)) return [];
           const feed = feedForCardId(id);
           return feed ? [feed] : [];
         });

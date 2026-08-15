@@ -11,6 +11,7 @@ import {
   makeListingOffer,
   notifyMarketPartner,
   respondListingOffer,
+  MAX_MARKET_PRICE,
   type ListingOfferRow,
   type MarketplaceListing,
 } from "../lib/marketplace";
@@ -127,7 +128,7 @@ export function ListingPage() {
     : "";
 
   async function onBuy() {
-    if (!listing) return;
+    if (!listing || !marketUnlocked) return;
     setBusy(true);
     setError(null);
     setStatus(null);
@@ -164,7 +165,7 @@ export function ListingPage() {
   }
 
   async function onMakeOffer() {
-    if (!listing) return;
+    if (!listing || !marketUnlocked) return;
     const price = Math.round(Number(offerInput));
     if (!Number.isFinite(price) || price < 10) {
       setError("Offer must be at least 10 Cash.");
@@ -174,8 +175,8 @@ export function ListingPage() {
       setError("Offer must be lower than the asking price.");
       return;
     }
-    if (price > 1_000_000) {
-      setError("Offer can't be over 1,000,000 Cash.");
+    if (price > MAX_MARKET_PRICE) {
+      setError(`Offer can't be over ${MAX_MARKET_PRICE.toLocaleString()} Cash.`);
       return;
     }
     setBusy(true);
@@ -392,7 +393,7 @@ export function ListingPage() {
               </button>
               <p className="listing-note">
                 Spend {MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the
-                shop before buying on the market.{" "}
+                shop before buying or offering on the market.{" "}
                 {marketSpendLeft.toLocaleString()} Cash left to unlock.
               </p>
             </div>

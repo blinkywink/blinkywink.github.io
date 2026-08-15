@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities, towers as baseTowers } from "../data/towers";
@@ -27,6 +28,7 @@ import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { EquippedHeroPanel } from "./HeroCollectionStrip";
 import { HeroesLab } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
+import { TierSortButton } from "./TierSortButton";
 import { VisibleCardGrid } from "./VisibleCardGrid";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
@@ -69,7 +71,7 @@ export type ViewerCollection = {
 };
 
 type Props = {
-  onBack: () => void;
+  onBack?: () => void;
   initial?: CardsOpenOpts | null;
   /** When set, show this player's collection (read-only) instead of yours. */
   viewer?: CollectionViewer | null;
@@ -82,8 +84,6 @@ type View =
   | { kind: "heroes" }
   | { kind: "all" }
   | { kind: "tower"; name: string };
-
-const CATEGORY_ORDER = ["Primary", "Military", "Magic", "Support"];
 
 type TowerChoice = {
   name: string;
@@ -99,20 +99,12 @@ function cardCountFor(tower: string): number {
   return 64 + (hasParagon ? 1 : 0);
 }
 
-const TOWER_CHOICES: TowerChoice[] = baseTowers
-  .slice()
-  .sort((a, b) => {
-    const ca = CATEGORY_ORDER.indexOf(a.category);
-    const cb = CATEGORY_ORDER.indexOf(b.category);
-    if (ca !== cb) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
-    return a.tower.localeCompare(b.tower);
-  })
-  .map((t) => ({
-    name: t.tower,
-    category: t.category,
-    image: t.image,
-    cardCount: cardCountFor(t.tower),
-  }));
+const TOWER_CHOICES: TowerChoice[] = baseTowers.map((t) => ({
+  name: t.tower,
+  category: t.category,
+  image: t.image,
+  cardCount: cardCountFor(t.tower),
+}));
 
 const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
   TOWER_CHOICES.map((t) => [
@@ -147,11 +139,11 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
 
 /** Player collection — owned cards in color, missing ones greyed out. */
 export function CardLab({
-  onBack,
   initial,
   viewer = null,
   viewerCollection = null,
 }: Props) {
+  const location = useLocation();
   const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
@@ -350,6 +342,19 @@ export function CardLab({
     }
   }, [initial, isRemote]);
 
+  const cardsHomeAt =
+    typeof (location.state as { cardsHome?: unknown } | null)?.cardsHome ===
+    "number"
+      ? (location.state as { cardsHome: number }).cardsHome
+      : 0;
+
+  useEffect(() => {
+    if (!cardsHomeAt || isRemote) return;
+    setFocused(null);
+    setQuery("");
+    setView({ kind: "towers" });
+  }, [cardsHomeAt, isRemote]);
+
   useEffect(() => {
     if (highlightIds.size === 0) return;
     const id = window.setTimeout(() => setHighlightIds(new Set()), 8000);
@@ -402,14 +407,10 @@ export function CardLab({
   }, [view, tierHighFirst]);
 
   const sortToggle = (
-    <button
-      type="button"
-      className="btn btn--ghost btn--sm card-lab__sort"
-      onClick={() => setTierHighFirst((v) => !v)}
-      aria-pressed={tierHighFirst}
-    >
-      {tierHighFirst ? "Tier · high → low" : "Tier · low → high"}
-    </button>
+    <TierSortButton
+      highFirst={tierHighFirst}
+      onToggle={() => setTierHighFirst((v) => !v)}
+    />
   );
 
   const ownedInTower = useMemo(
@@ -571,24 +572,11 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-        <header
-          className={`card-lab__header${isRemote ? " card-lab__header--remote" : ""}`}
-        >
-          {isRemote ? (
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={onBack}
-            >
-              ← Leaderboard
-            </button>
-          ) : null}
+        {isRemote ? (
+        <header className="card-lab__header card-lab__header--remote">
           <div className="card-lab__titles">
-            <p className="eyebrow">
-              {isRemote ? "Player collection" : "Collection"}
-            </p>
-            <h1 className={isRemote ? "card-lab__title-row" : undefined}>
-              {isRemote && viewer?.avatar ? (
+            <h1 className="card-lab__title-row">
+              {viewer?.avatar ? (
                 <UserAvatar
                   crop={viewer.avatar}
                   face={
@@ -605,20 +593,17 @@ export function CardLab({
                   className="card-lab__avatar"
                 />
               ) : null}
-              {isRemote ? `${ownerLabel}'s Cards` : "Card Collection"}
+              {`${ownerLabel}'s Cards`}
             </h1>
-            {isRemote ? (
-              <PlayerBadges
-                rank={viewerRank}
-                badgeIds={viewer?.badgeIds}
-                size="lg"
-              />
-            ) : null}
-            {isRemote && !remoteError ? (
+            <PlayerBadges
+              rank={viewerRank}
+              badgeIds={viewer?.badgeIds}
+              size="lg"
+            />
+            {!remoteError ? (
               <>
-                <div className="player-showcase">
-                  <p className="player-showcase__label">Showcase cards</p>
-                  {showcaseCards.length > 0 ? (
+                {showcaseCards.length > 0 ? (
+                  <div className="player-showcase">
                     <div className="player-showcase__row">
                       {showcaseCards.map((card) => (
                         <MonkeyCard
@@ -636,24 +621,14 @@ export function CardLab({
                         />
                       ))}
                     </div>
-                  ) : (
-                    <p className="player-showcase__empty">
-                      No showcase cards yet.
-                    </p>
-                  )}
-                </div>
+                  </div>
+                ) : null}
                 <EquippedHeroPanel
                   equippedHeroId={viewer?.equippedHeroId}
                   heroLevels={viewer?.heroLevels}
                   size="md"
                 />
               </>
-            ) : null}
-            {!isRemote ? (
-              <p className="card-lab__blurb">
-                {totalOwned} / {totalCards} owned · browse by tower, or open
-                Heroes / All Cards.
-              </p>
             ) : null}
             {remoteError ? (
               <p className="card-lab__blurb">{remoteError}</p>
@@ -686,8 +661,24 @@ export function CardLab({
             ) : null}
           </div>
         </header>
+        ) : null}
 
         <div className="card-lab__picker">
+          <button
+            type="button"
+            className="card-lab__all-btn"
+            onClick={() => {
+              setQuery("");
+              setTierHighFirst(true);
+              setView({ kind: "all" });
+            }}
+          >
+            <span className="card-lab__all-btn-title">All Cards</span>
+            <span className="card-lab__all-btn-meta">
+              {totalOwned} / {totalCards} owned
+            </span>
+          </button>
+
           {!isRemote ? (
             <button
               type="button"
@@ -703,21 +694,6 @@ export function CardLab({
               </span>
             </button>
           ) : null}
-
-          <button
-            type="button"
-            className="card-lab__all-btn"
-            onClick={() => {
-              setQuery("");
-              setTierHighFirst(true);
-              setView({ kind: "all" });
-            }}
-          >
-            <span className="card-lab__all-btn-title">All Cards</span>
-            <span className="card-lab__all-btn-meta">
-              {totalOwned} / {totalCards} owned
-            </span>
-          </button>
 
           <label className="card-lab__search">
             <span className="card-lab__search-label">Search towers</span>
@@ -743,6 +719,7 @@ export function CardLab({
                   type="button"
                   role="listitem"
                   className={`card-lab__tower-btn${ownedN >= tower.cardCount && tower.cardCount > 0 ? " is-complete" : ""}`}
+                  data-category={tower.category}
                   onClick={() => {
                     setQuery("");
                     setTierHighFirst(false);
@@ -796,33 +773,21 @@ export function CardLab({
         className={`card-lab${chromeOn ? " has-player-chrome" : ""}`}
         style={chromeOn ? chromeStyle : undefined}
       >
-        <header className="card-lab__header">
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => {
-              setFocused(null);
-              setQuery("");
-              setView({ kind: "towers" });
-            }}
-          >
-            ← Towers
-          </button>
-          <div className="card-lab__titles card-lab__titles--tower">
-            <p className="eyebrow">{isRemote ? ownerLabel : "Owned"}</p>
-            <h1>All Cards</h1>
-            <p className="card-lab__blurb">
-              {totalOwned === 0
-                ? isRemote
-                  ? "No cards unlocked yet."
-                  : "You don’t own any cards yet, open packs from the shop."
-                : query.trim()
-                  ? `${ownedAllCards.length} matching · ${totalOwned} / ${totalCards} owned · tap a card for the holo view.`
-                  : `${totalOwned} / ${totalCards} owned · tap a card for the holo view.`}
-            </p>
-          </div>
-        </header>
-
+        {isRemote ? (
+          <header className="card-lab__header">
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => {
+                setFocused(null);
+                setQuery("");
+                setView({ kind: "towers" });
+              }}
+            >
+              ← Towers
+            </button>
+          </header>
+        ) : null}
         <div className="card-lab__toolbar">
           <label className="card-lab__search card-lab__search--inline">
             <span className="card-lab__search-label">
@@ -855,6 +820,7 @@ export function CardLab({
                 entity={card.entity}
                 pathLevels={card.pathLevels}
                 mode="preview"
+                richPreview
                 owned
                 highlight={highlightIds.has(card.id)}
                 degree={cardDegree(card)}
@@ -885,34 +851,34 @@ export function CardLab({
       style={chromeOn ? chromeStyle : undefined}
       >
       <header className="card-lab__header">
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() => {
-            setFocused(null);
-            setView({ kind: "towers" });
-          }}
-        >
-          ← Towers
-        </button>
+        {isRemote ? (
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => {
+              setFocused(null);
+              setView({ kind: "towers" });
+            }}
+          >
+            ← Towers
+          </button>
+        ) : null}
         <div className="card-lab__titles card-lab__titles--tower">
           <p className="eyebrow">{selectedMeta?.category ?? "Tower"}</p>
-          <h1 className="card-lab__tower-heading">
-            {portrait ? (
-              <img src={portrait} alt="" draggable={false} />
-            ) : null}
-            {view.name}
-          </h1>
-          <p className="card-lab__blurb">
-            {ownedInTower}/{towerCards.length} owned · same portrait art is
-            grouped together. Tap an unlocked card for the holo view.
-          </p>
+          <div className="card-lab__tower-row">
+            <h1 className="card-lab__tower-heading">
+              {portrait ? (
+                <img src={portrait} alt="" draggable={false} />
+              ) : null}
+              <span className="card-lab__tower-title">{view.name}</span>
+              <span className="card-lab__tower-owned">
+                {ownedInTower}/{towerCards.length}
+              </span>
+            </h1>
+            {sortToggle}
+          </div>
         </div>
       </header>
-
-      <div className="card-lab__toolbar card-lab__toolbar--end">
-        {sortToggle}
-      </div>
 
       <VisibleCardGrid
         items={towerCards}

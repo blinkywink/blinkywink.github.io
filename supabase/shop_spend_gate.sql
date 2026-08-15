@@ -1,4 +1,4 @@
--- Gate marketplace Cash spends until the account has spent 5k in the shop
+-- Gate marketplace listing / buying until the account has spent 5k in the shop
 -- (packs via spend_coins, direct shelf, hero unlocks/upgrades).
 -- Safe to re-run. Grandfathers existing profiles so only new alts are locked.
 
@@ -74,7 +74,7 @@ begin
 
   if coalesce(spent, 0) < 5000 then
     raise exception
-      'Spend 5,000 Cash in the shop before buying on the marketplace';
+      'Spend 5,000 Cash in the shop before using the marketplace';
   end if;
 end;
 $$;
@@ -354,8 +354,8 @@ begin
   if p_listing_id is null then
     raise exception 'Missing listing';
   end if;
-  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 1000000 then
-    raise exception 'Offer must be between 10 and 1,000,000';
+  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 10000000 then
+    raise exception 'Offer must be between 10 and 10,000,000';
   end if;
 
   select * into listing
@@ -454,6 +454,97 @@ begin
 
   perform public._assert_shop_spend_unlocked(buyer);
   return public._make_listing_offer_impl(p_listing_id, p_offer_price);
+end;
+$$;
+
+create or replace function public.list_card_for_sale(
+  p_card_id text,
+  p_price integer
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  uid uuid := public.current_account_id();
+  listing_id uuid;
+  cleaned text;
+  active_count integer;
+  snap_degree integer;
+  snap_xp integer;
+  snap_seed bigint;
+begin
+  if uid is null then
+    uid := auth.uid();
+  end if;
+  if uid is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  perform public._assert_shop_spend_unlocked(uid);
+
+  cleaned := trim(coalesce(p_card_id, ''));
+  if char_length(cleaned) < 3 or char_length(cleaned) > 80 then
+    raise exception 'Invalid card';
+  end if;
+  if p_price is null or p_price < 10 or p_price > 10000000 then
+    raise exception 'Price must be between 10 and 10,000,000';
+  end if;
+
+  select count(*) into active_count
+  from public.marketplace_listings
+  where seller_id = uid and status = 'active';
+  if active_count >= 40 then
+    raise exception 'Too many active listings (max 40)';
+  end if;
+
+  if cleaned like '%-paragon' then
+    select degree, xp into snap_degree, snap_xp
+    from public.paragon_progress
+    where user_id = uid and card_id = cleaned;
+    snap_degree := coalesce(snap_degree, 1);
+    snap_xp := coalesce(snap_xp, 0);
+  end if;
+
+  delete from public.owned_cards
+  where user_id = uid and card_id = cleaned
+  returning visual_seed into snap_seed;
+  if not found then
+    raise exception 'You do not own this card';
+  end if;
+
+  if cleaned like '%-paragon' then
+    delete from public.paragon_progress
+    where user_id = uid and card_id = cleaned;
+  end if;
+
+  begin
+    insert into public.marketplace_listings (
+      seller_id, card_id, price, status, paragon_degree, paragon_xp, visual_seed
+    )
+    values (
+      uid,
+      cleaned,
+      p_price,
+      'active',
+      snap_degree,
+      snap_xp,
+      snap_seed
+    )
+    returning id into listing_id;
+  exception
+    when unique_violation then
+      insert into public.owned_cards (user_id, card_id, visual_seed)
+      values (uid, cleaned, coalesce(snap_seed, public._new_visual_seed()))
+      on conflict (user_id, card_id) do nothing;
+      if cleaned like '%-paragon' then
+        perform public._give_listed_paragon(uid, cleaned, snap_degree, snap_xp);
+      end if;
+      raise exception 'Card is already listed';
+  end;
+
+  return listing_id;
 end;
 $$;
 
@@ -570,6 +661,7 @@ revoke all on function public._assert_shop_spend_unlocked(uuid) from public;
 revoke all on function public._bump_shop_spent(uuid, integer) from public;
 revoke all on function public.buy_listing(uuid) from public;
 revoke all on function public.make_listing_offer(uuid, integer) from public;
+revoke all on function public.list_card_for_sale(text, integer) from public;
 revoke all on function public.spend_coins(integer) from public;
 revoke all on function public.spend_coins(integer, boolean) from public;
 revoke all on function public.buy_shop_direct_card(integer, bigint) from public;
@@ -577,6 +669,7 @@ revoke all on function public.buy_hero(text) from public;
 
 grant execute on function public.buy_listing(uuid) to anon, authenticated;
 grant execute on function public.make_listing_offer(uuid, integer) to anon, authenticated;
+grant execute on function public.list_card_for_sale(text, integer) to anon, authenticated;
 grant execute on function public.spend_coins(integer) to anon, authenticated;
 grant execute on function public.spend_coins(integer, boolean) to anon, authenticated;
 grant execute on function public.buy_shop_direct_card(integer, bigint) to anon, authenticated;

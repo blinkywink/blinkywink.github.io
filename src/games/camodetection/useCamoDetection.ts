@@ -241,19 +241,28 @@ export function useCamoDetection() {
     let raf = 0;
     let last = performance.now();
     let timedOut = false;
+    let left = recallMs(state.round.round);
+    let shownSec = Math.ceil(left / 1000);
     const tick = (now: number) => {
-      const dt = now - last;
+      const dt = Math.min(48, now - last);
       last = now;
-      setState((s) => {
-        if (s.phase !== "recalling") return s;
-        const next = Math.max(0, s.timeLeftMs - dt);
-        if (next <= 0 && s.timeLeftMs > 0 && !timedOut) {
+      left = Math.max(0, left - dt);
+      if (left <= 0) {
+        setState((s) => {
+          if (s.phase !== "recalling" || s.timeLeftMs <= 0 || timedOut) return s;
           timedOut = true;
           queueMicrotask(() => settle(true));
           return { ...s, timeLeftMs: 0 };
-        }
-        return { ...s, timeLeftMs: next };
-      });
+        });
+        return;
+      }
+      const sec = Math.ceil(left / 1000);
+      if (sec !== shownSec) {
+        shownSec = sec;
+        setState((s) =>
+          s.phase === "recalling" ? { ...s, timeLeftMs: left } : s,
+        );
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

@@ -74,11 +74,17 @@ function SidePanel({
     <button
       type="button"
       className={`price-side price-side--n${n} ${tone}`}
-      disabled={disabled}
-      onClick={() => onPick(sideKey)}
+      aria-disabled={disabled}
+      onPointerDown={(e) => {
+        if (disabled || e.button !== 0) return;
+        onPick(sideKey);
+      }}
+      onClick={() => {
+        if (disabled) return;
+        onPick(sideKey);
+      }}
       aria-label={`Pick ${label}, ${side.combos.length} tower${side.combos.length === 1 ? "" : "s"}`}
     >
-      <span className="price-side__label">{label}</span>
       <div className="price-side__art">
         {side.combos.map((c) => (
           <ComboTile key={c.id} combo={c} revealed={revealed} />
@@ -86,9 +92,7 @@ function SidePanel({
       </div>
       {revealed ? (
         <span className="price-side__total">{formatCash(side.total)}</span>
-      ) : (
-        <span className="price-side__hint">Higher</span>
-      )}
+      ) : null}
     </button>
   );
 }
@@ -176,10 +180,6 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
   const playing = state.phase === "playing";
   const attemptsUsed = maxLives - state.lives;
   const secondsLeft = Math.ceil(state.timeLeftMs / 1000);
-  const timerPct = Math.max(
-    0,
-    Math.min(100, (state.timeLeftMs / (timerSeconds * 1000)) * 100),
-  );
   const urgent = playing && state.timeLeftMs <= 3000;
   const endLabel =
     state.lives <= 0 ||
@@ -215,7 +215,8 @@ export function PriceCheckGame({ onBack, onRunEnd }: Props) {
               <div className="orderup-timer__track">
                 <div
                   className="orderup-timer__fill"
-                  style={{ width: `${timerPct}%` }}
+                  key={state.round.round}
+                  style={{ animationDuration: `${timerSeconds}s` }}
                 />
               </div>
               <span className="orderup-timer__num">{secondsLeft}</span>

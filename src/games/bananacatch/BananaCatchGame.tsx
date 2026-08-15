@@ -78,7 +78,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const [lockUnavailable, setLockUnavailable] = useState(!USE_POINTER_LOCK);
   const [musicVolume, setMusicVolume] = useState(() => readCatchBgmVolume());
 
-  useCatchBgm(state.phase, musicVolume);
+  const resumeBgm = useCatchBgm(state.phase, musicVolume);
 
   useEffect(() => {
     dropImagesRef.current = preloadDropImages();
@@ -131,7 +131,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     const v = Math.max(0, Math.min(1, next));
     setMusicVolume(v);
     writeCatchBgmVolume(v);
-  }, []);
+    resumeBgm();
+  }, [resumeBgm]);
 
   const requestLock = useCallback(() => {
     if (!USE_POINTER_LOCK || lockUnavailable) return;
@@ -227,6 +228,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   }, [playing, useRelativeMouse, pointerToAim]);
 
   function beginRun() {
+    resumeBgm();
     start();
     if (USE_POINTER_LOCK && !lockUnavailable) {
       // User gesture from Start — lock immediately.
@@ -243,40 +245,6 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
       <GameHeader title="BANANA CATCH" icon="" />
 
       <main className="catch-main">
-        <div className="catch-hud">
-          <span className="catch-stat" title="Bananas collected">
-            <img src={BANANA_IMAGE} alt="" width={28} height={28} />
-            <strong>{state.bananas}</strong>
-          </span>
-          <LivesMeter maxAttempts={CATCH_LIVES} attemptsUsed={attemptsUsed} />
-          <span className="catch-stat catch-stat--cash">
-            <CashAmount amount={state.cashEarned} size={18} />
-          </span>
-        </div>
-
-        <label className="catch-volume">
-          <span>Music {Math.round(musicVolume * 100)}</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={Math.round(musicVolume * 100)}
-            aria-label="Banana Catch music volume"
-            onChange={(e) => onMusicVolume(Number(e.target.value) / 100)}
-          />
-        </label>
-
-        <p className="catch-hint">
-          {playing
-            ? useRelativeMouse
-              ? "Move to catch · Esc frees the mouse"
-              : USE_POINTER_LOCK && !lockUnavailable
-                ? "Click the field to lock the mouse again"
-                : "Move mouse to catch"
-            : "Catch bananas forever · dodge reds, blues, greens, pinks, then blimps"}
-        </p>
-
         <div
           ref={fieldRef}
           className={`catch-field${playing ? " is-playing" : ""}${pointerLocked ? " is-locked" : ""}`}
@@ -313,6 +281,33 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             className="catch-canvas"
             aria-hidden="true"
           />
+
+          <div className="catch-hud">
+            <span className="catch-stat" title="Bananas collected">
+              <img src={BANANA_IMAGE} alt="" width={28} height={28} />
+              <strong>{state.bananas}</strong>
+            </span>
+            <LivesMeter maxAttempts={CATCH_LIVES} attemptsUsed={attemptsUsed} />
+            <span className="catch-stat catch-stat--cash">
+              <CashAmount amount={state.cashEarned} size={18} />
+            </span>
+          </div>
+
+          {state.phase === "ready" ? (
+            <label className="catch-volume">
+              <span>Music {Math.round(musicVolume * 100)}</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(musicVolume * 100)}
+                aria-label="Banana Catch music volume"
+                onPointerDown={() => resumeBgm()}
+                onChange={(e) => onMusicVolume(Number(e.target.value) / 100)}
+              />
+            </label>
+          ) : null}
 
           <img
             ref={playerRef}

@@ -376,15 +376,7 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
   return (
     <div className="card-lab heroes-lab">
       <header className="card-lab__header">
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={onBack}
-        >
-          ← Towers
-        </button>
         <div className="card-lab__titles card-lab__titles--tower">
-          <p className="eyebrow">Collection</p>
           <h1>Heroes</h1>
           <p className="card-lab__blurb">
             {ownedCount === 0

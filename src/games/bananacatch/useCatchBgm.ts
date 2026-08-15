@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { CATCH_BGM_TRACKS } from "./bgmTracks";
 import type { CatchPhase } from "./useBananaCatch";
 
@@ -15,7 +15,7 @@ function clamp01(n: number) {
   return Math.max(0, Math.min(1, n));
 }
 
-/** Random BGM while Banana Catch is actively playing. */
+/** BGM on the ready screen and while playing, so volume can be previewed. */
 export function useCatchBgm(phase: CatchPhase, volume: number) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const orderRef = useRef<number[]>([]);
@@ -68,18 +68,39 @@ export function useCatchBgm(phase: CatchPhase, volume: number) {
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) audio.volume = clamp01(volume);
-  }, [volume]);
+    if (
+      audio &&
+      CATCH_BGM_TRACKS.length &&
+      (phase === "ready" || phase === "playing") &&
+      audio.paused
+    ) {
+      if (!audio.src) playNextRef.current();
+      else void audio.play().catch(() => undefined);
+    }
+  }, [volume, phase]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !CATCH_BGM_TRACKS.length) return;
 
-    if (phase === "playing") {
-      playNextRef.current();
+    if (phase === "ready" || phase === "playing") {
+      if (audio.paused) {
+        if (!audio.src) playNextRef.current();
+        else void audio.play().catch(() => undefined);
+      }
       return;
     }
 
     audio.pause();
-    audio.currentTime = 0;
   }, [phase]);
+
+  const resume = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !CATCH_BGM_TRACKS.length) return;
+    audio.volume = volumeRef.current;
+    if (!audio.src) playNextRef.current();
+    else void audio.play().catch(() => undefined);
+  }, []);
+
+  return resume;
 }

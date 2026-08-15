@@ -100,7 +100,6 @@ function toRunStats(s: State): RunStats {
 function finishRun(
   s: State,
   opts: { resumeRound: number; cleared: boolean },
-  onPerfectBonus?: (bonus: number) => void,
 ): State {
   const perfect = isFlawlessClear({
     cleared: opts.cleared,
@@ -108,8 +107,6 @@ function finishRun(
     lives: s.lives,
     maxLives: PRICE_CHECK_CONFIG.maxLives,
   });
-  const bonus = perfect ? perfectRunBonus(s.score) : 0;
-  if (bonus > 0) onPerfectBonus?.(bonus);
 
   const run = toRunStats(s);
   const bests = mergeBests(run, s.bests);
@@ -129,6 +126,61 @@ function finishRun(
   };
 }
 
+function applyGuess(
+  s: State,
+  side: Guess,
+  timedOut: boolean,
+  streakBonusPct: number,
+): State {
+  if (s.phase !== "playing") return s;
+  const ok = !timedOut && side === s.round.answer;
+  const streak = ok ? s.streak + 1 : 0;
+  const bestStreak = Math.max(s.bestStreak, streak);
+  const points = ok
+    ? pointsForCorrect(s.round.round, streak, streak >= 2 ? streakBonusPct : 0)
+    : 0;
+  const penalty = ok ? 0 : penaltyForWrong(s.round.round);
+  const lives = ok ? s.lives : s.lives - 1;
+  const feedback: Feedback = {
+    guess: side,
+    correct: ok,
+    leftTotal: s.round.left.total,
+    rightTotal: s.round.right.total,
+    points,
+    penalty,
+    timedOut: timedOut || undefined,
+  };
+  return {
+    ...s,
+    phase: "reveal",
+    streak,
+    bestStreak,
+    score: Math.max(0, s.score + points - penalty),
+    correct: s.correct + (ok ? 1 : 0),
+    answered: s.answered + 1,
+    lives,
+    feedback,
+    timeLeftMs: 0,
+  };
+}
+
+function advanceReveal(s: State, prepared?: PriceRound | null): State {
+  if (s.phase !== "reveal") return s;
+  if (s.lives <= 0) {
+    return finishRun(s, { resumeRound: s.round.round + 1, cleared: false });
+  }
+  if (!s.freePlay && s.round.round >= PRICE_CHECK_CONFIG.roundsPerRun) {
+    return finishRun(s, { resumeRound: s.round.round + 1, cleared: true });
+  }
+  return {
+    ...s,
+    phase: "playing",
+    round: prepared ?? freshRound(s.round.round + 1),
+    feedback: null,
+    timeLeftMs: timerMs(),
+  };
+}
+
 export function usePriceCheck() {
   const { profile, setCoinBalance } = useAuth();
   const { streakBonusPct, onCorrectCash, onGwenStreakProc } = useQuizHeroFx();
@@ -137,131 +189,113 @@ export function usePriceCheck() {
   setCoinBalanceRef.current = setCoinBalance;
   const profileRef = useRef(profile);
   profileRef.current = profile;
-  const settling = useRef(false);
+  const streakBonusRef = useRef(streakBonusPct);
+  streakBonusRef.current = streakBonusPct;
+  const paidAnswered = useRef(0);
+  const perfectPaid = useRef(false);
+  const nextRoundRef = useRef<PriceRound | null>(null);
 
-  const settle = useCallback((side: Guess, timedOut: boolean) => {
-    setState((s) => {
-      if (s.phase !== "playing" || settling.current) return s;
-      settling.current = true;
-      const ok = !timedOut && side === s.round.answer;
-      const streak = ok ? s.streak + 1 : 0;
-      const bestStreak = Math.max(s.bestStreak, streak);
-      const points = ok
-        ? pointsForCorrect(
-            s.round.round,
-            streak,
-            streak >= 2 ? streakBonusPct : 0,
-          )
-        : 0;
-      const penalty = ok ? 0 : penaltyForWrong(s.round.round);
-      const lives = ok ? s.lives : s.lives - 1;
-      const feedback: Feedback = {
-        guess: side,
-        correct: ok,
-        leftTotal: s.round.left.total,
-        rightTotal: s.round.right.total,
-        points,
-        penalty,
-        timedOut: timedOut || undefined,
-      };
+  const guess = useCallback((side: Guess) => {
+    setState((s) => applyGuess(s, side, false, streakBonusRef.current));
+  }, []);
 
-      if (ok && points > 0) {
-        void awardCoins(points).then((balance) => {
-          if (balance != null) setCoinBalanceRef.current(balance);
-        });
-        void onCorrectCash(setCoinBalanceRef.current);
-        if (streak >= 2 && streakBonusPct > 0) {
-          onGwenStreakProc(streak);
-        }
-      } else if (penalty > 0) {
-        const balance = profileRef.current?.coins ?? 0;
-        const take = Math.min(penalty, Math.max(0, balance));
-        if (take > 0) {
-          void spendCoins(take).then((next) => {
-            if (next != null) setCoinBalanceRef.current(next);
-          });
-        }
+  useEffect(() => {
+    if (state.phase !== "reveal" || !state.feedback) return;
+    if (paidAnswered.current >= state.answered) return;
+    paidAnswered.current = state.answered;
+    const fb = state.feedback;
+    if (fb.correct && fb.points > 0) {
+      void awardCoins(fb.points).then((balance) => {
+        if (balance != null) setCoinBalanceRef.current(balance);
+      });
+      void onCorrectCash(setCoinBalanceRef.current);
+      if (state.streak >= 2 && streakBonusRef.current > 0) {
+        onGwenStreakProc(state.streak);
       }
+    } else if (fb.penalty > 0) {
+      const balance = profileRef.current?.coins ?? 0;
+      const take = Math.min(fb.penalty, Math.max(0, balance));
+      if (take > 0) {
+        void spendCoins(take).then((next) => {
+          if (next != null) setCoinBalanceRef.current(next);
+        });
+      }
+    }
+  }, [
+    state.phase,
+    state.feedback,
+    state.answered,
+    state.streak,
+    onCorrectCash,
+    onGwenStreakProc,
+  ]);
 
-      return {
-        ...s,
-        phase: "reveal",
-        streak,
-        bestStreak,
-        score: Math.max(0, s.score + points - penalty),
-        correct: s.correct + (ok ? 1 : 0),
-        answered: s.answered + 1,
-        lives,
-        feedback,
-        timeLeftMs: 0,
-      };
+  useEffect(() => {
+    if (state.phase !== "results") {
+      perfectPaid.current = false;
+      return;
+    }
+    if (!state.perfectRun || perfectPaid.current) return;
+    perfectPaid.current = true;
+    const bonus = perfectRunBonus(state.score);
+    if (bonus <= 0) return;
+    void awardCoins(bonus).then((balance) => {
+      if (balance != null) setCoinBalanceRef.current(balance);
     });
-  }, [onCorrectCash, onGwenStreakProc, streakBonusPct]);
+  }, [state.phase, state.perfectRun, state.score]);
 
-  const guess = useCallback(
-    (side: Guess) => {
-      settle(side, false);
-    },
-    [settle],
-  );
+  useEffect(() => {
+    if (state.phase !== "reveal") {
+      nextRoundRef.current = null;
+      return;
+    }
+    if (
+      state.lives <= 0 ||
+      (!state.freePlay && state.round.round >= PRICE_CHECK_CONFIG.roundsPerRun)
+    ) {
+      nextRoundRef.current = null;
+      return;
+    }
+    nextRoundRef.current = freshRound(state.round.round + 1);
+  }, [state.phase, state.round.round, state.lives, state.freePlay]);
 
   // Countdown while playing
   useEffect(() => {
     if (state.phase !== "playing") return;
-    settling.current = false;
     let raf = 0;
     let last = performance.now();
+    let left = timerMs();
+    let shownSec = Math.ceil(left / 1000);
     const tick = (now: number) => {
-      const dt = now - last;
+      const dt = Math.min(48, now - last);
       last = now;
-      setState((s) => {
-        if (s.phase !== "playing") return s;
-        const next = Math.max(0, s.timeLeftMs - dt);
-        if (next <= 0 && s.timeLeftMs > 0) {
+      left = Math.max(0, left - dt);
+      if (left <= 0) {
+        setState((s) => {
+          if (s.phase !== "playing") return s;
           const wrong: Guess = s.round.answer === "left" ? "right" : "left";
-          queueMicrotask(() => settle(wrong, true));
-          return { ...s, timeLeftMs: 0 };
-        }
-        return { ...s, timeLeftMs: next };
-      });
+          return applyGuess(s, wrong, true, streakBonusRef.current);
+        });
+        return;
+      }
+      const sec = Math.ceil(left / 1000);
+      if (sec !== shownSec) {
+        shownSec = sec;
+        setState((s) =>
+          s.phase === "playing" ? { ...s, timeLeftMs: left } : s,
+        );
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [state.phase, state.round.round, settle]);
+  }, [state.phase, state.round.round]);
 
   const goNext = useCallback(() => {
     setState((s) => {
-      if (s.phase !== "reveal") return s;
-      const awardBonus = (bonus: number) => {
-        void awardCoins(bonus).then((balance) => {
-          if (balance != null) setCoinBalanceRef.current(balance);
-        });
-      };
-      if (s.lives <= 0) {
-        return finishRun(
-          s,
-          { resumeRound: s.round.round + 1, cleared: false },
-          awardBonus,
-        );
-      }
-
-      if (!s.freePlay && s.round.round >= PRICE_CHECK_CONFIG.roundsPerRun) {
-        return finishRun(
-          s,
-          { resumeRound: s.round.round + 1, cleared: true },
-          awardBonus,
-        );
-      }
-
-      settling.current = false;
-      return {
-        ...s,
-        phase: "playing",
-        round: freshRound(s.round.round + 1),
-        feedback: null,
-        timeLeftMs: timerMs(),
-      };
+      const prepared = nextRoundRef.current;
+      nextRoundRef.current = null;
+      return advanceReveal(s, prepared);
     });
   }, []);
 
@@ -295,7 +329,6 @@ export function usePriceCheck() {
     }
     setCoinBalanceRef.current(balance);
 
-    settling.current = false;
     setState((s) => {
       const resumeRound = s.resumeRound ?? s.round.round + 1;
       return {
@@ -317,7 +350,8 @@ export function usePriceCheck() {
   }, []);
 
   const playAgain = useCallback(() => {
-    settling.current = false;
+    paidAnswered.current = 0;
+    perfectPaid.current = false;
     setState(initialState());
   }, []);
 

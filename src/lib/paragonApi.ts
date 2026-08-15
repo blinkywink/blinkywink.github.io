@@ -262,7 +262,7 @@ export async function feedParagonsFromCards(
   const unlockedSet = new Set(unlocked);
   const feeds: ParagonFeed[] = [];
   for (const id of ids) {
-    if (id.endsWith("-paragon") && unlockedSet.has(id)) continue;
+    if (unlockedSet.has(id)) continue;
     const feed = feedForCardId(id);
     if (!feed || !ownedParagonIds.has(feed.paragonId)) continue;
     feeds.push(feed);

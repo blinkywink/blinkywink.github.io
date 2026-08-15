@@ -1,4 +1,6 @@
 -- Apply Paragon XP/degrees from pulled card ids (text[] — same shape as award_cards).
+-- First copies (p_new_ids) never feed. Duplicates of a tower's cards feed that
+-- tower's Paragon, and only if the player already owns that Paragon.
 -- Also harden apply_paragon_feeds so a bad jsonb payload can't silently no-op.
 -- Safe to re-run.
 
@@ -85,8 +87,8 @@ begin
       public._paragon_id_for_card(trim(x)) as paragon_id,
       sum(
         case
-          when trim(x) like '%-paragon' and not (trim(x) = any (new_ids))
-            then 0
+          -- First copy of a card never feeds. Duplicates only.
+          when trim(x) = any (new_ids) then 0
           else public._paragon_xp_for_card(trim(x))
         end
       )::integer as add_xp,

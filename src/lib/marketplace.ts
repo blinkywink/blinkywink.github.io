@@ -10,6 +10,7 @@ import { cached, cacheInvalidate, CacheTtl } from "./cache";
 import { pingInbox } from "./trades";
 
 export const MARKET_PAGE_SIZE = 24;
+export const MAX_MARKET_PRICE = 10_000_000;
 
 export type MarketplaceListing = {
   id: string;
@@ -328,8 +329,8 @@ export async function listCardForSale(
   if (!Number.isFinite(amount) || amount < 10) {
     throw new Error("Price must be at least 10 Cash.");
   }
-  if (amount > 1_000_000) {
-    throw new Error("Price can't be over 1,000,000 Cash.");
+  if (amount > MAX_MARKET_PRICE) {
+    throw new Error(`Price can't be over ${MAX_MARKET_PRICE.toLocaleString()} Cash.`);
   }
   const { data, error } = await supabase.rpc("list_card_for_sale", {
     p_card_id: cardId,

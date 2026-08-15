@@ -542,15 +542,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
       <main className="hero-main">
         {state.phase === "browse" || state.phase === "loading" ? (
           <div className="hero-browse">
-            <h2>Search Encore charts</h2>
-            <p className="hero-browse__sub">
-              Pulls Clone Hero charts from{" "}
-              <a href="https://www.enchor.us/" target="_blank" rel="noreferrer">
-                enchor.us
-              </a>
-              . Expert Guitar charts, Vocals when the pack has them. Defaults{" "}
-              {keyHint} (hold for sustains).
-            </p>
             <form className="hero-search" onSubmit={onSearch}>
               <input
                 value={state.query}

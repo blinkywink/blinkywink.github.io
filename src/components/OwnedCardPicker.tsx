@@ -8,9 +8,9 @@ import {
   type MonkeyCardSpec,
 } from "../lib/pathCombos";
 import { MonkeyCard } from "./MonkeyCard";
+import { TierSortButton } from "./TierSortButton";
 import { VisibleCardGrid } from "./VisibleCardGrid";
-
-const CATEGORY_ORDER = ["Primary", "Military", "Magic", "Support"];
+import { useCardCollectionOptional } from "../auth/CardCollectionProvider";
 
 type TowerChoice = {
   name: string;
@@ -31,20 +31,12 @@ function cardCountFor(tower: string): number {
   return 64 + (hasParagon ? 1 : 0);
 }
 
-const TOWER_CHOICES: TowerChoice[] = baseTowers
-  .slice()
-  .sort((a, b) => {
-    const ca = CATEGORY_ORDER.indexOf(a.category);
-    const cb = CATEGORY_ORDER.indexOf(b.category);
-    if (ca !== cb) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
-    return a.tower.localeCompare(b.tower);
-  })
-  .map((t) => ({
-    name: t.tower,
-    category: t.category,
-    image: t.image,
-    cardCount: cardCountFor(t.tower),
-  }));
+const TOWER_CHOICES: TowerChoice[] = baseTowers.map((t) => ({
+  name: t.tower,
+  category: t.category,
+  image: t.image,
+  cardCount: cardCountFor(t.tower),
+}));
 
 const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
   TOWER_CHOICES.map((t) => [
@@ -121,6 +113,7 @@ export function OwnedCardPicker({
   dockExtra,
 }: Props) {
   const blocked = unavailableIds ?? EMPTY_SET;
+  const collection = useCardCollectionOptional();
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>({ kind: "towers" });
   const [tierHighFirst, setTierHighFirst] = useState(true);
@@ -215,6 +208,12 @@ export function OwnedCardPicker({
                 pathLevels={card.pathLevels}
                 mode="preview"
                 owned
+                degree={
+                  card.isParagon
+                    ? collection?.paragonOf(card.id)?.degree
+                    : undefined
+                }
+                visualSeed={collection?.visualSeedOf(card.id)}
                 onSelect={() => {
                   if (disabled || unavailable) return;
                   toggle(card.id);
@@ -245,14 +244,10 @@ export function OwnedCardPicker({
   }, [towerCards, owned, blocked]);
 
   const sortToggle = (
-    <button
-      type="button"
-      className="btn btn--ghost btn--sm card-lab__sort"
-      onClick={() => setTierHighFirst((v) => !v)}
-      aria-pressed={tierHighFirst}
-    >
-      {tierHighFirst ? "Tier · high → low" : "Tier · low → high"}
-    </button>
+    <TierSortButton
+      highFirst={tierHighFirst}
+      onToggle={() => setTierHighFirst((v) => !v)}
+    />
   );
 
   const draftCount = draft.size;
@@ -331,6 +326,7 @@ export function OwnedCardPicker({
                     type="button"
                     role="listitem"
                     className={`card-lab__tower-btn${ownedN >= tower.cardCount && tower.cardCount > 0 ? " is-complete" : ""}`}
+                    data-category={tower.category}
                     disabled={ownedN === 0}
                     onClick={() => {
                       setQuery("");

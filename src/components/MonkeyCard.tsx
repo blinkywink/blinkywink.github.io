@@ -17,6 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
+import { categoryShell, categoryTint } from "../lib/cardCategoryTheme";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
 type Accent = {
@@ -49,6 +50,11 @@ type Props = {
   degree?: number;
   /** Per-copy art seed. Falls back to the signed-in collection. */
   visualSeed?: number | null;
+  /**
+   * Preview still, but paint primary/secondary into the flat background
+   * instead of scaled blend layers (those shimmer at thumb size).
+   */
+  richPreview?: boolean;
 };
 
 const accents = cardAccents as unknown as Record<string, Accent>;
@@ -176,6 +182,143 @@ function darkenHex(hex: string, amount: number): string {
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
+function parseRgb(hex: string): [number, number, number] | null {
+  const h = hex.replace("#", "");
+  const full =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
+  if (full.length < 6) return null;
+  const n = Number.parseInt(full.slice(0, 6), 16);
+  if (!Number.isFinite(n)) return null;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function hexAlpha(hex: string, alpha: number): string {
+  const rgb = parseRgb(hex);
+  if (!rgb) return `rgba(47,159,224,${alpha})`;
+  return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${clamp01(alpha)})`;
+}
+
+function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+  const rr = r / 255;
+  const gg = g / 255;
+  const bb = b / 255;
+  const max = Math.max(rr, gg, bb);
+  const min = Math.min(rr, gg, bb);
+  const d = max - min;
+  let h = 0;
+  if (d > 0) {
+    if (max === rr) h = ((gg - bb) / d) % 6;
+    else if (max === gg) h = (bb - rr) / d + 2;
+    else h = (rr - gg) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, s: max === 0 ? 0 : d / max, v: max };
+}
+
+function hsvToHex(h: number, s: number, v: number): string {
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (h < 60) {
+    r = c;
+    g = x;
+  } else if (h < 120) {
+    r = x;
+    g = c;
+  } else if (h < 180) {
+    g = c;
+    b = x;
+  } else if (h < 240) {
+    g = x;
+    b = c;
+  } else if (h < 300) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+  const to = (n: number) =>
+    Math.round((n + m) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+function punchHex(hex: string): string {
+  const rgb = parseRgb(hex);
+  if (!rgb) return hex;
+  const { h, s, v } = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+  return hsvToHex(
+    h,
+    Math.min(1, s * 1.22 + 0.12),
+    Math.min(1, Math.max(v, 0.76) * 1.06),
+  );
+}
+
+function colorDist(a: string, b: string): number {
+  const x = parseRgb(a);
+  const y = parseRgb(b);
+  if (!x || !y) return 0;
+  const dr = x[0] - y[0];
+  const dg = x[1] - y[1];
+  const db = x[2] - y[2];
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+function popScore(hex: string, towerTint: string): number {
+  const rgb = parseRgb(hex);
+  if (!rgb) return -99;
+  const { h, s, v } = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+  const dist = colorDist(hex, towerTint) / 441;
+  // Muddy fur / wood: orange-yellow, not that saturated, not that bright.
+  const brown = h >= 8 && h <= 55 && s < 0.82 && v < 0.72;
+  const gray = s < 0.22;
+  const dim = v < 0.32;
+  let score = s * 1.7 + v * 1.05 + dist * 0.28;
+  if (brown) score -= 1.55;
+  if (gray) score -= 0.95;
+  if (dim) score -= 0.75;
+  if (s > 0.55 && v > 0.5) score += 0.55;
+  return score;
+}
+
+/** Bright, saturated palette color from the art — skip brown/mud. */
+function contrastAccent(
+  accent: Accent | undefined,
+  towerTint: string,
+  fallback: string,
+): string {
+  const candidates = [
+    accent?.secondary,
+    accent?.colors?.[1],
+    accent?.colors?.[0],
+    accent?.primary,
+    accent?.colors?.[2],
+    accent?.colors?.[3],
+    fallback,
+  ].filter((c): c is string => Boolean(c));
+  let best = candidates[0] ?? fallback;
+  let bestScore = -99;
+  for (const c of candidates) {
+    const score = popScore(c, towerTint);
+    if (score > bestScore) {
+      best = c;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 type ParagonFxPt = { x: string; y: string };
 
 const PARAGON_SMOKE: ParagonFxPt[] = [
@@ -238,6 +381,7 @@ export function MonkeyCard({
   bake = false,
   degree: degreeProp,
   visualSeed: visualSeedProp,
+  richPreview = false,
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
@@ -351,25 +495,26 @@ export function MonkeyCard({
   const secondary = isParagon
     ? PARAGON_ACCENT.secondary
     : (accent?.secondary ?? "#c8c8d4");
+  const towerTint = categoryTint(entity.category);
+  const previewBoost = isPreview ? 1.28 : 1;
 
   const colorFieldStyle = useMemo(() => {
-    if (tier <= 0) {
-      return { background: "#14181f" } as React.CSSProperties;
-    }
-    if (tier === 1) {
-      return { background: "#161b24" } as React.CSSProperties;
-    }
-    if (tier === 2) {
-      return {
-        background: `linear-gradient(165deg, #181e28 0%, #12161e 100%)`,
-      } as React.CSSProperties;
-    }
-    if (tier === 3) {
+    if (!isParagon && tier <= 2) {
+      const amount =
+        (tier <= 0 ? 0.32 : tier === 1 ? 0.42 : 0.54) * previewBoost;
       return {
         background: `
-          radial-gradient(circle at 40% 28%, color-mix(in srgb, ${primary} 28%, transparent), transparent 54%),
-          radial-gradient(circle at 75% 70%, color-mix(in srgb, ${secondary} 14%, transparent), transparent 50%),
-          linear-gradient(165deg, #1a2030 0%, #11151c 80%)
+          radial-gradient(ellipse 95% 85% at 48% 38%, ${hexAlpha(towerTint, amount)}, #14181f 78%)
+        `,
+      } as React.CSSProperties;
+    }
+    if (!isParagon && tier === 3) {
+      const fromImage = punchHex(contrastAccent(accent, towerTint, secondary));
+      return {
+        background: `
+          radial-gradient(ellipse 95% 85% at 42% 32%, ${hexAlpha(towerTint, 0.56 * previewBoost)}, #14181f 76%),
+          radial-gradient(ellipse 90% 70% at 86% 88%, ${hexAlpha(fromImage, 0.46)}, transparent 62%),
+          linear-gradient(165deg, #14181f 42%, ${hexAlpha(fromImage, 0.26)} 100%)
         `,
       } as React.CSSProperties;
     }
@@ -380,7 +525,7 @@ export function MonkeyCard({
         linear-gradient(155deg, ${darkenHex(primary, 0.68)} 0%, #10141c 50%, ${darkenHex(secondary, 0.78)} 100%)
       `,
     } as React.CSSProperties;
-  }, [tier, primary, secondary]);
+  }, [tier, primary, secondary, isParagon, towerTint, accent, previewBoost]);
 
   const accentStyle = useMemo(() => {
     const [r, g, b] = isParagon
@@ -395,6 +540,17 @@ export function MonkeyCard({
       ["--accent-g" as string]: String(g),
       ["--accent-b" as string]: String(b),
       ["--accent-strength" as string]: String(strength),
+      ["--card-shell" as string]:
+        !isParagon && tier <= 3
+          ? categoryShell(entity.category)
+          : darkenHex(
+              punchHex(
+                popScore(primary, towerTint) >= popScore(secondary, towerTint)
+                  ? primary
+                  : secondary,
+              ),
+              0.64,
+            ),
       ["--holo-mul" as string]: holo
         ? String(
             Math.min(
@@ -404,7 +560,19 @@ export function MonkeyCard({
           )
         : "0",
     } as React.CSSProperties;
-  }, [accent, strength, palette, isParagon, primary, secondary, holo, tier, stage]);
+  }, [
+    accent,
+    strength,
+    palette,
+    isParagon,
+    primary,
+    secondary,
+    holo,
+    tier,
+    stage,
+    entity.category,
+    towerTint,
+  ]);
 
   const applyPoint = useCallback((clientX: number, clientY: number) => {
     const scene = sceneRef.current;
@@ -564,6 +732,7 @@ export function MonkeyCard({
         .filter(Boolean)
         .join(" ")}
       {...interactiveProps}
+      style={accentStyle}
     >
       {isParagon && showFx && stage >= 1 ? (
         <div
@@ -617,7 +786,7 @@ export function MonkeyCard({
                   style={colorFieldStyle}
                   aria-hidden="true"
                 />
-                {tier >= 2 ? (
+                {tier >= 4 ? (
                   <div className="monkey-card__accent-wash" aria-hidden="true" />
                 ) : null}
               </>
@@ -651,7 +820,7 @@ export function MonkeyCard({
                 el.src = src;
               }}
             />
-            {tier >= 2 ? (
+            {tier >= 4 ? (
               <div className="monkey-card__accent-frame" aria-hidden="true" />
             ) : null}
 

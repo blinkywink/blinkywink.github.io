@@ -11,7 +11,9 @@ export const CARD_FACE_H = (CARD_FACE_W * 3.5) / 2.5;
 const PIXEL_RATIO = 2;
 const IDB_NAME = "ba-card-faces";
 const IDB_STORE = "faces";
-const IDB_VERSION = 1;
+const IDB_VERSION = 2;
+/** Bump when card chrome/colors change so stale JPEGs are dropped. */
+const FACE_STYLE_REV = "cat2";
 /** Soft cap so IndexedDB doesn’t grow forever. */
 const IDB_MAX_ENTRIES = 80;
 
@@ -46,7 +48,7 @@ function cacheKey(cardId: string, opts?: CardFaceBakeOpts): string {
     opts?.visualSeed != null && Number.isFinite(opts.visualSeed)
       ? Math.floor(Number(opts.visualSeed))
       : "";
-  return `${cardId}::d${degree}::s${seed}`;
+  return `${FACE_STYLE_REV}:${cardId}::d${degree}::s${seed}`;
 }
 
 function openFaceDb(): Promise<IDBDatabase | null> {

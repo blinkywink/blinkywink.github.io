@@ -165,8 +165,10 @@ begin
   if p_listing_id is null then
     raise exception 'Missing listing';
   end if;
-  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 1000000 then
-    raise exception 'Offer must be between 10 and 1,000,000';
+
+  perform public._assert_shop_spend_unlocked(buyer);
+  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 10000000 then
+    raise exception 'Offer must be between 10 and 10,000,000';
   end if;
 
   select * into listing
@@ -422,6 +424,8 @@ begin
   if p_listing_id is null then
     raise exception 'Missing listing';
   end if;
+
+  perform public._assert_shop_spend_unlocked(buyer);
 
   select * into listing
   from public.marketplace_listings

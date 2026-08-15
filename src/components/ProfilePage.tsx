@@ -44,6 +44,12 @@ import {
   showcaseSlotsFromProfile,
 } from "../lib/profileShowcase";
 import {
+  getLogoHomeId,
+  LOGO_HOME_PAGES,
+  setLogoHomeId,
+  type LogoHomeId,
+} from "../lib/logoHome";
+import {
   getSfxVolume,
   playCardFocus,
   setSfxVolume,
@@ -53,13 +59,9 @@ import {
   collectionPath,
   userCollectionPath,
 } from "../lib/routes";
-import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
-import { fetchBadgeIds } from "../lib/profileBadges";
-import { PageHeader } from "./PageHeader";
 import { CashAmount } from "./CurrencyChip";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { MonkeyCard } from "./MonkeyCard";
-import { PlayerBadges } from "./PlayerBadges";
 import { UserAvatar } from "./UserAvatar";
 
 type EditorStep = "pick" | "crop";
@@ -75,33 +77,12 @@ export function ProfilePage() {
   const [showcaseDraft, setShowcaseDraft] = useState<Set<string>>(new Set());
   const [colorDraft, setColorDraft] = useState("#F0C84A");
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
+  const [logoHome, setLogoHomeState] = useState(() => getLogoHomeId());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [boardRank, setBoardRank] = useState<number | null>(null);
-  const [badgeIds, setBadgeIds] = useState<string[]>([]);
 
   useEffect(() => subscribeSfxVolume(setSfxVolumeState), []);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setBoardRank(null);
-      setBadgeIds([]);
-      return;
-    }
-    let cancelled = false;
-    void Promise.all([
-      fetchLeaderboardRank(user.id),
-      fetchBadgeIds(user.id),
-    ]).then(([rank, badges]) => {
-      if (cancelled) return;
-      setBoardRank(rank);
-      setBadgeIds(badges);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
 
   const saved = useMemo(
     () => (profile ? avatarFromProfile(profile) : DEFAULT_AVATAR_CROP),
@@ -361,7 +342,6 @@ export function ProfilePage() {
   if (!ready) {
     return (
       <div className="profile-page">
-        <PageHeader title="Profile" blurb="Loading…" />
         <main className="profile-main">
           <p className="profile-empty">Loading…</p>
         </main>
@@ -609,11 +589,6 @@ export function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <PageHeader
-        eyebrow="Account"
-        title="Profile"
-        blurb="Picture, cosmetics, and showcase cards for your public page."
-      />
       <main className="profile-main">
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
@@ -642,7 +617,6 @@ export function ProfilePage() {
           </div>
           <div className="profile-home__meta">
             <h2 className="profile-home__name">{user.username}</h2>
-            <PlayerBadges rank={boardRank} badgeIds={badgeIds} size="lg" />
             <div className="profile-home__actions">
               <button
                 type="button"
@@ -815,6 +789,10 @@ export function ProfilePage() {
                     pathLevels={card.pathLevels}
                     mode="preview"
                     owned
+                    degree={
+                      card.isParagon ? paragonOf(card.id)?.degree : undefined
+                    }
+                    visualSeed={visualSeedOf(card.id)}
                   />
                   <button
                     type="button"
@@ -834,6 +812,35 @@ export function ProfilePage() {
                 : "None selected yet."}
             </p>
           )}
+        </section>
+
+        <section className="profile-settings" aria-label="Logo shortcut">
+          <div className="profile-settings__head">
+            <div>
+              <h3>Logo shortcut</h3>
+              <p>
+                Choose where the blinkywink.co logo in the header takes you.
+                Saved on this device.
+              </p>
+            </div>
+          </div>
+          <label className="profile-settings__select">
+            <span className="profile-settings__volume-label">Opens</span>
+            <select
+              value={logoHome}
+              onChange={(e) => {
+                const next = e.target.value as LogoHomeId;
+                setLogoHomeId(next);
+                setLogoHomeState(next);
+              }}
+            >
+              {LOGO_HOME_PAGES.map((page) => (
+                <option key={page.id} value={page.id}>
+                  {page.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </section>
       </main>
       <footer className="profile-page__footer">

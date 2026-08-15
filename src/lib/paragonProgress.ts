@@ -1,3 +1,5 @@
+import { CARD_TIER_ODDS } from "./packPull";
+import { PACK_PRICES, PACK_SIZE } from "./packTheme";
 import {
   findParagon,
   maxPathTier,
@@ -92,13 +94,54 @@ export function paragonStageLabel(degree: number): string {
   return PARAGON_STAGE_LABELS[paragonStage(degree)];
 }
 
-/** Suggested Cash ask — higher degree is worth a lot more. */
-export function suggestedParagonValue(degree: number): number {
-  const d = clampParagonDegree(degree);
-  return Math.round(6000 + 120 * d + 18 * d * d);
+/** Mid ask for a degree-1 Paragon (the pull itself ~100 tower packs). */
+const PARAGON_DEGREE_1_MID = 90_000;
+
+function expectedXpPerTowerPack(): number {
+  let xp = 0;
+  for (let tier = 0; tier <= 5; tier++) {
+    xp += CARD_TIER_ODDS[tier as 0 | 1 | 2 | 3 | 4 | 5] * PARAGON_XP_BY_TIER[tier];
+  }
+  return xp * PACK_SIZE;
 }
 
-/** XP / degrees this card should feed if the player already has that Paragon. */
+const XP_PER_TOWER_PACK = expectedXpPerTowerPack();
+const DEGREES_PER_PACK_FROM_DUPES =
+  PACK_SIZE * CARD_TIER_ODDS.paragon * PARAGON_DUP_DEGREES;
+
+/**
+ * Expected dedicated tower-packs to grind from degree 1 → `degree`,
+ * mixing duplicate XP with the rare extra Paragon (+3 degrees).
+ */
+export function expectedTowerPacksToParagonDegree(degree: number): number {
+  const target = clampParagonDegree(degree);
+  let packs = 0;
+  for (let d = 1; d < target; d++) {
+    const fromXp = XP_PER_TOWER_PACK / Math.max(1, xpToNextDegree(d));
+    packs += 1 / (DEGREES_PER_PACK_FROM_DUPES + fromXp);
+  }
+  return packs;
+}
+
+function roundParagonAsk(n: number): number {
+  const x = Math.max(10, n);
+  if (x >= 1_000_000) return Math.round(x / 5_000) * 5_000;
+  if (x >= 100_000) return Math.round(x / 1_000) * 1_000;
+  if (x >= 10_000) return Math.round(x / 500) * 500;
+  return Math.round(x / 100) * 100;
+}
+
+/**
+ * Suggested Cash ask from pack grind: deg 1 is ~80–100k (the Paragon pull),
+ * then each extra degree adds dedicated tower-pack cost (~1k Cash each).
+ */
+export function suggestedParagonValue(degree: number): number {
+  const d = clampParagonDegree(degree);
+  const packs = expectedTowerPacksToParagonDegree(d);
+  return roundParagonAsk(PARAGON_DEGREE_1_MID + packs * PACK_PRICES.tower);
+}
+
+/** XP / degrees a duplicate of this card feeds into that tower's Paragon. */
 export function feedForCard(card: MonkeyCardSpec): ParagonFeed | null {
   if (!findParagon(card.tower)) return null;
   const paragonId = paragonCardId(card.tower);
@@ -113,7 +156,7 @@ export function feedForCard(card: MonkeyCardSpec): ParagonFeed | null {
   };
 }
 
-/** @deprecated use feedForCard — same values, not duplicate-only. */
+/** @deprecated use feedForCard — amounts for a duplicate of this card. */
 export function feedForDuplicate(card: MonkeyCardSpec): ParagonFeed | null {
   return feedForCard(card);
 }
