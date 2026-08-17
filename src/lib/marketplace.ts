@@ -265,6 +265,44 @@ export async function fetchMarketplaceListings(
   });
 }
 
+export type ActiveListedCard = {
+  cardId: string;
+  paragonDegree: number | null;
+  paragonXp: number | null;
+};
+
+/** Active marketplace listings for dup detection / paragon snapshots while escrowed. */
+export async function fetchMyActiveListedCards(
+  sellerId: string,
+): Promise<ActiveListedCard[]> {
+  const id = String(sellerId ?? "").trim();
+  if (!id || !getAccessToken()) return [];
+  return cached(`market:listings:mine:active:${id}`, CacheTtl.listings, async () => {
+    const first = await supabase
+      .from("marketplace_listings")
+      .select("card_id, paragon_degree, paragon_xp")
+      .eq("seller_id", id)
+      .eq("status", "active");
+    const result = first.error
+      ? await supabase
+          .from("marketplace_listings")
+          .select("card_id")
+          .eq("seller_id", id)
+          .eq("status", "active")
+      : first;
+    if (result.error) throw new Error(result.error.message);
+    return (result.data ?? []).map((row) => {
+      const r = row as ListingRow;
+      return {
+        cardId: String(r.card_id),
+        paragonDegree:
+          r.paragon_degree == null ? null : Number(r.paragon_degree) || 1,
+        paragonXp: r.paragon_xp == null ? null : Number(r.paragon_xp) || 0,
+      };
+    });
+  });
+}
+
 /** The signed-in player's active listings. */
 export async function fetchMyMarketplaceListings(
   sellerId: string,

@@ -55,6 +55,13 @@ begin
     insert into public.owned_cards (user_id, card_id)
     select uid, c.card_id
     from cleaned c
+    where not exists (
+      select 1
+      from public.marketplace_listings ml
+      where ml.seller_id = uid
+        and ml.card_id = c.card_id
+        and ml.status = 'active'
+    )
     on conflict (user_id, card_id) do nothing
     returning card_id
   )

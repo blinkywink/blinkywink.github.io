@@ -233,7 +233,12 @@ export function PackOpenerTest({
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
   const { profile, setCoinBalance, refreshProfile } = useAuth();
-  const { awardCards, feedParagonsFromCards, owned, paragonOf } = useCardCollection();
+  const { awardCards, feedParagonsFromCards, owned, listed, paragonOf } =
+    useCardCollection();
+  const ownedForDup = useMemo(
+    () => new Set([...owned, ...listed]),
+    [owned, listed],
+  );
   const { setParagonNoticeDeferral } = useHeroFx();
   const {
     packPullMods,
@@ -596,7 +601,7 @@ export function PackOpenerTest({
   const beginDraw = useCallback(
     (cards: MonkeyCardSpec[], isGod: boolean, reveal: boolean) => {
       pendingPullsRef.current = null;
-      const ownedAtOpen = owned;
+      const ownedAtOpen = ownedForDup;
       const dupIds = new Set<string>();
       const unlocked: MonkeyCardSpec[] = [];
       const feeds: ParagonFeed[] = [];
@@ -611,7 +616,7 @@ export function PackOpenerTest({
         }
       }
       const ownedParagons = new Set<string>();
-      for (const id of ownedAtOpen) {
+      for (const id of owned) {
         if (id.endsWith("-paragon")) ownedParagons.add(id);
       }
       for (const card of unlocked) {
@@ -621,6 +626,7 @@ export function PackOpenerTest({
         if (!dupIds.has(card.id)) continue;
         const feed = feedForCard(card);
         if (!feed || !ownedParagons.has(feed.paragonId)) continue;
+        if (listed.has(feed.paragonId)) continue;
         const ownedDegree = paragonOf(feed.paragonId)?.degree ?? PARAGON_MIN_DEGREE;
         if (ownedDegree >= PARAGON_MAX_DEGREE) continue;
         feeds.push(feed);
@@ -657,7 +663,9 @@ export function PackOpenerTest({
       dupCashMods,
       feedParagonsFromCards,
       flushUnpaidDupCash,
+      ownedForDup,
       owned,
+      listed,
       paragonOf,
       showCardAt,
     ],
@@ -685,7 +693,7 @@ export function PackOpenerTest({
         return;
       }
       const mods = packPullMods();
-      const result = pullPackCards(pool, pack.cardCount, owned, mods);
+      const result = pullPackCards(pool, pack.cardCount, ownedForDup, mods);
       if (result.extraCard) onObynExtra();
       beginDraw(result.cards, result.godPack, false);
       return;
@@ -704,13 +712,13 @@ export function PackOpenerTest({
       setClips(splitClips(a, b));
       setPhaseBoth("sliced");
       const mods = packPullMods();
-      const result = pullPackCards(pool, pack.cardCount, owned, mods);
+      const result = pullPackCards(pool, pack.cardCount, ownedForDup, mods);
       if (result.extraCard) onObynExtra();
       setGodPack(result.godPack);
       pendingPullsRef.current = { cards: result.cards, isGod: result.godPack };
       later(() => beginDraw(result.cards, result.godPack, true), SLICE_REVEAL_MS);
     },
-    [beginDraw, onObynExtra, packPullMods, pool, pack, pack.cardCount, owned],
+    [beginDraw, onObynExtra, packPullMods, pool, pack, pack.cardCount, ownedForDup],
   );
 
   const autoSlashOpen = useCallback(() => {
