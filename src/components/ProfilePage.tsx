@@ -371,6 +371,15 @@ export function ProfilePage() {
                   {editorStep === "pick" ? "Choose a card" : "Frame your card"}
                 </h2>
               </div>
+              <button
+                type="button"
+                className="pfp-editor__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeEditor}
+              >
+                ×
+              </button>
             </header>
 
             <ol className="pfp-editor__steps" aria-label="Steps">
@@ -537,6 +546,15 @@ export function ProfilePage() {
                 <p className="pfp-editor__eyebrow">Showcase cards</p>
                 <h2 id="showcase-editor-title">Add one card</h2>
               </div>
+              <button
+                type="button"
+                className="pfp-editor__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeShowcaseEditor}
+              >
+                ×
+              </button>
             </header>
             {error ? (
               <p className="profile-banner profile-banner--err">{error}</p>

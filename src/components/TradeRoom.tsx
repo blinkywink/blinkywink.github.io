@@ -375,13 +375,23 @@ export function TradeRoom() {
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <MonkeyCard
-              entity={focused.card.entity}
-              pathLevels={focused.card.pathLevels}
-              mode="focus"
-              owned
-              degree={focused.degree}
-            />
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-focus__close"
+                aria-label="Close"
+                onClick={() => setFocused(null)}
+              >
+                ✕
+              </button>
+              <MonkeyCard
+                entity={focused.card.entity}
+                pathLevels={focused.card.pathLevels}
+                mode="focus"
+                owned
+                degree={focused.degree}
+              />
+            </div>
             {focused.card.isParagon ? (
               <ParagonXpBar
                 degree={focused.degree ?? 1}

@@ -78,13 +78,23 @@ export function ParagonDegreeLab() {
             onClick={() => setTheater(false)}
           />
           <div className="paragon-lab__theater-stage">
-            <MonkeyCard
-              entity={entity}
-              pathLevels={[5, 5, 5]}
-              mode="focus"
-              owned
-              degree={degree}
-            />
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm paragon-lab__theater-close card-focus__close"
+                aria-label="Close"
+                onClick={() => setTheater(false)}
+              >
+                ✕
+              </button>
+              <MonkeyCard
+                entity={entity}
+                pathLevels={[5, 5, 5]}
+                mode="focus"
+                owned
+                degree={degree}
+              />
+            </div>
             <ParagonXpBar degree={degree} xp={0} />
             <label className="paragon-lab__theater-slider">
               <span>

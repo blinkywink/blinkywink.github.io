@@ -168,12 +168,23 @@ export function ShopDirectShelf() {
             onClick={closeFocus}
           />
           <div className="card-focus__panel shop-direct-focus__panel">
-            <MonkeyCard
-              entity={focused.card.entity}
-              pathLevels={focused.card.pathLevels}
-              mode="focus"
-              owned
-            />
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-focus__close"
+                aria-label="Close"
+                disabled={busy}
+                onClick={closeFocus}
+              >
+                ✕
+              </button>
+              <MonkeyCard
+                entity={focused.card.entity}
+                pathLevels={focused.card.pathLevels}
+                mode="focus"
+                owned
+              />
+            </div>
             <div className="pack-opener__buy shop-direct-focus__buy">
               {isGuest ? (
                 <p className="pack-opener__buy-note">Sign in to buy.</p>

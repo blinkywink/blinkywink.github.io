@@ -69,10 +69,6 @@ function isRareCard(card: MonkeyCardSpec | null | undefined): boolean {
   return card.isParagon || maxPathTier(card.pathLevels) >= 5;
 }
 
-function isCompactPackUi(): boolean {
-  return window.matchMedia("(max-width: 820px)").matches;
-}
-
 function spaceHoldGate(card: MonkeyCardSpec | null | undefined): SpaceHoldGate {
   if (!card) return "none";
   if (isRareCard(card)) return "rare";
@@ -289,6 +285,10 @@ export function PackOpenerTest({
   /** Sync lock — React buyBusy alone races on Space-hold / key-repeat. */
   const buyLockRef = useRef(false);
   const preloadRef = useRef<HTMLImageElement[]>([]);
+  const pendingPullsRef = useRef<{
+    cards: MonkeyCardSpec[];
+    isGod: boolean;
+  } | null>(null);
 
   const clearTimers = () => {
     for (const id of timers.current) window.clearTimeout(id);
@@ -334,6 +334,7 @@ export function PackOpenerTest({
     readyAtRef.current = 0;
     buyLockRef.current = false;
     preloadRef.current = [];
+    pendingPullsRef.current = null;
     setBuyBusy(false);
     setBuyError(null);
     setFocused(null);
@@ -367,6 +368,7 @@ export function PackOpenerTest({
     readyAtRef.current = 0;
     setBuyError(null);
     preloadRef.current = [];
+    pendingPullsRef.current = null;
     setPhaseBoth("sealed");
   }, []);
 
@@ -429,6 +431,43 @@ export function PackOpenerTest({
     flushUnpaidDupCash();
     reset();
     onClose();
+  };
+
+  const skipToSummaryRef = useRef<() => void>(() => undefined);
+
+  const showPackSummary = () => {
+    skipToSummaryRef.current();
+  };
+
+  const onBackdropClose = () => {
+    const p = phaseRef.current;
+    if (p === "sealed" || p === "sliced") return;
+    if (
+      p === "suspense" ||
+      p === "enter" ||
+      p === "ready" ||
+      p === "exit"
+    ) {
+      showPackSummary();
+      return;
+    }
+    handleClose();
+  };
+
+  const onCloseButton = () => {
+    const p = phaseRef.current;
+    if (
+      p === "sealed" ||
+      p === "sliced" ||
+      p === "suspense" ||
+      p === "enter" ||
+      p === "ready" ||
+      p === "exit"
+    ) {
+      showPackSummary();
+      return;
+    }
+    handleClose();
   };
 
   const finishPack = useCallback(() => {
@@ -555,7 +594,8 @@ export function PackOpenerTest({
   }, []);
 
   const beginDraw = useCallback(
-    (cards: MonkeyCardSpec[], isGod: boolean) => {
+    (cards: MonkeyCardSpec[], isGod: boolean, reveal: boolean) => {
+      pendingPullsRef.current = null;
       const ownedAtOpen = owned;
       const dupIds = new Set<string>();
       const unlocked: MonkeyCardSpec[] = [];
@@ -605,11 +645,55 @@ export function PackOpenerTest({
         if (unlocked.length) await awardCards(newIds);
         await feedParagonsFromCards(pulledIds, newIds);
       })();
-      // Duplicate Cash is awarded per revealed card in showCardAt.
-      showCardAt(0);
+      if (reveal) {
+        showCardAt(0);
+      } else {
+        flushUnpaidDupCash();
+        setPhaseBoth("done");
+      }
     },
-    [awardCards, dupCashMods, feedParagonsFromCards, owned, paragonOf, showCardAt],
+    [
+      awardCards,
+      dupCashMods,
+      feedParagonsFromCards,
+      flushUnpaidDupCash,
+      owned,
+      paragonOf,
+      showCardAt,
+    ],
   );
+
+  skipToSummaryRef.current = () => {
+    const p = phaseRef.current;
+    if (p === "shop" || p === "done") return;
+    clearTimers();
+    drawing.current = false;
+    swipeOrigin.current = null;
+    spaceHeldRef.current = false;
+    setFocused(null);
+    focusedRef.current = null;
+
+    if (p === "sealed" || p === "sliced") {
+      const pending = pendingPullsRef.current;
+      if (pending) {
+        beginDraw(pending.cards, pending.isGod, false);
+        return;
+      }
+      if (pullsRef.current.length) {
+        flushUnpaidDupCash();
+        setPhaseBoth("done");
+        return;
+      }
+      const mods = packPullMods();
+      const result = pullPackCards(pool, pack.cardCount, owned, mods);
+      if (result.extraCard) onObynExtra();
+      beginDraw(result.cards, result.godPack, false);
+      return;
+    }
+
+    flushUnpaidDupCash();
+    setPhaseBoth("done");
+  };
 
   const completeCut = useCallback(
     (pts: Pt[]) => {
@@ -623,7 +707,8 @@ export function PackOpenerTest({
       const result = pullPackCards(pool, pack.cardCount, owned, mods);
       if (result.extraCard) onObynExtra();
       setGodPack(result.godPack);
-      later(() => beginDraw(result.cards, result.godPack), SLICE_REVEAL_MS);
+      pendingPullsRef.current = { cards: result.cards, isGod: result.godPack };
+      later(() => beginDraw(result.cards, result.godPack, true), SLICE_REVEAL_MS);
     },
     [beginDraw, onObynExtra, packPullMods, pool, pack, pack.cardCount, owned],
   );
@@ -709,16 +794,6 @@ export function PackOpenerTest({
   const nextCard = useCallback(() => {
     const next = indexRef.current + 1;
     if (next >= pullsRef.current.length) {
-      if (isCompactPackUi()) {
-        if (mode === "reward") {
-          finishPack();
-        } else {
-          flushUnpaidDupCash();
-          reset();
-          onClose();
-        }
-        return;
-      }
       setPhaseBoth("done");
       // Holding Space through the last card should buy another without a re-tap.
       // Reward packs are free post-game grants — not purchasable again.
@@ -732,7 +807,7 @@ export function PackOpenerTest({
       return;
     }
     showCardAt(next);
-  }, [buyAnother, finishPack, flushUnpaidDupCash, mode, onClose, reset, showCardAt]);
+  }, [buyAnother, mode, showCardAt]);
 
   const flingAway = useCallback(
     (dir?: { x: number; y: number }) => {
@@ -758,9 +833,19 @@ export function PackOpenerTest({
           focusedRef.current = null;
           return;
         }
-        flushUnpaidDupCash();
-        reset();
-        onClose();
+        const p = phaseRef.current;
+        if (
+          p === "sealed" ||
+          p === "sliced" ||
+          p === "suspense" ||
+          p === "enter" ||
+          p === "ready" ||
+          p === "exit"
+        ) {
+          showPackSummary();
+          return;
+        }
+        handleClose();
         return;
       }
       if (e.code !== "Space" && e.key !== " ") return;
@@ -964,7 +1049,7 @@ export function PackOpenerTest({
         type="button"
         className="pack-opener__backdrop"
         aria-label="Close"
-        onClick={handleClose}
+        onClick={onBackdropClose}
       />
 
       {godPack && phase !== "shop" && phase !== "sealed" ? (
@@ -978,6 +1063,10 @@ export function PackOpenerTest({
       {phase !== "done" ? (
         <div
           className={`pack-opener__arena ${phase === "sealed" ? "is-slashing" : ""} ${phase === "shop" ? "is-shop" : ""}${godPack ? " is-god" : ""}`}
+          onPointerDown={phase === "sealed" ? onSlashDown : undefined}
+          onPointerMove={phase === "sealed" ? onSlashMove : undefined}
+          onPointerUp={phase === "sealed" ? onSlashUp : undefined}
+          onPointerCancel={phase === "sealed" ? onSlashUp : undefined}
         >
           <div className="pack-opener__panel">
             {godPack &&
@@ -996,13 +1085,16 @@ export function PackOpenerTest({
               </p>
             ) : null}
 
-            <div
-              className="pack-opener__stage"
-              onPointerDown={phase === "sealed" ? onSlashDown : undefined}
-              onPointerMove={phase === "sealed" ? onSlashMove : undefined}
-              onPointerUp={phase === "sealed" ? onSlashUp : undefined}
-              onPointerCancel={phase === "sealed" ? onSlashUp : undefined}
+            <div className="pack-opener__stage">
+            <button
+              type="button"
+              className="pack-opener__close btn btn--ghost btn--sm"
+              aria-label="Close"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={onCloseButton}
             >
+              ✕
+            </button>
             {showPack ? (
               <div
                 className="booster-wrap"
@@ -1228,6 +1320,14 @@ export function PackOpenerTest({
           className={`pack-opener__done${packChromeOn ? " has-player-chrome" : ""}`}
           style={packChrome}
         >
+          <button
+            type="button"
+            className="pack-opener__close btn btn--ghost btn--sm"
+            aria-label="Close"
+            onClick={handleClose}
+          >
+            ✕
+          </button>
           <h2>{godPack ? "GOD PACK!" : "Pack summary"}</h2>
           {duplicates.size > 0 ? (
             <p className="pack-opener__done-stats">
@@ -1293,15 +1393,25 @@ export function PackOpenerTest({
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <MonkeyCard
-              entity={focused.entity}
-              pathLevels={focused.pathLevels}
-              mode="focus"
-              owned
-              degree={
-                focused.isParagon ? paragonOf(focused.id)?.degree : undefined
-              }
-            />
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-focus__close"
+                aria-label="Close"
+                onClick={() => setFocused(null)}
+              >
+                ✕
+              </button>
+              <MonkeyCard
+                entity={focused.entity}
+                pathLevels={focused.pathLevels}
+                mode="focus"
+                owned
+                degree={
+                  focused.isParagon ? paragonOf(focused.id)?.degree : undefined
+                }
+              />
+            </div>
             {focused.isParagon ? (
               <ParagonXpBar
                 degree={paragonOf(focused.id)?.degree ?? 1}

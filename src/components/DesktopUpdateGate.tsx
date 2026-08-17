@@ -145,7 +145,6 @@ export function DesktopUpdateGate() {
     <div className="desktop-online-gate" role="alertdialog" aria-modal="true">
       <div className="desktop-online-gate__card">
         <h1>Updating</h1>
-        <p>{message}</p>
         {status === "updating" ? (
           <div
             className="desktop-online-gate__progress"
@@ -164,17 +163,20 @@ export function DesktopUpdateGate() {
             />
           </div>
         ) : (
-          <div className="desktop-online-gate__actions">
-            <ExternalLink href={win} className="btn btn--primary">
-              Download Windows
-            </ExternalLink>
-            <ExternalLink href={mac} className="btn btn--primary">
-              Download Mac
-            </ExternalLink>
-            <button type="button" className="btn" onClick={() => void run()}>
-              Retry
-            </button>
-          </div>
+          <>
+            <p>{message}</p>
+            <div className="desktop-online-gate__actions">
+              <ExternalLink href={win} className="btn btn--primary">
+                Download Windows
+              </ExternalLink>
+              <ExternalLink href={mac} className="btn btn--primary">
+                Download Mac
+              </ExternalLink>
+              <button type="button" className="btn" onClick={() => void run()}>
+                Retry
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

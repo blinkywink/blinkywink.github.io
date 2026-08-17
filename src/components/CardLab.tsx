@@ -467,14 +467,24 @@ export function CardLab({
             onClick={() => setFocused(null)}
           />
           <div className="card-focus__panel">
-            <MonkeyCard
-              entity={focused.entity}
-              pathLevels={focused.pathLevels}
-              mode="focus"
-              owned
-              degree={cardDegree(focused)}
-              visualSeed={cardSeed(focused)}
-            />
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-focus__close"
+                aria-label="Close"
+                onClick={() => setFocused(null)}
+              >
+                ✕
+              </button>
+              <MonkeyCard
+                entity={focused.entity}
+                pathLevels={focused.pathLevels}
+                mode="focus"
+                owned
+                degree={cardDegree(focused)}
+                visualSeed={cardSeed(focused)}
+              />
+            </div>
             {focused.isParagon ? (
               <ParagonXpBar
                 degree={
@@ -521,6 +531,14 @@ export function CardLab({
                     accept or decline. Nothing moves until you agree.
                   </p>
                 </div>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm desktop-only-close"
+                  aria-label="Close"
+                  onClick={() => setExchangeOpen(false)}
+                >
+                  ✕
+                </button>
               </div>
               {sharedOwned.size === 0 ? (
                 <p className="card-lab__exchange-empty">
