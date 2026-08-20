@@ -6,6 +6,7 @@ create or replace function public._new_visual_seed()
 returns bigint
 language sql
 volatile
+set search_path = public
 as $$
   select (floor(random() * 4294967296))::bigint;
 $$;
@@ -485,8 +486,8 @@ begin
   if char_length(cleaned) < 3 or char_length(cleaned) > 80 then
     raise exception 'Invalid card';
   end if;
-  if p_price is null or p_price < 10 or p_price > 10000000 then
-    raise exception 'Price must be between 10 and 10,000,000';
+  if p_price is null or p_price < 10 or p_price > 100000000 then
+    raise exception 'Price must be between 10 and 100,000,000';
   end if;
 
   select count(*) into active_count

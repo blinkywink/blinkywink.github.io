@@ -18,6 +18,7 @@ create or replace function public.hero_unlock_cost(p_hero_id text)
 returns integer
 language sql
 immutable
+set search_path = public
 as $$
   select case lower(trim(coalesce(p_hero_id, '')))
     when 'quincy' then 4750
@@ -41,6 +42,7 @@ create or replace function public.hero_upgrade_cost(
 returns integer
 language sql
 immutable
+set search_path = public
 as $$
   select case
     when greatest(1, least(20, coalesce(p_to_level, 1))) <= 1 then
@@ -65,6 +67,7 @@ create or replace function public.hero_clears_required(p_cur_level integer)
 returns integer
 language sql
 immutable
+set search_path = public
 as $$
   select 10 + 2 * (greatest(1, least(19, coalesce(p_cur_level, 1))) - 1);
 $$;

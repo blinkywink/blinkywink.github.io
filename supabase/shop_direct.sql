@@ -45,6 +45,7 @@ create or replace function public.shop_direct_price(p_tier smallint)
 returns integer
 language sql
 immutable
+set search_path = public
 as $$
   select case p_tier
     when 4 then 7500

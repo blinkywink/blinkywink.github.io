@@ -10,7 +10,7 @@ import { cached, cacheInvalidate, CacheTtl } from "./cache";
 import { pingInbox } from "./trades";
 
 export const MARKET_PAGE_SIZE = 24;
-export const MAX_MARKET_PRICE = 10_000_000;
+export const MAX_MARKET_PRICE = 100_000_000;
 
 export type MarketplaceListing = {
   id: string;

@@ -1,0 +1,152 @@
+{
+  "generatedAt": "2026-08-18T06:50:20.791Z",
+  "output": "/Users/evan/Downloads/blinkywink.github.io/exports/t5-card-grid-background.png",
+  "seed": 42,
+  "count": 24,
+  "cards": [
+    {
+      "id": "mortar-monkey-0-0-5",
+      "name": "Blooncineration",
+      "tower": "Mortar Monkey",
+      "path": "0-0-5"
+    },
+    {
+      "id": "ice-monkey-5-0-0",
+      "name": "Super Brittle",
+      "tower": "Ice Monkey",
+      "path": "5-0-0"
+    },
+    {
+      "id": "wizard-monkey-0-0-5",
+      "name": "Prince of Darkness",
+      "tower": "Wizard Monkey",
+      "path": "0-0-5"
+    },
+    {
+      "id": "monkey-sub-0-5-0",
+      "name": "Pre-Emptive Strike",
+      "tower": "Monkey Sub",
+      "path": "0-5-0"
+    },
+    {
+      "id": "boomerang-monkey-0-5-0",
+      "name": "Perma Charge",
+      "tower": "Boomerang Monkey",
+      "path": "0-5-0"
+    },
+    {
+      "id": "boomerang-monkey-5-0-0",
+      "name": "Glaive Lord",
+      "tower": "Boomerang Monkey",
+      "path": "5-0-0"
+    },
+    {
+      "id": "heli-pilot-0-0-5",
+      "name": "Comanche Commander",
+      "tower": "Heli Pilot",
+      "path": "0-0-5"
+    },
+    {
+      "id": "monkey-buccaneer-0-5-0",
+      "name": "Pirate Lord",
+      "tower": "Monkey Buccaneer",
+      "path": "0-5-0"
+    },
+    {
+      "id": "spike-factory-5-0-0",
+      "name": "Super Mines",
+      "tower": "Spike Factory",
+      "path": "5-0-0"
+    },
+    {
+      "id": "druid-0-0-5",
+      "name": "Avatar of Wrath",
+      "tower": "Druid",
+      "path": "0-0-5"
+    },
+    {
+      "id": "desperado-0-5-0",
+      "name": "Golden Justice",
+      "tower": "Desperado",
+      "path": "0-5-0"
+    },
+    {
+      "id": "bomb-shooter-5-0-0",
+      "name": "Bloon Crush",
+      "tower": "Bomb Shooter",
+      "path": "5-0-0"
+    },
+    {
+      "id": "ninja-monkey-0-0-5",
+      "name": "Master Bomber",
+      "tower": "Ninja Monkey",
+      "path": "0-0-5"
+    },
+    {
+      "id": "monkey-buccaneer-0-0-5",
+      "name": "Trade Empire",
+      "tower": "Monkey Buccaneer",
+      "path": "0-0-5"
+    },
+    {
+      "id": "mortar-monkey-5-0-0",
+      "name": "The Biggest One",
+      "tower": "Mortar Monkey",
+      "path": "5-0-0"
+    },
+    {
+      "id": "monkey-sub-5-0-0",
+      "name": "Energizer",
+      "tower": "Monkey Sub",
+      "path": "5-0-0"
+    },
+    {
+      "id": "skywarden-0-0-5",
+      "name": "Winter's Mercy",
+      "tower": "Skywarden",
+      "path": "0-0-5"
+    },
+    {
+      "id": "spike-factory-0-5-0",
+      "name": "Carpet of Spikes",
+      "tower": "Spike Factory",
+      "path": "0-5-0"
+    },
+    {
+      "id": "monkey-ace-0-0-5",
+      "name": "Flying Fortress",
+      "tower": "Monkey Ace",
+      "path": "0-0-5"
+    },
+    {
+      "id": "dart-monkey-0-0-5",
+      "name": "Crossbow Master",
+      "tower": "Dart Monkey",
+      "path": "0-0-5"
+    },
+    {
+      "id": "super-monkey-0-0-5",
+      "name": "Legend of the Night",
+      "tower": "Super Monkey",
+      "path": "0-0-5"
+    },
+    {
+      "id": "desperado-5-0-0",
+      "name": "The Blazing Sun",
+      "tower": "Desperado",
+      "path": "5-0-0"
+    },
+    {
+      "id": "dartling-gunner-0-0-5",
+      "name": "Bloon Exclusion Zone",
+      "tower": "Dartling Gunner",
+      "path": "0-0-5"
+    },
+    {
+      "id": "monkey-village-5-0-0",
+      "name": "Primary Expertise",
+      "tower": "Monkey Village",
+      "path": "5-0-0"
+    }
+  ]
+}

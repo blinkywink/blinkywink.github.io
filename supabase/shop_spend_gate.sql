@@ -12,6 +12,10 @@ create table if not exists public._schema_patches (
   applied_at timestamptz not null default now()
 );
 
+alter table public._schema_patches enable row level security;
+alter table public._schema_patches force row level security;
+revoke all on table public._schema_patches from anon, authenticated, public;
+
 with ins as (
   insert into public._schema_patches (id)
   values ('shop_spend_gate_v1')
@@ -26,6 +30,7 @@ where p.shop_spent < 5000;
 create or replace function public.protect_profile_coins()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if current_setting('bloon.allow_coin_update', true) = 'on' then
@@ -354,8 +359,8 @@ begin
   if p_listing_id is null then
     raise exception 'Missing listing';
   end if;
-  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 10000000 then
-    raise exception 'Offer must be between 10 and 10,000,000';
+  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 100000000 then
+    raise exception 'Offer must be between 10 and 100,000,000';
   end if;
 
   select * into listing
@@ -488,8 +493,8 @@ begin
   if char_length(cleaned) < 3 or char_length(cleaned) > 80 then
     raise exception 'Invalid card';
   end if;
-  if p_price is null or p_price < 10 or p_price > 10000000 then
-    raise exception 'Price must be between 10 and 10,000,000';
+  if p_price is null or p_price < 10 or p_price > 100000000 then
+    raise exception 'Price must be between 10 and 100,000,000';
   end if;
 
   select count(*) into active_count

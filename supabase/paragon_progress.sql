@@ -55,6 +55,7 @@ create or replace function public.paragon_xp_to_next(p_degree integer)
 returns integer
 language sql
 immutable
+set search_path = public
 as $$
   select case
     when p_degree is null or p_degree >= 100 then 0
@@ -71,10 +72,11 @@ create or replace function public._apply_paragon_gain(
   p_add_degrees integer,
   out o_degree integer,
   out o_xp integer,
-  out o_degrees_gained integer
+  out   o_degrees_gained integer
 )
 language plpgsql
 immutable
+set search_path = public
 as $$
 declare
   incoming integer := greatest(0, coalesce(p_add_xp, 0));
@@ -418,8 +420,8 @@ begin
   if char_length(cleaned) < 3 or char_length(cleaned) > 80 then
     raise exception 'Invalid card';
   end if;
-  if p_price is null or p_price < 10 or p_price > 10000000 then
-    raise exception 'Price must be between 10 and 10,000,000';
+  if p_price is null or p_price < 10 or p_price > 100000000 then
+    raise exception 'Price must be between 10 and 100,000,000';
   end if;
 
   select count(*) into active_count

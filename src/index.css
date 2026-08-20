@@ -15989,3 +15989,60 @@ button.hero-proc--action:focus-visible {
   }
 }
 
+/* Local export page only — real MonkeyCard previews, no clipping. */
+.t5-grid-export {
+  --card-face-w: 400px;
+  --card-preview-w: 240px;
+  --card-preview-scale: 0.6;
+  --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+  --t5-grid-gap: 28px;
+  --t5-grid-pad: 56px;
+  width: calc(
+    var(--t5-grid-pad) * 2 + 6 * var(--card-preview-w) + 5 * var(--t5-grid-gap)
+  );
+  height: calc(
+    var(--t5-grid-pad) * 2 + 4 * var(--card-preview-h) + 3 * var(--t5-grid-gap)
+  );
+  margin: 0;
+  padding: var(--t5-grid-pad);
+  box-sizing: border-box;
+  background: #08080e;
+  overflow: visible;
+}
+
+.t5-grid-export__grid {
+  display: grid;
+  grid-template-columns: repeat(6, var(--card-preview-w));
+  grid-template-rows: repeat(4, var(--card-preview-h));
+  gap: var(--t5-grid-gap);
+  justify-content: start;
+  align-content: start;
+  padding: 0;
+  overflow: visible;
+}
+
+.t5-grid-export__cell {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  position: relative;
+  overflow: visible;
+}
+
+.t5-grid-export .monkey-card-scene--preview {
+  width: var(--card-preview-w);
+  height: var(--card-preview-h);
+  overflow: visible;
+  clip-path: none;
+  contain: none;
+  border-radius: calc(22px * var(--card-preview-scale));
+}
+
+.t5-grid-export .monkey-card-scene--preview::after {
+  display: none;
+}
+
+.t5-grid-export .monkey-card-scene--preview > .monkey-card {
+  transform: scale(var(--card-preview-scale));
+  transform-origin: top left;
+}
+

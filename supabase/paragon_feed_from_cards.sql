@@ -8,6 +8,7 @@ create or replace function public._paragon_xp_for_card(p_card_id text)
 returns integer
 language plpgsql
 immutable
+set search_path = public
 as $$
 declare
   a integer;
@@ -41,6 +42,7 @@ create or replace function public._paragon_id_for_card(p_card_id text)
 returns text
 language sql
 immutable
+set search_path = public
 as $$
   select case
     when p_card_id like '%-paragon' then p_card_id

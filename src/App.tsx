@@ -26,6 +26,7 @@ import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
+import { T5GridExport } from "./components/T5GridExport";
 import { RouteFallback } from "./components/RouteFallback";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
@@ -478,6 +479,10 @@ function AppShell() {
 
   const goHome = () => navigate("/");
   const goGames = () => navigate(gamesPath());
+
+  if (location.pathname === "/__t5-grid-export") {
+    return <T5GridExport />;
+  }
 
   return (
     <>

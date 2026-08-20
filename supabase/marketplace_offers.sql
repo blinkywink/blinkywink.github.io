@@ -9,7 +9,7 @@ create table if not exists public.marketplace_offers (
   status text not null default 'pending',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint marketplace_offers_price_ok check (offer_price between 10 and 10000000),
+  constraint marketplace_offers_price_ok check (offer_price between 10 and 100000000),
   constraint marketplace_offers_status_ok check (
     status in ('pending', 'accepted', 'declined', 'cancelled')
   )
@@ -86,8 +86,8 @@ begin
   end if;
 
   perform public._assert_shop_spend_unlocked(buyer);
-  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 10000000 then
-    raise exception 'Offer must be between 10 and 10,000,000';
+  if p_offer_price is null or p_offer_price < 10 or p_offer_price > 100000000 then
+    raise exception 'Offer must be between 10 and 100,000,000';
   end if;
 
   select * into listing
