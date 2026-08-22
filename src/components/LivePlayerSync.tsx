@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { loadAppSession } from "../auth/session";
-import { cacheInvalidate } from "../lib/cache";
 
 const SYNC_MS = 45_000;
 const SYNC_COOLDOWN_MS = 12_000;
@@ -24,12 +23,6 @@ export function LivePlayerSync() {
     busyRef.current = true;
     lastSyncRef.current = Date.now();
     try {
-      cacheInvalidate("leaderboard:");
-      cacheInvalidate("profile:");
-      cacheInvalidate("player-paragons:");
-      cacheInvalidate("player-cards:");
-      cacheInvalidate("player-card-copies:");
-      cacheInvalidate("market:");
       await Promise.all([refreshProfile(), refresh()]);
     } catch (err) {
       console.warn("Live player sync failed", err);

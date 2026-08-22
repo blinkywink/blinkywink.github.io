@@ -94,7 +94,12 @@ function mapLeaderboardRows(
 /** One page of the lifetime Cash board, richest first. */
 export async function fetchLeaderboardPage(
   offset = 0,
-  opts?: { force?: boolean; limit?: number },
+  opts?: {
+    force?: boolean;
+    revalidate?: boolean;
+    limit?: number;
+    onRevalidate?: (rows: LeaderboardEntry[]) => void;
+  },
 ): Promise<LeaderboardEntry[]> {
   const start = Math.max(0, Math.floor(offset));
   const limit = Math.min(
@@ -116,14 +121,27 @@ export async function fetchLeaderboardPage(
       if (error) throw new Error(error.message);
       return mapLeaderboardRows((data ?? []) as Record<string, unknown>[], start);
     },
-    { force: opts?.force },
+    {
+      force: opts?.force,
+      revalidate: opts?.revalidate,
+      onRevalidate: opts?.onRevalidate,
+    },
   );
 }
 
 export async function fetchTopLeaderboard(
   force = false,
+  opts?: {
+    revalidate?: boolean;
+    onRevalidate?: (rows: LeaderboardEntry[]) => void;
+  },
 ): Promise<LeaderboardEntry[]> {
-  return fetchLeaderboardPage(0, { force, limit: LEADERBOARD_PAGE_SIZE });
+  return fetchLeaderboardPage(0, {
+    force,
+    limit: LEADERBOARD_PAGE_SIZE,
+    revalidate: opts?.revalidate,
+    onRevalidate: opts?.onRevalidate,
+  });
 }
 
 export async function fetchLeaderboardRank(

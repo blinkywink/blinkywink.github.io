@@ -113,19 +113,27 @@ export async function fetchOwnParagons(): Promise<ParagonMap | null> {
   return Array.isArray(data) ? asStateMap(data) : {};
 }
 
-export async function fetchPlayerParagons(userId: string): Promise<ParagonMap> {
+export async function fetchPlayerParagons(
+  userId: string,
+  opts?: { force?: boolean },
+): Promise<ParagonMap> {
   const id = String(userId ?? "").trim();
   if (!id) return {};
-  return cached(`player-paragons:${id}`, CacheTtl.playerCards, async () => {
-    const { data, error } = await supabase.rpc("get_player_paragons", {
-      p_user_id: id,
-    });
-    if (error) {
-      console.warn("get_player_paragons failed", error.message);
-      return {};
-    }
-    return Array.isArray(data) ? asStateMap(data) : {};
-  });
+  return cached(
+    `player-paragons:${id}`,
+    CacheTtl.playerCards,
+    async () => {
+      const { data, error } = await supabase.rpc("get_player_paragons", {
+        p_user_id: id,
+      });
+      if (error) {
+        console.warn("get_player_paragons failed", error.message);
+        return {};
+      }
+      return Array.isArray(data) ? asStateMap(data) : {};
+    },
+    { force: opts?.force },
+  );
 }
 
 export async function ensureParagonStates(

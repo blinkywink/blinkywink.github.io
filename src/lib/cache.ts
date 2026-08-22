@@ -7,14 +7,25 @@ type Entry = {
 
 const store = new Map<string, Entry>();
 
+export type CachedOpts<T> = {
+  /** Bypass cache and replace stored value. */
+  force?: boolean;
+  /** Return stale data immediately, refresh in the background. */
+  revalidate?: boolean;
+  onRevalidate?: (value: T) => void;
+};
+
 export function cacheGet<T>(key: string): T | undefined {
   const hit = store.get(key);
   if (!hit) return undefined;
-  if (Date.now() > hit.expires) {
-    store.delete(key);
-    return undefined;
-  }
+  if (Date.now() > hit.expires) return undefined;
   return hit.value as T;
+}
+
+/** Last stored value even after TTL — for instant paint while revalidating. */
+export function cacheGetStale<T>(key: string): T | undefined {
+  const hit = store.get(key);
+  return hit ? (hit.value as T) : undefined;
 }
 
 export function cacheSet<T>(key: string, value: T, ttlMs: number): void {
@@ -33,20 +44,50 @@ export function cacheInvalidate(keyOrPrefix?: string): void {
   }
 }
 
+function revalidateInBackground<T>(
+  key: string,
+  ttlMs: number,
+  load: () => Promise<T>,
+  onRevalidate?: (value: T) => void,
+): void {
+  void load()
+    .then((value) => {
+      cacheSet(key, value, ttlMs);
+      onRevalidate?.(value);
+    })
+    .catch(() => undefined);
+}
+
 /**
  * Return cached value when fresh; otherwise run `load` and store.
- * Pass `force: true` to bypass (after a mutation).
+ * With `revalidate`, return stale cache immediately and refresh in the background.
  */
 export async function cached<T>(
   key: string,
   ttlMs: number,
   load: () => Promise<T>,
-  opts?: { force?: boolean },
+  opts?: CachedOpts<T>,
 ): Promise<T> {
-  if (!opts?.force) {
-    const hit = cacheGet<T>(key);
-    if (hit !== undefined) return hit;
+  if (opts?.force) {
+    const value = await load();
+    cacheSet(key, value, ttlMs);
+    return value;
   }
+
+  const fresh = cacheGet<T>(key);
+  if (fresh !== undefined) {
+    if (opts?.revalidate) {
+      revalidateInBackground(key, ttlMs, load, opts.onRevalidate);
+    }
+    return fresh;
+  }
+
+  const stale = cacheGetStale<T>(key);
+  if (stale !== undefined && opts?.revalidate) {
+    revalidateInBackground(key, ttlMs, load, opts.onRevalidate);
+    return stale;
+  }
+
   const value = await load();
   cacheSet(key, value, ttlMs);
   return value;

@@ -42,12 +42,16 @@ function escapeIlike(raw: string): string {
 /** Look up a profile by username (case-insensitive). */
 export async function fetchProfileByUsername(
   username: string,
+  opts?: { force?: boolean },
 ): Promise<PublicProfile | null> {
   const raw = String(username ?? "").trim();
   if (!raw) return null;
 
   const key = `profile:name:${raw.toLowerCase()}`;
-  return cached(key, CacheTtl.profiles, async () => {
+  return cached(
+    key,
+    CacheTtl.profiles,
+    async () => {
     const { data, error } = await supabase.rpc("get_profile_by_username", {
       p_username: raw,
     });
@@ -78,7 +82,9 @@ export async function fetchProfileByUsername(
       heroLevels: normalizeHeroLevels(row.hero_levels),
       badgeIds: normalizeBadgeIds(row.badge_ids),
     };
-  });
+  },
+    { force: opts?.force },
+  );
 }
 
 /** Partial username search (case-insensitive), richest players first. */

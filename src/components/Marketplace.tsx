@@ -16,6 +16,7 @@ import {
   fetchMarketplaceListingsPage,
   fetchMyMarketplaceListings,
   listCardForSale,
+  peekMarketplaceListingsPage,
   MARKET_PAGE_SIZE,
   MAX_MARKET_PRICE,
   type MarketplaceListing,
@@ -133,12 +134,18 @@ export function Marketplace({ onBack: _onBack }: Props) {
 
   const load = useCallback(
     async (force = false) => {
-      setLoading(true);
+      if (force) setLoading(true);
       setError(null);
       try {
         const rows = await fetchMarketplaceListingsPage({
           offset: 0,
           force,
+          revalidate: !force,
+          onRevalidate: (fresh) => {
+            setListings(fresh);
+            offsetRef.current = fresh.length;
+            setHasMore(fresh.length === MARKET_PAGE_SIZE);
+          },
           query: debouncedQuery,
           tower: towerFilter,
           sort: sortKey,
@@ -148,9 +155,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
         setHasMore(rows.length === MARKET_PAGE_SIZE);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load market.");
-        setListings([]);
-        offsetRef.current = 0;
-        setHasMore(false);
+        if (force) {
+          setListings([]);
+          offsetRef.current = 0;
+          setHasMore(false);
+        }
       }
       setLoading(false);
     },
@@ -200,8 +209,22 @@ export function Marketplace({ onBack: _onBack }: Props) {
   }, [user?.id]);
 
   useEffect(() => {
-    void load(true);
-  }, [load]);
+    const cached = peekMarketplaceListingsPage({
+      query: debouncedQuery,
+      tower: towerFilter,
+      sort: sortKey,
+    });
+    if (cached?.length) {
+      setListings(cached);
+      offsetRef.current = cached.length;
+      setHasMore(cached.length === MARKET_PAGE_SIZE);
+      setLoading(false);
+    } else {
+      setListings([]);
+      setLoading(true);
+    }
+    void load();
+  }, [load, debouncedQuery, towerFilter, sortKey]);
 
   useEffect(() => {
     if (tab === "mine") void loadMine();

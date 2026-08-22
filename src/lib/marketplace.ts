@@ -6,7 +6,7 @@ import {
   type AvatarCrop,
 } from "./avatar";
 import { allCardSpecs, matchesCardQuery } from "./cardCatalog";
-import { cached, cacheInvalidate, CacheTtl } from "./cache";
+import { cached, cacheGetStale, cacheInvalidate, CacheTtl } from "./cache";
 import { pingInbox } from "./trades";
 
 export const MARKET_PAGE_SIZE = 24;
@@ -135,6 +135,8 @@ export type MarketListQuery = {
   offset?: number;
   limit?: number;
   force?: boolean;
+  revalidate?: boolean;
+  onRevalidate?: (rows: MarketplaceListing[]) => void;
   query?: string;
   tower?: string;
   sort?: MarketSortKey;
@@ -216,6 +218,21 @@ async function hydrateListings(rows: ListingRow[]): Promise<MarketplaceListing[]
   return rows.map((r) => mapListing(r, profiles));
 }
 
+function marketListingsCacheKey(opts?: MarketListQuery): string {
+  const offset = Math.max(0, Math.floor(opts?.offset ?? 0));
+  const limit = Math.min(100, Math.max(1, opts?.limit ?? MARKET_PAGE_SIZE));
+  const query = String(opts?.query ?? "").trim();
+  const tower = String(opts?.tower ?? "all");
+  const sort = opts?.sort ?? "newest";
+  return `market:listings:${offset}:${limit}:${tower}:${sort}:${query.toLowerCase()}`;
+}
+
+export function peekMarketplaceListingsPage(
+  opts?: MarketListQuery,
+): MarketplaceListing[] | undefined {
+  return cacheGetStale<MarketplaceListing[]>(marketListingsCacheKey(opts));
+}
+
 /** One page of active listings. Search/filter hit the server, not just loaded rows. */
 export async function fetchMarketplaceListingsPage(
   opts?: MarketListQuery,
@@ -225,7 +242,13 @@ export async function fetchMarketplaceListingsPage(
   const query = String(opts?.query ?? "").trim();
   const tower = String(opts?.tower ?? "all");
   const sort = opts?.sort ?? "newest";
-  const key = `market:listings:${offset}:${limit}:${tower}:${sort}:${query.toLowerCase()}`;
+  const key = marketListingsCacheKey({
+    offset,
+    limit,
+    query,
+    tower,
+    sort,
+  });
 
   return cached(
     key,
@@ -250,7 +273,7 @@ export async function fetchMarketplaceListingsPage(
       if (result.error) throw new Error(result.error.message);
       return hydrateListings((result.data ?? []) as ListingRow[]);
     },
-    { force: opts?.force },
+    { force: opts?.force, revalidate: opts?.revalidate, onRevalidate: opts?.onRevalidate },
   );
 }
 

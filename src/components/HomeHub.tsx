@@ -152,16 +152,23 @@ export function HomeHub() {
     let cancelled = false;
     const load = async (force = false) => {
       try {
-        const rows = (await fetchTopLeaderboard(force)).slice(0, 5);
+        const rows = (
+          await fetchTopLeaderboard(force, {
+            revalidate: !force,
+            onRevalidate: (fresh) => {
+              if (!cancelled) setTopPlayers(fresh.slice(0, 5));
+            },
+          })
+        ).slice(0, 5);
         if (!cancelled) setTopPlayers(rows);
       } catch {
         if (!cancelled) setTopPlayers([]);
       }
     };
-    void load(true);
-    const id = window.setInterval(() => void load(true), 45_000);
+    void load();
+    const id = window.setInterval(() => void load(false), 45_000);
     const onWake = () => {
-      if (document.visibilityState === "visible") void load(true);
+      if (document.visibilityState === "visible") void load(false);
     };
     window.addEventListener("focus", onWake);
     document.addEventListener("visibilitychange", onWake);

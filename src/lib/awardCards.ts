@@ -278,21 +278,27 @@ export async function fetchOwnedCardIds(): Promise<string[]> {
 /** Load another player's owned card copies (public leaderboard browse). */
 export async function fetchPlayerCardCopies(
   userId: string,
+  opts?: { force?: boolean },
 ): Promise<OwnedCardCopy[]> {
   const id = String(userId ?? "").trim();
   if (!id) return [];
 
-  return cached(`player-card-copies:${id}`, CacheTtl.playerCards, async () => {
-    try {
-      return await fetchCopiesViaRpc(id);
-    } catch (error) {
-      console.warn(
-        "get_player_card_copies failed",
-        error instanceof Error ? error.message : error,
-      );
-      throw error instanceof Error ? error : new Error(String(error));
-    }
-  });
+  return cached(
+    `player-card-copies:${id}`,
+    CacheTtl.playerCards,
+    async () => {
+      try {
+        return await fetchCopiesViaRpc(id);
+      } catch (error) {
+        console.warn(
+          "get_player_card_copies failed",
+          error instanceof Error ? error.message : error,
+        );
+        throw error instanceof Error ? error : new Error(String(error));
+      }
+    },
+    { force: opts?.force },
+  );
 }
 
 /** Load another player's owned card ids (public leaderboard browse). */

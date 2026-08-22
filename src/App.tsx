@@ -49,7 +49,7 @@ import {
   type EndlessGameId,
   type GameScoreReport,
 } from "./lib/gameScores";
-import { fetchPublicPlayerPage } from "./lib/playerPage";
+import { fetchPublicPlayerPage, peekPublicPlayerPage } from "./lib/playerPage";
 import { recordHeroClear } from "./lib/profileHeroes";
 import { heroById } from "./data/heroes";
 import {
@@ -148,23 +148,46 @@ function UserCollectionPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     setError(null);
-    setPage(null);
-    void fetchPublicPlayerPage(username)
+
+    const cached = peekPublicPlayerPage(username);
+    if (cached !== undefined) {
+      if (cached) setPage(cached);
+      else setError("Player not found.");
+      setLoading(false);
+    } else {
+      setLoading(true);
+      setPage(null);
+    }
+
+    void fetchPublicPlayerPage(username, {
+      revalidate: true,
+      onRevalidate: (next) => {
+        if (cancelled) return;
+        if (!next) {
+          setError("Player not found.");
+          setPage(null);
+          return;
+        }
+        setError(null);
+        setPage(next);
+      },
+    })
       .then((next) => {
         if (cancelled) return;
         if (!next) {
           setError("Player not found.");
-          setLoading(false);
-          return;
+          setPage(null);
+        } else {
+          setError(null);
+          setPage(next);
         }
-        setPage(next);
         setLoading(false);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Could not load player.");
+        if (cached === undefined) setPage(null);
         setLoading(false);
       });
     return () => {

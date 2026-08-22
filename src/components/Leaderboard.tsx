@@ -6,6 +6,7 @@ import {
   LEADERBOARD_PAGE_SIZE,
   type LeaderboardEntry,
 } from "../lib/leaderboardRanks";
+import { cacheGetStale } from "../lib/cache";
 import { searchProfilesByUsername } from "../lib/profiles";
 import {
   hasPlayerChrome,
@@ -55,22 +56,32 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   const offsetRef = useRef(0);
   const loadingMoreRef = useRef(false);
 
+  const applyPage = useCallback((page: LeaderboardEntry[]) => {
+    setRows(page.map(entryToRow));
+    offsetRef.current = page.length;
+    setHasMore(page.length === LEADERBOARD_PAGE_SIZE);
+  }, []);
+
   const load = useCallback(async (force = false) => {
-    setLoading(true);
+    if (force) setLoading(true);
     setError(null);
     try {
-      const page = await fetchLeaderboardPage(0, { force });
-      setRows(page.map(entryToRow));
-      offsetRef.current = page.length;
-      setHasMore(page.length === LEADERBOARD_PAGE_SIZE);
+      const page = await fetchLeaderboardPage(0, {
+        force,
+        revalidate: !force,
+        onRevalidate: applyPage,
+      });
+      applyPage(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
-      setRows([]);
-      offsetRef.current = 0;
-      setHasMore(false);
+      if (force) {
+        setRows([]);
+        offsetRef.current = 0;
+        setHasMore(false);
+      }
     }
     setLoading(false);
-  }, []);
+  }, [applyPage]);
 
   const loadMore = useCallback(async () => {
     if (loadingMoreRef.current || !hasMore) return;
@@ -95,11 +106,20 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   }, [hasMore]);
 
   useEffect(() => {
-    void load(true);
-  }, [load]);
+    const cached = cacheGetStale<LeaderboardEntry[]>(
+      `leaderboard:page:0:${LEADERBOARD_PAGE_SIZE}`,
+    );
+    if (cached?.length) {
+      applyPage(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    void load();
+  }, [load, applyPage]);
 
   useEffect(() => {
-    const tick = () => void load(true);
+    const tick = () => void load(false);
     const id = window.setInterval(tick, 45_000);
     const onWake = () => {
       if (document.visibilityState === "visible") tick();
