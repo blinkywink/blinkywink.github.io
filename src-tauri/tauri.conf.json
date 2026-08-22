@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "blinkywink.co",
+  "productName": "Monkey Cards",
   "version": "1.0.9",
   "identifier": "co.blinkywink.arcade",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "blinkywink.co",
+        "title": "Monkey Cards",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

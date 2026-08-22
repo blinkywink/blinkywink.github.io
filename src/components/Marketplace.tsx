@@ -200,7 +200,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
   }, [user?.id]);
 
   useEffect(() => {
-    void load();
+    void load(true);
   }, [load]);
 
   useEffect(() => {

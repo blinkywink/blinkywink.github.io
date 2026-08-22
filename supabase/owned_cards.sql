@@ -31,7 +31,7 @@ security definer
 set search_path = public
 as $$
 declare
-  uid uuid := auth.uid();
+  uid uuid := public.current_account_id();
   added text[];
 begin
   if uid is null then
@@ -72,4 +72,4 @@ end;
 $$;
 
 revoke all on function public.award_cards(text[]) from public;
-grant execute on function public.award_cards(text[]) to authenticated;
+grant execute on function public.award_cards(text[]) to anon, authenticated;

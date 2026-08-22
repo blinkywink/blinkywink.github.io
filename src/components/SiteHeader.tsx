@@ -5,6 +5,7 @@ import {
   logoHomePage,
   subscribeLogoHome,
 } from "../lib/logoHome";
+import { SITE_LOGO, SITE_NAME } from "../lib/brand";
 import { AccountBar } from "./AccountBar";
 import { TradeInbox } from "./TradeInbox";
 
@@ -70,13 +71,12 @@ export function SiteHeader() {
         >
           <img
             className="site-header__logo"
-            src="/images/ui/site-logo.png"
+            src={SITE_LOGO}
             alt=""
-            width={36}
-            height={36}
+            height={66}
             draggable={false}
           />
-          <span>blinkywink.co</span>
+          <span>{SITE_NAME}</span>
         </Link>
 
         <nav className="site-nav site-nav--desktop" aria-label="Main">

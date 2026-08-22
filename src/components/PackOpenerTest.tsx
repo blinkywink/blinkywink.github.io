@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { useHeroFx } from "../auth/HeroFxProvider";
+import { useTowerComplete } from "../auth/TowerCompleteProvider";
 import { towers } from "../data/towers";
 import {
   buildTowerCardSpecs,
@@ -25,6 +26,7 @@ import {
   type PackDef,
 } from "../lib/packTheme";
 import { awardCoins } from "../lib/awardCoins";
+import { autoPackUnlockedFromProfile } from "../lib/autoPackOpen";
 import { isTypingTarget } from "../lib/keyboard";
 import { playBuy, playCardFocus, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
@@ -240,6 +242,7 @@ export function PackOpenerTest({
     [owned, listed],
   );
   const { setParagonNoticeDeferral } = useHeroFx();
+  const { setTowerCompleteDeferral } = useTowerComplete();
   const {
     packPullMods,
     onObynExtra,
@@ -263,6 +266,7 @@ export function PackOpenerTest({
   const [exitDir, setExitDir] = useState({ x: 0, y: -1 });
   const [buyBusy, setBuyBusy] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
+  const [autoOpenActive, setAutoOpenActive] = useState(false);
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
   const focusedRef = useRef<MonkeyCardSpec | null>(null);
   focusedRef.current = focused;
@@ -287,8 +291,12 @@ export function PackOpenerTest({
   const needFreshSpaceRef = useRef(false);
   /** When the current card became ready (for T4 hold gate). */
   const readyAtRef = useRef(0);
+  /** Guards enter→ready so stale timers can't snap scale mid-animation. */
+  const enterSeqRef = useRef(0);
+  const enterStartedAtRef = useRef(0);
   /** Sync lock — React buyBusy alone races on Space-hold / key-repeat. */
   const buyLockRef = useRef(false);
+  const autoOpenActiveRef = useRef(false);
   const preloadRef = useRef<HTMLImageElement[]>([]);
   const pendingPullsRef = useRef<{
     cards: MonkeyCardSpec[];
@@ -338,10 +346,12 @@ export function PackOpenerTest({
     needFreshSpaceRef.current = false;
     readyAtRef.current = 0;
     buyLockRef.current = false;
+    autoOpenActiveRef.current = false;
     preloadRef.current = [];
     pendingPullsRef.current = null;
     setBuyBusy(false);
     setBuyError(null);
+    setAutoOpenActive(false);
     setFocused(null);
     focusedRef.current = null;
   }, []);
@@ -388,18 +398,24 @@ export function PackOpenerTest({
     return clearTimers;
   }, [open, pack.id, mode, reset]);
 
-  // Hold degree-up toasts until the pack summary (or close), not mid-reveal.
+  // Hold degree-up / tower-complete toasts until the pack summary (or close).
   useEffect(() => {
     if (!open) {
       setParagonNoticeDeferral(false);
+      setTowerCompleteDeferral(false);
       return;
     }
-    setParagonNoticeDeferral(phase !== "shop" && phase !== "done");
-  }, [open, phase, setParagonNoticeDeferral]);
+    const defer = phase !== "shop" && phase !== "done";
+    setParagonNoticeDeferral(defer);
+    setTowerCompleteDeferral(defer);
+  }, [open, phase, setParagonNoticeDeferral, setTowerCompleteDeferral]);
 
   useEffect(() => {
-    return () => setParagonNoticeDeferral(false);
-  }, [setParagonNoticeDeferral]);
+    return () => {
+      setParagonNoticeDeferral(false);
+      setTowerCompleteDeferral(false);
+    };
+  }, [setParagonNoticeDeferral, setTowerCompleteDeferral]);
 
   /** Credit Cash for one revealed duplicate (header +/- pops with the card). */
   const awardDupCashForIndex = useCallback(
@@ -531,6 +547,29 @@ export function PackOpenerTest({
     trySaudaDiscount,
   ]);
 
+  const finishCardEnter = useCallback((seq?: number) => {
+    if (phaseRef.current !== "enter") return;
+    if (seq != null && enterSeqRef.current !== seq) return;
+    const elapsed = performance.now() - enterStartedAtRef.current;
+    if (elapsed < CARD_ENTER_MS - 32) return;
+    readyAtRef.current = performance.now();
+    const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
+    if (gate === "rare" && spaceHeldRef.current) {
+      needFreshSpaceRef.current = true;
+    }
+    setPhaseBoth("ready");
+  }, []);
+
+  const beginCardEnter = useCallback(
+    (seq: number) => {
+      enterStartedAtRef.current = performance.now();
+      setPhaseBoth("enter");
+      // Fallback if animationend never fires (reduced motion, etc.)
+      later(() => finishCardEnter(seq), CARD_ENTER_MS + 80);
+    },
+    [finishCardEnter],
+  );
+
   const showCardAt = useCallback(
     (i: number) => {
       indexRef.current = i;
@@ -540,21 +579,7 @@ export function PackOpenerTest({
       awardDupCashForIndex(i);
       const card = pullsRef.current[i];
       const rare = isRareCard(card);
-
-      const finishEnter = () => {
-        if (
-          phaseRef.current !== "enter" &&
-          phaseRef.current !== "suspense"
-        ) {
-          return;
-        }
-        readyAtRef.current = performance.now();
-        const gate = spaceHoldGate(pullsRef.current[i]);
-        if (gate === "rare" && spaceHeldRef.current) {
-          needFreshSpaceRef.current = true;
-        }
-        setPhaseBoth("ready");
-      };
+      const enterSeq = ++enterSeqRef.current;
 
       if (rare) {
         if (card?.isParagon) playPackParagon();
@@ -565,8 +590,8 @@ export function PackOpenerTest({
           : RARE_SUSPENSE_MS;
         later(() => {
           if (phaseRef.current !== "suspense") return;
-          setPhaseBoth("enter");
-          later(finishEnter, CARD_ENTER_MS);
+          if (enterSeqRef.current !== enterSeq) return;
+          beginCardEnter(enterSeq);
         }, suspenseMs);
         return;
       }
@@ -575,10 +600,19 @@ export function PackOpenerTest({
         playPackT4();
       }
 
-      setPhaseBoth("enter");
-      later(finishEnter, CARD_ENTER_MS);
+      beginCardEnter(enterSeq);
     },
-    [awardDupCashForIndex],
+    [awardDupCashForIndex, beginCardEnter],
+  );
+
+  const onCardEnterAnimationEnd = useCallback(
+    (e: React.AnimationEvent<HTMLDivElement>) => {
+      if (phaseRef.current !== "enter") return;
+      if (e.target !== e.currentTarget) return;
+      if (!e.animationName.includes("pack-card-enter")) return;
+      finishCardEnter();
+    },
+    [finishCardEnter],
   );
 
   const spaceCanFling = useCallback((e: KeyboardEvent): boolean => {
@@ -745,6 +779,12 @@ export function PackOpenerTest({
     tick();
   }, [completeCut]);
 
+  const stopAutoOpen = useCallback(() => {
+    autoOpenActiveRef.current = false;
+    spaceHeldRef.current = false;
+    setAutoOpenActive(false);
+  }, []);
+
   const buyAnother = useCallback(async () => {
     if (buyLockRef.current || mode === "reward") return;
     setBuyError(null);
@@ -755,14 +795,16 @@ export function PackOpenerTest({
       setBuyBusy(true);
       resetToSealed();
       playBuy();
-      later(() => {
-        buyLockRef.current = false;
-        setBuyBusy(false);
-        autoSlashOpen();
-      }, 160);
+    later(() => {
+      buyLockRef.current = false;
+      setBuyBusy(false);
+      // Auto mode slashes via the sealed-phase effect; Space rebuy slashes here.
+      if (!autoOpenActiveRef.current) autoSlashOpen();
+    }, 160);
       return;
     }
     if ((profile?.coins ?? 0) < charge) {
+      stopAutoOpen();
       reset();
       setBuyError("Not enough Cash.");
       return;
@@ -773,6 +815,7 @@ export function PackOpenerTest({
     if (balance == null) {
       buyLockRef.current = false;
       setBuyBusy(false);
+      stopAutoOpen();
       reset();
       setBuyError("Purchase failed, try again.");
       return;
@@ -784,7 +827,7 @@ export function PackOpenerTest({
     later(() => {
       buyLockRef.current = false;
       setBuyBusy(false);
-      autoSlashOpen();
+      if (!autoOpenActiveRef.current) autoSlashOpen();
     }, 160);
   }, [
     autoSlashOpen,
@@ -796,6 +839,7 @@ export function PackOpenerTest({
     reset,
     resetToSealed,
     setCoinBalance,
+    stopAutoOpen,
     trySaudaDiscount,
   ]);
 
@@ -829,6 +873,55 @@ export function PackOpenerTest({
     },
     [nextCard],
   );
+
+  /** Same pacing as holding Space — keeps spaceHeld and ticks flings via Space gates. */
+  const startAutoOpen = useCallback(() => {
+    if (mode === "reward") return;
+    if (!autoPackUnlockedFromProfile(profile)) return;
+    autoOpenActiveRef.current = true;
+    spaceHeldRef.current = true;
+    needFreshSpaceRef.current = false;
+    setAutoOpenActive(true);
+    const p = phaseRef.current;
+    if (p === "sealed") autoSlashOpen();
+    else if (p === "ready") {
+      const fake = { repeat: false } as KeyboardEvent;
+      if (spaceCanFling(fake)) flingAway();
+    } else if (p === "done") {
+      void buyAnother();
+    }
+  }, [autoSlashOpen, buyAnother, flingAway, mode, profile, spaceCanFling]);
+
+  // Drive card flings like Space key-repeat while Auto is on.
+  useEffect(() => {
+    if (!open || !autoOpenActive) return;
+    const id = window.setInterval(() => {
+      if (!autoOpenActiveRef.current || buyLockRef.current) return;
+      spaceHeldRef.current = true;
+      if (phaseRef.current !== "ready") return;
+      const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
+      // Holding Space can't clear a rare by itself; Auto taps once like a fresh press.
+      if (gate === "rare" && needFreshSpaceRef.current) {
+        needFreshSpaceRef.current = false;
+      }
+      const fake = {
+        repeat: gate !== "rare",
+      } as KeyboardEvent;
+      if (spaceCanFling(fake)) flingAway();
+    }, 50);
+    return () => window.clearInterval(id);
+  }, [autoOpenActive, flingAway, open, spaceCanFling]);
+
+  // If Auto is already on when a pack becomes sealed, slash once (like held Space).
+  useEffect(() => {
+    if (!open || !autoOpenActive || phase !== "sealed") return;
+    const id = window.setTimeout(() => {
+      if (phaseRef.current === "sealed" && autoOpenActiveRef.current) {
+        autoSlashOpen();
+      }
+    }, 280);
+    return () => window.clearTimeout(id);
+  }, [autoOpenActive, autoSlashOpen, open, phase]);
 
   useEffect(() => {
     if (!open) return;
@@ -877,6 +970,11 @@ export function PackOpenerTest({
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space" && e.key !== " ") return;
+      // Auto Open = sticky Space hold; don't clear it on real keyup.
+      if (autoOpenActiveRef.current) {
+        spaceHeldRef.current = true;
+        return;
+      }
       spaceHeldRef.current = false;
       needFreshSpaceRef.current = false;
     };
@@ -1018,11 +1116,12 @@ export function PackOpenerTest({
 
   const cardStyle =
     phase === "ready"
-      ? {
-          transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04 + drag.y * 0.02}deg)`,
-          transition:
-            drag.x === 0 && drag.y === 0 ? "transform 0.12s ease-out" : "none",
-        }
+      ? drag.x !== 0 || drag.y !== 0
+        ? {
+            transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04 + drag.y * 0.02}deg)`,
+            transition: "none",
+          }
+        : undefined
       : phase === "exit"
         ? {
             transform: `translate(${exitDir.x * 820}px, ${exitDir.y * 820}px) rotate(${exitDir.x * 32}deg)`,
@@ -1045,6 +1144,11 @@ export function PackOpenerTest({
     accentColor: cosmeticsFromProfile(profile ?? {}).accentColor,
   });
   const packChromeOn = hasPlayerChrome(packChrome);
+
+  const showAutoDock =
+    mode !== "reward" &&
+    autoPackUnlockedFromProfile(profile) &&
+    (phase !== "done" || autoOpenActive);
 
   return createPortal(
     <div
@@ -1069,6 +1173,7 @@ export function PackOpenerTest({
       ) : null}
 
       {phase !== "done" ? (
+        <>
         <div
           className={`pack-opener__arena ${phase === "sealed" ? "is-slashing" : ""} ${phase === "shop" ? "is-shop" : ""}${godPack ? " is-god" : ""}`}
           onPointerDown={phase === "sealed" ? onSlashDown : undefined}
@@ -1203,6 +1308,7 @@ export function PackOpenerTest({
                   .filter(Boolean)
                   .join(" ")}
                 style={cardStyle}
+                onAnimationEnd={onCardEnterAnimationEnd}
                 onPointerDownCapture={
                   phase === "ready" ? onCardPointerDown : undefined
                 }
@@ -1323,6 +1429,7 @@ export function PackOpenerTest({
           ) : null}
           </div>
         </div>
+        </>
       ) : (
         <div
           className={`pack-opener__done${packChromeOn ? " has-player-chrome" : ""}`}
@@ -1373,7 +1480,7 @@ export function PackOpenerTest({
               <button
                 type="button"
                 className="btn btn--secondary"
-                disabled={buyBusy}
+                disabled={buyBusy || autoOpenActive}
                 onClick={() => {
                   void buyAnother();
                 }}
@@ -1428,6 +1535,19 @@ export function PackOpenerTest({
             ) : null}
           </div>
         </div>
+      ) : null}
+      {showAutoDock ? (
+        <button
+          type="button"
+          className={`btn btn--secondary pack-opener__auto-btn${autoOpenActive ? " is-on" : ""}`}
+          disabled={buyBusy}
+          onClick={() => {
+            if (autoOpenActive) stopAutoOpen();
+            else startAutoOpen();
+          }}
+        >
+          {autoOpenActive ? "Stop Auto" : "Auto Open"}
+        </button>
       ) : null}
     </div>,
     document.body,

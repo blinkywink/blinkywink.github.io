@@ -28,6 +28,8 @@ export function LivePlayerSync() {
       cacheInvalidate("profile:");
       cacheInvalidate("player-paragons:");
       cacheInvalidate("player-cards:");
+      cacheInvalidate("player-card-copies:");
+      cacheInvalidate("market:");
       await Promise.all([refreshProfile(), refresh()]);
     } catch (err) {
       console.warn("Live player sync failed", err);

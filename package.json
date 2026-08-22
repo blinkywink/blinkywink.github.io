@@ -25,7 +25,8 @@
     "prepare-card-assets:all": "tsx scripts/prepare-card-assets.ts all",
     "compress-audio": "tsx scripts/compress-audio.ts",
     "export-t5-grid": "tsx scripts/generate-t5-grid-background.ts",
-    "reset-accounts": "tsx scripts/reset-all-accounts.ts"
+    "reset-accounts": "tsx scripts/reset-all-accounts.ts",
+    "smoke-test": "tsx scripts/pre-release-smoke-test.ts"
   },
   "dependencies": {
     "@fontsource/fredoka": "^5.3.0",

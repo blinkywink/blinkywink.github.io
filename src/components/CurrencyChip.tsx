@@ -60,8 +60,8 @@ export function CurrencyChip({
         src="/images/ui/money-icon.webp"
         alt=""
         className="coin-chip__icon"
-        width={34}
-        height={34}
+        width={36}
+        height={36}
       />
       <span className="coin-chip__value">{amount.toLocaleString()}</span>
       <span className="coin-chip__pops" aria-live="polite" aria-atomic="false">

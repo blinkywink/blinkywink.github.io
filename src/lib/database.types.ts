@@ -28,6 +28,10 @@ export type Profile = {
   accent_unlocked?: boolean | null;
   /** Hex `#RRGGBB` accent, or null. */
   accent_color?: string | null;
+  /** One-time unlock for hands-free pack opening. */
+  auto_pack_unlocked?: boolean | null;
+  /** Site-wide color theme id (synced across devices). */
+  site_theme?: string | null;
   /** One-time unlock for profile aura FX. */
   aura_unlocked?: boolean | null;
   /** Owned card id whose FX palette is copied onto profile chrome. */
@@ -74,6 +78,8 @@ export type Database = {
           showcase_slots?: number;
           accent_unlocked?: boolean;
           accent_color?: string | null;
+          auto_pack_unlocked?: boolean;
+          site_theme?: string;
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
           owned_hero_ids?: string[] | null;
@@ -99,6 +105,8 @@ export type Database = {
           showcase_slots?: number;
           accent_unlocked?: boolean;
           accent_color?: string | null;
+          auto_pack_unlocked?: boolean;
+          site_theme?: string;
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
           owned_hero_ids?: string[] | null;
@@ -362,9 +370,17 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      buy_auto_pack_open: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       set_profile_accent: {
         Args: { p_color: string };
         Returns: number;
+      };
+      set_site_theme: {
+        Args: { p_theme: string };
+        Returns: string;
       };
       set_profile_aura: {
         Args: { p_card_id: string | null };

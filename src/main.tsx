@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CardCollectionProvider } from "./auth/CardCollectionProvider";
 import { HeroFxProvider } from "./auth/HeroFxProvider";
+import { TowerCompleteProvider } from "./auth/TowerCompleteProvider";
 import App from "./App";
 import { supabaseConfigured } from "./lib/supabase";
 import "@fontsource/fredoka/latin-500.css";
@@ -13,7 +14,10 @@ import "@fontsource/nunito/latin-600.css";
 import "@fontsource/nunito/latin-700.css";
 import "@fontsource/nunito/latin-800.css";
 import "@fontsource/luckiest-guy/latin-400.css";
+import { initSiteTheme } from "./lib/siteTheme";
 import "./index.css";
+
+initSiteTheme();
 
 const root = document.getElementById("root")!;
 
@@ -41,9 +45,11 @@ function renderApp() {
       <AuthProvider>
         <BrowserRouter>
           <HeroFxProvider>
-            <CardCollectionProvider>
-              <App />
-            </CardCollectionProvider>
+            <TowerCompleteProvider>
+              <CardCollectionProvider>
+                <App />
+              </CardCollectionProvider>
+            </TowerCompleteProvider>
           </HeroFxProvider>
         </BrowserRouter>
       </AuthProvider>

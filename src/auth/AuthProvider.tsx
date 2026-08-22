@@ -14,6 +14,8 @@ import {
   saveGuestWallet,
 } from "../lib/guestWallet";
 import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
+import { subscribeRouteEnter } from "../lib/navigationRefresh";
+import { reconcileSiteThemeWithAccount } from "../lib/siteTheme";
 import { isValidUsername, normalizeUsername } from "./username";
 import {
   clearAppSession,
@@ -221,7 +223,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     const next = await fetchProfile(userId);
-    if (next) setProfile(next);
+    if (next) {
+      setProfile(next);
+      await reconcileSiteThemeWithAccount(next.site_theme);
+    }
   }, [session?.userId]);
 
   useEffect(() => {
@@ -248,13 +253,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       await mergeGuestProgressIntoAccount();
       if (cancelled) return;
-      setProfile(await fetchProfile(userId));
+      const loaded = await fetchProfile(userId);
+      if (cancelled || !loaded) return;
+      setProfile(loaded);
+      await reconcileSiteThemeWithAccount(loaded.site_theme);
     })();
 
     return () => {
       cancelled = true;
     };
   }, [ready, session?.userId]);
+
+  useEffect(() => {
+    return subscribeRouteEnter((pathname) => {
+      if (pathname === "/profile") {
+        void refreshProfile();
+      }
+    });
+  }, [refreshProfile]);
 
   const signUp = useCallback(
     async (input: { username: string; password: string }) => {

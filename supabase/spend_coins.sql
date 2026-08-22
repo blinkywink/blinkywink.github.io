@@ -1,16 +1,17 @@
--- Spend Cash (pack shop, etc.)
--- Safe to re-run after award_coins.sql
+-- Spend Cash (pack shop, etc.) — session auth via current_account_id().
+-- Safe to re-run.
 
 create or replace function public.spend_coins(p_amount integer)
 returns integer
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
+  uid uuid := public.current_account_id();
   new_balance integer;
 begin
-  if auth.uid() is null then
+  if uid is null then
     raise exception 'Not authenticated';
   end if;
 
@@ -22,7 +23,7 @@ begin
 
   update public.profiles
   set coins = coins - p_amount
-  where id = auth.uid()
+  where id = uid
     and coins >= p_amount
   returning coins into new_balance;
 
@@ -35,4 +36,4 @@ end;
 $$;
 
 revoke all on function public.spend_coins(integer) from public;
-grant execute on function public.spend_coins(integer) to authenticated;
+grant execute on function public.spend_coins(integer) to anon, authenticated;

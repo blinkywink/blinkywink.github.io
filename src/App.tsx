@@ -31,6 +31,7 @@ import { RouteFallback } from "./components/RouteFallback";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
 import { LivePlayerSync } from "./components/LivePlayerSync";
+import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
 import {
@@ -690,7 +691,9 @@ export default function App() {
       <DesktopOnlineGate />
       <DesktopUpdateGate />
       <LivePlayerSync />
-      <AppShell />
+      <NavigationRefresh>
+        <AppShell />
+      </NavigationRefresh>
     </>
   );
 }

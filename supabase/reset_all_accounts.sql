@@ -138,6 +138,7 @@ begin
     accent_color = null,
     aura_unlocked = false,
     aura_card_id = null,
+    auto_pack_unlocked = false,
     owned_hero_ids = '{}'::text[],
     equipped_hero_id = null,
     hero_levels = '{}'::jsonb,

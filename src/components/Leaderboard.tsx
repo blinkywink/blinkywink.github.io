@@ -95,7 +95,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   }, [hasMore]);
 
   useEffect(() => {
-    void load();
+    void load(true);
   }, [load]);
 
   useEffect(() => {

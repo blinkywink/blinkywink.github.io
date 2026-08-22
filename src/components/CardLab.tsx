@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
-import { towerEntities, towers as baseTowers } from "../data/towers";
+import { towerEntities } from "../data/towers";
 import type { TowerEntity } from "../data/types";
 import { fetchPlayerCardCopies } from "../lib/awardCards";
 import { fetchPlayerParagons } from "../lib/paragonApi";
@@ -11,7 +11,11 @@ import type { ParagonMap } from "../lib/guestParagons";
 import type { AvatarCrop } from "../lib/avatar";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
-  buildTowerCardSpecs,
+  ALL_TOWER_SPECS,
+  TOWER_CHOICES,
+  TOWER_SPECS,
+} from "../lib/towerCollection";
+import {
   formatPathLevels,
   sortCardSpecs,
   type MonkeyCardSpec,
@@ -84,39 +88,6 @@ type View =
   | { kind: "heroes" }
   | { kind: "all" }
   | { kind: "tower"; name: string };
-
-type TowerChoice = {
-  name: string;
-  category: string;
-  image: string;
-  cardCount: number;
-};
-
-function cardCountFor(tower: string): number {
-  const hasParagon = towerEntities.some(
-    (e) => e.tower === tower && e.type === "paragon",
-  );
-  return 64 + (hasParagon ? 1 : 0);
-}
-
-const TOWER_CHOICES: TowerChoice[] = baseTowers.map((t) => ({
-  name: t.tower,
-  category: t.category,
-  image: t.image,
-  cardCount: cardCountFor(t.tower),
-}));
-
-const TOWER_SPECS: Record<string, MonkeyCardSpec[]> = Object.fromEntries(
-  TOWER_CHOICES.map((t) => [
-    t.name,
-    buildTowerCardSpecs(t.name).slice().sort(sortCardSpecs),
-  ]),
-);
-
-/** Every collectible card across all towers. */
-const ALL_SPECS: MonkeyCardSpec[] = TOWER_CHOICES.flatMap(
-  (t) => TOWER_SPECS[t.name] ?? [],
-);
 
 function baseEntity(tower: string): TowerEntity | null {
   return (
@@ -362,7 +333,7 @@ export function CardLab({
   }, [highlightIds]);
 
   const totalOwned = owned.size;
-  const totalCards = ALL_SPECS.length;
+  const totalCards = ALL_TOWER_SPECS.length;
   const ownedHeroCount = useMemo(
     () => normalizeOwnedHeroIds(profile?.owned_hero_ids).length,
     [profile?.owned_hero_ids],
@@ -390,7 +361,7 @@ export function CardLab({
   }, [query]);
 
   const ownedAllCards = useMemo(() => {
-    let list = ALL_SPECS.filter((c) => owned.has(c.id));
+    let list = ALL_TOWER_SPECS.filter((c) => owned.has(c.id));
     const q = query.trim().toLowerCase();
     if (q) list = list.filter((c) => matchesCardQuery(c, q));
     if (tierHighFirst) {

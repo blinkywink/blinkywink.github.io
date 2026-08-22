@@ -35,6 +35,11 @@ import {
   setProfileAccent,
 } from "../lib/profileCosmetics";
 import {
+  AUTO_PACK_OPEN_COST,
+  autoPackUnlockedFromProfile,
+  buyAutoPackOpen,
+} from "../lib/autoPackOpen";
+import {
   SHOWCASE_CHANGE_COST,
   SHOWCASE_MAX,
   SHOWCASE_SLOT_COST,
@@ -49,6 +54,13 @@ import {
   setLogoHomeId,
   type LogoHomeId,
 } from "../lib/logoHome";
+import {
+  getSiteThemeId,
+  setSiteThemeId,
+  saveSiteThemeToServer,
+  SITE_THEMES,
+  subscribeSiteTheme,
+} from "../lib/siteTheme";
 import {
   getSfxVolume,
   playCardFocus,
@@ -78,11 +90,15 @@ export function ProfilePage() {
   const [colorDraft, setColorDraft] = useState("#F0C84A");
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [logoHome, setLogoHomeState] = useState(() => getLogoHomeId());
+  const [siteTheme, setSiteThemeState] = useState(() => getSiteThemeId());
+  const [themeError, setThemeError] = useState<string | null>(null);
+  const [themeSaving, setThemeSaving] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => subscribeSfxVolume(setSfxVolumeState), []);
+  useEffect(() => subscribeSiteTheme(setSiteThemeState), []);
 
   const saved = useMemo(
     () => (profile ? avatarFromProfile(profile) : DEFAULT_AVATAR_CROP),
@@ -335,6 +351,23 @@ export function ProfilePage() {
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save color.");
+    }
+    setBusy(false);
+  }
+
+  async function onBuyAutoPackOpen() {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const balance = await buyAutoPackOpen();
+      setCoinBalance(balance);
+      await refreshProfile();
+      setStatus(
+        `Unlocked Auto Pack Open (−${AUTO_PACK_OPEN_COST.toLocaleString()} Cash).`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unlock.");
     }
     setBusy(false);
   }
@@ -644,49 +677,103 @@ export function ProfilePage() {
           </div>
         </section>
 
-        <section className="profile-settings" aria-label="Sound">
-          <div className="profile-settings__head">
-            <div>
-              <h3>Sound</h3>
-              <p>Master volume for packs, shop, and hero voice lines.</p>
-            </div>
-            <strong className="profile-settings__pct">
-              {Math.round(sfxVolume * 100)}%
-            </strong>
-          </div>
-          <label className="profile-settings__volume">
-            <span className="profile-settings__volume-label">Volume</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={Math.round(sfxVolume * 100)}
-              onChange={(e) => {
-                const next = Number(e.target.value) / 100;
-                setSfxVolume(next);
-              }}
-              onPointerUp={() => {
-                if (getSfxVolume() > 0) playCardFocus();
-              }}
-            />
-          </label>
-        </section>
-
-        <section className="profile-cosmetics">
+        <section className="profile-cosmetics" aria-label="Profile cosmetics">
           <div className="profile-cosmetics__head">
             <div>
               <h3>Profile cosmetics</h3>
-              <p>
-                Custom color for your page and leaderboard chip.
-              </p>
+              <p>Showcase cards and accent color for your public profile.</p>
             </div>
+          </div>
+
+          <div className="profile-cosmetics__block profile-showcase-edit">
+            <div className="profile-showcase-edit__head">
+              <div>
+                <h4>Showcase cards</h4>
+                <p>
+                  {visibleShowcase.length}/{showcaseSlots} filled · {showcaseSlots}/
+                  {SHOWCASE_MAX} slots owned. Slots cost{" "}
+                  <CashAmount amount={SHOWCASE_SLOT_COST} size={13} />, setting a
+                  card costs{" "}
+                  <CashAmount amount={SHOWCASE_CHANGE_COST} size={13} />.
+                </p>
+              </div>
+              <div className="profile-showcase-edit__actions">
+                {showcaseSlots < SHOWCASE_MAX ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    disabled={
+                      busy || (profile?.coins ?? 0) < SHOWCASE_SLOT_COST
+                    }
+                    onClick={() => void onBuyShowcaseSlot()}
+                  >
+                    Buy slot
+                    <CashAmount amount={SHOWCASE_SLOT_COST} size={14} />
+                  </button>
+                ) : null}
+                {visibleShowcase.length < showcaseSlots ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    disabled={
+                      busy || (profile?.coins ?? 0) < SHOWCASE_CHANGE_COST
+                    }
+                    onClick={openShowcaseEditor}
+                  >
+                    Add card
+                    <CashAmount amount={SHOWCASE_CHANGE_COST} size={14} />
+                  </button>
+                ) : null}
+                {visibleShowcase.length > 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={busy}
+                    onClick={() => void onClearShowcase()}
+                  >
+                    Clear all
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {showcaseSpecs.length > 0 ? (
+              <div className="profile-showcase-edit__row">
+                {showcaseSpecs.map((card) => (
+                  <div key={card.id} className="profile-showcase-edit__slot">
+                    <MonkeyCard
+                      entity={card.entity}
+                      pathLevels={card.pathLevels}
+                      mode="preview"
+                      owned
+                      degree={
+                        card.isParagon ? paragonOf(card.id)?.degree : undefined
+                      }
+                      visualSeed={visualSeedOf(card.id)}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={busy}
+                      onClick={() => void onRemoveShowcaseCard(card.id)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="profile-showcase-edit__empty">
+                {showcaseSlots === 0
+                  ? "Buy a showcase slot to get started."
+                  : "None selected yet."}
+              </p>
+            )}
           </div>
 
           <div className="profile-cosmetics__grid">
             <div className="profile-cosmetics__card">
               <div className="profile-cosmetics__card-head">
-                <h4>Color</h4>
+                <h4>Accent color</h4>
                 <span className="profile-cosmetics__price">
                   {cosmetics.accentUnlocked
                     ? "Applies to your page & leaderboard"
@@ -694,7 +781,7 @@ export function ProfilePage() {
                 </span>
               </div>
               <label className="profile-cosmetics__color">
-                <span>Accent</span>
+                <span>Color</span>
                 <input
                   type="color"
                   value={colorDraft}
@@ -729,118 +816,149 @@ export function ProfilePage() {
           </div>
         </section>
 
-        <section className="profile-showcase-edit">
-          <div className="profile-showcase-edit__head">
-            <div>
-              <h3>Showcase cards</h3>
-              <p>
-                {visibleShowcase.length}/{showcaseSlots} filled · {showcaseSlots}/
-                {SHOWCASE_MAX} slots owned. Slots cost{" "}
-                <CashAmount amount={SHOWCASE_SLOT_COST} size={13} />, setting a
-                card costs <CashAmount amount={SHOWCASE_CHANGE_COST} size={13} />
-                .
-              </p>
-            </div>
-            <div className="profile-showcase-edit__actions">
-              {showcaseSlots < SHOWCASE_MAX ? (
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  disabled={
-                    busy || (profile?.coins ?? 0) < SHOWCASE_SLOT_COST
-                  }
-                  onClick={() => void onBuyShowcaseSlot()}
-                >
-                  Buy slot
-                  <CashAmount amount={SHOWCASE_SLOT_COST} size={14} />
-                </button>
-              ) : null}
-              {visibleShowcase.length < showcaseSlots ? (
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  disabled={
-                    busy || (profile?.coins ?? 0) < SHOWCASE_CHANGE_COST
-                  }
-                  onClick={openShowcaseEditor}
-                >
-                  Add card
-                  <CashAmount amount={SHOWCASE_CHANGE_COST} size={14} />
-                </button>
-              ) : null}
-              {visibleShowcase.length > 0 ? (
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  disabled={busy}
-                  onClick={() => void onClearShowcase()}
-                >
-                  Clear all
-                </button>
-              ) : null}
-            </div>
-          </div>
-          {showcaseSpecs.length > 0 ? (
-            <div className="profile-showcase-edit__row">
-              {showcaseSpecs.map((card) => (
-                <div key={card.id} className="profile-showcase-edit__slot">
-                  <MonkeyCard
-                    entity={card.entity}
-                    pathLevels={card.pathLevels}
-                    mode="preview"
-                    owned
-                    degree={
-                      card.isParagon ? paragonOf(card.id)?.degree : undefined
-                    }
-                    visualSeed={visualSeedOf(card.id)}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--sm"
-                    disabled={busy}
-                    onClick={() => void onRemoveShowcaseCard(card.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="profile-showcase-edit__empty">
-              {showcaseSlots === 0
-                ? "Buy a showcase slot to get started."
-                : "None selected yet."}
-            </p>
-          )}
-        </section>
-
-        <section className="profile-settings" aria-label="Logo shortcut">
+        <section className="profile-settings" aria-label="Site settings">
           <div className="profile-settings__head">
             <div>
-              <h3>Logo shortcut</h3>
-              <p>
-                Choose where the blinkywink.co logo in the header takes you.
-                Saved on this device.
-              </p>
+              <h3>Site settings</h3>
+              <p>Theme, sound, and navigation preferences.</p>
             </div>
           </div>
-          <label className="profile-settings__select">
-            <span className="profile-settings__volume-label">Opens</span>
-            <select
-              value={logoHome}
-              onChange={(e) => {
-                const next = e.target.value as LogoHomeId;
-                setLogoHomeId(next);
-                setLogoHomeState(next);
-              }}
+
+          <div className="profile-settings__block">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Volume</h4>
+                <p>Master volume for packs, shop, and hero voice lines.</p>
+              </div>
+              <strong className="profile-settings__pct">
+                {Math.round(sfxVolume * 100)}%
+              </strong>
+            </div>
+            <label className="profile-settings__volume">
+              <span className="profile-settings__volume-label">Level</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(sfxVolume * 100)}
+                onChange={(e) => {
+                  const next = Number(e.target.value) / 100;
+                  setSfxVolume(next);
+                }}
+                onPointerUp={() => {
+                  if (getSfxVolume() > 0) playCardFocus();
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="profile-settings__block">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Theme</h4>
+                <p>
+                  Background and accent color for the whole site. Synced to your
+                  account.
+                </p>
+              </div>
+            </div>
+            <div
+              className="profile-settings__themes"
+              role="radiogroup"
+              aria-label="Site theme"
             >
-              {LOGO_HOME_PAGES.map((page) => (
-                <option key={page.id} value={page.id}>
-                  {page.label}
-                </option>
+              {SITE_THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  role="radio"
+                  className={`profile-settings__theme${siteTheme === theme.id ? " is-active" : ""}`}
+                  aria-checked={siteTheme === theme.id}
+                  aria-label="Theme color"
+                  onClick={() => {
+                    if (themeSaving || siteTheme === theme.id) return;
+                    setSiteThemeId(theme.id);
+                    setThemeError(null);
+                    setThemeSaving(true);
+                    void (async () => {
+                      const err = await saveSiteThemeToServer(theme.id);
+                      if (err) {
+                        setThemeError(err);
+                        setThemeSaving(false);
+                        return;
+                      }
+                      await refreshProfile();
+                      setThemeSaving(false);
+                    })();
+                  }}
+                  disabled={themeSaving}
+                >
+                  <span
+                    className="profile-settings__theme-swatch"
+                    style={{ background: theme.swatch, backgroundColor: "transparent" }}
+                    aria-hidden
+                  />
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+            {themeError ? (
+              <p className="profile-banner profile-banner--err" role="alert">
+                {themeError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="profile-settings__block">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Auto Open</h4>
+                <p>
+                  One-time unlock. Opens packs like holding Space — turn it on
+                  in the pack shop before you buy.
+                </p>
+              </div>
+            </div>
+            {autoPackUnlockedFromProfile(profile) ? (
+              <p className="profile-settings__owned">Unlocked</p>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--secondary profile-settings__buy"
+                disabled={busy || (profile?.coins ?? 0) < AUTO_PACK_OPEN_COST}
+                onClick={() => void onBuyAutoPackOpen()}
+              >
+                Unlock
+                <CashAmount amount={AUTO_PACK_OPEN_COST} size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="profile-settings__block">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Home button</h4>
+                <p>Where the Monkey Cards logo in the header takes you.</p>
+              </div>
+            </div>
+            <label className="profile-settings__select">
+              <span className="profile-settings__volume-label">Opens</span>
+              <select
+                value={logoHome}
+                onChange={(e) => {
+                  const next = e.target.value as LogoHomeId;
+                  setLogoHomeId(next);
+                  setLogoHomeState(next);
+                }}
+              >
+                {LOGO_HOME_PAGES.map((page) => (
+                  <option key={page.id} value={page.id}>
+                    {page.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </section>
       </main>
       <footer className="profile-page__footer">

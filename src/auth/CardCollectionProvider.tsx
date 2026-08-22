@@ -25,6 +25,7 @@ import {
   showcaseFromProfile,
 } from "../lib/profileShowcase";
 import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
+import { subscribeRouteEnter } from "../lib/navigationRefresh";
 import {
   applyParagonFeeds as persistParagonFeeds,
   ensureParagonStates,
@@ -39,7 +40,9 @@ import {
 } from "../lib/paragonProgress";
 import { fetchMyActiveListedCards } from "../lib/marketplace";
 import { needsVisualSeed, newVisualSeed } from "../lib/cardVisualSeed";
+import { newlyCompletedTowers } from "../lib/towerCollection";
 import type { ParagonMap } from "../lib/guestParagons";
+import { useTowerComplete } from "./TowerCompleteProvider";
 
 type CardCollectionContextValue = {
   ready: boolean;
@@ -72,6 +75,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const { ready: authReady, session, isGuest, profile, refreshProfile } =
     useAuth();
   const { notifyParagonDegree } = useHeroFx();
+  const { notifyTowerCompletions } = useTowerComplete();
   const notifyParagonRef = useRef(notifyParagonDegree);
   notifyParagonRef.current = notifyParagonDegree;
   const [ready, setReady] = useState(false);
@@ -83,6 +87,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   const ownedRef = useRef(ownedIds);
   const listedRef = useRef(listedIds);
   const paragonRef = useRef(paragonMap);
+  const hydratedRef = useRef(false);
   const feedQueue = useRef(Promise.resolve());
   ownedRef.current = ownedIds;
   listedRef.current = listedIds;
@@ -93,7 +98,19 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return rows.map((row) => row.cardId);
   }, []);
 
+  const announceTowerCompletions = useCallback(
+    (before: readonly string[]) => {
+      const beforeSet = new Set(before);
+      const afterSet = new Set(ownedRef.current);
+      const towers = newlyCompletedTowers(beforeSet, afterSet);
+      if (towers.length) notifyTowerCompletions(towers);
+    },
+    [notifyTowerCompletions],
+  );
+
   const refresh = useCallback(async () => {
+    const beforeOwned = ownedRef.current;
+    const shouldAnnounce = hydratedRef.current;
     const [copies, nextParagons, nextListed] = await Promise.all([
       fetchOwnedCopies(),
       fetchOwnParagons(),
@@ -118,13 +135,16 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       setParagonMap(next);
     }
     setHydrated(true);
-  }, [loadListedIds, session?.userId]);
+    hydratedRef.current = true;
+    if (shouldAnnounce) announceTowerCompletions(beforeOwned);
+  }, [loadListedIds, session?.userId, announceTowerCompletions]);
 
   useEffect(() => {
     if (!authReady) return;
     let cancelled = false;
     setReady(true);
     setHydrated(false);
+    hydratedRef.current = false;
     paragonRef.current = {};
     setParagonMap({});
     setListedIds([]);
@@ -157,11 +177,20 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
         setParagonMap(next);
       }
       setHydrated(true);
+      hydratedRef.current = true;
     })();
     return () => {
       cancelled = true;
     };
   }, [authReady, session?.userId, isGuest, loadListedIds]);
+
+  useEffect(() => {
+    return subscribeRouteEnter((pathname) => {
+      if (pathname === "/collection" || pathname === "/shop") {
+        void refresh();
+      }
+    });
+  }, [refresh]);
 
   useEffect(() => {
     if (!hydrated || isGuest || !profile) return;
@@ -175,6 +204,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   }, [hydrated, isGuest, profile, ownedIds, refreshProfile]);
 
   const awardCards = useCallback(async (cardIds: string[]) => {
+    const beforeOwned = ownedRef.current;
     const added = await persistAwardCards(cardIds);
     const nextOwned = new Set(ownedRef.current);
     for (const id of cardIds) nextOwned.add(id);
@@ -200,6 +230,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
+    announceTowerCompletions(beforeOwned);
     void fetchOwnedCopies().then((copies) => {
       setOwnedIds(copies.map((row) => row.cardId));
       setSeedMap(
@@ -211,7 +242,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       );
     });
     return added;
-  }, []);
+  }, [announceTowerCompletions]);
 
   const announceDegreeUps = useCallback((results: ParagonApplyResult[]) => {
     for (const r of results) {

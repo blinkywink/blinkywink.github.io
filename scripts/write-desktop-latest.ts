@@ -93,7 +93,7 @@ if (!Object.keys(platforms).length) {
 
 const manifest = {
   version,
-  notes: `blinkywink.co desktop ${version}`,
+  notes: `Monkey Cards desktop ${version}`,
   pub_date: new Date().toISOString(),
   platforms,
 };

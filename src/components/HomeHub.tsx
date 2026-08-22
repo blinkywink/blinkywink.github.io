@@ -158,7 +158,7 @@ export function HomeHub() {
         if (!cancelled) setTopPlayers([]);
       }
     };
-    void load();
+    void load(true);
     const id = window.setInterval(() => void load(true), 45_000);
     const onWake = () => {
       if (document.visibilityState === "visible") void load(true);
@@ -310,6 +310,10 @@ export function HomeHub() {
           <ExternalLink href={DISCORD_INVITE_URL}>Join the discord</ExternalLink>
         </p>
         <p>BTD6 Creator code: blinky</p>
+        <p className="arcade__footer-disclaimer">
+          Not affiliated with Ninja Kiwi. This is a fan project. I am not selling
+          anything — it is a free game.
+        </p>
       </footer>
 
       <HowToPlayOverlay open={howtoOpen} onClose={() => setHowtoOpen(false)} />
