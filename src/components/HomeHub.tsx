@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { cardSpecById } from "../lib/cardCatalog";
 import { fetchTopLeaderboard } from "../lib/leaderboardRanks";
 import {
+  aboutPath,
   collectionPath,
   gamePath,
   gamesPath,
@@ -314,6 +315,9 @@ export function HomeHub() {
             made by:{" "}
             <ExternalLink href={YOUTUBE_CHANNEL_URL}>blinkywink</ExternalLink>
           </span>
+          <Link to={aboutPath()} className="arcade__footer-link">
+            About
+          </Link>
           <ExternalLink href={DISCORD_INVITE_URL}>Join the discord</ExternalLink>
         </p>
         <p>BTD6 Creator code: blinky</p>

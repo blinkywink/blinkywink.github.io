@@ -59,6 +59,10 @@ export function profilePath(): string {
   return "/profile";
 }
 
+export function aboutPath(): string {
+  return "/about";
+}
+
 export function paragonLabPath(): string {
   return "/profile/paragon-lab";
 }

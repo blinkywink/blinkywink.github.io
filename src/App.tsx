@@ -16,6 +16,7 @@ import { CashAmount } from "./components/CurrencyChip";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { LoadingDots } from "./components/LoadingDots";
 import { EndlessHaulCard } from "./components/EndlessHaulCard";
+import { AboutPage } from "./components/AboutPage";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
@@ -514,6 +515,7 @@ function AppShell() {
       <div className="site-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/shop" element={<ShopRoute />} />
           <Route path="/collection" element={<CollectionPage />} />
