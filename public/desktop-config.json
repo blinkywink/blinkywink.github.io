@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.9",
-  "version": "1.0.9",
-  "shopDay": "2026-8-20",
+  "minDesktopVersion": "1.0.10",
+  "version": "1.0.10",
+  "shopDay": "2026-8-22",
   "featuredTowers": [
-    "Desperado",
-    "Heli Pilot",
-    "Dart Monkey"
+    "Monkey Ace",
+    "Mermonkey",
+    "Engineer Monkey"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",

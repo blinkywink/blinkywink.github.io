@@ -1,21 +1,21 @@
 {
-  "version": "1.0.9",
-  "notes": "Monkey Cards desktop 1.0.9",
-  "pub_date": "2026-08-20T05:07:01.962Z",
-  "shopDay": "2026-8-20",
+  "version": "1.0.10",
+  "notes": "Monkey Cards desktop 1.0.10",
+  "pub_date": "2026-08-22T06:57:06.338Z",
+  "shopDay": "2026-8-22",
   "featuredTowers": [
-    "Desperado",
-    "Heli Pilot",
-    "Dart Monkey"
+    "Monkey Ace",
+    "Mermonkey",
+    "Engineer Monkey"
   ],
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVVDOWJhVHp4SFNZYlNtaFRiL0o0a0dUOVJyR083amxLdDgzanZvUGhVU1h2VDRjbG1jQVB0eVYxRklSZVEvMThNbklSNDFwTEFzQ1pub1VsL2FVZndNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3MjAyMjg0CWZpbGU6Ymxpbmt5d2luay5jby5hcHAudGFyLmd6ClhKTGlsQ283eElUVnV4VHJaeWJlcDhVM0VvcGhjaGIyVGJmdHNidysyN24veVZEbGxBRnoybU1QYXhQQlM4MG04Q0ZqWm1GWWM5SEpBYk9mM1ZXekNBPT0K",
-      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.9/blinkywink-mac.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVhDUjJPMzlxNUloQjliM3VidkJteHQzdFF2R1IxdGNpb2N3QjdiUmZYaTFFVXBoNVNwdDBBa1pvV01NTTBPWFM2Z3lkbzFEbUdVdk1nVlk5OVZjR2dJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3MzgxNTkzCWZpbGU6TW9ua2V5IENhcmRzLmFwcC50YXIuZ3oKTEJqTTNiSzkxVm9NMlFlQzRVQlZuM0J4QzhqRWNXMEVDcXdGK0Y2alJOZ0VoaGJtcXQyK05CeVBVVU1tMjJ6cDdISjdiaXhMSGxzZm92WXc5eGVTQVE9PQo=",
+      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.10/blinkywink-mac.app.tar.gz"
     },
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbWR6bUxnVXJOUWdicmcvbldqMnBrNFByMWRzbEYyMjJVQUlQNjJ6WGw0amYzM3dWTVJIVnQyR29lbFl4c3NWczcwYTNiVUZ5djlhMUhKdnNCRW9PQXdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3MjAyNDIxCWZpbGU6Ymxpbmt5d2luay5jb18xLjAuOV94NjQtc2V0dXAuZXhlClJHbTkzL1JCdVBjZGxmNWxTNVhBUFJ2c3c5cGJBdnN3aUlOTHppOVBpQ2ZIdURkNm1za2NGaGF5TWZmdmtLK0lkTHlhTW85MU9qa0NuVnRqZSt6SUN3PT0K",
-      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.9/blinkywink-windows-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVhTM1dEcUNJSU0ramZJbEtCYmJycURQNWZNNjdXVEFuSFJreVdpWmdCeFdSV0o4ZnpkeW96R2hxdVNnQ3dQYUpDNkFBZm9iSW9haGZFSzZWODF5Z1E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3MzgxNzM0CWZpbGU6TW9ua2V5IENhcmRzXzEuMC4xMF94NjQtc2V0dXAuZXhlCnN4TzJaT3FlbU5uS1QvOFZNOWYvSGI1ME5TVWhBVDNPc1pKN1BEcUhaekdJT3FnZVluYlVFditvOUlSSTJNZWtFc0VITURqejMzWDZRY1hsOWxIUkJ3PT0K",
+      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.10/blinkywink-windows-setup.exe"
     }
   }
 }
