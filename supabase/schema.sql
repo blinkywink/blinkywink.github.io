@@ -3,7 +3,7 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text not null,
-  coins integer not null default 0 check (coins >= 0),
+  coins bigint not null default 0 check (coins >= 0),
   monkey_money integer not null default 0 check (monkey_money >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

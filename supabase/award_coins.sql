@@ -30,14 +30,14 @@ end;
 $$;
 
 create or replace function public.award_coins(p_amount integer)
-returns integer
+returns bigint
 language plpgsql
 security definer
 set search_path = public, extensions
 as $$
 declare
   uid uuid;
-  new_balance integer;
+  new_balance bigint;
 begin
   begin
     uid := public.current_account_id();

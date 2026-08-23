@@ -2,7 +2,7 @@
 -- Safe to re-run.
 
 alter table public.profiles
-  add column if not exists coins_earned integer not null default 0
+  add column if not exists coins_earned bigint not null default 0
   check (coins_earned >= 0);
 
 -- Best-effort backfill: at least what they currently hold

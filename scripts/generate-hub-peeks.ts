@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
-  HUB_PEEK_CARD_IDS,
+  hubPeekExportCardIds,
   hubPeekPacks,
 } from "../src/lib/hubPeeks";
 
@@ -78,7 +78,7 @@ async function main() {
     );
 
     const targets = [
-      ...HUB_PEEK_CARD_IDS.map((id) => `card-${id}`),
+      ...hubPeekExportCardIds().map((id) => `card-${id}`),
       ...hubPeekPacks().map((p) => `pack-${p.id}`),
     ];
 

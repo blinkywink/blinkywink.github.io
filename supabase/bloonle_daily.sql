@@ -15,7 +15,7 @@ declare
   last_claim date;
   guesses integer;
   amount integer;
-  new_balance integer;
+  new_balance bigint;
 begin
   if uid is null then
     uid := auth.uid();

@@ -65,7 +65,7 @@ declare
   today date := (timezone('utc', now()))::date;
   last_claim date;
   amount integer := 500;
-  new_balance integer;
+  new_balance bigint;
 begin
   if uid is null then
     uid := auth.uid();

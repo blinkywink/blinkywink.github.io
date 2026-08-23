@@ -6,13 +6,16 @@ import {
   type ReactNode,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { CashAmount } from "./CurrencyChip";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
+  HUB_MARKET_PEEK_CARD_ID,
   HUB_PEEK_CARD_IDS,
   hubPeekCardSrc,
   hubPeekPacks,
   hubPeekPackSrc,
 } from "../lib/hubPeeks";
+import { suggestedListingRange } from "../lib/listingValue";
 import { fetchTopLeaderboard } from "../lib/leaderboardRanks";
 import {
   aboutPath,
@@ -117,6 +120,11 @@ export function HomeHub() {
       ),
     [],
   );
+  const marketPeek = useMemo(() => {
+    const card = cardSpecById(HUB_MARKET_PEEK_CARD_ID);
+    const price = card ? suggestedListingRange(card).mid : 41_500;
+    return { cardId: HUB_MARKET_PEEK_CARD_ID, price };
+  }, []);
 
   const showHowtoBtn = ready && (isGuest || !user);
 
@@ -231,29 +239,17 @@ export function HomeHub() {
             title="Market"
             blurb="Buy and sell cards with other players."
           >
-            <div className="home-hub__market-listing">
+            <div className="home-hub__market-stage">
               <img
                 className="home-hub__market-card"
-                src={hubPeekCardSrc(
-                  cardPeeks[1]?.id ?? cardPeeks[0]?.id ?? HUB_PEEK_CARD_IDS[0],
-                )}
+                src={hubPeekCardSrc(marketPeek.cardId)}
                 alt=""
                 draggable={false}
                 decoding="async"
               />
-              <div className="home-hub__market-meta">
-                <span className="home-hub__market-price">
-                  <img
-                    src="/images/ui/money-icon.webp"
-                    alt=""
-                    width={16}
-                    height={16}
-                    draggable={false}
-                  />
-                  2,400
-                </span>
-                <span className="home-hub__market-buy">Purchase</span>
-              </div>
+              <span className="home-hub__market-tag">
+                <CashAmount amount={marketPeek.price} size={15} />
+              </span>
             </div>
           </DestTile>
         </div>

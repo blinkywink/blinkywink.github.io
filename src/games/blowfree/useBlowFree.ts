@@ -53,7 +53,7 @@ type Persisted = {
   levelId: string;
 };
 
-const STORAGE_KEY = "bloon-arcade:blowfree:daily:v3";
+const STORAGE_KEY = "bloon-arcade:blowfree:daily:v7";
 
 function loadPersisted(day: string): Persisted | null {
   try {

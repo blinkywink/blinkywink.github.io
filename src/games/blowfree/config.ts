@@ -57,11 +57,11 @@ export type BlowLevel = {
   pairs: BlowPair[];
 };
 
-/** Decent size — long enough to think, not a phone-zoom nightmare. */
+/** Fewer colors = longer pipes that actually block each other. */
 export const BLOW_DAILY_SIZE = 9;
-export const BLOW_DAILY_PAIRS = 8;
+export const BLOW_DAILY_PAIRS = 6;
 export const BLOW_PRACTICE_SIZE = 8;
-export const BLOW_PRACTICE_PAIRS = 7;
+export const BLOW_PRACTICE_PAIRS = 6;
 
 export function cellKey(r: number, c: number): string {
   return `${r},${c}`;

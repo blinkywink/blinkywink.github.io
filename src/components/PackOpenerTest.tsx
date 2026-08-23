@@ -1435,15 +1435,17 @@ export function PackOpenerTest({
           className={`pack-opener__done${packChromeOn ? " has-player-chrome" : ""}`}
           style={packChrome}
         >
-          <button
-            type="button"
-            className="pack-opener__close btn btn--ghost btn--sm"
-            aria-label="Close"
-            onClick={handleClose}
-          >
-            ✕
-          </button>
-          <h2>{godPack ? "GOD PACK!" : "Pack summary"}</h2>
+          <div className="pack-opener__done-head">
+            <h2>{godPack ? "GOD PACK!" : "Pack summary"}</h2>
+            <button
+              type="button"
+              className="pack-opener__close pack-opener__close--inline btn btn--ghost btn--sm"
+              aria-label="Close"
+              onClick={handleClose}
+            >
+              ✕
+            </button>
+          </div>
           {duplicates.size > 0 ? (
             <p className="pack-opener__done-stats">
               {duplicates.size} duplicate

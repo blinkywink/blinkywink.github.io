@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
-  HUB_PEEK_CARD_IDS,
+  hubPeekExportCardIds,
   hubPeekPacks,
 } from "../lib/hubPeeks";
 import { BoosterPack } from "./BoosterPack";
@@ -14,9 +14,9 @@ import { MonkeyCard } from "./MonkeyCard";
 export function HubPeekExport() {
   const cards = useMemo(
     () =>
-      HUB_PEEK_CARD_IDS.map((id) => cardSpecById(id)).filter(
-        (c): c is NonNullable<typeof c> => c != null,
-      ),
+      hubPeekExportCardIds()
+        .map((id) => cardSpecById(id))
+        .filter((c): c is NonNullable<typeof c> => c != null),
     [],
   );
   const packs = useMemo(() => hubPeekPacks(), []);

@@ -30,14 +30,14 @@ grant all on table public.reward_buckets to service_role;
 -- Generous enough for heavy play + guest merge chunks; stops unlimited minting.
 -- Per-call coin max stays 10_000 (Bloon Hero / merge chunks).
 create or replace function public.award_coins(p_amount integer)
-returns integer
+returns bigint
 language plpgsql
 security definer
 set search_path = public, extensions
 as $$
 declare
   uid uuid := public.current_account_id();
-  new_balance integer;
+  new_balance bigint;
   today date := (timezone('utc', now()))::date;
   b public.reward_buckets%rowtype;
   -- Caps (tune here only)
@@ -57,7 +57,7 @@ begin
   end if;
 
   insert into public.reward_buckets (user_id)
-  values (uid)
+    values (uid)
   on conflict (user_id) do nothing;
 
   select * into b from public.reward_buckets where user_id = uid for update;

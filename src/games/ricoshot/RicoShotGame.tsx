@@ -40,6 +40,7 @@ type Props = {
 };
 
 type ShooterTip = {
+  shooterId: string;
   name: string;
   tier: number;
   blurb: string;
@@ -294,11 +295,13 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
   const [tip, setTip] = useState<ShooterTip | null>(null);
 
   const showShooterTip = (
+    shooterId: string,
     el: HTMLElement,
     def: { name: string; tier: number; blurb: string },
   ) => {
     const r = el.getBoundingClientRect();
     setTip({
+      shooterId,
       name: def.name,
       tier: def.tier,
       blurb: def.blurb,
@@ -308,6 +311,18 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
   };
 
   const hideShooterTip = () => setTip(null);
+
+  const toggleShooterTip = (
+    shooterId: string,
+    el: HTMLElement,
+    def: { name: string; tier: number; blurb: string },
+  ) => {
+    if (tip?.shooterId === shooterId) {
+      hideShooterTip();
+      return;
+    }
+    showShooterTip(shooterId, el, def);
+  };
   const imgs = useRef<{
     bloon: Record<BloonKind, HTMLImageElement>;
     dart: HTMLImageElement;
@@ -336,6 +351,10 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
   const puzzleDone =
     state.status === "won_puzzle" || state.status === "lost_puzzle";
   const runOver = state.status === "won_run" || state.status === "lost_run";
+
+  useEffect(() => {
+    if (!aiming) hideShooterTip();
+  }, [aiming]);
 
   useEffect(() => {
     warmRicoSfx();
@@ -805,6 +824,8 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
           <div
             className="rico-stage"
             onPointerDown={(e) => {
+              if ((e.target as HTMLElement).closest(".rico-shooter")) return;
+              hideShooterTip();
               if (!aiming) return;
               (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
               const p = toLocal(e.clientX, e.clientY);
@@ -886,17 +907,20 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
                 disabled={!aiming || slot.used}
                 onClick={(e) => {
                   selectShooter(slot.id);
-                  showShooterTip(e.currentTarget, def);
+                  toggleShooterTip(slot.id, e.currentTarget, def);
                 }}
                 onPointerEnter={(e) => {
                   if (e.pointerType === "touch") return;
-                  showShooterTip(e.currentTarget, def);
+                  showShooterTip(slot.id, e.currentTarget, def);
                 }}
                 onPointerLeave={(e) => {
                   if (e.pointerType === "touch") return;
                   hideShooterTip();
                 }}
-                onFocus={(e) => showShooterTip(e.currentTarget, def)}
+                onFocus={(e) => {
+                  if (window.matchMedia("(hover: none)").matches) return;
+                  showShooterTip(slot.id, e.currentTarget, def);
+                }}
                 onBlur={hideShooterTip}
                 aria-label={`${def.name}. ${def.blurb}`}
               >
@@ -928,6 +952,7 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
               className="rico-fire"
               disabled={!aiming || !state.loadout.some((s) => !s.used)}
               onClick={() => {
+                hideShooterTip();
                 playRicoFire();
                 fire();
               }}

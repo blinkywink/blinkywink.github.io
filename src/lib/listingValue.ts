@@ -22,8 +22,9 @@ function offPath(levels: PathLevels): number {
 }
 
 /**
- * Rough player-market ask band. T5s sit around 17k–25k+. Paragons start
- * ~80–100k at degree 1 (the pull) and climb with tower-pack grind.
+ * Rough player-market ask band. Specific T5s run ~35k–55k+ (tower packs
+ * are 1k with ~0.7% T5/card — a named T5 is ~3× rarer than “any T5”).
+ * Paragons start ~80–100k at degree 1 and climb with tower-pack grind.
  */
 export function suggestedListingRange(
   card: MonkeyCardSpec,
@@ -45,14 +46,14 @@ export function suggestedListingRange(
   let high: number;
   if (tier >= 5) {
     if (off >= 2) {
-      low = 22_000;
-      high = 30_000;
+      low = 48_000;
+      high = 68_000;
     } else if (off === 1) {
-      low = 18_500;
-      high = 24_000;
+      low = 40_000;
+      high = 55_000;
     } else {
-      low = 17_000;
-      high = 21_000;
+      low = 35_000;
+      high = 48_000;
     }
   } else if (tier === 4) {
     low = off >= 2 ? 8_500 : off === 1 ? 7_200 : 6_500;

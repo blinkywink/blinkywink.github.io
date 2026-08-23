@@ -82,8 +82,9 @@ type AuthContextValue = {
     error: string | null;
     amount?: number;
     coins?: number;
+    already?: boolean;
   }>;
-  claimDailyCard: () => Promise<{ error: string | null }>;
+  claimDailyCard: () => Promise<{ error: string | null; already?: boolean }>;
   signUp: (input: {
     username: string;
     password: string;
@@ -97,6 +98,33 @@ type AuthContextValue = {
 
 export function utcToday(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function parseRpcJson<T extends Record<string, unknown>>(data: unknown): T | null {
+  if (data == null) return null;
+  if (typeof data === "string") {
+    try {
+      return JSON.parse(data) as T;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof data === "object" && !Array.isArray(data)) {
+    return data as T;
+  }
+  return null;
+}
+
+/** PostgREST sometimes puts the exception text in details/hint, not message. */
+function rpcErrorText(error: {
+  message?: string;
+  details?: string | null;
+  hint?: string | null;
+  code?: string;
+}): string {
+  return [error.message, error.details, error.hint, error.code]
+    .filter(Boolean)
+    .join(" ");
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -270,7 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return subscribeRouteEnter((pathname) => {
-      if (pathname === "/profile") {
+      if (pathname === "/profile" || pathname === "/shop") {
         void refreshProfile();
       }
     });
@@ -368,36 +396,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data, error } = await supabase.rpc("claim_daily_cash");
     if (error) {
-      if (error.message.includes("ALREADY_CLAIMED")) {
-        return { error: "Already claimed today. Come back tomorrow." };
+      const msg = rpcErrorText(error);
+      if (/ALREADY_CLAIMED/i.test(msg)) {
+        // Server already paid today — sync local state so the button grays out.
+        const fresh = await fetchProfile(session.userId);
+        if (fresh) {
+          setProfile(fresh);
+          return { error: null, already: true, coins: fresh.coins };
+        }
+        setProfile((prev) =>
+          prev ? { ...prev, last_daily_claim: utcToday() } : prev,
+        );
+        return { error: null, already: true };
       }
-      return { error: error.message };
+      if (/integer out of range/i.test(msg)) {
+        return {
+          error: "Cash is over the old 2.1B limit — ask an admin to run coins_bigint.sql.",
+        };
+      }
+      return { error: msg || "Claim failed. Try again." };
     }
-    const raw = data as {
+    const raw = parseRpcJson<{
       amount?: number;
-      coins?: number;
+      coins?: number | string;
       last_daily_claim?: string;
-    } | null;
+    }>(data);
     if (raw?.coins == null) {
-      return { error: "Claim failed." };
+      // Claim may have succeeded without a parseable payload — refresh.
+      const fresh = await fetchProfile(session.userId);
+      if (fresh?.last_daily_claim === utcToday()) {
+        setProfile(fresh);
+        return {
+          error: null,
+          already: true,
+          coins: fresh.coins,
+        };
+      }
+      return { error: "Claim failed. Try again." };
     }
+    const day = String(raw.last_daily_claim ?? utcToday()).slice(0, 10);
+    const coins = Number(raw.coins);
+    const amount = Number(raw.amount) || 500;
     setProfile((prev) =>
       prev
         ? {
             ...prev,
-            coins: Number(raw.coins),
-            coins_earned: (prev.coins_earned ?? 0) + (Number(raw.amount) || 0),
-            last_daily_claim: String(raw.last_daily_claim ?? utcToday()).slice(
-              0,
-              10,
-            ),
+            coins,
+            coins_earned: (prev.coins_earned ?? 0) + amount,
+            last_daily_claim: day,
           }
         : prev,
     );
     return {
       error: null,
-      amount: Number(raw.amount) || 500,
-      coins: Number(raw.coins),
+      amount,
+      coins,
     };
   }, [session?.userId]);
 
@@ -407,12 +460,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data, error } = await supabase.rpc("claim_daily_card");
     if (error) {
-      if (error.message.includes("ALREADY_CLAIMED")) {
-        return { error: "Already claimed today. Come back tomorrow." };
+      const msg = rpcErrorText(error);
+      if (/ALREADY_CLAIMED/i.test(msg)) {
+        setProfile((prev) =>
+          prev ? { ...prev, last_daily_card_claim: utcToday() } : prev,
+        );
+        return { error: null, already: true };
       }
-      return { error: error.message };
+      return { error: msg || "Claim failed. Try again." };
     }
-    const raw = data as { last_daily_card_claim?: string } | null;
+    const raw = parseRpcJson<{ last_daily_card_claim?: string }>(data);
     const day = String(raw?.last_daily_card_claim ?? utcToday()).slice(0, 10);
     setProfile((prev) =>
       prev ? { ...prev, last_daily_card_claim: day } : prev,
