@@ -1,6 +1,6 @@
 [package]
 name = "bloon-arcade"
-version = "1.0.10"
+version = "1.0.11"
 description = "Monkey Cards desktop shell (same web app + bundled assets)"
 authors = ["monkeycards"]
 license = ""
