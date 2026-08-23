@@ -360,38 +360,41 @@ const BLOW_PREVIEW_END: Record<
   green: "/images/bloons/btd6/green.webp",
 };
 
-/** Mini solved board — reads as Flow Free at a glance. */
+/**
+ * Mini solved 5×5 — winding pipes (not stripes), every cell filled,
+ * same joint/arm geometry as the real Blow Free board.
+ */
 const BLOW_PREVIEW_CELLS: BlowPreviewCell[] = [
-  // row 0 — red across the top
+  // row 0
   { end: "red", color: "red", r: true },
   { color: "red", l: true, r: true },
   { color: "red", l: true, r: true },
-  { color: "red", l: true, r: true },
-  { end: "red", color: "red", l: true },
-  // row 1 — green
-  { end: "green", color: "green", r: true },
-  { color: "green", l: true, r: true },
-  { color: "green", l: true, r: true },
+  { color: "red", l: true, d: true },
+  { end: "blue", color: "blue", d: true },
+  // row 1
+  { end: "green", color: "green", d: true },
+  { end: "yellow", color: "yellow", r: true },
+  { color: "yellow", l: true, d: true },
+  { end: "red", color: "red", u: true },
+  { color: "blue", u: true, d: true },
+  // row 2
+  { color: "green", u: true, d: true },
+  { end: "yellow", color: "yellow", r: true },
+  { color: "yellow", l: true, u: true },
+  { end: "pink", color: "pink", d: true },
+  { color: "blue", u: true, d: true },
+  // row 3
+  { color: "green", u: true, r: true },
   { color: "green", l: true, r: true },
   { end: "green", color: "green", l: true },
-  // row 2 — blue
-  { end: "blue", color: "blue", r: true },
-  { color: "blue", l: true, r: true },
-  { color: "blue", l: true, r: true },
-  { end: "blue", color: "blue", l: true },
-  {},
-  // row 3 — pink stub
-  {},
-  {},
-  {},
-  {},
-  { end: "pink", color: "pink", d: true },
-  // row 4 — yellow + pink end
-  { end: "yellow", color: "yellow", r: true },
-  { color: "yellow", l: true, r: true },
-  { color: "yellow", l: true, r: true },
-  { end: "yellow", color: "yellow", l: true },
-  { end: "pink", color: "pink", u: true },
+  { color: "pink", u: true, d: true },
+  { color: "blue", u: true, d: true },
+  // row 4
+  { end: "pink", color: "pink", r: true },
+  { color: "pink", l: true, r: true },
+  { color: "pink", l: true, r: true },
+  { color: "pink", l: true, u: true },
+  { end: "blue", color: "blue", u: true },
 ];
 
 function BlowFreePreview() {

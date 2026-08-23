@@ -563,24 +563,22 @@ function AppShell() {
       coinsEarned: number;
       difficulty: keyof typeof SWEEPER_DIFFICULTIES;
     }) => {
+      if (!info.cleared) return;
       setEndlessHaul(null);
       const diffLabel = SWEEPER_DIFFICULTIES[info.difficulty].label;
       setRunHaul({
         game: "bloonssweeper",
-        cleared: info.cleared,
+        cleared: true,
         cashEarned: info.coinsEarned,
-        details: [
-          `${diffLabel} board`,
-          info.cleared ? "Board cleared" : "Hit a red bloon",
-        ],
+        details: [`${diffLabel} board`, "Board cleared"],
       });
       queueClearAndBonusPacks({
-        cleared: info.cleared,
-        wantBonus: info.cleared,
+        cleared: true,
+        wantBonus: true,
         haulAfter: true,
       });
-      void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("bloonssweeper", info.cleared);
+      void creditHeroClear(true);
+      void settleFeaturedBonus("bloonssweeper", true);
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );

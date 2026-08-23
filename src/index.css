@@ -2969,28 +2969,29 @@ body:has(.rico-page) {
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 50% 38%, #2c4068 0%, #0e121c 78%);
-  padding: 0.55rem;
+    radial-gradient(ellipse at 50% 30%, #243048 0%, #121820 72%);
+  padding: 0.5rem;
 }
 
 .game-preview__blow-grid {
-  width: 86%;
+  --blow-thick: 42%;
+  width: 88%;
   aspect-ratio: 1;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 2px;
-  padding: 5px;
-  border-radius: 10px;
-  background: rgba(8, 12, 20, 0.72);
+  padding: 6px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #1a2230 0%, #121820 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
     0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 .game-preview__blow-cell {
   position: relative;
-  border-radius: 3px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -3001,96 +3002,86 @@ body:has(.rico-page) {
 
 .game-preview__blow-joint {
   position: absolute;
+  z-index: 1;
   left: 50%;
   top: 50%;
-  width: 42%;
-  height: 42%;
-  border-radius: 50%;
+  width: var(--blow-thick);
+  height: var(--blow-thick);
+  border-radius: 999px;
   transform: translate(-50%, -50%);
-  z-index: 1;
-  animation: blow-preview-glow 2.6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .game-preview__blow-arm {
   position: absolute;
-  z-index: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 999px;
 }
 
 .game-preview__blow-arm--h {
   top: 50%;
-  height: 34%;
+  height: var(--blow-thick);
   transform: translateY(-50%);
-  left: 50%;
-  width: 0;
+  left: calc(50% - var(--blow-thick) / 2);
+  right: calc(50% - var(--blow-thick) / 2);
 }
 
 .game-preview__blow-arm--h.l {
   left: 0;
-  width: 50%;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .game-preview__blow-arm--h.r {
-  left: 50%;
-  width: 50%;
+  right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .game-preview__blow-arm--h.l.r {
   left: 0;
-  width: 100%;
+  right: 0;
+  width: auto;
 }
 
 .game-preview__blow-arm--v {
   left: 50%;
-  width: 34%;
+  width: var(--blow-thick);
   transform: translateX(-50%);
-  top: 50%;
-  height: 0;
+  top: calc(50% - var(--blow-thick) / 2);
+  bottom: calc(50% - var(--blow-thick) / 2);
 }
 
 .game-preview__blow-arm--v.u {
   top: 0;
-  height: 50%;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .game-preview__blow-arm--v.d {
-  top: 50%;
-  height: 50%;
+  bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .game-preview__blow-arm--v.u.d {
   top: 0;
-  height: 100%;
+  bottom: 0;
+  height: auto;
 }
 
 .game-preview__blow-bloon {
-  position: relative;
+  position: absolute;
   z-index: 3;
-  width: 82%;
+  left: 50%;
+  top: 50%;
+  width: 78%;
   height: auto;
+  transform: translate(-50%, -50%);
   display: block;
-  margin: 9% auto 0;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
-  animation: blow-preview-pulse 2.6s ease-in-out infinite;
-}
-
-@keyframes blow-preview-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.06);
-  }
-}
-
-@keyframes blow-preview-glow {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.25);
-  }
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
 /* legacy ricoshot preview alias */

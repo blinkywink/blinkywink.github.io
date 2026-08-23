@@ -33,7 +33,7 @@
     "tier": 2,
     "image": "/images/towers/dart-monkey/razor-sharp-shots.webp",
     "sourceFile": "200-Dartmonkey.png",
-    "cost": 220
+    "cost": 200
   },
   {
     "id": "dart-monkey-13",
@@ -45,7 +45,7 @@
     "tier": 3,
     "image": "/images/towers/dart-monkey/spike-o-pult.webp",
     "sourceFile": "300-Dartmonkey.png",
-    "cost": 300
+    "cost": 320
   },
   {
     "id": "dart-monkey-14",
@@ -117,7 +117,7 @@
     "tier": 3,
     "image": "/images/towers/dart-monkey/triple-shot.webp",
     "sourceFile": "030-Dartmonkey.png",
-    "cost": 400
+    "cost": 450
   },
   {
     "id": "dart-monkey-24",
@@ -129,7 +129,7 @@
     "tier": 4,
     "image": "/images/towers/dart-monkey/super-monkey-fan-club.webp",
     "sourceFile": "040-Dartmonkey.png",
-    "cost": 7500
+    "cost": 7200
   },
   {
     "id": "dart-monkey-25",
@@ -177,7 +177,7 @@
     "tier": 3,
     "image": "/images/towers/dart-monkey/crossbow.webp",
     "sourceFile": "003-Dartmonkey.png",
-    "cost": 625
+    "cost": 575
   },
   {
     "id": "dart-monkey-34",
@@ -189,7 +189,7 @@
     "tier": 4,
     "image": "/images/towers/dart-monkey/sharp-shooter.webp",
     "sourceFile": "004-Dartmonkey.png",
-    "cost": 2000
+    "cost": 2050
   },
   {
     "id": "dart-monkey-35",
@@ -261,7 +261,7 @@
     "tier": 4,
     "image": "/images/towers/boomerang-monkey/m-o-a-r-glaives.webp",
     "sourceFile": "400-BoomerangMonkey.png",
-    "cost": 3000
+    "cost": 2000
   },
   {
     "id": "boomerang-monkey-15",
@@ -273,7 +273,7 @@
     "tier": 5,
     "image": "/images/towers/boomerang-monkey/glaive-lord.webp",
     "sourceFile": "500-BoomerangMonkey.png",
-    "cost": 29400
+    "cost": 32500
   },
   {
     "id": "boomerang-monkey-paragon",
@@ -321,7 +321,7 @@
     "tier": 3,
     "image": "/images/towers/boomerang-monkey/bionic-boomerang.webp",
     "sourceFile": "030-BoomerangMonkey.png",
-    "cost": 1450
+    "cost": 1250
   },
   {
     "id": "boomerang-monkey-24",
@@ -393,7 +393,7 @@
     "tier": 4,
     "image": "/images/towers/boomerang-monkey/moab-press.webp",
     "sourceFile": "004-BoomerangMonkey.png",
-    "cost": 2400
+    "cost": 2700
   },
   {
     "id": "boomerang-monkey-35",
@@ -465,7 +465,7 @@
     "tier": 4,
     "image": "/images/towers/bomb-shooter/bloon-impact.webp",
     "sourceFile": "400-BombShooter.png",
-    "cost": 3200
+    "cost": 2800
   },
   {
     "id": "bomb-shooter-15",
@@ -489,7 +489,7 @@
     "tier": 6,
     "image": "/images/towers/bomb-shooter/ballistic-obliteration-missile-bunker.webp",
     "sourceFile": "Paragon-BallisticObliterationMissileBunker.png",
-    "cost": 600000
+    "cost": 650000
   },
   {
     "id": "bomb-shooter-21",
@@ -525,7 +525,7 @@
     "tier": 3,
     "image": "/images/towers/bomb-shooter/moab-mauler.webp",
     "sourceFile": "030-BombShooter.png",
-    "cost": 1100
+    "cost": 1000
   },
   {
     "id": "bomb-shooter-24",
@@ -537,7 +537,7 @@
     "tier": 4,
     "image": "/images/towers/bomb-shooter/moab-assassin.webp",
     "sourceFile": "040-BombShooter.png",
-    "cost": 3350
+    "cost": 3450
   },
   {
     "id": "bomb-shooter-25",
@@ -549,7 +549,7 @@
     "tier": 5,
     "image": "/images/towers/bomb-shooter/moab-eliminator.webp",
     "sourceFile": "050-BombShooter.png",
-    "cost": 28000
+    "cost": 26000
   },
   {
     "id": "bomb-shooter-31",
@@ -585,7 +585,7 @@
     "tier": 3,
     "image": "/images/towers/bomb-shooter/cluster-bombs.webp",
     "sourceFile": "003-BombShooter.png",
-    "cost": 800
+    "cost": 700
   },
   {
     "id": "bomb-shooter-34",
@@ -597,7 +597,7 @@
     "tier": 4,
     "image": "/images/towers/bomb-shooter/recursive-cluster.webp",
     "sourceFile": "004-BombShooter.png",
-    "cost": 2800
+    "cost": 2500
   },
   {
     "id": "bomb-shooter-35",
@@ -609,7 +609,7 @@
     "tier": 5,
     "image": "/images/towers/bomb-shooter/bomb-blitz.webp",
     "sourceFile": "005-BombShooter.png",
-    "cost": 25500
+    "cost": 30000
   },
   {
     "id": "tack-shooter-000",
@@ -645,7 +645,7 @@
     "tier": 2,
     "image": "/images/towers/tack-shooter/even-faster-shooting.webp",
     "sourceFile": "200-TackShooter.png",
-    "cost": 300
+    "cost": 220
   },
   {
     "id": "tack-shooter-13",
@@ -765,7 +765,7 @@
     "tier": 1,
     "image": "/images/towers/tack-shooter/more-tacks.webp",
     "sourceFile": "001-TackShooter.png",
-    "cost": 110
+    "cost": 150
   },
   {
     "id": "tack-shooter-32",
@@ -777,7 +777,7 @@
     "tier": 2,
     "image": "/images/towers/tack-shooter/even-more-tacks.webp",
     "sourceFile": "002-TackShooter.png",
-    "cost": 110
+    "cost": 150
   },
   {
     "id": "tack-shooter-33",
@@ -825,7 +825,7 @@
     "tier": 0,
     "image": "/images/towers/ice-monkey/ice-monkey.webp",
     "sourceFile": "000-IceMonkey.png",
-    "cost": 500
+    "cost": 400
   },
   {
     "id": "ice-monkey-11",
@@ -873,7 +873,7 @@
     "tier": 4,
     "image": "/images/towers/ice-monkey/embrittlement.webp",
     "sourceFile": "400-IceMonkey.png",
-    "cost": 2200
+    "cost": 2300
   },
   {
     "id": "ice-monkey-15",
@@ -909,7 +909,7 @@
     "tier": 1,
     "image": "/images/towers/ice-monkey/enhanced-freeze.webp",
     "sourceFile": "010-IceMonkey.png",
-    "cost": 225
+    "cost": 200
   },
   {
     "id": "ice-monkey-22",
@@ -921,7 +921,7 @@
     "tier": 2,
     "image": "/images/towers/ice-monkey/deep-freeze.webp",
     "sourceFile": "020-IceMonkey.png",
-    "cost": 450
+    "cost": 300
   },
   {
     "id": "ice-monkey-23",
@@ -933,7 +933,7 @@
     "tier": 3,
     "image": "/images/towers/ice-monkey/arctic-wind.webp",
     "sourceFile": "030-IceMonkey.png",
-    "cost": 2800
+    "cost": 2750
   },
   {
     "id": "ice-monkey-24",
@@ -945,7 +945,7 @@
     "tier": 4,
     "image": "/images/towers/ice-monkey/snowstorm.webp",
     "sourceFile": "040-IceMonkey.png",
-    "cost": 3800
+    "cost": 4750
   },
   {
     "id": "ice-monkey-25",
@@ -957,7 +957,7 @@
     "tier": 5,
     "image": "/images/towers/ice-monkey/absolute-zero.webp",
     "sourceFile": "050-IceMonkey.png",
-    "cost": 19200
+    "cost": 21000
   },
   {
     "id": "ice-monkey-31",
@@ -969,7 +969,7 @@
     "tier": 1,
     "image": "/images/towers/ice-monkey/larger-radius.webp",
     "sourceFile": "001-IceMonkey.png",
-    "cost": 175
+    "cost": 150
   },
   {
     "id": "ice-monkey-32",
@@ -981,7 +981,7 @@
     "tier": 2,
     "image": "/images/towers/ice-monkey/re-freeze.webp",
     "sourceFile": "002-IceMonkey.png",
-    "cost": 225
+    "cost": 200
   },
   {
     "id": "ice-monkey-33",
@@ -993,7 +993,7 @@
     "tier": 3,
     "image": "/images/towers/ice-monkey/cryo-cannon.webp",
     "sourceFile": "003-IceMonkey.png",
-    "cost": 2250
+    "cost": 1900
   },
   {
     "id": "ice-monkey-34",
@@ -1065,7 +1065,7 @@
     "tier": 3,
     "image": "/images/towers/glue-gunner/bloon-dissolver.webp",
     "sourceFile": "300-GlueGunner.png",
-    "cost": 2500
+    "cost": 2000
   },
   {
     "id": "glue-gunner-14",
@@ -1089,7 +1089,7 @@
     "tier": 5,
     "image": "/images/towers/glue-gunner/the-bloon-solver.webp",
     "sourceFile": "500-GlueGunner.png",
-    "cost": 22000
+    "cost": 22500
   },
   {
     "id": "glue-gunner-21",
@@ -1125,7 +1125,7 @@
     "tier": 3,
     "image": "/images/towers/glue-gunner/glue-hose.webp",
     "sourceFile": "030-GlueGunner.png",
-    "cost": 2100
+    "cost": 1950
   },
   {
     "id": "glue-gunner-24",
@@ -1137,7 +1137,7 @@
     "tier": 4,
     "image": "/images/towers/glue-gunner/glue-strike.webp",
     "sourceFile": "040-GlueGunner.png",
-    "cost": 3850
+    "cost": 4000
   },
   {
     "id": "glue-gunner-25",
@@ -1233,7 +1233,7 @@
     "tier": 1,
     "image": "/images/towers/desperado/quick-draw.webp",
     "sourceFile": "100-Desperado.png",
-    "cost": 250
+    "cost": 200
   },
   {
     "id": "desperado-12",
@@ -1281,7 +1281,7 @@
     "tier": 5,
     "image": "/images/towers/desperado/the-blazing-sun.webp",
     "sourceFile": "500-Desperado.png",
-    "cost": 17500
+    "cost": 16500
   },
   {
     "id": "desperado-21",
@@ -1305,7 +1305,7 @@
     "tier": 2,
     "image": "/images/towers/desperado/bullseye.webp",
     "sourceFile": "020-Desperado.png",
-    "cost": 500
+    "cost": 350
   },
   {
     "id": "desperado-23",
@@ -1329,7 +1329,7 @@
     "tier": 4,
     "image": "/images/towers/desperado/bounty-hunter.webp",
     "sourceFile": "040-Desperado.png",
-    "cost": 8000
+    "cost": 6000
   },
   {
     "id": "desperado-25",
@@ -1449,7 +1449,7 @@
     "tier": 3,
     "image": "/images/towers/sniper-monkey/deadly-precision.webp",
     "sourceFile": "300-SniperMonkey.png",
-    "cost": 3000
+    "cost": 2200
   },
   {
     "id": "sniper-monkey-14",
@@ -1461,7 +1461,7 @@
     "tier": 4,
     "image": "/images/towers/sniper-monkey/maim-moab.webp",
     "sourceFile": "400-SniperMonkey.png",
-    "cost": 5650
+    "cost": 6300
   },
   {
     "id": "sniper-monkey-15",
@@ -1533,7 +1533,7 @@
     "tier": 5,
     "image": "/images/towers/sniper-monkey/elite-sniper.webp",
     "sourceFile": "050-SniperMonkey.png",
-    "cost": 14000
+    "cost": 12000
   },
   {
     "id": "sniper-monkey-31",
@@ -1569,7 +1569,7 @@
     "tier": 3,
     "image": "/images/towers/sniper-monkey/semi-automatic.webp",
     "sourceFile": "003-SniperMonkey.png",
-    "cost": 2900
+    "cost": 2700
   },
   {
     "id": "sniper-monkey-34",
@@ -1593,7 +1593,7 @@
     "tier": 5,
     "image": "/images/towers/sniper-monkey/elite-defender.webp",
     "sourceFile": "005-SniperMonkey.png",
-    "cost": 14700
+    "cost": 14900
   },
   {
     "id": "monkey-sub-000",
@@ -1653,7 +1653,7 @@
     "tier": 4,
     "image": "/images/towers/monkey-sub/bloontonium-reactor.webp",
     "sourceFile": "400-MonkeySub.png",
-    "cost": 2300
+    "cost": 2400
   },
   {
     "id": "monkey-sub-15",
@@ -1665,7 +1665,7 @@
     "tier": 5,
     "image": "/images/towers/monkey-sub/energizer.webp",
     "sourceFile": "500-MonkeySub.png",
-    "cost": 31000
+    "cost": 28000
   },
   {
     "id": "monkey-sub-paragon",
@@ -1785,7 +1785,7 @@
     "tier": 4,
     "image": "/images/towers/monkey-sub/armor-piercing-darts.webp",
     "sourceFile": "004-MonkeySub.png",
-    "cost": 3000
+    "cost": 2500
   },
   {
     "id": "monkey-sub-35",
@@ -1845,7 +1845,7 @@
     "tier": 3,
     "image": "/images/towers/monkey-buccaneer/destroyer.webp",
     "sourceFile": "300-MonkeyBuccaneer.png",
-    "cost": 3050
+    "cost": 3350
   },
   {
     "id": "monkey-buccaneer-14",
@@ -1869,7 +1869,7 @@
     "tier": 5,
     "image": "/images/towers/monkey-buccaneer/carrier-flagship.webp",
     "sourceFile": "500-MonkeyBuccaneer.png",
-    "cost": 24500
+    "cost": 26000
   },
   {
     "id": "monkey-buccaneer-paragon",
@@ -1929,7 +1929,7 @@
     "tier": 4,
     "image": "/images/towers/monkey-buccaneer/monkey-pirates.webp",
     "sourceFile": "040-MonkeyBuccaneer.png",
-    "cost": 4900
+    "cost": 3900
   },
   {
     "id": "monkey-buccaneer-25",
@@ -1941,7 +1941,7 @@
     "tier": 5,
     "image": "/images/towers/monkey-buccaneer/pirate-lord.webp",
     "sourceFile": "050-MonkeyBuccaneer.png",
-    "cost": 26000
+    "cost": 29000
   },
   {
     "id": "monkey-buccaneer-31",
@@ -2025,7 +2025,7 @@
     "tier": 1,
     "image": "/images/towers/monkey-ace/rapid-fire.webp",
     "sourceFile": "100-MonkeyAce.png",
-    "cost": 650
+    "cost": 450
   },
   {
     "id": "monkey-ace-12",
@@ -2037,7 +2037,7 @@
     "tier": 2,
     "image": "/images/towers/monkey-ace/lots-more-darts.webp",
     "sourceFile": "200-MonkeyAce.png",
-    "cost": 650
+    "cost": 550
   },
   {
     "id": "monkey-ace-13",
@@ -2061,7 +2061,7 @@
     "tier": 4,
     "image": "/images/towers/monkey-ace/operation-dart-storm.webp",
     "sourceFile": "400-MonkeyAce.png",
-    "cost": 3000
+    "cost": 3300
   },
   {
     "id": "monkey-ace-15",
@@ -2133,7 +2133,7 @@
     "tier": 4,
     "image": "/images/towers/monkey-ace/ground-zero.webp",
     "sourceFile": "040-MonkeyAce.png",
-    "cost": 18000
+    "cost": 16000
   },
   {
     "id": "monkey-ace-25",
@@ -2145,7 +2145,7 @@
     "tier": 5,
     "image": "/images/towers/monkey-ace/tsar-bomba.webp",
     "sourceFile": "050-MonkeyAce.png",
-    "cost": 30000
+    "cost": 26000
   },
   {
     "id": "monkey-ace-31",
@@ -2205,7 +2205,7 @@
     "tier": 5,
     "image": "/images/towers/monkey-ace/flying-fortress.webp",
     "sourceFile": "005-MonkeyAce.png",
-    "cost": 85000
+    "cost": 90000
   },
   {
     "id": "heli-pilot-000",
@@ -2217,7 +2217,7 @@
     "tier": 0,
     "image": "/images/towers/heli-pilot/heli-pilot.webp",
     "sourceFile": "000-HeliPilot.png",
-    "cost": 1600
+    "cost": 1500
   },
   {
     "id": "heli-pilot-11",
@@ -2253,7 +2253,7 @@
     "tier": 3,
     "image": "/images/towers/heli-pilot/razor-rotors.webp",
     "sourceFile": "300-HeliPilot.png",
-    "cost": 1750
+    "cost": 1450
   },
   {
     "id": "heli-pilot-14",
@@ -2265,7 +2265,7 @@
     "tier": 4,
     "image": "/images/towers/heli-pilot/apache-dartship.webp",
     "sourceFile": "400-HeliPilot.png",
-    "cost": 19600
+    "cost": 20000
   },
   {
     "id": "heli-pilot-15",
@@ -2373,7 +2373,7 @@
     "tier": 3,
     "image": "/images/towers/heli-pilot/moab-shove.webp",
     "sourceFile": "003-HeliPilot.png",
-    "cost": 3000
+    "cost": 3400
   },
   {
     "id": "heli-pilot-34",
@@ -2409,7 +2409,7 @@
     "tier": 0,
     "image": "/images/towers/mortar-monkey/mortar-monkey.webp",
     "sourceFile": "000-MortarMonkey.png",
-    "cost": 750
+    "cost": 600
   },
   {
     "id": "mortar-monkey-11",
@@ -2421,7 +2421,7 @@
     "tier": 1,
     "image": "/images/towers/mortar-monkey/bigger-blast.webp",
     "sourceFile": "100-MortarMonkey.png",
-    "cost": 500
+    "cost": 300
   },
   {
     "id": "mortar-monkey-12",
@@ -2445,7 +2445,7 @@
     "tier": 3,
     "image": "/images/towers/mortar-monkey/shell-shock.webp",
     "sourceFile": "300-MortarMonkey.png",
-    "cost": 900
+    "cost": 825
   },
   {
     "id": "mortar-monkey-14",
@@ -2457,7 +2457,7 @@
     "tier": 4,
     "image": "/images/towers/mortar-monkey/the-big-one.webp",
     "sourceFile": "400-MortarMonkey.png",
-    "cost": 6500
+    "cost": 7000
   },
   {
     "id": "mortar-monkey-15",
@@ -2481,7 +2481,7 @@
     "tier": 1,
     "image": "/images/towers/mortar-monkey/faster-reload.webp",
     "sourceFile": "010-MortarMonkey.png",
-    "cost": 300
+    "cost": 400
   },
   {
     "id": "mortar-monkey-22",
@@ -2553,7 +2553,7 @@
     "tier": 2,
     "image": "/images/towers/mortar-monkey/burny-stuff.webp",
     "sourceFile": "002-MortarMonkey.png",
-    "cost": 500
+    "cost": 400
   },
   {
     "id": "mortar-monkey-33",
@@ -2565,7 +2565,7 @@
     "tier": 3,
     "image": "/images/towers/mortar-monkey/signal-flare.webp",
     "sourceFile": "003-MortarMonkey.png",
-    "cost": 900
+    "cost": 1100
   },
   {
     "id": "mortar-monkey-34",
@@ -2577,7 +2577,7 @@
     "tier": 4,
     "image": "/images/towers/mortar-monkey/shattering-shells.webp",
     "sourceFile": "004-MortarMonkey.png",
-    "cost": 10500
+    "cost": 9500
   },
   {
     "id": "mortar-monkey-35",
@@ -2637,7 +2637,7 @@
     "tier": 3,
     "image": "/images/towers/dartling-gunner/laser-cannon.webp",
     "sourceFile": "300-DartlingGunner.png",
-    "cost": 3650
+    "cost": 3000
   },
   {
     "id": "dartling-gunner-14",
@@ -2649,7 +2649,7 @@
     "tier": 4,
     "image": "/images/towers/dartling-gunner/plasma-accelerator.webp",
     "sourceFile": "400-DartlingGunner.png",
-    "cost": 11100
+    "cost": 11750
   },
   {
     "id": "dartling-gunner-15",
@@ -2661,7 +2661,7 @@
     "tier": 5,
     "image": "/images/towers/dartling-gunner/ray-of-doom.webp",
     "sourceFile": "500-DartlingGunner.png",
-    "cost": 80000
+    "cost": 75000
   },
   {
     "id": "dartling-gunner-21",
@@ -2697,7 +2697,7 @@
     "tier": 3,
     "image": "/images/towers/dartling-gunner/hydra-rocket-pods.webp",
     "sourceFile": "030-DartlingGunner.png",
-    "cost": 4800
+    "cost": 4500
   },
   {
     "id": "dartling-gunner-24",
@@ -2709,7 +2709,7 @@
     "tier": 4,
     "image": "/images/towers/dartling-gunner/rocket-storm.webp",
     "sourceFile": "040-DartlingGunner.png",
-    "cost": 5550
+    "cost": 5000
   },
   {
     "id": "dartling-gunner-25",
@@ -2721,7 +2721,7 @@
     "tier": 5,
     "image": "/images/towers/dartling-gunner/m-a-d.webp",
     "sourceFile": "050-DartlingGunner.png",
-    "cost": 60000
+    "cost": 65000
   },
   {
     "id": "dartling-gunner-31",
@@ -2757,7 +2757,7 @@
     "tier": 3,
     "image": "/images/towers/dartling-gunner/buckshot.webp",
     "sourceFile": "003-DartlingGunner.png",
-    "cost": 3400
+    "cost": 3000
   },
   {
     "id": "dartling-gunner-34",
@@ -2793,7 +2793,7 @@
     "tier": 0,
     "image": "/images/towers/wizard-monkey/wizard-monkey.webp",
     "sourceFile": "000-WizardMonkey.png",
-    "cost": 325
+    "cost": 250
   },
   {
     "id": "wizard-monkey-11",
@@ -2805,7 +2805,7 @@
     "tier": 1,
     "image": "/images/towers/wizard-monkey/guided-magic.webp",
     "sourceFile": "100-WizardMonkey.png",
-    "cost": 150
+    "cost": 175
   },
   {
     "id": "wizard-monkey-12",
@@ -2829,7 +2829,7 @@
     "tier": 3,
     "image": "/images/towers/wizard-monkey/arcane-mastery.webp",
     "sourceFile": "300-WizardMonkey.png",
-    "cost": 1400
+    "cost": 1450
   },
   {
     "id": "wizard-monkey-14",
@@ -2865,7 +2865,7 @@
     "tier": 6,
     "image": "/images/towers/wizard-monkey/magus-perfectus.webp",
     "sourceFile": "Paragon-MagusPerfectus.png",
-    "cost": 750000
+    "cost": 800000
   },
   {
     "id": "wizard-monkey-21",
@@ -2913,7 +2913,7 @@
     "tier": 4,
     "image": "/images/towers/wizard-monkey/summon-phoenix.webp",
     "sourceFile": "040-WizardMonkey.png",
-    "cost": 7000
+    "cost": 6000
   },
   {
     "id": "wizard-monkey-25",
@@ -3177,7 +3177,7 @@
     "tier": 5,
     "image": "/images/towers/super-monkey/legend-of-the-night.webp",
     "sourceFile": "005-SuperMonkey.png",
-    "cost": 200000
+    "cost": 165650
   },
   {
     "id": "ninja-monkey-000",
@@ -3429,7 +3429,7 @@
     "tier": 3,
     "image": "/images/towers/alchemist/berserker-brew.webp",
     "sourceFile": "300-Alchemist.png",
-    "cost": 1300
+    "cost": 1400
   },
   {
     "id": "alchemist-14",
@@ -3441,7 +3441,7 @@
     "tier": 4,
     "image": "/images/towers/alchemist/stronger-stimulant.webp",
     "sourceFile": "400-Alchemist.png",
-    "cost": 2950
+    "cost": 2850
   },
   {
     "id": "alchemist-15",
@@ -3489,7 +3489,7 @@
     "tier": 3,
     "image": "/images/towers/alchemist/unstable-concoction.webp",
     "sourceFile": "030-Alchemist.png",
-    "cost": 3000
+    "cost": 2800
   },
   {
     "id": "alchemist-24",
@@ -3501,7 +3501,7 @@
     "tier": 4,
     "image": "/images/towers/alchemist/transforming-tonic.webp",
     "sourceFile": "040-Alchemist.png",
-    "cost": 4500
+    "cost": 4200
   },
   {
     "id": "alchemist-25",
@@ -3765,7 +3765,7 @@
     "tier": 4,
     "image": "/images/towers/druid/poplust.webp",
     "sourceFile": "004-Druid.png",
-    "cost": 2500
+    "cost": 2350
   },
   {
     "id": "druid-35",
@@ -3981,7 +3981,7 @@
     "tier": 0,
     "image": "/images/towers/mermonkey/mermonkey.webp",
     "sourceFile": "000-Mermonkey.png",
-    "cost": 475
+    "cost": 300
   },
   {
     "id": "mermonkey-11",
@@ -3993,7 +3993,7 @@
     "tier": 1,
     "image": "/images/towers/mermonkey/trident-efficiency.webp",
     "sourceFile": "100-Mermonkey.png",
-    "cost": 250
+    "cost": 150
   },
   {
     "id": "mermonkey-12",
@@ -4005,7 +4005,7 @@
     "tier": 2,
     "image": "/images/towers/mermonkey/trident-swiftness.webp",
     "sourceFile": "200-Mermonkey.png",
-    "cost": 300
+    "cost": 250
   },
   {
     "id": "mermonkey-13",
@@ -4017,7 +4017,7 @@
     "tier": 3,
     "image": "/images/towers/mermonkey/abyss-dweller.webp",
     "sourceFile": "300-Mermonkey.png",
-    "cost": 2100
+    "cost": 1800
   },
   {
     "id": "mermonkey-14",
@@ -4029,7 +4029,7 @@
     "tier": 4,
     "image": "/images/towers/mermonkey/abyssal-warrior.webp",
     "sourceFile": "400-Mermonkey.png",
-    "cost": 3600
+    "cost": 4200
   },
   {
     "id": "mermonkey-15",
@@ -4053,7 +4053,7 @@
     "tier": 1,
     "image": "/images/towers/mermonkey/sharper-prongs.webp",
     "sourceFile": "010-Mermonkey.png",
-    "cost": 300
+    "cost": 200
   },
   {
     "id": "mermonkey-22",
@@ -4065,7 +4065,7 @@
     "tier": 2,
     "image": "/images/towers/mermonkey/tidal-chill.webp",
     "sourceFile": "020-Mermonkey.png",
-    "cost": 400
+    "cost": 225
   },
   {
     "id": "mermonkey-23",
@@ -4077,7 +4077,7 @@
     "tier": 3,
     "image": "/images/towers/mermonkey/riptide-champion.webp",
     "sourceFile": "030-Mermonkey.png",
-    "cost": 2300
+    "cost": 2000
   },
   {
     "id": "mermonkey-24",
@@ -4125,7 +4125,7 @@
     "tier": 2,
     "image": "/images/towers/mermonkey/echosense-network.webp",
     "sourceFile": "002-Mermonkey.png",
-    "cost": 380
+    "cost": 280
   },
   {
     "id": "mermonkey-33",
@@ -4437,7 +4437,7 @@
     "tier": 6,
     "image": "/images/towers/spike-factory/mega-massive-munitions-factory.webp",
     "sourceFile": "SpikeFactoryParagon.png",
-    "cost": 800000
+    "cost": 750000
   },
   {
     "id": "spike-factory-21",
@@ -4485,7 +4485,7 @@
     "tier": 4,
     "image": "/images/towers/spike-factory/spike-storm.webp",
     "sourceFile": "040-SpikeFactory.png",
-    "cost": 6000
+    "cost": 7000
   },
   {
     "id": "spike-factory-25",
@@ -4497,7 +4497,7 @@
     "tier": 5,
     "image": "/images/towers/spike-factory/carpet-of-spikes.webp",
     "sourceFile": "050-SpikeFactory.png",
-    "cost": 42000
+    "cost": 41000
   },
   {
     "id": "spike-factory-31",
@@ -4833,7 +4833,7 @@
     "tier": 6,
     "image": "/images/towers/engineer-monkey/master-builder.webp",
     "sourceFile": "Paragon-MasterBuilder.png",
-    "cost": 650000
+    "cost": 600000
   },
   {
     "id": "engineer-monkey-21",
@@ -4953,7 +4953,7 @@
     "tier": 5,
     "image": "/images/towers/engineer-monkey/xxxl-trap.webp",
     "sourceFile": "005-EngineerMonkey.png",
-    "cost": 48000
+    "cost": 45000
   },
   {
     "id": "beast-handler-000",

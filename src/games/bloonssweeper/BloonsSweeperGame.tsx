@@ -26,25 +26,22 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     const was = prevStatus.current;
     prevStatus.current = state.status;
-    if (was === "won" || was === "lost") return;
-    if (state.status === "won")
+    if (was === "won") return;
+    if (state.status === "won") {
       onRunEnd?.({
         cleared: true,
         coinsEarned: state.reward,
         difficulty: state.difficulty,
       });
-    else if (state.status === "lost")
-      onRunEnd?.({
-        cleared: false,
-        coinsEarned: 0,
-        difficulty: state.difficulty,
-      });
+    }
   }, [state.status, state.reward, state.difficulty, onRunEnd]);
 
-  const done = state.status === "won" || state.status === "lost";
+  const won = state.status === "won";
+  const lost = state.status === "lost";
+  const done = won || lost;
 
   return (
-    <div className={`sweeper-page${done ? " is-done" : ""}`}>
+    <div className={`sweeper-page${won ? " is-done" : lost ? " is-lost" : ""}`}>
       <GameHeader title="BLOONS SWEEPER" icon="" />
 
       <main className="sweeper-main">
@@ -72,7 +69,11 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
             )}
           </div>
 
-          <button type="button" className="btn btn--ghost btn--sm" onClick={restart}>
+          <button
+            type="button"
+            className={`btn btn--ghost btn--sm${lost ? " btn--primary" : ""}`}
+            onClick={restart}
+          >
             New board
           </button>
         </div>
@@ -154,7 +155,7 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
           </div>
         </div>
 
-        {state.status === "won" ? (
+        {won ? (
           <div className="sweeper-result is-win" role="status">
             <h2>Board clear!</h2>
             <p>
@@ -164,21 +165,6 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
             <div className="sweeper-result__actions">
               <button type="button" className="btn btn--primary" onClick={restart}>
                 Play again
-              </button>
-              <button type="button" className="btn btn--ghost" onClick={onBack}>
-                Games
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {state.status === "lost" ? (
-          <div className="sweeper-result is-lose" role="status">
-            <h2>Popped a red bloon</h2>
-            <p>Flag the reds next time, try another board.</p>
-            <div className="sweeper-result__actions">
-              <button type="button" className="btn btn--primary" onClick={restart}>
-                Try again
               </button>
               <button type="button" className="btn btn--ghost" onClick={onBack}>
                 Games

@@ -1,10 +1,11 @@
 /**
- * Scrapes Medium-difficulty cash costs from the Bloons Wiki Upgrades page
- * and writes them onto each entity in src/data/towers.json.
+ * Pulls Medium-difficulty cash costs from Blooncyclopedia (bloonswiki.com) Cargo
+ * tables and writes them onto each entity in src/data/towers.json.
  *
- * Source: https://bloons.fandom.com/wiki/Upgrades (prices shown for Medium).
+ * Source of truth: Blooncyclopedia Cargo (`btd6_towers` / `btd6_upgrades`).
+ * https://www.bloonswiki.com/
  *
- * Usage: npx tsx scripts/fetch-tower-costs.ts
+ * Usage: npm run fetch-tower-costs
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -14,16 +15,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const TOWERS_JSON = path.join(ROOT, "src", "data", "towers.json");
 
-const API = "https://bloons.fandom.com/api.php";
+const API = "https://www.bloonswiki.com/api.php";
 const USER_AGENT =
   "BloonArcadeAssetBot/1.0 (+local fan project; caches wiki costs offline)";
-
-const TOWER_SECTIONS = [
-  { index: 7, category: "Primary" },
-  { index: 8, category: "Military" },
-  { index: 9, category: "Magic" },
-  { index: 10, category: "Support" },
-] as const;
 
 type Entity = {
   id: string;
@@ -38,24 +32,7 @@ type Entity = {
   cost?: number;
 };
 
-type Cell = { file: string; name: string; cost: number | null };
-
-function stripHtml(input: string): string {
-  return input
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .trim();
-}
-
-function parseWikiLinkLabel(raw: string): string {
-  const inner = raw.replace(/^\[\[/, "").replace(/\]\]$/, "");
-  const parts = inner.split("|");
-  const label = parts.length > 1 ? parts[parts.length - 1]! : parts[0]!;
-  return stripHtml(label).replace(/_/g, " ");
-}
+type CargoRow = Record<string, string>;
 
 function normalizeName(name: string): string {
   return name
@@ -65,115 +42,137 @@ function normalizeName(name: string): string {
     .trim();
 }
 
-async function apiJson<T>(params: Record<string, string>): Promise<T> {
-  const url = new URL(API);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`API ${res.status} for ${url}`);
-  return (await res.json()) as T;
-}
+async function cargoQuery(
+  tables: string,
+  fields: string,
+  opts: { where?: string; orderBy?: string; limit?: number } = {},
+): Promise<CargoRow[]> {
+  const rows: CargoRow[] = [];
+  const limit = opts.limit ?? 500;
+  let offset = 0;
 
-async function fetchSectionWikitext(section: number): Promise<string> {
-  const data = await apiJson<{ parse: { wikitext: string } }>({
-    action: "parse",
-    page: "Upgrades",
-    section: String(section),
-    prop: "wikitext",
-    format: "json",
-    formatversion: "2",
-  });
-  return data.parse.wikitext;
-}
+  while (true) {
+    const url = new URL(API);
+    url.searchParams.set("action", "cargoquery");
+    url.searchParams.set("tables", tables);
+    url.searchParams.set("fields", fields);
+    if (opts.where) url.searchParams.set("where", opts.where);
+    if (opts.orderBy) url.searchParams.set("order_by", opts.orderBy);
+    url.searchParams.set("limit", String(Math.min(limit, 500)));
+    url.searchParams.set("offset", String(offset));
+    url.searchParams.set("format", "json");
 
-function extractCellsFromRow(row: string): Cell[] {
-  const cells: Cell[] = [];
-  const fileRe = /\[\[File:([^|\]]+)(?:\|[^\]]*)?\]\]/gi;
-  let m: RegExpExecArray | null;
-  while ((m = fileRe.exec(row)) !== null) {
-    const file = m[1]!.trim();
-    const after = row.slice(m.index + m[0].length);
-    const nextFile = after.search(/\[\[File:/i);
-    const window = nextFile === -1 ? after : after.slice(0, nextFile);
-    const nameM = window.match(/\[\[([^\]]+)\]\]/);
-    if (!nameM) continue;
-    const costM = window.match(/\$([\d,]+)/);
-    cells.push({
-      file,
-      name: parseWikiLinkLabel(`[[${nameM[1]}]]`),
-      cost: costM ? Number(costM[1]!.replace(/,/g, "")) : null,
+    const res = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
     });
+    if (!res.ok) throw new Error(`Cargo API ${res.status} for ${url}`);
+    const data = (await res.json()) as {
+      cargoquery?: { title: CargoRow }[];
+      error?: { info?: string };
+    };
+    if (data.error?.info) throw new Error(data.error.info);
+    const batch = data.cargoquery ?? [];
+    for (const item of batch) rows.push(item.title);
+    if (batch.length < Math.min(limit, 500)) break;
+    offset += batch.length;
   }
-  return cells;
+
+  return rows;
 }
 
-/** tower name (normalized) + entity name (normalized) → medium cash cost */
-function scrapeCosts(wikitext: string): Map<string, number> {
-  const costs = new Map<string, number>();
-  const rows = wikitext
-    .split(/\n\|-/)
-    .map((r) => r.trim())
-    .filter((r) => r.length > 0 && /\[\[File:/i.test(r));
-
-  let currentTower: string | null = null;
-
-  const setCost = (tower: string, name: string, cost: number | null) => {
-    if (cost == null || Number.isNaN(cost)) return;
-    costs.set(`${normalizeName(tower)}::${normalizeName(name)}`, cost);
-  };
-
-  for (const row of rows) {
-    const isTowerStart = /rowspan\s*=\s*["']?3["']?/i.test(row);
-    const cells = extractCellsFromRow(row);
-    if (cells.length === 0) continue;
-
-    if (isTowerStart) {
-      currentTower = cells[0]!.name;
-      for (const cell of cells) {
-        setCost(currentTower, cell.name, cell.cost);
-      }
-      continue;
-    }
-
-    if (!currentTower) continue;
-    for (const cell of cells) {
-      setCost(currentTower, cell.name, cell.cost);
-    }
-  }
-
-  return costs;
+function parseCost(raw: string | undefined): number | null {
+  if (raw == null || raw === "") return null;
+  const n = Number(String(raw).replace(/,/g, ""));
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 async function main() {
-  const merged = new Map<string, number>();
-  for (const { index, category } of TOWER_SECTIONS) {
-    const wt = await fetchSectionWikitext(index);
-    const sectionCosts = scrapeCosts(wt);
-    console.log(`${category}: ${sectionCosts.size} priced cells`);
-    for (const [k, v] of sectionCosts) merged.set(k, v);
+  const towerRows = await cargoQuery("btd6_towers", "name,cost", { limit: 100 });
+  const upgradeRows = await cargoQuery(
+    "btd6_upgrades",
+    "tower,path,tier,name,cost",
+    {
+      where: "unused = 0",
+      orderBy: "tower,path,tier",
+      limit: 500,
+    },
+  );
+
+  /** tower::name → medium cash */
+  const byName = new Map<string, number>();
+  /** tower::path-tier → medium cash (upgrades / paragons) */
+  const byPathTier = new Map<string, number>();
+
+  for (const row of towerRows) {
+    const cost = parseCost(row.cost);
+    if (cost == null || !row.name) continue;
+    byName.set(`${normalizeName(row.name)}::${normalizeName(row.name)}`, cost);
   }
+
+  for (const row of upgradeRows) {
+    const cost = parseCost(row.cost);
+    if (cost == null || !row.tower || !row.name) continue;
+    const towerKey = normalizeName(row.tower);
+    byName.set(`${towerKey}::${normalizeName(row.name)}`, cost);
+    const path = Number(row.path);
+    const tier = Number(row.tier);
+    if (Number.isFinite(path) && Number.isFinite(tier) && tier > 0) {
+      // Paragon rows use path -1 / tier 6
+      byPathTier.set(`${towerKey}::${path}-${tier}`, cost);
+      if (tier === 6) byPathTier.set(`${towerKey}::paragon`, cost);
+    }
+  }
+
+  console.log(
+    `Wiki: ${towerRows.length} towers, ${upgradeRows.length} upgrades/paragons`,
+  );
 
   const raw = await readFile(TOWERS_JSON, "utf8");
   const entities = JSON.parse(raw) as Entity[];
 
   let matched = 0;
+  const changed: string[] = [];
   const missing: string[] = [];
+
   for (const e of entities) {
-    const key = `${normalizeName(e.tower)}::${normalizeName(e.name)}`;
-    const cost = merged.get(key);
+    const towerKey = normalizeName(e.tower);
+    let cost: number | null = null;
+
+    if (e.type === "tower") {
+      cost = byName.get(`${towerKey}::${normalizeName(e.name)}`) ?? null;
+    } else if (e.type === "paragon") {
+      cost =
+        byPathTier.get(`${towerKey}::paragon`) ??
+        byName.get(`${towerKey}::${normalizeName(e.name)}`) ??
+        null;
+    } else if (e.path != null && e.tier > 0) {
+      cost =
+        byPathTier.get(`${towerKey}::${e.path}-${e.tier}`) ??
+        byName.get(`${towerKey}::${normalizeName(e.name)}`) ??
+        null;
+    } else {
+      cost = byName.get(`${towerKey}::${normalizeName(e.name)}`) ?? null;
+    }
+
     if (cost != null) {
+      if (e.cost !== cost) {
+        changed.push(`${e.id}: ${e.cost ?? "∅"} → ${cost}`);
+      }
       e.cost = cost;
       matched += 1;
     } else {
       missing.push(`${e.id} (${e.tower} / ${e.name})`);
-      delete e.cost;
     }
   }
 
   await writeFile(TOWERS_JSON, `${JSON.stringify(entities, null, 2)}\n`);
 
-  console.log(`\nMatched ${matched}/${entities.length} entities`);
+  console.log(`Matched ${matched}/${entities.length} entities`);
+  if (changed.length) {
+    console.log(`Updated ${changed.length} costs:`);
+    for (const line of changed.slice(0, 40)) console.log(`  ${line}`);
+    if (changed.length > 40) console.log(`  … +${changed.length - 40} more`);
+  }
   if (missing.length) {
     console.warn(`Missing costs (${missing.length}):`);
     for (const line of missing) console.warn(`  - ${line}`);
