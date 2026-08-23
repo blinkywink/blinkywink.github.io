@@ -628,7 +628,7 @@ export function CardLab({
             <PlayerBadges
               rank={viewerRank}
               badgeIds={viewer?.badgeIds}
-              size="lg"
+              size="sm"
             />
             {!remoteError ? (
               <>

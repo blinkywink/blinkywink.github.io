@@ -301,6 +301,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
                             rank={row.rank}
                             badgeIds={row.badgeIds}
                             size="sm"
+                            maxVisible={3}
                           />
                         </span>
                       </span>

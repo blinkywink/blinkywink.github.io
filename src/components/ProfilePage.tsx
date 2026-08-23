@@ -990,7 +990,7 @@ export function ProfilePage() {
                       disabled={themeSaving}
                     >
                       <span
-                        className={`profile-settings__theme-swatch${theme.id === "rgb" ? " is-rgb" : ""}`}
+                        className="profile-settings__theme-swatch"
                         style={{
                           background: theme.swatch,
                           backgroundColor: "transparent",

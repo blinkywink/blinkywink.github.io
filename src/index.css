@@ -684,23 +684,6 @@ body {
   }
 }
 
-.profile-settings__theme-swatch.is-rgb {
-  background-size: 220% 220% !important;
-  animation: site-rgb-swatch 4.5s linear infinite;
-}
-
-@keyframes site-rgb-swatch {
-  to {
-    background-position: 100% 50%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-settings__theme-swatch.is-rgb {
-    animation: none;
-  }
-}
-
 button,
 a {
   font: inherit;
@@ -5886,7 +5869,27 @@ body.rewards-overlay-open .sweeper-result {
 
 .card-lab__titles > .player-badges {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(100%, 18rem);
   margin: 0.15rem 0 0.35rem;
+  gap: 0.15rem;
+}
+
+.card-lab__titles > .player-badges .rank-medal {
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 640px) {
+  .card-lab__titles > .player-badges {
+    max-width: 100%;
+  }
+
+  .card-lab__titles > .player-badges .rank-medal {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .card-lab__header--remote .card-lab__titles > .player-badges {
@@ -14549,9 +14552,17 @@ body.rewards-overlay-open .sweeper-result {
   justify-content: flex-start;
   min-height: 1.65rem;
   min-width: 0;
-  overflow: visible;
+  max-width: 100%;
+  overflow: hidden;
   position: relative;
   z-index: 2;
+}
+
+.board-card__badges .player-badges {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .board-card__badges .rank-medal {
@@ -14593,6 +14604,22 @@ body.rewards-overlay-open .sweeper-result {
   align-items: center;
   gap: 0.2rem;
   flex-shrink: 0;
+  max-width: 100%;
+}
+
+.player-badges__more {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  padding: 0 0.15rem;
+  color: rgba(240, 240, 244, 0.72);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  cursor: help;
 }
 
 .rank-medal-wrap {

@@ -1,0 +1,8 @@
+node_modules
+src-tauri
+.git
+exports
+public/downloads/*.dmg
+public/downloads/*.exe
+public/downloads/*.tar.gz
+*.local

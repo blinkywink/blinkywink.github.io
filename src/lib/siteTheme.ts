@@ -32,8 +32,6 @@ type ThemeDef = {
   label: string;
   tier: "free" | "premium";
   swatch: string;
-  /** Animated rainbow swatch in settings. */
-  animated?: boolean;
 };
 
 export const SITE_THEMES = [
@@ -209,7 +207,6 @@ export const SITE_THEMES = [
     id: "rgb",
     label: "RGB LED",
     tier: "premium",
-    animated: true,
     swatch: previewSwatch({
       bgTop: "#1a1020",
       bgMid: "#0c1018",
