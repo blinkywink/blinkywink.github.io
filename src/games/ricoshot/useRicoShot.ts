@@ -10,7 +10,6 @@ import {
   ricoRunClearBonus,
   type RicoBloon,
   type RicoWall,
-  type Vec,
 } from "./config";
 import {
   angleToward,
