@@ -827,7 +827,9 @@ export function MonkeyCard({
               <div className="monkey-card__titles">
                 <h2 className="monkey-card__name">{entity.name}</h2>
                 <p className="monkey-card__tower">
-                  {pathLabel} · {entity.tower}
+                  {isParagon || entity.type !== "tower"
+                    ? `${pathLabel} · ${entity.tower}`
+                    : pathLabel}
                 </p>
               </div>
             </header>

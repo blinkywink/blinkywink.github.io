@@ -1,8 +1,8 @@
--- Manual-only profile badges (Early Supporter, etc).
--- Clients can read. Nobody can grant via the app — only SQL as postgres/service_role.
+-- Profile badges (Early Supporter, Cursed Holo, etc).
+-- Clients can read. Early Supporter is SQL-only; Cursed Holo via award_cursed_holo_badge().
 -- Safe to re-run.
 --
--- Grant later:
+-- Grant Early Supporter later:
 --   insert into public.profile_badges (user_id, badge_id)
 --   select id, 'early_supporter' from public.profiles
 --   where lower(username) = lower('USERNAME');
@@ -11,9 +11,27 @@ create table if not exists public.profile_badges (
   user_id uuid not null references public.profiles (id) on delete cascade,
   badge_id text not null,
   granted_at timestamptz not null default now(),
-  primary key (user_id, badge_id),
-  constraint profile_badges_known check (badge_id in ('early_supporter'))
+  primary key (user_id, badge_id)
 );
+
+alter table public.profile_badges
+  drop constraint if exists profile_badges_known;
+
+alter table public.profile_badges
+  add constraint profile_badges_known
+  check (
+    badge_id in (
+      'early_supporter',
+      'cursed_holo',
+      'collected_every_card',
+      'collected_a_tower',
+      'level_20_hero',
+      'degree_100_paragon',
+      'owns_a_paragon',
+      'owns_all_paragons',
+      'owns_all_heroes'
+    )
+  );
 
 alter table public.profile_badges enable row level security;
 
@@ -82,3 +100,216 @@ $$;
 
 revoke all on function public.get_profile_by_username(text) from public;
 grant execute on function public.get_profile_by_username(text) to anon, authenticated;
+
+create or replace function public.award_cursed_holo_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'cursed_holo')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_cursed_holo_badge() from public;
+grant execute on function public.award_cursed_holo_badge() to anon, authenticated;
+
+create or replace function public.award_collected_every_card_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'collected_every_card')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_collected_every_card_badge() from public;
+grant execute on function public.award_collected_every_card_badge() to anon, authenticated;
+
+create or replace function public.award_collected_a_tower_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'collected_a_tower')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_collected_a_tower_badge() from public;
+grant execute on function public.award_collected_a_tower_badge() to anon, authenticated;
+
+
+create or replace function public.award_level_20_hero_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'level_20_hero')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_level_20_hero_badge() from public;
+grant execute on function public.award_level_20_hero_badge() to anon, authenticated;
+
+
+create or replace function public.award_degree_100_paragon_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'degree_100_paragon')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_degree_100_paragon_badge() from public;
+grant execute on function public.award_degree_100_paragon_badge() to anon, authenticated;
+
+
+create or replace function public.award_owns_a_paragon_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'owns_a_paragon')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_owns_a_paragon_badge() from public;
+grant execute on function public.award_owns_a_paragon_badge() to anon, authenticated;
+
+
+create or replace function public.award_owns_all_paragons_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'owns_all_paragons')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_owns_all_paragons_badge() from public;
+grant execute on function public.award_owns_all_paragons_badge() to anon, authenticated;
+
+
+create or replace function public.award_owns_all_heroes_badge()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := public.current_account_id();
+  inserted boolean := false;
+begin
+  if uid is null then
+    return false;
+  end if;
+
+  insert into public.profile_badges (user_id, badge_id)
+  values (uid, 'owns_all_heroes')
+  on conflict (user_id, badge_id) do nothing;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+revoke all on function public.award_owns_all_heroes_badge() from public;
+grant execute on function public.award_owns_all_heroes_badge() to anon, authenticated;

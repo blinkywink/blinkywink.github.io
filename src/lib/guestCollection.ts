@@ -117,6 +117,7 @@ export function clearGuestCards(): void {
   try {
     window.localStorage.removeItem(LS_KEY);
     window.localStorage.removeItem(LS_SEEDS);
+    window.localStorage.removeItem("bloon-arcade:guest-card-mastered");
   } catch {
     // ignore
   }

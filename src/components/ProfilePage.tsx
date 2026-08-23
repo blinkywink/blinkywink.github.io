@@ -55,11 +55,16 @@ import {
   type LogoHomeId,
 } from "../lib/logoHome";
 import {
+  buySiteTheme,
+  FREE_SITE_THEMES,
   getSiteThemeId,
-  setSiteThemeId,
+  PREMIUM_SITE_THEMES,
+  PREMIUM_THEME_COST,
   saveSiteThemeToServer,
-  SITE_THEMES,
+  setSiteThemeId,
   subscribeSiteTheme,
+  themeUnlockedFromProfile,
+  type SiteThemeId,
 } from "../lib/siteTheme";
 import {
   getSfxVolume,
@@ -91,6 +96,7 @@ export function ProfilePage() {
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [logoHome, setLogoHomeState] = useState(() => getLogoHomeId());
   const [siteTheme, setSiteThemeState] = useState(() => getSiteThemeId());
+  const [themeOfferId, setThemeOfferId] = useState<SiteThemeId | null>(null);
   const [themeError, setThemeError] = useState<string | null>(null);
   const [themeSaving, setThemeSaving] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -370,6 +376,61 @@ export function ProfilePage() {
       setError(err instanceof Error ? err.message : "Could not unlock.");
     }
     setBusy(false);
+  }
+
+  async function onPickTheme(themeId: SiteThemeId) {
+    if (themeSaving) return;
+
+    const unlocked = themeUnlockedFromProfile(themeId, profile);
+    if (!unlocked) {
+      setThemeOfferId(themeId);
+      setThemeError(null);
+      if (siteTheme !== themeId) setSiteThemeId(themeId);
+      return;
+    }
+
+    setThemeOfferId(null);
+    if (siteTheme === themeId) return;
+
+    setSiteThemeId(themeId);
+    setThemeError(null);
+    setThemeSaving(true);
+    const err = await saveSiteThemeToServer(themeId);
+    if (err) {
+      setThemeError(err);
+      setThemeSaving(false);
+      return;
+    }
+    await refreshProfile();
+    setThemeSaving(false);
+  }
+
+  async function onBuyOfferedTheme() {
+    if (!themeOfferId || themeSaving) return;
+    if ((profile?.coins ?? 0) < PREMIUM_THEME_COST) {
+      setThemeError("Not enough Cash for that theme.");
+      return;
+    }
+    setThemeError(null);
+    setThemeSaving(true);
+    try {
+      const balance = await buySiteTheme(themeOfferId);
+      setCoinBalance(balance);
+      setSiteThemeId(themeOfferId);
+      setThemeOfferId(null);
+      await refreshProfile();
+      const label =
+        PREMIUM_SITE_THEMES.find((t) => t.id === themeOfferId)?.label ??
+        "theme";
+      setStatus(
+        `Unlocked ${label} (−${PREMIUM_THEME_COST.toLocaleString()} Cash).`,
+      );
+    } catch (err) {
+      setThemeError(
+        err instanceof Error ? err.message : "Could not unlock theme.",
+      );
+    }
+    setThemeSaving(false);
   }
 
   if (!ready) {
@@ -863,44 +924,111 @@ export function ProfilePage() {
                 </p>
               </div>
             </div>
-            <div
-              className="profile-settings__themes"
-              role="radiogroup"
-              aria-label="Site theme"
-            >
-              {SITE_THEMES.map((theme) => (
-                <button
-                  key={theme.id}
-                  type="button"
-                  role="radio"
-                  className={`profile-settings__theme${siteTheme === theme.id ? " is-active" : ""}`}
-                  aria-checked={siteTheme === theme.id}
-                  aria-label="Theme color"
-                  onClick={() => {
-                    if (themeSaving || siteTheme === theme.id) return;
-                    setSiteThemeId(theme.id);
-                    setThemeError(null);
-                    setThemeSaving(true);
-                    void (async () => {
-                      const err = await saveSiteThemeToServer(theme.id);
-                      if (err) {
-                        setThemeError(err);
-                        setThemeSaving(false);
-                        return;
+
+            <div className="profile-settings__theme-group">
+              <p className="profile-settings__theme-label">Free</p>
+              <div
+                className="profile-settings__themes"
+                role="radiogroup"
+                aria-label="Free site themes"
+              >
+                {FREE_SITE_THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    role="radio"
+                    className={`profile-settings__theme${siteTheme === theme.id ? " is-active" : ""}`}
+                    aria-checked={siteTheme === theme.id}
+                    aria-label={theme.label}
+                    onClick={() => void onPickTheme(theme.id)}
+                    disabled={themeSaving}
+                  >
+                    <span
+                      className="profile-settings__theme-swatch"
+                      style={{
+                        background: theme.swatch,
+                        backgroundColor: "transparent",
+                      }}
+                      aria-hidden
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="profile-settings__theme-group">
+              <p className="profile-settings__theme-label">Premium</p>
+              <div
+                className="profile-settings__themes"
+                role="radiogroup"
+                aria-label="Premium site themes"
+              >
+                {PREMIUM_SITE_THEMES.map((theme) => {
+                  const unlocked = themeUnlockedFromProfile(theme.id, profile);
+                  const locked = !unlocked;
+                  const offered = themeOfferId === theme.id;
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      role="radio"
+                      className={[
+                        "profile-settings__theme",
+                        "is-premium",
+                        siteTheme === theme.id ? "is-active" : "",
+                        locked ? "is-locked" : "",
+                        offered ? "is-offered" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      aria-checked={siteTheme === theme.id}
+                      aria-label={
+                        locked ? `${theme.label}, locked` : theme.label
                       }
-                      await refreshProfile();
-                      setThemeSaving(false);
-                    })();
-                  }}
-                  disabled={themeSaving}
-                >
-                  <span
-                    className="profile-settings__theme-swatch"
-                    style={{ background: theme.swatch, backgroundColor: "transparent" }}
-                    aria-hidden
-                  />
-                </button>
-              ))}
+                      title={theme.label}
+                      onClick={() => void onPickTheme(theme.id)}
+                      disabled={themeSaving}
+                    >
+                      <span
+                        className={`profile-settings__theme-swatch${theme.id === "rgb" ? " is-rgb" : ""}`}
+                        style={{
+                          background: theme.swatch,
+                          backgroundColor: "transparent",
+                        }}
+                        aria-hidden
+                      />
+                      {locked ? (
+                        <span className="profile-settings__theme-lock" aria-hidden>
+                          ✦
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {themeOfferId ? (
+                <div className="profile-settings__theme-offer">
+                  <div>
+                    <strong>
+                      {PREMIUM_SITE_THEMES.find((t) => t.id === themeOfferId)
+                        ?.label ?? "Premium"}
+                    </strong>
+                    <p>Locked — unlock to keep this theme.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--secondary profile-settings__buy"
+                    disabled={
+                      themeSaving ||
+                      (profile?.coins ?? 0) < PREMIUM_THEME_COST
+                    }
+                    onClick={() => void onBuyOfferedTheme()}
+                  >
+                    {themeSaving ? "Unlocking…" : "Unlock"}
+                    <CashAmount amount={PREMIUM_THEME_COST} size={16} />
+                  </button>
+                </div>
+              ) : null}
             </div>
             {themeError ? (
               <p className="profile-banner profile-banner--err" role="alert">

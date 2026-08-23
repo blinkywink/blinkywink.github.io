@@ -25,10 +25,11 @@ import {
   packPrice,
   type PackDef,
 } from "../lib/packTheme";
+import { awardCursedHoloBadge } from "../lib/profileBadges";
 import { awardCoins } from "../lib/awardCoins";
 import { autoPackUnlockedFromProfile } from "../lib/autoPackOpen";
 import { isTypingTarget } from "../lib/keyboard";
-import { playBuy, playCardFocus, playCardWhoosh, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadPackSounds } from "../lib/packSounds";
+import { playBuy, playCardFocus, playCardWhoosh, playJumpscare, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadJumpscareSound, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
 import { spendCoins } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
@@ -53,6 +54,23 @@ const RARE_SUSPENSE_MS = 1450;
 const RARE_PARAGON_SUSPENSE_MS = 1900;
 /** While holding Space, T4 cards force a beat so you can see them. */
 const T4_SPACE_HOLD_MS = 1500;
+/** Visual-only pack gag after the 3rd card — not a real pull. */
+const JUMPSCARE_CHANCE = 1 / 10000;
+const JUMPSCARE_AFTER_INDEX = 2;
+const JUMPSCARE_IMG = "/images/jumpscare/cursed-holo-monkey.png";
+
+function rollPackJumpscare(): boolean {
+  if (typeof window !== "undefined") {
+    try {
+      if (window.localStorage.getItem("bloon-arcade:force-jumpscare") === "1") {
+        return true;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return Math.random() < JUMPSCARE_CHANCE;
+}
 
 type Phase =
   | "shop"
@@ -270,6 +288,10 @@ export function PackOpenerTest({
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
   const focusedRef = useRef<MonkeyCardSpec | null>(null);
   focusedRef.current = focused;
+  const [jumpscare, setJumpscare] = useState(false);
+  const jumpscareRef = useRef(false);
+  const jumpscareArmedRef = useRef(false);
+  const jumpscareUsedRef = useRef(false);
 
   const phaseRef = useRef<Phase>("shop");
   const drawing = useRef(false);
@@ -354,6 +376,10 @@ export function PackOpenerTest({
     setAutoOpenActive(false);
     setFocused(null);
     focusedRef.current = null;
+    jumpscareRef.current = false;
+    jumpscareArmedRef.current = false;
+    jumpscareUsedRef.current = false;
+    setJumpscare(false);
   }, []);
 
   /** Clear open-state and jump to sealed (after a successful rebuy). */
@@ -384,6 +410,10 @@ export function PackOpenerTest({
     setBuyError(null);
     preloadRef.current = [];
     pendingPullsRef.current = null;
+    jumpscareRef.current = false;
+    jumpscareArmedRef.current = false;
+    jumpscareUsedRef.current = false;
+    setJumpscare(false);
     setPhaseBoth("sealed");
   }, []);
 
@@ -616,6 +646,10 @@ export function PackOpenerTest({
   );
 
   const spaceCanFling = useCallback((e: KeyboardEvent): boolean => {
+    if (jumpscareRef.current) {
+      if (e.repeat || needFreshSpaceRef.current) return false;
+      return true;
+    }
     const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
     if (gate === "rare") {
       // No key-repeat / hold-through — must let go and press again.
@@ -672,6 +706,15 @@ export function PackOpenerTest({
       duplicateCashRef.current = cash;
       duplicatesRef.current = dupIds;
       paidDupIndicesRef.current = new Set();
+      jumpscareUsedRef.current = false;
+      jumpscareRef.current = false;
+      setJumpscare(false);
+      const scare = Boolean(reveal) && rollPackJumpscare();
+      jumpscareArmedRef.current = scare;
+      if (scare) {
+        preloadJumpscareSound();
+        void preloadImages([JUMPSCARE_IMG]);
+      }
       preloadRef.current = preloadImages(cards.map((card) => card.entity.image));
       setPulls(cards);
       setDuplicates(dupIds);
@@ -712,6 +755,8 @@ export function PackOpenerTest({
     drawing.current = false;
     swipeOrigin.current = null;
     spaceHeldRef.current = false;
+    jumpscareRef.current = false;
+    setJumpscare(false);
     setFocused(null);
     focusedRef.current = null;
 
@@ -844,6 +889,25 @@ export function PackOpenerTest({
   ]);
 
   const nextCard = useCallback(() => {
+    const leaving = indexRef.current;
+    if (
+      jumpscareArmedRef.current &&
+      !jumpscareUsedRef.current &&
+      leaving === JUMPSCARE_AFTER_INDEX
+    ) {
+      jumpscareUsedRef.current = true;
+      jumpscareRef.current = true;
+      setJumpscare(true);
+      setDrag({ x: 0, y: 0 });
+      dragRef.current = { x: 0, y: 0 };
+      needFreshSpaceRef.current = true;
+      readyAtRef.current = performance.now();
+      playJumpscare();
+      void awardCursedHoloBadge();
+      setPhaseBoth("ready");
+      return;
+    }
+
     const next = indexRef.current + 1;
     if (next >= pullsRef.current.length) {
       setPhaseBoth("done");
@@ -868,10 +932,31 @@ export function PackOpenerTest({
       const angle = Math.random() * Math.PI * 2;
       const nextDir = dir ?? { x: Math.cos(angle), y: Math.sin(angle) };
       setExitDir(nextDir);
+      if (jumpscareRef.current) {
+        jumpscareRef.current = false;
+        setPhaseBoth("exit");
+        later(() => {
+          setJumpscare(false);
+          const next = indexRef.current + 1;
+          if (next >= pullsRef.current.length) {
+            setPhaseBoth("done");
+            if (spaceHeldRef.current && mode !== "reward") {
+              later(() => {
+                if (phaseRef.current === "done" && spaceHeldRef.current) {
+                  void buyAnother();
+                }
+              }, 60);
+            }
+            return;
+          }
+          showCardAt(next);
+        }, CARD_EXIT_MS);
+        return;
+      }
       setPhaseBoth("exit");
       later(nextCard, CARD_EXIT_MS);
     },
-    [nextCard],
+    [buyAnother, mode, nextCard, showCardAt],
   );
 
   /** Same pacing as holding Space — keeps spaceHeld and ticks flings via Space gates. */
@@ -899,7 +984,9 @@ export function PackOpenerTest({
       if (!autoOpenActiveRef.current || buyLockRef.current) return;
       spaceHeldRef.current = true;
       if (phaseRef.current !== "ready") return;
-      const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
+      const gate = jumpscareRef.current
+        ? "rare"
+        : spaceHoldGate(pullsRef.current[indexRef.current]);
       // Holding Space can't clear a rare by itself; Auto taps once like a fresh press.
       if (gate === "rare" && needFreshSpaceRef.current) {
         needFreshSpaceRef.current = false;
@@ -1099,6 +1186,7 @@ export function PackOpenerTest({
           : null
     : null;
   const showTierGlow =
+    !jumpscare &&
     Boolean(currentTier) &&
     (phase === "suspense" ||
       phase === "enter" ||
@@ -1107,11 +1195,15 @@ export function PackOpenerTest({
   const showPack =
     phase === "shop" || phase === "sealed" || phase === "sliced";
   const showCard =
+    !jumpscare &&
     (phase === "suspense" ||
       phase === "enter" ||
       phase === "ready" ||
       phase === "exit") &&
     current;
+  const showJumpscare =
+    jumpscare &&
+    (phase === "ready" || phase === "exit");
   const showCardFace = phase !== "suspense";
 
   const cardStyle =
@@ -1147,15 +1239,24 @@ export function PackOpenerTest({
 
   const showAutoDock =
     mode !== "reward" &&
+    !jumpscare &&
     autoPackUnlockedFromProfile(profile) &&
     (phase !== "done" || autoOpenActive);
 
   return createPortal(
     <div
-      className={`pack-opener${godPack ? " pack-opener--god" : ""}`}
+      className={[
+        "pack-opener",
+        godPack ? "pack-opener--god" : "",
+        showJumpscare ? "pack-opener--jumpscare" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       role="dialog"
       aria-modal="true"
-      aria-label={godPack ? "God pack" : "Pack opener"}
+      aria-label={
+        showJumpscare ? "Cursed card" : godPack ? "God pack" : "Pack opener"
+      }
     >
       <button
         type="button"
@@ -1199,15 +1300,17 @@ export function PackOpenerTest({
             ) : null}
 
             <div className="pack-opener__stage">
-            <button
-              type="button"
-              className="pack-opener__close btn btn--ghost btn--sm"
-              aria-label="Close"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={onCloseButton}
-            >
-              ✕
-            </button>
+            {!showJumpscare ? (
+              <button
+                type="button"
+                className="pack-opener__close btn btn--ghost btn--sm"
+                aria-label="Close"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={onCloseButton}
+              >
+                ✕
+              </button>
+            ) : null}
             {showPack ? (
               <div
                 className="booster-wrap"
@@ -1292,6 +1395,37 @@ export function PackOpenerTest({
                     />
                   </svg>
                 ) : null}
+              </div>
+            ) : null}
+
+            {showJumpscare ? (
+              <div
+                key="pack-jumpscare"
+                className={[
+                  "pack-opener__card",
+                  "pack-opener__jumpscare",
+                  `pack-opener__card--${phase}`,
+                ].join(" ")}
+                style={cardStyle}
+                onPointerDownCapture={
+                  phase === "ready" ? onCardPointerDown : undefined
+                }
+                onPointerMoveCapture={
+                  phase === "ready" ? onCardPointerMove : undefined
+                }
+                onPointerUpCapture={
+                  phase === "ready" ? onCardPointerUp : undefined
+                }
+                onPointerCancelCapture={
+                  phase === "ready" ? onCardPointerUp : undefined
+                }
+              >
+                <img
+                  className="pack-opener__jumpscare-img"
+                  src={JUMPSCARE_IMG}
+                  alt=""
+                  draggable={false}
+                />
               </div>
             ) : null}
 

@@ -107,7 +107,7 @@ function writeHowtoOpen(open: boolean) {
 /** Site hub. Games up top, feature tiles below. */
 export function HomeHub() {
   const navigate = useNavigate();
-  const { ready, user, isGuest } = useAuth();
+  const { ready, user, isGuest, displayName } = useAuth();
   const [howtoOpen, setHowtoOpen] = useState(readHowtoOpen);
   const [topPlayers, setTopPlayers] = useState<
     Awaited<ReturnType<typeof fetchTopLeaderboard>>
@@ -181,6 +181,9 @@ export function HomeHub() {
       ) : null}
 
       <section className="home-hub__section" aria-labelledby="hub-games">
+        <p className="home-hub__hello">
+          Hello, {ready ? displayName : "…"}
+        </p>
         <div className="home-hub__head">
           <h2 id="hub-games">Games</h2>
           <Link to={gamesPath()}>All games →</Link>

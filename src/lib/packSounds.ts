@@ -8,6 +8,7 @@ const PACK_PARAGON_SRC = "/sounds/pack-paragon.mp3";
 const BUY_SRC = "/sounds/buy.mp3";
 const WHOOSH_SRC = "/sounds/whoosh-2.mp3";
 const BLOON_POP_SRC = "/sounds/bloon-pop.mp3";
+const JUMPSCARE_SRC = "/sounds/jumpscare-cursed.mp3";
 
 const VOLUME_KEY = "bloon.sfxVolume";
 const DEFAULT_VOLUME = 0.5;
@@ -222,6 +223,18 @@ export function playPackParagon(): void {
 /** Successful Cash purchase (packs, shop, marketplace, heroes). */
 export function playBuy(): void {
   playBuffer(BUY_SRC, 0.48);
+}
+
+/** Rare pack opener jumpscare (prewarm only when armed). */
+export function preloadJumpscareSound(): void {
+  if (typeof window === "undefined") return;
+  ctx();
+  warm(JUMPSCARE_SRC);
+}
+
+/** Full-volume cursed jumpscare sting. */
+export function playJumpscare(): void {
+  playBuffer(JUMPSCARE_SRC, 2.4);
 }
 
 /** Whoosh when flinging a revealed pack card away. */

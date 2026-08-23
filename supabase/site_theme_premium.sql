@@ -1,8 +1,5 @@
--- Site color theme — synced to the signed-in account (also cached locally for guests).
--- Safe to re-run. Prefer site_theme_premium.sql for the full unlock model.
-
-alter table public.profiles
-  add column if not exists site_theme text not null default 'midnight';
+-- Premium site themes (5 000 Cash each) + unlock tracking.
+-- Safe to re-run.
 
 alter table public.profiles
   add column if not exists site_themes_unlocked text[] not null default '{}';
@@ -36,6 +33,25 @@ alter table public.profiles
       'void'
     )
   );
+
+-- Grandfather anyone already on a premium theme.
+update public.profiles
+set site_themes_unlocked = array(
+  select distinct x
+  from unnest(
+    coalesce(site_themes_unlocked, '{}'::text[])
+    || case
+      when site_theme in (
+        'rgb', 'neon', 'lava', 'toxic', 'vapor', 'aurora', 'gold', 'void'
+      ) then array[site_theme]
+      else '{}'::text[]
+    end
+  ) as x
+)
+where site_theme in (
+  'rgb', 'neon', 'lava', 'toxic', 'vapor', 'aurora', 'gold', 'void'
+)
+and not (site_theme = any (coalesce(site_themes_unlocked, '{}'::text[])));
 
 create or replace function public.set_site_theme(p_theme text)
 returns text

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, lazy, Suspense, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense, type ReactNode } from "react";
 import {
   Navigate,
   Route,
@@ -33,6 +33,7 @@ import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
 import { HubPeekExport } from "./components/HubPeekExport";
 import { RouteFallback } from "./components/RouteFallback";
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
 import { LivePlayerSync } from "./components/LivePlayerSync";
@@ -57,6 +58,7 @@ import {
 import { fetchPublicPlayerPage, peekPublicPlayerPage } from "./lib/playerPage";
 import { recordHeroClear } from "./lib/profileHeroes";
 import { heroById } from "./data/heroes";
+import { lazyRoute } from "./lib/lazyRoute";
 import {
   collectionPath,
   gamePath,
@@ -66,40 +68,40 @@ import {
 } from "./lib/routes";
 import { SWEEPER_DIFFICULTIES } from "./games/bloonssweeper/config";
 
-const ZoomedGame = lazy(() =>
+const ZoomedGame = lazyRoute(() =>
   import("./games/zoomed").then((m) => ({ default: m.ZoomedGame })),
 );
-const GeoguessrGame = lazy(() =>
+const GeoguessrGame = lazyRoute(() =>
   import("./games/geoguessr").then((m) => ({ default: m.GeoguessrGame })),
 );
-const PriceCheckGame = lazy(() =>
+const PriceCheckGame = lazyRoute(() =>
   import("./games/pricecheck").then((m) => ({ default: m.PriceCheckGame })),
 );
-const OrderUpGame = lazy(() =>
+const OrderUpGame = lazyRoute(() =>
   import("./games/orderup").then((m) => ({ default: m.OrderUpGame })),
 );
-const BloonleGame = lazy(() =>
+const BloonleGame = lazyRoute(() =>
   import("./games/bloonle").then((m) => ({ default: m.BloonleGame })),
 );
-const RoundCheckGame = lazy(() =>
+const RoundCheckGame = lazyRoute(() =>
   import("./games/roundcheck").then((m) => ({ default: m.RoundCheckGame })),
 );
-const RicoShotGame = lazy(() =>
+const RicoShotGame = lazyRoute(() =>
   import("./games/ricoshot").then((m) => ({ default: m.RicoShotGame })),
 );
-const CamoDetectionGame = lazy(() =>
+const CamoDetectionGame = lazyRoute(() =>
   import("./games/camodetection").then((m) => ({ default: m.CamoDetectionGame })),
 );
-const BloonsSweeperGame = lazy(() =>
+const BloonsSweeperGame = lazyRoute(() =>
   import("./games/bloonssweeper").then((m) => ({ default: m.BloonsSweeperGame })),
 );
-const BlowFreeGame = lazy(() =>
+const BlowFreeGame = lazyRoute(() =>
   import("./games/blowfree").then((m) => ({ default: m.BlowFreeGame })),
 );
-const BananaCatchGame = lazy(() =>
+const BananaCatchGame = lazyRoute(() =>
   import("./games/bananacatch").then((m) => ({ default: m.BananaCatchGame })),
 );
-const BloonHeroGame = lazy(() =>
+const BloonHeroGame = lazyRoute(() =>
   import("./games/bloonhero").then((m) => ({ default: m.BloonHeroGame })),
 );
 
@@ -937,7 +939,7 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <>
+    <AppErrorBoundary>
       <ScrollToTop />
       <DesktopOnlineGate />
       <DesktopUpdateGate />
@@ -945,6 +947,6 @@ export default function App() {
       <NavigationRefresh>
         <AppShell />
       </NavigationRefresh>
-    </>
+    </AppErrorBoundary>
   );
 }

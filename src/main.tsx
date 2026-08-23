@@ -6,6 +6,7 @@ import { CardCollectionProvider } from "./auth/CardCollectionProvider";
 import { HeroFxProvider } from "./auth/HeroFxProvider";
 import { TowerCompleteProvider } from "./auth/TowerCompleteProvider";
 import App from "./App";
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { supabaseConfigured } from "./lib/supabase";
 import "@fontsource/fredoka/latin-500.css";
 import "@fontsource/fredoka/latin-600.css";
@@ -42,17 +43,19 @@ VITE_SUPABASE_PUBLISHABLE_KEY</pre>
 function renderApp() {
   createRoot(root).render(
     <StrictMode>
-      <AuthProvider>
-        <BrowserRouter>
-          <HeroFxProvider>
-            <TowerCompleteProvider>
-              <CardCollectionProvider>
-                <App />
-              </CardCollectionProvider>
-            </TowerCompleteProvider>
-          </HeroFxProvider>
-        </BrowserRouter>
-      </AuthProvider>
+      <AppErrorBoundary>
+        <AuthProvider>
+          <BrowserRouter>
+            <HeroFxProvider>
+              <TowerCompleteProvider>
+                <CardCollectionProvider>
+                  <App />
+                </CardCollectionProvider>
+              </TowerCompleteProvider>
+            </HeroFxProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </AppErrorBoundary>
     </StrictMode>,
   );
 }

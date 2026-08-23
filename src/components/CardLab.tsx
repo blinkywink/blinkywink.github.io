@@ -222,7 +222,7 @@ export function CardLab({
         );
         setRemoteOwned(new Set());
         setRemoteSeeds({});
-        setRemoteParagons({});
+          setRemoteParagons({});
         setRemoteLoading(false);
       });
     return () => {

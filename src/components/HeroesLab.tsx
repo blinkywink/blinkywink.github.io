@@ -27,13 +27,16 @@ import {
 import { CashAmount } from "./CurrencyChip";
 import { HeroCardFace } from "./HeroCollectionStrip";
 
-/**
- * Levels where the plate actually changes look (exact in-game break points):
- * - Art swaps at 3 / 7 / 10 / 20 (`heroPortraitForLevel`)
- * - Palette + VFX tiers start at 6 / 11 / 16 / 20 (`heroVisualTier`)
- * 3→7 covers the tier-1 jump; 10→11 covers the tier-2 jump.
- */
-const LOOK_LEVELS = [3, 7, 10, 11, 16, 20] as const;
+/** Milestone looks shown in the hero focus strip. */
+const LOOK_LEVELS = [1, 5, 10, 15, 20] as const;
+
+/** Milestone strip plus current level when it isn't already one of those. */
+function previewStripLevels(currentLevel: number): number[] {
+  const cur = Math.max(1, Math.min(HERO_MAX_LEVEL, Math.floor(currentLevel) || 1));
+  const levels = new Set<number>(LOOK_LEVELS);
+  levels.add(cur);
+  return [...levels].sort((a, b) => a - b);
+}
 
 type Props = {
   onBack: () => void;
@@ -124,8 +127,13 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
   const equipCost = mine && !equipped ? HERO_EQUIP_SWAP_COST : 0;
   const fillPct =
     need > 0 ? Math.min(100, (progress / need) * 100) : maxed ? 100 : 0;
-  const previewingFuture =
-    previewLevel != null && previewLevel > realLevel;
+  const stripLevels = useMemo(
+    () => previewStripLevels(realLevel),
+    [realLevel],
+  );
+  const previewingOther =
+    previewLevel != null && previewLevel !== realLevel;
+  const previewingFuture = previewingOther && previewLevel > realLevel;
 
   async function onLevelUp() {
     if (!selected || busy || isGuest || !mine || maxed) return;
@@ -199,7 +207,7 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
           <div className="card-lab__titles card-lab__titles--tower">
             <p className="eyebrow">
               {mine ? (equipped ? "Equipped" : "Owned") : "Locked"}
-              {previewingFuture ? ` · Preview Lv ${displayLevel}` : ""}
+              {previewingOther ? ` · Preview Lv ${displayLevel}` : ""}
             </p>
             <h1>{selected.name}</h1>
           </div>
@@ -220,9 +228,10 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
               mode="focus"
               hideCaption
             />
-            {previewingFuture ? (
+            {previewingOther ? (
               <p className="heroes-lab__preview-tag">
-                Preview · current Lv {realLevel}
+                Preview · Lv {displayLevel}
+                {previewingFuture ? ` · current Lv ${realLevel}` : ""}
               </p>
             ) : null}
           </div>
@@ -235,40 +244,47 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
             <div className="heroes-lab__previews" role="group" aria-label="Level looks">
               <p className="heroes-lab__previews-label">Looks</p>
               <div className="heroes-lab__previews-row">
-                <button
-                  type="button"
-                  className={`heroes-lab__preview-btn${previewLevel == null ? " is-active" : ""}`}
-                  onClick={() => setPreviewLevel(null)}
-                >
-                  <HeroCardFace
-                    hero={selected}
-                    level={realLevel}
-                    size="sm"
-                    mode="preview"
-                    hideCaption
-                  />
-                  <span>Now · Lv {realLevel}</span>
-                </button>
-                {LOOK_LEVELS.map((lv) => (
-                  <button
-                    key={lv}
-                    type="button"
-                    className={`heroes-lab__preview-btn${previewLevel === lv ? " is-active" : ""}${lv <= realLevel ? " is-unlocked" : ""}`}
-                    onClick={() => {
-                      playCardFocus();
-                      setPreviewLevel(lv);
-                    }}
-                  >
-                    <HeroCardFace
-                      hero={selected}
-                      level={lv}
-                      size="sm"
-                      mode="preview"
-                      hideCaption
-                    />
-                    <span>Lv {lv}</span>
-                  </button>
-                ))}
+                {stripLevels.map((lv) => {
+                  const isCurrent = lv === realLevel;
+                  const isActive =
+                    previewLevel === lv ||
+                    (previewLevel == null && isCurrent);
+                  return (
+                    <button
+                      key={lv}
+                      type="button"
+                      className={`heroes-lab__preview-btn${isActive ? " is-active" : ""}${lv <= realLevel ? " is-unlocked" : ""}${isCurrent ? " is-current" : ""}`}
+                      aria-pressed={isActive}
+                      aria-label={
+                        isCurrent
+                          ? `Level ${lv}, your current level`
+                          : `Preview level ${lv}`
+                      }
+                      onClick={() => {
+                        playCardFocus();
+                        setPreviewLevel(isCurrent ? null : lv);
+                      }}
+                    >
+                      <HeroCardFace
+                        hero={selected}
+                        level={lv}
+                        size="sm"
+                        mode="preview"
+                        hideCaption
+                      />
+                      <span className="heroes-lab__preview-btn-label">
+                        {isCurrent ? (
+                          <>
+                            Lv {lv}
+                            <em>You</em>
+                          </>
+                        ) : (
+                          <>Lv {lv}</>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

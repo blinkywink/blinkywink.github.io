@@ -34,6 +34,8 @@ export type Profile = {
   auto_pack_unlocked?: boolean | null;
   /** Site-wide color theme id (synced across devices). */
   site_theme?: string | null;
+  /** Premium theme ids unlocked with Cash. */
+  site_themes_unlocked?: string[] | null;
   /** One-time unlock for profile aura FX. */
   aura_unlocked?: boolean | null;
   /** Owned card id whose FX palette is copied onto profile chrome. */
@@ -83,6 +85,7 @@ export type Database = {
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
           site_theme?: string;
+          site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
           owned_hero_ids?: string[] | null;
@@ -111,6 +114,7 @@ export type Database = {
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
           site_theme?: string;
+          site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
           aura_card_id?: string | null;
           owned_hero_ids?: string[] | null;
@@ -378,6 +382,38 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      award_cursed_holo_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_collected_every_card_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_collected_a_tower_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_level_20_hero_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_degree_100_paragon_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_owns_a_paragon_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_owns_all_paragons_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      award_owns_all_heroes_badge: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       set_profile_accent: {
         Args: { p_color: string };
         Returns: number;
@@ -385,6 +421,10 @@ export type Database = {
       set_site_theme: {
         Args: { p_theme: string };
         Returns: string;
+      };
+      buy_site_theme: {
+        Args: { p_theme: string };
+        Returns: number;
       };
       set_profile_aura: {
         Args: { p_card_id: string | null };

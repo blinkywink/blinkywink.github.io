@@ -127,6 +127,12 @@ export function heroLevelFromProfile(
   return Math.max(1, Math.min(20, Math.floor(n)));
 }
 
+/** True if any hero in the map is at max level. */
+export function hasAnyLevel20Hero(levels: unknown): boolean {
+  const normalized = normalizeHeroLevels(levels);
+  return Object.values(normalized).some((n) => n >= HERO_MAX_LEVEL);
+}
+
 export function heroClearProgressFromProfile(
   progress: Record<string, number> | null | undefined,
   heroId: string,

@@ -41,6 +41,14 @@ import {
 import { fetchMyActiveListedCards } from "../lib/marketplace";
 import { needsVisualSeed, newVisualSeed } from "../lib/cardVisualSeed";
 import { newlyCompletedTowers } from "../lib/towerCollection";
+import {
+  maybeAwardCollectedATowerBadge,
+  maybeAwardCollectedEveryCardBadge,
+  maybeAwardDegree100ParagonBadge,
+  maybeAwardOwnsAllHeroesBadge,
+  maybeAwardOwnsAllParagonsBadge,
+  maybeAwardOwnsAParagonBadge,
+} from "../lib/profileBadges";
 import type { ParagonMap } from "../lib/guestParagons";
 import { useTowerComplete } from "./TowerCompleteProvider";
 
@@ -108,6 +116,17 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     [notifyTowerCompletions],
   );
 
+  const applyCopies = useCallback((copies: Awaited<ReturnType<typeof fetchOwnedCopies>>) => {
+    setOwnedIds(copies.map((row) => row.cardId));
+    setSeedMap(
+      Object.fromEntries(
+        copies
+          .filter((row) => row.visualSeed != null)
+          .map((row) => [row.cardId, row.visualSeed as number]),
+      ),
+    );
+  }, []);
+
   const refresh = useCallback(async () => {
     const beforeOwned = ownedRef.current;
     const shouldAnnounce = hydratedRef.current;
@@ -116,15 +135,8 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       fetchOwnParagons(),
       loadListedIds(session?.userId),
     ]);
-    setOwnedIds(copies.map((row) => row.cardId));
+    applyCopies(copies);
     setListedIds(nextListed);
-    setSeedMap(
-      Object.fromEntries(
-        copies
-          .filter((row) => row.visualSeed != null)
-          .map((row) => [row.cardId, row.visualSeed as number]),
-      ),
-    );
     if (nextParagons) {
       const merged = mergeParagonMaps(paragonRef.current, nextParagons);
       const next = await ensureParagonStates(
@@ -137,7 +149,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
     hydratedRef.current = true;
     if (shouldAnnounce) announceTowerCompletions(beforeOwned);
-  }, [loadListedIds, session?.userId, announceTowerCompletions]);
+  }, [loadListedIds, session?.userId, announceTowerCompletions, applyCopies]);
 
   useEffect(() => {
     if (!authReady) return;
@@ -158,15 +170,8 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
         loadListedIds(session?.userId),
       ]);
       if (cancelled) return;
-      setOwnedIds(copies.map((row) => row.cardId));
+      applyCopies(copies);
       setListedIds(nextListed);
-      setSeedMap(
-        Object.fromEntries(
-          copies
-            .filter((row) => row.visualSeed != null)
-            .map((row) => [row.cardId, row.visualSeed as number]),
-        ),
-      );
       if (nextParagons) {
         const merged = mergeParagonMaps(paragonRef.current, nextParagons);
         const next = await ensureParagonStates(
@@ -182,7 +187,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [authReady, session?.userId, isGuest, loadListedIds]);
+  }, [authReady, session?.userId, isGuest, loadListedIds, applyCopies]);
 
   useEffect(() => {
     return subscribeRouteEnter((pathname) => {
@@ -202,6 +207,22 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => undefined);
   }, [hydrated, isGuest, profile, ownedIds, refreshProfile]);
+
+  // Permanent completion badge — keep checking; award is idempotent.
+  useEffect(() => {
+    if (!hydrated || isGuest || !profile) return;
+    const held = new Set<string>([...ownedIds, ...listedIds]);
+    void maybeAwardCollectedEveryCardBadge(held, profile.owned_hero_ids);
+    void maybeAwardCollectedATowerBadge(held);
+    void maybeAwardOwnsAParagonBadge(held);
+    void maybeAwardOwnsAllParagonsBadge(held);
+    void maybeAwardOwnsAllHeroesBadge(profile.owned_hero_ids);
+  }, [hydrated, isGuest, profile, ownedIds, listedIds]);
+
+  useEffect(() => {
+    if (!hydrated || isGuest) return;
+    void maybeAwardDegree100ParagonBadge(paragonMap);
+  }, [hydrated, isGuest, paragonMap]);
 
   const awardCards = useCallback(async (cardIds: string[]) => {
     const beforeOwned = ownedRef.current;
@@ -232,17 +253,10 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     });
     announceTowerCompletions(beforeOwned);
     void fetchOwnedCopies().then((copies) => {
-      setOwnedIds(copies.map((row) => row.cardId));
-      setSeedMap(
-        Object.fromEntries(
-          copies
-            .filter((row) => row.visualSeed != null)
-            .map((row) => [row.cardId, row.visualSeed as number]),
-        ),
-      );
+      applyCopies(copies);
     });
     return added;
-  }, [announceTowerCompletions]);
+  }, [announceTowerCompletions, applyCopies]);
 
   const announceDegreeUps = useCallback((results: ParagonApplyResult[]) => {
     for (const r of results) {
@@ -342,7 +356,6 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     () => new Map(Object.entries(seedMap)),
     [seedMap],
   );
-
   const value = useMemo<CardCollectionContextValue>(
     () => ({
       ready,

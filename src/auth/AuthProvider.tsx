@@ -16,6 +16,10 @@ import {
 import { mergeGuestProgressIntoAccount } from "../lib/mergeGuestProgress";
 import { subscribeRouteEnter } from "../lib/navigationRefresh";
 import { reconcileSiteThemeWithAccount } from "../lib/siteTheme";
+import {
+  maybeAwardLevel20HeroBadge,
+  maybeAwardOwnsAllHeroesBadge,
+} from "../lib/profileBadges";
 import { isValidUsername, normalizeUsername } from "./username";
 import {
   clearAppSession,
@@ -162,6 +166,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     showcase_card_ids: Array.isArray(data.showcase_card_ids)
       ? data.showcase_card_ids.map(String)
       : [],
+    site_themes_unlocked: Array.isArray(data.site_themes_unlocked)
+      ? data.site_themes_unlocked.map(String)
+      : [],
     owned_hero_ids: Array.isArray(data.owned_hero_ids)
       ? data.owned_hero_ids.map(String)
       : [],
@@ -260,6 +267,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await reconcileSiteThemeWithAccount(next.site_theme);
     }
   }, [session?.userId]);
+
+  useEffect(() => {
+    if (!profile || profile.id === GUEST_ID) return;
+    void maybeAwardLevel20HeroBadge(profile.hero_levels);
+    void maybeAwardOwnsAllHeroesBadge(profile.owned_hero_ids);
+  }, [profile]);
 
   useEffect(() => {
     const existing = loadAppSession();
