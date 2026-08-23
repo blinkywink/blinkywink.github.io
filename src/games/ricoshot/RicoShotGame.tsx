@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { GameHeader } from "../../components/GameHeader";
 import { CashAmount } from "../../components/CurrencyChip";
 import { LivesMeter } from "../../components/LivesMeter";
@@ -36,6 +37,15 @@ type Props = {
     solves: number;
     perfect: boolean;
   }) => void;
+};
+
+type ShooterTip = {
+  name: string;
+  tier: number;
+  blurb: string;
+  /** Anchor center-x / top of the shooter button (viewport px). */
+  x: number;
+  y: number;
 };
 
 type Particle = {
@@ -281,6 +291,23 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
   } = useRicoShot();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [assetsTick, setAssetsTick] = useState(0);
+  const [tip, setTip] = useState<ShooterTip | null>(null);
+
+  const showShooterTip = (
+    el: HTMLElement,
+    def: { name: string; tier: number; blurb: string },
+  ) => {
+    const r = el.getBoundingClientRect();
+    setTip({
+      name: def.name,
+      tier: def.tier,
+      blurb: def.blurb,
+      x: r.left + r.width * 0.5,
+      y: r.top,
+    });
+  };
+
+  const hideShooterTip = () => setTip(null);
   const imgs = useRef<{
     bloon: Record<BloonKind, HTMLImageElement>;
     dart: HTMLImageElement;
@@ -852,23 +879,31 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
             // Stay lit while this ninja's projectiles are still in the air.
             const spent = slot.used && !firing;
             return (
-                <button
-                  key={`${slot.id}-${i}`}
-                  type="button"
-                  className={`rico-shooter${selected ? " is-selected" : ""}${spent ? " is-used" : ""}${firing ? " is-firing" : ""}`}
-                  disabled={!aiming || slot.used}
-                  onClick={() => selectShooter(slot.id)}
-                  aria-label={`${def.name}. ${def.blurb}`}
-                >
-                  <span className="rico-shooter__tip" role="tooltip">
-                    <strong>{def.name}</strong>
-                    <em>T{def.tier}</em>
-                    <span>{def.blurb}</span>
-                  </span>
-                  <img src={def.icon} alt="" width={44} height={44} />
-                  <span className="rico-shooter__name">{def.name}</span>
-                  <span className="rico-shooter__tier">T{def.tier}</span>
-                </button>
+              <button
+                key={`${slot.id}-${i}`}
+                type="button"
+                className={`rico-shooter${selected ? " is-selected" : ""}${spent ? " is-used" : ""}${firing ? " is-firing" : ""}`}
+                disabled={!aiming || slot.used}
+                onClick={(e) => {
+                  selectShooter(slot.id);
+                  showShooterTip(e.currentTarget, def);
+                }}
+                onPointerEnter={(e) => {
+                  if (e.pointerType === "touch") return;
+                  showShooterTip(e.currentTarget, def);
+                }}
+                onPointerLeave={(e) => {
+                  if (e.pointerType === "touch") return;
+                  hideShooterTip();
+                }}
+                onFocus={(e) => showShooterTip(e.currentTarget, def)}
+                onBlur={hideShooterTip}
+                aria-label={`${def.name}. ${def.blurb}`}
+              >
+                <img src={def.icon} alt="" width={44} height={44} />
+                <span className="rico-shooter__name">{def.name}</span>
+                <span className="rico-shooter__tier">T{def.tier}</span>
+              </button>
             );
           })}
           {puzzleDone ? (
@@ -902,6 +937,26 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
           )}
         </div>
       </main>
+
+      {tip
+        ? createPortal(
+            <div
+              className="rico-float-tip"
+              role="tooltip"
+              style={
+                {
+                  ["--tip-x"]: `${tip.x}px`,
+                  ["--tip-y"]: `${tip.y}px`,
+                } as CSSProperties
+              }
+            >
+              <strong>{tip.name}</strong>
+              <em>T{tip.tier}</em>
+              <span>{tip.blurb}</span>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

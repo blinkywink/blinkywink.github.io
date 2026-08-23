@@ -5,8 +5,9 @@ import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import type { PricedCombo } from "../pricecheck/costs";
-import { ORDER_UP_CONFIG, pointsForCorrect } from "./config";
+import { ORDER_UP_CONFIG, pointsForPlacement } from "./config";
 import {
+  countCorrectPositions,
   createOrderUpRound,
   isCorrectOrder,
   type OrderUpRound,
@@ -17,6 +18,9 @@ export type OrderUpPhase = "playing" | "reveal" | "results";
 export type OrderUpFeedback = {
   correct: boolean;
   points: number;
+  /** Towers already in the right cheapest→pricey slot. */
+  placedCorrect: number;
+  handSize: number;
   /** Player order at lock/timeout. */
   submitted: PricedCombo[];
 };
@@ -158,24 +162,29 @@ export function useOrderUp() {
 
     const orderIds = s.order.map((c) => c.id);
     const ok = isCorrectOrder(orderIds, s.round.correctIds);
+    const placedCorrect = countCorrectPositions(orderIds, s.round.correctIds);
+    const handSize = s.round.correctIds.length;
     const streak = ok ? s.streak + 1 : 0;
     const bestStreak = Math.max(s.bestStreak, streak);
-    const points = ok
-      ? pointsForCorrect(
-          s.round.round,
-          streak,
-          streak >= 2 ? streakBonusPct : 0,
-        )
-      : 0;
+    const points = pointsForPlacement({
+      round: s.round.round,
+      placedCorrect,
+      handSize,
+      perfect: ok,
+      streakAfter: streak,
+      streakBonusPct: streak >= 2 ? streakBonusPct : 0,
+    });
     const lives = ok ? s.lives : s.lives - 1;
 
-    if (ok && points > 0) {
+    if (points > 0) {
       void awardCoins(points).then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
-      void onCorrectCash(setCoinBalanceRef.current);
-      if (streak >= 2 && streakBonusPct > 0) {
-        onGwenStreakProc(streak);
+      if (ok) {
+        void onCorrectCash(setCoinBalanceRef.current);
+        if (streak >= 2 && streakBonusPct > 0) {
+          onGwenStreakProc(streak);
+        }
       }
     }
 
@@ -191,6 +200,8 @@ export function useOrderUp() {
       feedback: {
         correct: ok,
         points,
+        placedCorrect,
+        handSize,
         submitted: s.order.slice(),
       },
       timeLeftMs: 0,

@@ -20,7 +20,7 @@ export const GAME_HAUL_TITLES: Record<GamePath, string> = {
   bananacatch: "BANANA CATCH",
   bloonhero: "BLOON HERO",
   roundcheck: "ROUND CHECK",
-  ricoshot: "HELIUM POP",
+  heliumpop: "HELIUM POP",
   blowfree: "BLOW FREE",
 };
 

@@ -268,11 +268,13 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
             </div>
           ) : state.feedback ? (
             <p
-              className={`orderup-result ${state.feedback.correct ? "is-win" : "is-miss"}`}
+              className={`orderup-result ${state.feedback.correct ? "is-win" : state.feedback.points > 0 ? "is-partial" : "is-miss"}`}
             >
               {state.feedback.correct
                 ? `Correct! +${state.feedback.points}`
-                : "Wrong order"}
+                : state.feedback.points > 0
+                  ? `${state.feedback.placedCorrect}/${state.feedback.handSize} right · +${state.feedback.points}`
+                  : "Wrong order"}
             </p>
           ) : null}
         </div>

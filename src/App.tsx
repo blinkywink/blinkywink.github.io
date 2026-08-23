@@ -536,7 +536,7 @@ function AppShell() {
     }) => {
       setEndlessHaul(null);
       setRunHaul({
-        game: "ricoshot",
+        game: "heliumpop",
         cleared: info.cleared,
         cashEarned: info.coinsEarned,
         details: [
@@ -552,7 +552,7 @@ function AppShell() {
         haulAfter: true,
       });
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("ricoshot", info.cleared);
+      void settleFeaturedBonus("heliumpop", info.cleared);
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -797,7 +797,7 @@ function AppShell() {
             }
           />
           <Route
-            path="/ricoshot"
+            path="/heliumpop"
             element={
               <LazyGame>
                 <RicoShotGame
@@ -808,6 +808,7 @@ function AppShell() {
               </LazyGame>
             }
           />
+          <Route path="/ricoshot" element={<Navigate to="/heliumpop" replace />} />
           <Route
             path="/camodetection"
             element={

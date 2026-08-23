@@ -11,7 +11,7 @@ export type GamePath =
   | "bananacatch"
   | "bloonhero"
   | "roundcheck"
-  | "ricoshot"
+  | "heliumpop"
   | "blowfree";
 
 export const GAME_PATHS: readonly GamePath[] = [
@@ -25,7 +25,7 @@ export const GAME_PATHS: readonly GamePath[] = [
   "bananacatch",
   "bloonhero",
   "roundcheck",
-  "ricoshot",
+  "heliumpop",
   "blowfree",
 ] as const;
 

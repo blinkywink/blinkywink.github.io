@@ -180,7 +180,7 @@ export function HomeHub() {
         <ArcadeHome
           embed
           limit={4}
-          pick={["bananacatch", "bloonle", "ricoshot", "zoomed"]}
+          pick={["bananacatch", "bloonle", "heliumpop", "zoomed"]}
           onPlay={(game) => navigate(gamePath(game as GamePath))}
         />
 

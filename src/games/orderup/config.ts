@@ -15,6 +15,31 @@ export function pointsForCorrect(
   return rewardForCorrect({ round, streakAfter, streakBonusPct });
 }
 
+/**
+ * Partial credit for towers already in the right slot.
+ * Perfect order → full payout. Misses still pay for greens (no streak bonus).
+ */
+export function pointsForPlacement(input: {
+  round: number;
+  placedCorrect: number;
+  handSize: number;
+  perfect: boolean;
+  streakAfter: number;
+  streakBonusPct?: number;
+}): number {
+  const hand = Math.max(1, input.handSize);
+  const placed = Math.max(0, Math.min(hand, input.placedCorrect));
+  if (placed <= 0) return 0;
+  const full = pointsForCorrect(
+    input.round,
+    input.perfect ? input.streakAfter : 0,
+    input.perfect ? (input.streakBonusPct ?? 0) : 0,
+  );
+  if (input.perfect || placed >= hand) return full;
+  // Scale by share correct — e.g. 3/5 ≈ 60% of the round payout.
+  return Math.max(1, Math.round((full * placed) / hand));
+}
+
 /** Hand grows 3 → 4 → 5 as the run progresses. */
 export function handSizeForRound(round: number): number {
   if (round <= 3) return 3;

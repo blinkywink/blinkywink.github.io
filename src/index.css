@@ -10344,6 +10344,10 @@ body.rewards-overlay-open .sweeper-result {
   color: #7dff9a;
 }
 
+.orderup-result.is-partial {
+  color: #f0c84a;
+}
+
 .orderup-result.is-miss {
   color: #ff8a70;
 }
@@ -10945,7 +10949,8 @@ body.rewards-overlay-open .sweeper-result {
   padding: 0 0.2rem 0.1rem;
   width: 100%;
   margin: 0 auto;
-  overflow: hidden;
+  /* Let shooter tooltips paint above the board instead of clipping. */
+  overflow: visible;
 }
 
 .rico-board-slot {
@@ -11067,6 +11072,8 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .rico-loadout {
+  position: relative;
+  z-index: 40;
   flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
@@ -11076,10 +11083,12 @@ body.rewards-overlay-open .sweeper-result {
   width: min(100%, 34rem);
   min-height: 5.6rem;
   padding: 0 0.2rem 0.15rem;
+  overflow: visible;
 }
 
 .rico-shooter {
   position: relative;
+  z-index: 1;
   flex: 1 1 6.2rem;
   max-width: 9rem;
   min-width: 5.5rem;
@@ -11094,37 +11103,38 @@ body.rewards-overlay-open .sweeper-result {
   color: #e8f0dc;
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.12s ease, background 0.12s ease;
+  overflow: visible;
 }
 
-.rico-shooter__tip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.45rem);
-  z-index: 12;
-  width: max(11.5rem, 100%);
-  transform: translateX(-50%) translateY(4px);
+/* Portaled to document.body — escapes shooter backdrop-filter containing block. */
+.rico-float-tip {
+  position: fixed;
+  left: var(--tip-x, 50%);
+  top: var(--tip-y, 50%);
+  z-index: 10000;
+  width: max(11.5rem, 6rem);
+  max-width: min(18rem, calc(100vw - 1.75rem));
+  transform: translate(-50%, calc(-100% - 0.45rem));
   display: grid;
   gap: 0.2rem;
   padding: 0.55rem 0.65rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 220, 100, 0.28);
-  background: rgba(10, 18, 14, 0.94);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  background: rgba(10, 18, 14, 0.96);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   color: #eef4e4;
   text-align: left;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity 0.14s ease, transform 0.14s ease;
 }
 
-.rico-shooter__tip strong {
+.rico-float-tip strong {
   font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 800;
   line-height: 1.2;
 }
 
-.rico-shooter__tip em {
+.rico-float-tip em {
   font-style: normal;
   font-size: 0.62rem;
   font-weight: 750;
@@ -11132,20 +11142,15 @@ body.rewards-overlay-open .sweeper-result {
   color: rgba(255, 220, 100, 0.92);
 }
 
-.rico-shooter__tip span {
+.rico-float-tip span {
   font-size: 0.68rem;
   line-height: 1.35;
   color: rgba(232, 240, 220, 0.86);
 }
 
-.rico-shooter:hover .rico-shooter__tip,
-.rico-shooter:focus-visible .rico-shooter__tip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.rico-shooter:disabled:hover .rico-shooter__tip {
-  opacity: 1;
+.rico-shooter:hover,
+.rico-shooter:focus-visible {
+  z-index: 50;
 }
 
 .rico-shooter img {
@@ -11262,6 +11267,18 @@ body.rewards-overlay-open .sweeper-result {
 .rico-page.is-done .rico-stage {
   opacity: 0.78;
   filter: saturate(0.85);
+}
+
+@media (max-width: 900px) {
+  /* Viewport-centered tip on phones / DevTools mobile (escapes edge clipping). */
+  .rico-float-tip {
+    left: 50%;
+    top: auto;
+    bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+    width: min(18rem, calc(100vw - 1.75rem));
+    max-width: min(18rem, calc(100vw - 1.75rem));
+    transform: translateX(-50%);
+  }
 }
 
 @media (max-width: 560px) {

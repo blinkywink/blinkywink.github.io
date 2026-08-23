@@ -221,3 +221,16 @@ export function isCorrectOrder(
   if (orderIds.length !== correctIds.length) return false;
   return orderIds.every((id, i) => id === correctIds[i]);
 }
+
+/** How many slots match the correct cheapest→pricey ranking. */
+export function countCorrectPositions(
+  orderIds: string[],
+  correctIds: string[],
+): number {
+  const n = Math.min(orderIds.length, correctIds.length);
+  let hit = 0;
+  for (let i = 0; i < n; i++) {
+    if (orderIds[i] === correctIds[i]) hit += 1;
+  }
+  return hit;
+}

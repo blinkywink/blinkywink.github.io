@@ -24,7 +24,7 @@ export type GameId =
   | "bananacatch"
   | "bloonhero"
   | "roundcheck"
-  | "ricoshot"
+  | "heliumpop"
   | "blowfree";
 
 type Props = {
@@ -675,7 +675,7 @@ export function ArcadeHome({
       preview: <BloonlePreview />,
     },
     {
-      id: "ricoshot" as const,
+      id: "heliumpop" as const,
       title: "HELIUM POP",
       blurb: "Clear all the bloons with ninjas.",
       label: "Helium Pop, Clear all the bloons with ninjas",
