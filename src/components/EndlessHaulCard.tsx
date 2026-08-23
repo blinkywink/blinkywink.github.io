@@ -11,6 +11,7 @@ type Props = {
   cashEarned: number;
   report: GameScoreReport | null;
   loading: boolean;
+  onPlayAgain: () => void;
   onBack: () => void;
 };
 
@@ -19,6 +20,7 @@ export function EndlessHaulCard({
   cashEarned,
   report,
   loading,
+  onPlayAgain,
   onBack,
 }: Props) {
   const label = scoreLabel(gameId);
@@ -77,13 +79,22 @@ export function EndlessHaulCard({
           )}
         </div>
 
-        <button
-          type="button"
-          className="btn btn--primary btn--lg"
-          onClick={onBack}
-        >
-          Back to Games
-        </button>
+        <div className="rewards-done__actions">
+          <button
+            type="button"
+            className="btn btn--primary btn--lg"
+            onClick={onPlayAgain}
+          >
+            Play again
+          </button>
+          <button
+            type="button"
+            className="btn btn--secondary btn--lg"
+            onClick={onBack}
+          >
+            Back to Games
+          </button>
+        </div>
       </div>
     </div>
   );

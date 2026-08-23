@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
@@ -33,6 +34,7 @@ import {
 } from "../lib/trades";
 import { listingPath, tradePath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
+import { ExchangeCompare } from "./ExchangeCompare";
 
 const EMPTY_TRADES: TradeInbox = { incoming: [], outgoing: [], active: [] };
 const EMPTY_OFFERS: MarketOfferInbox = { incoming: [], outgoing: [] };
@@ -50,6 +52,11 @@ export function TradeInbox() {
   const [exchangePrice, setExchangePrice] = useState<Record<string, string>>(
     {},
   );
+  /** Open compare sheet for an exchange (incoming or outgoing). */
+  const [reviewExchange, setReviewExchange] = useState<{
+    item: ExchangeInboxItem;
+    role: "incoming" | "outgoing";
+  } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -229,6 +236,7 @@ export function TradeInbox() {
           ? `Asked ${item.partnerUsername} for ${price.toLocaleString()} Cash. Waiting for them to accept.`
           : `Offered a free swap. Waiting for ${item.partnerUsername} to accept.`,
       );
+      setReviewExchange(null);
       await refresh(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send offer.");
@@ -251,6 +259,7 @@ export function TradeInbox() {
             : `Exchanged ${offerCardLabel(item.cardId)} for free.`,
         );
       }
+      setReviewExchange(null);
       await refresh(true);
     } catch (err) {
       setError(
@@ -266,6 +275,7 @@ export function TradeInbox() {
     try {
       await respondExchange(item.id, false, 0);
       await pingInbox(item.partnerId).catch(() => undefined);
+      setReviewExchange(null);
       await refresh(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not decline exchange.");
@@ -544,7 +554,6 @@ export function TradeInbox() {
               <h3>Exchange requests</h3>
               <ul>
                 {exchanges.incoming.map((item) => {
-                  const paragon = item.cardId.endsWith("-paragon");
                   const offered = item.status === "offered";
                   return (
                     <li key={item.id}>
@@ -554,16 +563,15 @@ export function TradeInbox() {
                           {offered ? (
                             <>
                               Waiting on <strong>{item.partnerUsername}</strong>{" "}
-                              to accept your{" "}
+                              for {offerCardLabel(item.cardId)}
                               {item.price > 0 ? (
                                 <>
-                                  <CashAmount amount={item.price} size={15} />{" "}
-                                  offer
+                                  {" "}
+                                  · <CashAmount amount={item.price} size={15} />
                                 </>
                               ) : (
-                                "free swap"
-                              )}{" "}
-                              for {offerCardLabel(item.cardId)}
+                                " · free"
+                              )}
                             </>
                           ) : (
                             <>
@@ -571,13 +579,6 @@ export function TradeInbox() {
                               exchange {offerCardLabel(item.cardId)}
                             </>
                           )}
-                          {paragon ? (
-                            <>
-                              {" "}
-                              · their deg {item.theirDegree} / yours{" "}
-                              {item.myDegree}
-                            </>
-                          ) : null}
                         </span>
                         <div className="trade-inbox__actions">
                           {offered ? (
@@ -590,50 +591,15 @@ export function TradeInbox() {
                               Cancel
                             </button>
                           ) : (
-                            <>
-                              <label className="trade-inbox__price">
-                                Cash
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={1000000}
-                                  inputMode="numeric"
-                                  value={exchangePrice[item.id] ?? "0"}
-                                  onChange={(e) =>
-                                    setExchangePrice((prev) => ({
-                                      ...prev,
-                                      [item.id]: e.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              <button
-                                type="button"
-                                className="btn btn--ghost btn--sm"
-                                disabled={busyId === item.id}
-                                onClick={() => void onOfferExchange(item, 0)}
-                              >
-                                Offer free
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn--primary btn--sm"
-                                disabled={busyId === item.id}
-                                onClick={() =>
-                                  void onOfferExchange(item, exchangeFee(item))
-                                }
-                              >
-                                Send offer
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn--ghost btn--sm"
-                                disabled={busyId === item.id}
-                                onClick={() => void onDeclineExchange(item)}
-                              >
-                                Decline
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--sm"
+                              onClick={() =>
+                                setReviewExchange({ item, role: "incoming" })
+                              }
+                            >
+                              Review
+                            </button>
                           )}
                         </div>
                       </div>
@@ -653,49 +619,36 @@ export function TradeInbox() {
                   return (
                     <li key={item.id}>
                       <div className="trade-inbox__row trade-inbox__row--offer">
+                        <InboxThumb cardId={item.cardId} />
                         <span>
                           {offered ? (
                             <>
-                              <strong>{item.partnerUsername}</strong> wants{" "}
+                              <strong>{item.partnerUsername}</strong> offered{" "}
                               {item.price > 0 ? (
                                 <CashAmount amount={item.price} size={15} />
                               ) : (
                                 "a free swap"
                               )}{" "}
-                              to exchange {offerCardLabel(item.cardId)}
+                              for {offerCardLabel(item.cardId)}
                             </>
                           ) : (
                             <>
                               {offerCardLabel(item.cardId)} · waiting on{" "}
-                              <strong>{item.partnerUsername}</strong> to name a
-                              price
+                              <strong>{item.partnerUsername}</strong>
                             </>
                           )}
                         </span>
                         <div className="trade-inbox__actions">
                           {offered ? (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn--primary btn--sm"
-                                disabled={busyId === item.id}
-                                onClick={() =>
-                                  void onConfirmExchange(item, true)
-                                }
-                              >
-                                Accept
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn--ghost btn--sm"
-                                disabled={busyId === item.id}
-                                onClick={() =>
-                                  void onConfirmExchange(item, false)
-                                }
-                              >
-                                Decline
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--sm"
+                              onClick={() =>
+                                setReviewExchange({ item, role: "outgoing" })
+                              }
+                            >
+                              Review
+                            </button>
                           ) : (
                             <button
                               type="button"
@@ -815,6 +768,154 @@ export function TradeInbox() {
           ) : null}
         </div>
       ) : null}
+
+      {reviewExchange
+        ? createPortal(
+            <div
+              className="exchange-review"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Review exchange"
+            >
+              <button
+                type="button"
+                className="exchange-review__backdrop"
+                aria-label="Close"
+                onClick={() => setReviewExchange(null)}
+              />
+              <div className="exchange-review__panel">
+                <header className="exchange-review__head">
+                  <div>
+                    <p className="eyebrow">Exchange</p>
+                    <h2>
+                      {reviewExchange.role === "incoming"
+                        ? `Offer from ${reviewExchange.item.partnerUsername}`
+                        : `Offer from ${reviewExchange.item.partnerUsername}`}
+                    </h2>
+                    <p>
+                      {reviewExchange.role === "incoming"
+                        ? "Compare copies, then set what they pay you to swap (or offer free)."
+                        : reviewExchange.item.price > 0
+                          ? `They want ${reviewExchange.item.price.toLocaleString()} Cash to swap.`
+                          : "They offered a free swap."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    aria-label="Close"
+                    onClick={() => setReviewExchange(null)}
+                  >
+                    ✕
+                  </button>
+                </header>
+
+                <ExchangeCompare
+                  cardId={reviewExchange.item.cardId}
+                  mine={{
+                    label: "You",
+                    seed: reviewExchange.item.mySeed,
+                    degree: reviewExchange.item.myDegree,
+                  }}
+                  theirs={{
+                    label: reviewExchange.item.partnerUsername,
+                    seed: reviewExchange.item.theirSeed,
+                    degree: reviewExchange.item.theirDegree,
+                  }}
+                />
+
+                {reviewExchange.role === "incoming" &&
+                reviewExchange.item.status === "pending" ? (
+                  <>
+                    <p className="exchange-review__fee-note">
+                      Cash fee is what you charge them to swap copies.
+                    </p>
+                    <div className="exchange-review__actions">
+                      <label className="trade-inbox__price exchange-review__price">
+                        Cash fee
+                        <input
+                          type="number"
+                          min={0}
+                          max={1000000}
+                          inputMode="numeric"
+                          value={
+                            exchangePrice[reviewExchange.item.id] ?? "0"
+                          }
+                          onChange={(e) =>
+                            setExchangePrice((prev) => ({
+                              ...prev,
+                              [reviewExchange.item.id]: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="btn btn--ghost"
+                        disabled={busyId === reviewExchange.item.id}
+                        onClick={() =>
+                          void onOfferExchange(reviewExchange.item, 0)
+                        }
+                      >
+                        Offer free
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--primary"
+                        disabled={busyId === reviewExchange.item.id}
+                        onClick={() =>
+                          void onOfferExchange(
+                            reviewExchange.item,
+                            exchangeFee(reviewExchange.item),
+                          )
+                        }
+                      >
+                        Send offer
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--ghost"
+                        disabled={busyId === reviewExchange.item.id}
+                        onClick={() =>
+                          void onDeclineExchange(reviewExchange.item)
+                        }
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </>
+                ) : null}
+
+                {reviewExchange.role === "outgoing" &&
+                reviewExchange.item.status === "offered" ? (
+                  <div className="exchange-review__actions">
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      disabled={busyId === reviewExchange.item.id}
+                      onClick={() =>
+                        void onConfirmExchange(reviewExchange.item, true)
+                      }
+                    >
+                      Accept swap
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      disabled={busyId === reviewExchange.item.id}
+                      onClick={() =>
+                        void onConfirmExchange(reviewExchange.item, false)
+                      }
+                    >
+                      Decline
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

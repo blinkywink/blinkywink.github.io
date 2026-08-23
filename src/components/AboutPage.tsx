@@ -84,6 +84,53 @@ export function AboutPage() {
           BTD6 is always appreciated — but it has nothing to do with this site.
         </p>
       </section>
+
+      <section className="about-page__section" id="privacy">
+        <h2>Privacy</h2>
+        <p>
+          If you create an account, we store your username, password hash,
+          profile settings, in-game Cash balance, card collection, and related
+          gameplay data (such as trades, marketplace listings, and daily claim
+          dates) on our database so your progress can sync across devices.
+        </p>
+        <p>
+          Guest play keeps progress in your browser’s local storage on that
+          device until you sign up or clear it. The optional desktop app uses
+          the same online account system as the website.
+        </p>
+        <p>
+          We do not sell personal data. We do not run third-party advertising
+          trackers on this site. Standard server and hosting logs may include
+          technical information such as IP address and request times for
+          security and reliability.
+        </p>
+        <p>
+          Questions about privacy: reach out on{" "}
+          <ExternalLink href={DISCORD_INVITE_URL}>Discord</ExternalLink>.
+        </p>
+      </section>
+
+      <section className="about-page__section" id="terms">
+        <h2>Terms</h2>
+        <p>
+          {SITE_NAME} is a free, unofficial fan project provided as-is, without
+          warranties of any kind. Features may change, break, or be reset as the
+          game develops.
+        </p>
+        <p>
+          You must not cheat, exploit bugs, harass other players, or attempt to
+          disrupt accounts, trades, or the service. We may suspend or remove
+          accounts that abuse the game or other players.
+        </p>
+        <p>
+          In-game Cash, packs, and cards have no real-world value and cannot be
+          redeemed for money. Do not use {SITE_NAME} for anything illegal.
+        </p>
+        <p>
+          Bloons TD 6 and related trademarks belong to their owners. By using
+          this site you agree to these terms and the privacy notes above.
+        </p>
+      </section>
     </article>
   );
 }

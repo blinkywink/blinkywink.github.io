@@ -128,6 +128,7 @@ begin
     last_daily_claim = null,
     last_daily_card_claim = null,
     last_bloonle_day = null,
+    last_blowfree_day = null,
     avatar_card_id = null,
     avatar_zoom = 1.35,
     avatar_x = 0.5,

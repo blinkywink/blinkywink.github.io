@@ -34,6 +34,7 @@ import { HeroesLab } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
 import { TierSortButton } from "./TierSortButton";
 import { VisibleCardGrid } from "./VisibleCardGrid";
+import { ExchangeCompare } from "./ExchangeCompare";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
 import { LoadingDots } from "./LoadingDots";
@@ -119,7 +120,9 @@ export function CardLab({
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const [exchangeOpen, setExchangeOpen] = useState(false);
-  const { owned: myOwned, paragonOf } = useCardCollection();
+  /** After pick — review You vs Them before sending. */
+  const [exchangeCardId, setExchangeCardId] = useState<string | null>(null);
+  const { owned: myOwned, paragonOf, visualSeedOf } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
     () => (viewerCollection ? new Set(viewerCollection.ownedIds) : null),
   );
@@ -281,16 +284,26 @@ export function CardLab({
     setTradeBusy(false);
   }
 
-  async function onRequestExchange(cardIds: string[]) {
-    if (!viewer || tradeBusy) return;
+  function closeExchange() {
+    setExchangeOpen(false);
+    setExchangeCardId(null);
+  }
+
+  function onPickExchangeCard(cardIds: string[]) {
     const cardId = cardIds[0];
     if (!cardId || !needsVisualSeed(cardId)) return;
+    setExchangeCardId(cardId);
+  }
+
+  async function onSendExchange() {
+    if (!viewer || tradeBusy || !exchangeCardId) return;
+    if (!needsVisualSeed(exchangeCardId)) return;
     setTradeBusy(true);
     setTradeMsg(null);
     try {
-      await requestExchange(viewer.username, cardId);
+      await requestExchange(viewer.username, exchangeCardId);
       await pingInbox(viewer.userId).catch(() => undefined);
-      setExchangeOpen(false);
+      closeExchange();
       setTradeMsg(`Exchange request sent to ${viewer.username}.`);
     } catch (err) {
       setTradeMsg(err instanceof Error ? err.message : "Could not send exchange.");
@@ -398,7 +411,8 @@ export function CardLab({
     if (!focused && !exchangeOpen && view.kind === "towers") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (exchangeOpen) setExchangeOpen(false);
+      if (exchangeCardId) setExchangeCardId(null);
+      else if (exchangeOpen) closeExchange();
       else if (focused) setFocused(null);
       else if (view.kind !== "towers") {
         setQuery("");
@@ -407,7 +421,7 @@ export function CardLab({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [exchangeOpen, focused, view.kind]);
+  }, [exchangeCardId, exchangeOpen, focused, view.kind]);
 
   useEffect(() => {
     if (!focused) return;
@@ -489,24 +503,28 @@ export function CardLab({
               type="button"
               className="card-lab__exchange-backdrop"
               aria-label="Close"
-              onClick={() => setExchangeOpen(false)}
+              onClick={closeExchange}
             />
             <div className="card-lab__exchange-panel">
               <div className="card-lab__exchange-head">
                 <div>
                   <p className="eyebrow">Exchange</p>
-                  <h2>Swap a copy with {viewer.username}</h2>
+                  <h2>
+                    {exchangeCardId
+                      ? `Compare with ${viewer.username}`
+                      : `Swap a copy with ${viewer.username}`}
+                  </h2>
                   <p>
-                    Only Tier 5+ cards and paragons are unique — pick one you
-                    both own to swap art seeds. They name a Cash fee, then you
-                    accept or decline. Nothing moves until you agree.
+                    {exchangeCardId
+                      ? "Check art seed and degree differences, then send the request. They’ll name a Cash fee — you accept or decline."
+                      : "Only Tier 5+ cards and paragons are unique — pick one you both own. You’ll compare copies before sending."}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm desktop-only-close"
                   aria-label="Close"
-                  onClick={() => setExchangeOpen(false)}
+                  onClick={closeExchange}
                 >
                   ✕
                 </button>
@@ -516,12 +534,48 @@ export function CardLab({
                   You don’t share any Tier 5+ or paragon cards with{" "}
                   {viewer.username} yet.
                 </p>
+              ) : exchangeCardId ? (
+                <div className="card-lab__exchange-review">
+                  <ExchangeCompare
+                    cardId={exchangeCardId}
+                    mine={{
+                      label: "You",
+                      seed: visualSeedOf(exchangeCardId),
+                      degree: paragonOf(exchangeCardId)?.degree,
+                      xp: paragonOf(exchangeCardId)?.xp,
+                    }}
+                    theirs={{
+                      label: viewer.username,
+                      seed: remoteSeeds[exchangeCardId] ?? null,
+                      degree: remoteParagons[exchangeCardId]?.degree,
+                      xp: remoteParagons[exchangeCardId]?.xp,
+                    }}
+                  />
+                  <div className="card-lab__exchange-actions">
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      disabled={tradeBusy}
+                      onClick={() => setExchangeCardId(null)}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      disabled={tradeBusy}
+                      onClick={() => void onSendExchange()}
+                    >
+                      {tradeBusy ? "Sending…" : "Send exchange"}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <OwnedCardPicker
                   owned={sharedOwned}
                   selectedIds={new Set()}
-                  onConfirm={(ids) => void onRequestExchange(ids)}
-                  confirmLabel={tradeBusy ? "Sending…" : "Send exchange"}
+                  onConfirm={onPickExchangeCard}
+                  confirmLabel="Compare copies"
                   multi={false}
                   maxSelected={1}
                   disabled={tradeBusy}
@@ -625,6 +679,7 @@ export function CardLab({
                   disabled={tradeBusy}
                   onClick={() => {
                     setTradeMsg(null);
+                    setExchangeCardId(null);
                     setExchangeOpen(true);
                   }}
                 >

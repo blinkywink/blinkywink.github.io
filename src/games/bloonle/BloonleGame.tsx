@@ -10,7 +10,12 @@ type Props = {
   /** Fired once when solved in ≤3 guesses. */
   onFastSolve?: (guessCount: number) => void;
   /** Fired once when a round ends (win or lose). */
-  onRunEnd?: (info: { cleared: boolean; coinsEarned: number }) => void;
+  onRunEnd?: (info: {
+    cleared: boolean;
+    coinsEarned: number;
+    guesses: number;
+    answer: string;
+  }) => void;
 };
 
 const ROWS = [
@@ -84,17 +89,28 @@ export function BloonleGame({
           ? state.reward
           : bloonleSolveReward(state.mode, guesses);
       if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
-      onRunEnd?.({ cleared: true, coinsEarned });
+      onRunEnd?.({
+        cleared: true,
+        coinsEarned,
+        guesses,
+        answer: state.puzzle.slug,
+      });
       return;
     }
     if (state.status === "lost") {
-      onRunEnd?.({ cleared: false, coinsEarned: 0 });
+      onRunEnd?.({
+        cleared: false,
+        coinsEarned: 0,
+        guesses: state.guesses.length,
+        answer: state.puzzle.slug,
+      });
     }
   }, [
     state.status,
     state.guesses.length,
     state.mode,
     state.reward,
+    state.puzzle.slug,
     onFastSolve,
     onRunEnd,
   ]);

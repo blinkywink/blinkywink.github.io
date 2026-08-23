@@ -10,6 +10,8 @@ import {
   BLUE_BLOON_IMAGE,
   CATCH_CLEAR_BANANAS,
   CATCH_LIVES,
+  CATCH_LOGIC_H,
+  CATCH_LOGIC_W,
   GREEN_BLOON_IMAGE,
   MOAB_IMAGE,
   MONKEY_IMAGE,
@@ -17,10 +19,10 @@ import {
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   RED_BLOON_IMAGE,
-  catchUiScale,
 } from "./config";
 import { useBananaCatch, type DropKind } from "./useBananaCatch";
 import { useCatchBgm } from "./useCatchBgm";
+import { playBloonPop } from "../../lib/packSounds";
 
 type Props = {
   onBack: () => void;
@@ -55,6 +57,17 @@ function preloadDropImages(): Map<DropKind, HTMLImageElement> {
   return map;
 }
 
+type Spark = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  max: number;
+  r: number;
+  color: string;
+};
+
 export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   const {
     state,
@@ -63,26 +76,33 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
     aimAt,
     aimByDelta,
     setFieldSize,
+    setDisplayWidth,
     setPaintLoop,
     setPlayerMover,
+    setBananaPickupFx,
     getLiveDrops,
   } = useBananaCatch();
   const fieldRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<HTMLImageElement>(null);
   const dropImagesRef = useRef<Map<DropKind, HTMLImageElement> | null>(null);
-  const fieldSizeRef = useRef({ w: state.fieldW, h: state.fieldH });
-  fieldSizeRef.current = { w: state.fieldW, h: state.fieldH };
+  const sparksRef = useRef<Spark[]>([]);
+  const displaySizeRef = useRef({ w: CATCH_LOGIC_W, h: CATCH_LOGIC_H });
   const prevPhase = useRef(state.phase);
   const [pointerLocked, setPointerLocked] = useState(false);
   const [lockUnavailable, setLockUnavailable] = useState(!USE_POINTER_LOCK);
   const [musicVolume, setMusicVolume] = useState(() => readCatchBgmVolume());
+  const [bananaPulse, setBananaPulse] = useState(0);
 
   const resumeBgm = useCatchBgm(state.phase, musicVolume);
 
   useEffect(() => {
     dropImagesRef.current = preloadDropImages();
   }, []);
+
+  useEffect(() => {
+    setFieldSize(CATCH_LOGIC_W, CATCH_LOGIC_H);
+  }, [setFieldSize]);
 
   useEffect(() => {
     setPlayerMover((x) => {
@@ -93,35 +113,80 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   }, [setPlayerMover]);
 
   useEffect(() => {
+    setBananaPickupFx((x, y) => {
+      playBloonPop(0.45);
+      setBananaPulse((n) => n + 1);
+      for (let i = 0; i < 18; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 120 + Math.random() * 220;
+        sparksRef.current.push({
+          x,
+          y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - 80,
+          life: 1,
+          max: 0.35 + Math.random() * 0.35,
+          r: 3 + Math.random() * 5,
+          color: Math.random() > 0.45 ? "#ffe566" : "#ffb020",
+        });
+      }
+    });
+    return () => setBananaPickupFx(null);
+  }, [setBananaPickupFx]);
+
+  useEffect(() => {
     const paint = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const { w, h } = fieldSizeRef.current;
-      if (w <= 0 || h <= 0) return;
+      const { w: dw, h: dh } = displaySizeRef.current;
+      if (dw < 2 || dh < 2) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const pw = Math.round(w * dpr);
-      const ph = Math.round(h * dpr);
+      const pw = Math.max(1, Math.round(dw * dpr));
+      const ph = Math.max(1, Math.round(dh * dpr));
       if (canvas.width !== pw || canvas.height !== ph) {
         canvas.width = pw;
         canvas.height = ph;
-        canvas.style.width = `${w}px`;
-        canvas.style.height = `${h}px`;
       }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
+      ctx.setTransform(
+        (pw / CATCH_LOGIC_W),
+        0,
+        0,
+        (ph / CATCH_LOGIC_H),
+        0,
+        0,
+      );
+      ctx.clearRect(0, 0, CATCH_LOGIC_W, CATCH_LOGIC_H);
       const images = dropImagesRef.current;
-      if (!images) return;
-      for (const d of getLiveDrops()) {
-        const img = images.get(d.kind);
-        if (!img?.complete || !img.naturalWidth) continue;
-        ctx.save();
-        ctx.translate(d.x, d.y);
-        ctx.rotate((d.rot * Math.PI) / 180);
-        ctx.drawImage(img, -d.w / 2, -d.h / 2, d.w, d.h);
-        ctx.restore();
+      if (images) {
+        for (const d of getLiveDrops()) {
+          const img = images.get(d.kind);
+          if (!img?.complete || !img.naturalWidth) continue;
+          ctx.save();
+          ctx.translate(d.x, d.y);
+          ctx.rotate((d.rot * Math.PI) / 180);
+          ctx.drawImage(img, -d.w / 2, -d.h / 2, d.w, d.h);
+          ctx.restore();
+        }
       }
+      const dt = 1 / 60;
+      const next: Spark[] = [];
+      for (const p of sparksRef.current) {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 420 * dt;
+        p.life -= dt / p.max;
+        if (p.life <= 0) continue;
+        next.push(p);
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      sparksRef.current = next;
+      ctx.globalAlpha = 1;
     };
     setPaintLoop(paint);
     return () => setPaintLoop(null);
@@ -156,15 +221,17 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     const el = fieldRef.current;
     if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const box = entries[0]?.contentRect;
-      if (!box) return;
-      setFieldSize(box.width, box.height);
-    });
+    const sync = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      displaySizeRef.current = { w, h };
+      setDisplayWidth(w);
+    };
+    const ro = new ResizeObserver(sync);
     ro.observe(el);
-    setFieldSize(el.clientWidth, el.clientHeight);
+    sync();
     return () => ro.disconnect();
-  }, [setFieldSize]);
+  }, [setDisplayWidth]);
 
   useEffect(() => {
     const was = prevPhase.current;
@@ -229,69 +296,73 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
 
   function beginRun() {
     resumeBgm();
+    sparksRef.current = [];
     start();
     if (USE_POINTER_LOCK && !lockUnavailable) {
-      // User gesture from Start — lock immediately.
       queueMicrotask(() => requestLock());
     }
   }
 
-  const ui = catchUiScale(state.fieldW, state.fieldH);
-  const playerW = PLAYER_WIDTH * ui;
-  const playerH = PLAYER_HEIGHT * ui;
+  const playerWPct = (PLAYER_WIDTH / CATCH_LOGIC_W) * 100;
+  const playerHPct = (PLAYER_HEIGHT / CATCH_LOGIC_H) * 100;
 
   return (
     <div className={`catch-page${done ? " is-done" : ""}`}>
       <GameHeader title="BANANA CATCH" icon="" />
 
       <main className="catch-main">
-        <div
-          ref={fieldRef}
-          className={`catch-field${playing ? " is-playing" : ""}${pointerLocked ? " is-locked" : ""}`}
-          role="application"
-          aria-label="Banana catch playfield"
-          onPointerDown={(e) => {
-            if (!playing) return;
-            pointerToAim(e.clientX);
-            if (useRelativeMouse) {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              return;
-            }
-            if (
-              USE_POINTER_LOCK &&
-              !lockUnavailable &&
-              document.pointerLockElement !== e.currentTarget
-            ) {
-              requestLock();
-            }
-          }}
-          onPointerMove={(e) => {
-            if (!playing) return;
-            if (useRelativeMouse) {
-              aimByDelta(e.movementX);
-              return;
-            }
-            pointerToAim(e.clientX);
-          }}
-        >
-          <div className="catch-field__sky" aria-hidden="true" />
+        <div className="catch-board-slot">
+          <div
+            ref={fieldRef}
+            className={`catch-field${playing ? " is-playing" : ""}${pointerLocked ? " is-locked" : ""}`}
+            role="application"
+            aria-label="Banana catch playfield"
+            onPointerDown={(e) => {
+              if (!playing) return;
+              pointerToAim(e.clientX);
+              if (useRelativeMouse) {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                return;
+              }
+              if (
+                USE_POINTER_LOCK &&
+                !lockUnavailable &&
+                document.pointerLockElement !== e.currentTarget
+              ) {
+                requestLock();
+              }
+            }}
+            onPointerMove={(e) => {
+              if (!playing) return;
+              if (useRelativeMouse) {
+                aimByDelta(e.movementX);
+                return;
+              }
+              pointerToAim(e.clientX);
+            }}
+          >
+            <div className="catch-field__sky" aria-hidden="true" />
 
-          <canvas
-            ref={canvasRef}
-            className="catch-canvas"
-            aria-hidden="true"
-          />
+            <canvas
+              ref={canvasRef}
+              className="catch-canvas"
+              aria-hidden="true"
+            />
 
-          <div className="catch-hud">
-            <span className="catch-stat" title="Bananas collected">
-              <img src={BANANA_IMAGE} alt="" width={28} height={28} />
-              <strong>{state.bananas}</strong>
-            </span>
-            <LivesMeter maxAttempts={CATCH_LIVES} attemptsUsed={attemptsUsed} />
-            <span className="catch-stat catch-stat--cash">
-              <CashAmount amount={state.cashEarned} size={18} />
-            </span>
-          </div>
+            <div className="catch-hud">
+              <span
+                className={`catch-stat${bananaPulse ? " is-pulse" : ""}`}
+                title="Bananas collected"
+                key={bananaPulse}
+              >
+                <img src={BANANA_IMAGE} alt="" width={28} height={28} />
+                <strong>{state.bananas}</strong>
+              </span>
+              <LivesMeter maxAttempts={CATCH_LIVES} attemptsUsed={attemptsUsed} />
+              <span className="catch-stat catch-stat--cash">
+                <CashAmount amount={state.cashEarned} size={18} />
+              </span>
+            </div>
 
           {state.phase === "ready" ? (
             <label className="catch-volume">
@@ -316,8 +387,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
             alt=""
             draggable={false}
             style={{
-              width: playerW,
-              height: playerH,
+              width: `${playerWPct}%`,
+              height: `${playerHPct}%`,
               left: `${state.playerX * 100}%`,
             }}
           />
@@ -375,6 +446,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
               </div>
             </div>
           ) : null}
+        </div>
         </div>
       </main>
     </div>

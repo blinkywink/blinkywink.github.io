@@ -22,7 +22,10 @@ export type GameId =
   | "camodetection"
   | "bloonssweeper"
   | "bananacatch"
-  | "bloonhero";
+  | "bloonhero"
+  | "roundcheck"
+  | "ricoshot"
+  | "blowfree";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -183,22 +186,46 @@ function PricePreview() {
 }
 
 function OrderPreview() {
-  const faces = [
-    "/images/towers/dart-monkey/dart-monkey.webp",
-    "/images/towers/ninja-monkey/ninja-monkey.webp",
-    "/images/towers/wizard-monkey/wizard-monkey.webp",
-    "/images/towers/alchemist/alchemist.webp",
-    "/images/towers/super-monkey/super-monkey.webp",
+  const row = [
+    {
+      src: "/images/towers/dart-monkey/dart-monkey.webp",
+      wrong: false,
+      label: "$",
+    },
+    {
+      src: "/images/towers/ninja-monkey/ninja-monkey.webp",
+      wrong: true,
+      label: "$$",
+    },
+    {
+      src: "/images/towers/super-monkey/super-monkey.webp",
+      wrong: false,
+      label: "$$$",
+    },
   ] as const;
 
   return (
     <div className="game-preview game-preview--order" aria-hidden>
-      {faces.map((src, i) => (
-        <div key={src} className="game-preview__order-slot">
-          <span>{i + 1}</span>
-          <img src={src} alt="" draggable={false} />
-        </div>
-      ))}
+      <div className="game-preview__order-row">
+        {row.map((t, i) => (
+          <div
+            key={t.src}
+            className={`game-preview__order-tile${t.wrong ? " is-swap" : ""}`}
+          >
+            <em>{i + 1}</em>
+            <img src={t.src} alt="" draggable={false} />
+          </div>
+        ))}
+      </div>
+      <div className="game-preview__order-scale" aria-hidden>
+        <span className="game-preview__order-scale-rail" />
+        {row.map((t) => (
+          <span key={t.label} className="game-preview__order-scale-tick">
+            <i />
+            <em>{t.label}</em>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -215,6 +242,201 @@ function BloonlePreview() {
             {ch}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function RoundCheckPreview() {
+  const chips = [
+    { src: "/images/bloons/btd6/ceramic.webp", n: 20 },
+    { src: "/images/bloons/btd6/moab.webp", n: 2 },
+  ];
+  return (
+    <div className="game-preview game-preview--roundcheck" aria-hidden>
+      <div className="game-preview__roundcheck-board">
+        {chips.map((c) => (
+          <span key={c.src} className="game-preview__roundcheck-chip">
+            <img src={c.src} alt="" draggable={false} />
+            <em>×{c.n}</em>
+          </span>
+        ))}
+      </div>
+      <div className="game-preview__roundcheck-slide">
+        <span className="game-preview__roundcheck-num">?</span>
+        <span className="game-preview__roundcheck-rail">
+          <i style={{ left: "62%" }} />
+        </span>
+        <span className="game-preview__roundcheck-ends">
+          <em>40</em>
+          <em>100</em>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function HeliumPopPreview() {
+  return (
+    <div className="game-preview game-preview--heliumpop" aria-hidden>
+      <div className="game-preview__helium-meadow" />
+      <div className="game-preview__helium-field">
+        <img
+          className="game-preview__helium-bloon game-preview__helium-bloon--a"
+          src="/images/bloons/btd6/red.webp"
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="game-preview__helium-bloon game-preview__helium-bloon--b"
+          src="/images/bloons/btd6/yellow.webp"
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="game-preview__helium-bloon game-preview__helium-bloon--c"
+          src="/images/bloons/btd6/pink.webp"
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="game-preview__helium-bloon game-preview__helium-bloon--d"
+          src="/images/bloons/btd6/ceramic.webp"
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="game-preview__helium-bloon game-preview__helium-bloon--e"
+          src="/images/bloons/btd6/blue.webp"
+          alt=""
+          draggable={false}
+        />
+        <span className="game-preview__helium-pop" />
+        <img
+          className="game-preview__helium-star"
+          src="/images/bloons/shuriken.webp"
+          alt=""
+          draggable={false}
+        />
+        <img
+          className="game-preview__helium-tower"
+          src="/images/towers/ninja-monkey/ninja-monkey.webp"
+          alt=""
+          draggable={false}
+        />
+      </div>
+    </div>
+  );
+}
+
+type BlowPreviewCell = {
+  end?: "red" | "blue" | "yellow" | "pink" | "green";
+  color?: "red" | "blue" | "yellow" | "pink" | "green";
+  l?: boolean;
+  r?: boolean;
+  u?: boolean;
+  d?: boolean;
+};
+
+const BLOW_PREVIEW_PIPE: Record<
+  NonNullable<BlowPreviewCell["color"]>,
+  string
+> = {
+  red: "#ff5a5a",
+  blue: "#5a9fff",
+  yellow: "#ffe566",
+  pink: "#ff7ab8",
+  green: "#6fd99a",
+};
+
+const BLOW_PREVIEW_END: Record<
+  NonNullable<BlowPreviewCell["end"]>,
+  string
+> = {
+  red: "/images/bloons/btd6/red.webp",
+  blue: "/images/bloons/btd6/blue.webp",
+  yellow: "/images/bloons/btd6/yellow.webp",
+  pink: "/images/bloons/btd6/pink.webp",
+  green: "/images/bloons/btd6/green.webp",
+};
+
+/** Mini solved board — reads as Flow Free at a glance. */
+const BLOW_PREVIEW_CELLS: BlowPreviewCell[] = [
+  // row 0 — red across the top
+  { end: "red", color: "red", r: true },
+  { color: "red", l: true, r: true },
+  { color: "red", l: true, r: true },
+  { color: "red", l: true, r: true },
+  { end: "red", color: "red", l: true },
+  // row 1 — green
+  { end: "green", color: "green", r: true },
+  { color: "green", l: true, r: true },
+  { color: "green", l: true, r: true },
+  { color: "green", l: true, r: true },
+  { end: "green", color: "green", l: true },
+  // row 2 — blue
+  { end: "blue", color: "blue", r: true },
+  { color: "blue", l: true, r: true },
+  { color: "blue", l: true, r: true },
+  { end: "blue", color: "blue", l: true },
+  {},
+  // row 3 — pink stub
+  {},
+  {},
+  {},
+  {},
+  { end: "pink", color: "pink", d: true },
+  // row 4 — yellow + pink end
+  { end: "yellow", color: "yellow", r: true },
+  { color: "yellow", l: true, r: true },
+  { color: "yellow", l: true, r: true },
+  { end: "yellow", color: "yellow", l: true },
+  { end: "pink", color: "pink", u: true },
+];
+
+function BlowFreePreview() {
+  return (
+    <div className="game-preview game-preview--blowfree" aria-hidden>
+      <div className="game-preview__blow-grid">
+        {BLOW_PREVIEW_CELLS.map((cell, i) => {
+          const pipe = cell.color ? BLOW_PREVIEW_PIPE[cell.color] : null;
+          const onPipe = Boolean(pipe && (cell.l || cell.r || cell.u || cell.d));
+          return (
+            <span
+              key={i}
+              className={`game-preview__blow-cell${onPipe ? " is-pipe" : ""}${cell.end ? " is-end" : ""}`}
+            >
+              {onPipe && pipe ? (
+                <>
+                  <span
+                    className="game-preview__blow-joint"
+                    style={{ background: pipe }}
+                  />
+                  {cell.l || cell.r ? (
+                    <span
+                      className={`game-preview__blow-arm game-preview__blow-arm--h${cell.l ? " l" : ""}${cell.r ? " r" : ""}`}
+                      style={{ background: pipe }}
+                    />
+                  ) : null}
+                  {cell.u || cell.d ? (
+                    <span
+                      className={`game-preview__blow-arm game-preview__blow-arm--v${cell.u ? " u" : ""}${cell.d ? " d" : ""}`}
+                      style={{ background: pipe }}
+                    />
+                  ) : null}
+                </>
+              ) : null}
+              {cell.end ? (
+                <img
+                  className="game-preview__blow-bloon"
+                  src={BLOW_PREVIEW_END[cell.end]}
+                  alt=""
+                  draggable={false}
+                />
+              ) : null}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -285,26 +507,26 @@ function BananaCatchPreview() {
   return (
     <div className="game-preview game-preview--catch" aria-hidden>
       <img
-        className="game-preview__catch-banana game-preview__catch-banana--a"
+        className="game-preview__catch-fall game-preview__catch-fall--banana"
         src="/images/bananas/banana.webp"
         alt=""
         draggable={false}
       />
       <img
-        className="game-preview__catch-banana game-preview__catch-banana--b"
+        className="game-preview__catch-fall game-preview__catch-fall--banana2"
         src="/images/bananas/banana.webp"
         alt=""
         draggable={false}
       />
       <img
-        className="game-preview__catch-bloon"
-        src="/images/bloons/red-bloon.png"
+        className="game-preview__catch-fall game-preview__catch-fall--bloon"
+        src="/images/bloons/red-bloon.webp"
         alt=""
         draggable={false}
       />
       <img
-        className="game-preview__catch-moab"
-        src="/images/bloons/moab.webp"
+        className="game-preview__catch-fall game-preview__catch-fall--pink"
+        src="/images/bloons/pink-bloon.webp"
         alt=""
         draggable={false}
       />
@@ -439,11 +661,11 @@ export function ArcadeHome({
 
   const games = [
     {
-      id: "zoomed" as const,
-      title: "ZOOMED",
-      blurb: "Guess the tower from the image.",
-      label: "Zoomed, Guess the tower from the image",
-      preview: <ZoomedPreview />,
+      id: "bananacatch" as const,
+      title: "BANANA CATCH",
+      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
+      label: "Banana Catch, Endless banana catch with escalating bloons",
+      preview: <BananaCatchPreview />,
     },
     {
       id: "bloonle" as const,
@@ -453,11 +675,18 @@ export function ArcadeHome({
       preview: <BloonlePreview />,
     },
     {
-      id: "bananacatch" as const,
-      title: "BANANA CATCH",
-      blurb: "Catch falling bananas forever, dodge colored bloons & blimps.",
-      label: "Banana Catch, Endless banana catch with escalating bloons",
-      preview: <BananaCatchPreview />,
+      id: "ricoshot" as const,
+      title: "HELIUM POP",
+      blurb: "Clear all the bloons with ninjas.",
+      label: "Helium Pop, Clear all the bloons with ninjas",
+      preview: <HeliumPopPreview />,
+    },
+    {
+      id: "zoomed" as const,
+      title: "ZOOMED",
+      blurb: "Guess the tower from the image.",
+      label: "Zoomed, Guess the tower from the image",
+      preview: <ZoomedPreview />,
     },
     {
       id: "bloonhero" as const,
@@ -467,18 +696,11 @@ export function ArcadeHome({
       preview: <BloonHeroPreview />,
     },
     {
-      id: "bloonssweeper" as const,
-      title: "BLOONS SWEEPER",
-      blurb: "Minesweeper, red bloons are the mines.",
-      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
-      preview: <SweeperPreview />,
-    },
-    {
-      id: "pricecheck" as const,
-      title: "PRICE CHECK",
-      blurb: "Which tower costs more?",
-      label: "Price Check, Which tower costs more?",
-      preview: <PricePreview />,
+      id: "blowfree" as const,
+      title: "BLOW FREE",
+      blurb: "Daily Flow Free. Big grid, big cash.",
+      label: "Blow Free, Daily Flow Free with colored bloons",
+      preview: <BlowFreePreview />,
     },
     {
       id: "camodetection" as const,
@@ -488,11 +710,18 @@ export function ArcadeHome({
       preview: <CamoPreview />,
     },
     {
-      id: "orderup" as const,
-      title: "ORDER UP",
-      blurb: "Drag towers cheap to pricey before time runs out.",
-      label: "Order Up, Drag towers by price before time runs out",
-      preview: <OrderPreview />,
+      id: "pricecheck" as const,
+      title: "PRICE CHECK",
+      blurb: "Which tower costs more?",
+      label: "Price Check, Which tower costs more?",
+      preview: <PricePreview />,
+    },
+    {
+      id: "roundcheck" as const,
+      title: "ROUND CHECK",
+      blurb: "Guess the round 1–100 in 4 or less. Higher or lower.",
+      label: "Round Check, Guess the freeplay round 1 to 100 in 4 or less, higher or lower",
+      preview: <RoundCheckPreview />,
     },
     {
       id: "geoguessr" as const,
@@ -501,7 +730,22 @@ export function ArcadeHome({
       label: "Geoguessr, Guess the map from a zoomed crop",
       preview: <MapPreview />,
     },
+    {
+      id: "bloonssweeper" as const,
+      title: "BLOONS SWEEPER",
+      blurb: "Minesweeper, red bloons are the mines.",
+      label: "Bloons Sweeper, Classic minesweeper with red bloon mines",
+      preview: <SweeperPreview />,
+    },
+    {
+      id: "orderup" as const,
+      title: "ORDER UP",
+      blurb: "Drag towers cheap to pricey before time runs out.",
+      label: "Order Up, Drag towers by price before time runs out",
+      preview: <OrderPreview />,
+    },
   ];
+
   const shown = pick?.length
     ? pick
         .map((id) => games.find((g) => g.id === id))

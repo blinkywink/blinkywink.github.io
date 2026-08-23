@@ -7,6 +7,12 @@ import {
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cardSpecById } from "../lib/cardCatalog";
+import {
+  HUB_PEEK_CARD_IDS,
+  hubPeekCardSrc,
+  hubPeekPacks,
+  hubPeekPackSrc,
+} from "../lib/hubPeeks";
 import { fetchTopLeaderboard } from "../lib/leaderboardRanks";
 import {
   aboutPath,
@@ -19,15 +25,6 @@ import {
   userCollectionPath,
   type GamePath,
 } from "../lib/routes";
-import {
-  featuredShopPacks,
-  resolveTowerPackTheme,
-  type PackDef,
-} from "../lib/packTheme";
-import {
-  getRemoteFeaturedTowers,
-  subscribeRemoteFeatured,
-} from "../lib/remoteShop";
 import { isDesktopShell } from "../lib/desktopOnline";
 import {
   DISCORD_INVITE_URL,
@@ -43,20 +40,6 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
-
-const CARD_PEEK_IDS = [
-  "dart-monkey-0-0-0",
-  "ninja-monkey-5-0-0",
-  "super-monkey-0-5-0",
-] as const;
-
-function packPeekSrc(pack: PackDef): string {
-  if (pack.coverArt) return pack.coverArt;
-  if (pack.tower) {
-    return resolveTowerPackTheme(pack.tower)?.image ?? "/images/ui/monkey-pack.jpg";
-  }
-  return "/images/ui/monkey-pack.jpg";
-}
 
 function DestTile({
   to,
@@ -126,18 +109,10 @@ export function HomeHub() {
   const [topPlayers, setTopPlayers] = useState<
     Awaited<ReturnType<typeof fetchTopLeaderboard>>
   >([]);
-  const [remoteTowers, setRemoteTowers] = useState(getRemoteFeaturedTowers);
-  useEffect(
-    () => subscribeRemoteFeatured(() => setRemoteTowers(getRemoteFeaturedTowers())),
-    [],
-  );
-  const shopPeeks = useMemo(
-    () => featuredShopPacks(undefined, 0, remoteTowers ?? undefined).slice(0, 3),
-    [remoteTowers],
-  );
+  const shopPeeks = useMemo(() => hubPeekPacks(), []);
   const cardPeeks = useMemo(
     () =>
-      CARD_PEEK_IDS.map((id) => cardSpecById(id)).filter(
+      HUB_PEEK_CARD_IDS.map((id) => cardSpecById(id)).filter(
         (c): c is NonNullable<typeof c> => Boolean(c),
       ),
     [],
@@ -204,8 +179,8 @@ export function HomeHub() {
         </div>
         <ArcadeHome
           embed
-          limit={3}
-          pick={["zoomed", "bloonle", "bananacatch"]}
+          limit={4}
+          pick={["bananacatch", "bloonle", "ricoshot", "zoomed"]}
           onPlay={(game) => navigate(gamePath(game as GamePath))}
         />
 
@@ -221,7 +196,7 @@ export function HomeHub() {
                 <img
                   key={pack.id}
                   className={`home-hub__img-peek is-pack is-${i}`}
-                  src={packPeekSrc(pack)}
+                  src={hubPeekPackSrc(pack)}
                   alt=""
                   draggable={false}
                   decoding="async"
@@ -241,7 +216,7 @@ export function HomeHub() {
                 <img
                   key={card.id}
                   className={`home-hub__img-peek is-card is-${i}`}
-                  src={card.entity.image}
+                  src={hubPeekCardSrc(card.id)}
                   alt=""
                   draggable={false}
                   decoding="async"
@@ -256,9 +231,29 @@ export function HomeHub() {
             title="Market"
             blurb="Buy and sell cards with other players."
           >
-            <div className="home-hub__market-actions">
-              <span className="home-hub__market-btn is-buy">Buy</span>
-              <span className="home-hub__market-btn is-sell">Sell</span>
+            <div className="home-hub__market-listing">
+              <img
+                className="home-hub__market-card"
+                src={hubPeekCardSrc(
+                  cardPeeks[1]?.id ?? cardPeeks[0]?.id ?? HUB_PEEK_CARD_IDS[0],
+                )}
+                alt=""
+                draggable={false}
+                decoding="async"
+              />
+              <div className="home-hub__market-meta">
+                <span className="home-hub__market-price">
+                  <img
+                    src="/images/ui/money-icon.webp"
+                    alt=""
+                    width={16}
+                    height={16}
+                    draggable={false}
+                  />
+                  2,400
+                </span>
+                <span className="home-hub__market-buy">Purchase</span>
+              </div>
             </div>
           </DestTile>
         </div>

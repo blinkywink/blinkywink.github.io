@@ -1,0 +1,1 @@
+export { RicoShotGame } from "./RicoShotGame";

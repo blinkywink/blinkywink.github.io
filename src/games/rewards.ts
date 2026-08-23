@@ -98,6 +98,16 @@ export function bloonlePracticeReward(): number {
   return 2500;
 }
 
+/** Blow Free daily clear — one hard grid per UTC day. */
+export function blowFreeDailyReward(): number {
+  return 2800;
+}
+
+/** Blow Free practice — still pays, but not daily money. */
+export function blowFreePracticeReward(): number {
+  return 450;
+}
+
 /** Faster solves pay more, never above the mode cap. First try is the max. */
 export function bloonleSolveReward(
   mode: "daily" | "practice",
@@ -109,4 +119,40 @@ export function bloonleSolveReward(
   const mult =
     guesses <= 1 ? 1 : guesses === 2 ? 0.85 : guesses === 3 ? 0.7 : 0.55;
   return Math.min(cap, Math.round(cap * mult));
+}
+
+/**
+ * Round Check — one freeplay-round puzzle inside a 4-solve run.
+ * First-try solve = 1000; four perfects = 4000.
+ * Misses pay almost nothing so binary-search spam can't farm cash.
+ */
+export function roundCheckPuzzleReward(input: {
+  guessCount: number;
+  distance: number;
+  solved: boolean;
+}): number {
+  const cap = 1000;
+  const guesses = Math.max(1, Math.min(4, Math.floor(input.guessCount)));
+  const dist = Math.max(0, Math.floor(input.distance));
+
+  const guessMult =
+    guesses <= 1 ? 1 : guesses === 2 ? 0.8 : guesses === 3 ? 0.6 : 0.45;
+
+  if (input.solved) {
+    return Math.min(cap, Math.round(cap * guessMult));
+  }
+
+  // Unsolved: only a tiny tip if you were extremely close — otherwise 0.
+  if (dist <= 1) return 25;
+  if (dist <= 2) return 10;
+  return 0;
+}
+
+/** @deprecated Use roundCheckPuzzleReward — kept for any stray imports. */
+export function roundCheckReward(input: {
+  guessCount: number;
+  distance: number;
+  solved: boolean;
+}): number {
+  return roundCheckPuzzleReward(input);
 }

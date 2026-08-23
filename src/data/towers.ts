@@ -4,7 +4,25 @@ import data from "./towers.json";
 
 export const towerEntities = data as TowerEntity[];
 
-export const towers = towerEntities.filter((e) => e.type === "tower");
+/**
+ * Skywarden is the newest Magic tower and should list after Mermonkey
+ * (JSON currently inserts it earlier).
+ */
+function orderBaseTowers(list: TowerEntity[]): TowerEntity[] {
+  const next = list.slice();
+  const sky = next.findIndex((t) => t.tower === "Skywarden");
+  const mer = next.findIndex((t) => t.tower === "Mermonkey");
+  if (sky < 0 || mer < 0 || sky > mer) return next;
+  const [skywarden] = next.splice(sky, 1);
+  if (!skywarden) return list;
+  const merAfter = next.findIndex((t) => t.tower === "Mermonkey");
+  next.splice(merAfter + 1, 0, skywarden);
+  return next;
+}
+
+export const towers = orderBaseTowers(
+  towerEntities.filter((e) => e.type === "tower"),
+);
 export const upgrades = towerEntities.filter((e) => e.type === "upgrade" || e.type === "paragon");
 export const byTower = towerEntities.reduce<Record<string, TowerEntity[]>>((acc, e) => {
   (acc[e.tower] ??= []).push(e);

@@ -12,10 +12,13 @@ import { useAuth } from "./auth/AuthProvider";
 import { useHeroFx } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
 import { BonusPackPicker } from "./components/BonusPackPicker";
-import { CashAmount } from "./components/CurrencyChip";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { LoadingDots } from "./components/LoadingDots";
 import { EndlessHaulCard } from "./components/EndlessHaulCard";
+import {
+  RewardsHaulCard,
+  type RunHaulSummary,
+} from "./components/RewardsHaulCard";
 import { AboutPage } from "./components/AboutPage";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
@@ -28,6 +31,7 @@ import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
+import { HubPeekExport } from "./components/HubPeekExport";
 import { RouteFallback } from "./components/RouteFallback";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
@@ -60,6 +64,7 @@ import {
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
+import { SWEEPER_DIFFICULTIES } from "./games/bloonssweeper/config";
 
 const ZoomedGame = lazy(() =>
   import("./games/zoomed").then((m) => ({ default: m.ZoomedGame })),
@@ -76,11 +81,20 @@ const OrderUpGame = lazy(() =>
 const BloonleGame = lazy(() =>
   import("./games/bloonle").then((m) => ({ default: m.BloonleGame })),
 );
+const RoundCheckGame = lazy(() =>
+  import("./games/roundcheck").then((m) => ({ default: m.RoundCheckGame })),
+);
+const RicoShotGame = lazy(() =>
+  import("./games/ricoshot").then((m) => ({ default: m.RicoShotGame })),
+);
 const CamoDetectionGame = lazy(() =>
   import("./games/camodetection").then((m) => ({ default: m.CamoDetectionGame })),
 );
 const BloonsSweeperGame = lazy(() =>
   import("./games/bloonssweeper").then((m) => ({ default: m.BloonsSweeperGame })),
+);
+const BlowFreeGame = lazy(() =>
+  import("./games/blowfree").then((m) => ({ default: m.BlowFreeGame })),
 );
 const BananaCatchGame = lazy(() =>
   import("./games/bananacatch").then((m) => ({ default: m.BananaCatchGame })),
@@ -259,11 +273,13 @@ function AppShell() {
   const { setCoinBalance, refreshProfile } = useAuth();
   const { equipped, notifyHeroProc } = useHeroFx();
   const navigate = useNavigate();
+  const location = useLocation();
   const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
   const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
   const [bonusToast, setBonusToast] = useState<string | null>(null);
   const [showBackToGames, setShowBackToGames] = useState(false);
-  const [runCashEarned, setRunCashEarned] = useState(0);
+  const [runHaul, setRunHaul] = useState<RunHaulSummary | null>(null);
+  const [gameReplayKey, setGameReplayKey] = useState(0);
   const [endlessHaul, setEndlessHaul] = useState<{
     gameId: EndlessGameId;
     report: GameScoreReport | null;
@@ -347,6 +363,8 @@ function AppShell() {
       wantBonus: boolean;
       /** Endless games always open Nice Haul even with no packs. */
       alwaysHaul?: boolean;
+      /** Open Nice Haul after this run even on a miss (non-quiz games). */
+      haulAfter?: boolean;
     }) => {
       const free = opts.cleared ? pickRewardTowerPack(owned) : null;
       const exclude = new Set(free?.tower ? [free.tower] : []);
@@ -366,7 +384,10 @@ function AppShell() {
       } else {
         setRewardPack(null);
         setBonusChoices(null);
-        if (opts.alwaysHaul) setShowBackToGames(true);
+        // Quiz fails keep their Continue screen — don't stack Nice Haul on top.
+        if (opts.alwaysHaul || opts.cleared || opts.haulAfter) {
+          setShowBackToGames(true);
+        }
       }
     },
     [owned],
@@ -381,7 +402,12 @@ function AppShell() {
         coinsEarned: number;
       }) => {
         setEndlessHaul(null);
-        setRunCashEarned(info.coinsEarned);
+        setRunHaul({
+          game,
+          cleared: info.cleared,
+          cashEarned: info.coinsEarned,
+          details: [`${info.correctCount} correct`],
+        });
         queueClearAndBonusPacks({
           cleared: info.cleared,
           wantBonus: earnsQuizBonusPack(info.correctCount),
@@ -404,7 +430,15 @@ function AppShell() {
       coinsEarned: number;
       score: number;
     }) => {
-      setRunCashEarned(info.coinsEarned);
+      setRunHaul({
+        game: "camodetection",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          `${info.correctCount} correct`,
+          `${info.score.toLocaleString("en-US")} answered`,
+        ],
+      });
       beginEndlessHaul("camodetection", info.score);
       queueClearAndBonusPacks({
         cleared: info.cleared,
@@ -435,9 +469,26 @@ function AppShell() {
   );
 
   const onBloonleRunEnd = useCallback(
-    (info: { cleared: boolean; coinsEarned: number }) => {
+    (info: {
+      cleared: boolean;
+      coinsEarned: number;
+      guesses: number;
+      answer: string;
+    }) => {
       setEndlessHaul(null);
-      setRunCashEarned(info.coinsEarned);
+      setRunHaul({
+        game: "bloonle",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          info.cleared
+            ? `Solved in ${info.guesses} guess${info.guesses === 1 ? "" : "es"}`
+            : "Out of guesses",
+          `Answer: ${info.answer}`,
+        ],
+      });
+      // Bloonle has no clear pack; still show haul so results aren't hidden.
+      setShowBackToGames(true);
       void (async () => {
         await creditHeroClear(info.cleared);
         void settleFeaturedBonus("bloonle", info.cleared);
@@ -446,13 +497,87 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear],
   );
 
-  const onSweeperRunEnd = useCallback(
-    (info: { cleared: boolean; coinsEarned: number }) => {
+  const onRoundCheckRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      coinsEarned: number;
+      solves: number;
+      perfect: boolean;
+    }) => {
       setEndlessHaul(null);
-      setRunCashEarned(info.coinsEarned);
+      setRunHaul({
+        game: "roundcheck",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          info.perfect
+            ? "Perfect · 4 first-try solves"
+            : `${info.solves}/4 solves`,
+          info.cleared ? "Run cleared" : "Out of lives",
+        ],
+      });
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
+        haulAfter: true,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("roundcheck", info.cleared);
+    },
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+  );
+
+  const onRicoShotRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      coinsEarned: number;
+      solves: number;
+      perfect: boolean;
+    }) => {
+      setEndlessHaul(null);
+      setRunHaul({
+        game: "ricoshot",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          info.perfect
+            ? "Perfect · 5 clean pops"
+            : `${info.solves}/5 pops`,
+          info.cleared ? "Run cleared" : "Out of lives",
+        ],
+      });
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared,
+        haulAfter: true,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("ricoshot", info.cleared);
+    },
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+  );
+
+  const onSweeperRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      coinsEarned: number;
+      difficulty: keyof typeof SWEEPER_DIFFICULTIES;
+    }) => {
+      setEndlessHaul(null);
+      const diffLabel = SWEEPER_DIFFICULTIES[info.difficulty].label;
+      setRunHaul({
+        game: "bloonssweeper",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          `${diffLabel} board`,
+          info.cleared ? "Board cleared" : "Hit a red bloon",
+        ],
+      });
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared,
+        haulAfter: true,
       });
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("bloonssweeper", info.cleared);
@@ -460,9 +585,41 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
+  const onBlowFreeRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      coinsEarned: number;
+      mode: "daily" | "practice";
+    }) => {
+      setEndlessHaul(null);
+      setRunHaul({
+        game: "blowfree",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          info.mode === "daily" ? "Daily board" : "Practice board",
+          info.cleared ? "Grid filled" : "Run ended",
+        ],
+      });
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus: info.cleared && info.mode === "daily",
+        haulAfter: true,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("blowfree", info.cleared);
+    },
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+  );
+
   const onBananaCatchRunEnd = useCallback(
     (info: { cleared: boolean; coinsEarned: number; score: number }) => {
-      setRunCashEarned(info.coinsEarned);
+      setRunHaul({
+        game: "bananacatch",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [`${info.score.toLocaleString("en-US")} bananas`],
+      });
       beginEndlessHaul("bananacatch", info.score);
       queueClearAndBonusPacks({
         cleared: info.cleared,
@@ -483,10 +640,16 @@ function AppShell() {
   const onBloonHeroRunEnd = useCallback(
     (info: { cleared: boolean; didWell: boolean; coinsEarned: number }) => {
       setEndlessHaul(null);
-      setRunCashEarned(info.coinsEarned);
+      setRunHaul({
+        game: "bloonhero",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [info.didWell ? "Strong accuracy" : "Tough chart"],
+      });
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.didWell,
+        haulAfter: true,
       });
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("bloonhero", info.cleared);
@@ -505,8 +668,39 @@ function AppShell() {
   const goHome = () => navigate("/");
   const goGames = () => navigate(gamesPath());
 
+  const rewardsOverlayOpen =
+    Boolean(rewardPack) || Boolean(bonusChoices) || showBackToGames;
+
+  useEffect(() => {
+    document.body.classList.toggle("rewards-overlay-open", rewardsOverlayOpen);
+    return () => {
+      document.body.classList.remove("rewards-overlay-open");
+    };
+  }, [rewardsOverlayOpen]);
+
+  const dismissHaul = useCallback(() => {
+    setShowBackToGames(false);
+    setEndlessHaul(null);
+    setRunHaul(null);
+  }, []);
+
+  const playAgain = useCallback(() => {
+    const game = runHaul?.game ?? endlessHaul?.gameId ?? null;
+    dismissHaul();
+    setGameReplayKey((k) => k + 1);
+    if (game) navigate(gamePath(game as GamePath), { replace: true });
+  }, [runHaul?.game, endlessHaul?.gameId, dismissHaul, navigate]);
+
+  const backToGames = useCallback(() => {
+    dismissHaul();
+    navigate(gamesPath());
+  }, [dismissHaul, navigate]);
+
   if (location.pathname === "/__t5-grid-export") {
     return <T5GridExport />;
+  }
+  if (location.pathname === "/__hub-peek-export") {
+    return <HubPeekExport />;
   }
 
   return (
@@ -534,6 +728,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <ZoomedGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.zoomed}
                 />
@@ -545,6 +740,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <GeoguessrGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.geoguessr}
                 />
@@ -556,6 +752,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <PriceCheckGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.pricecheck}
                 />
@@ -567,6 +764,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <OrderUpGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.orderup}
                 />
@@ -578,9 +776,34 @@ function AppShell() {
             element={
               <LazyGame>
                 <BloonleGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onFastSolve={offerBloonleBonus}
                   onRunEnd={onBloonleRunEnd}
+                />
+              </LazyGame>
+            }
+          />
+          <Route
+            path="/roundcheck"
+            element={
+              <LazyGame>
+                <RoundCheckGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onRoundCheckRunEnd}
+                />
+              </LazyGame>
+            }
+          />
+          <Route
+            path="/ricoshot"
+            element={
+              <LazyGame>
+                <RicoShotGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onRicoShotRunEnd}
                 />
               </LazyGame>
             }
@@ -590,6 +813,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <CamoDetectionGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onCamoDetectionRunEnd}
                 />
@@ -600,7 +824,23 @@ function AppShell() {
             path="/bloonssweeper"
             element={
               <LazyGame>
-                <BloonsSweeperGame onBack={goGames} onRunEnd={onSweeperRunEnd} />
+                <BloonsSweeperGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onSweeperRunEnd}
+                />
+              </LazyGame>
+            }
+          />
+          <Route
+            path="/blowfree"
+            element={
+              <LazyGame>
+                <BlowFreeGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onBlowFreeRunEnd}
+                />
               </LazyGame>
             }
           />
@@ -609,6 +849,7 @@ function AppShell() {
             element={
               <LazyGame>
                 <BananaCatchGame
+                  key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onBananaCatchRunEnd}
                 />
@@ -619,7 +860,11 @@ function AppShell() {
             path="/bloonhero"
             element={
               <LazyGame>
-                <BloonHeroGame onBack={goGames} onRunEnd={onBloonHeroRunEnd} />
+                <BloonHeroGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onBloonHeroRunEnd}
+                />
               </LazyGame>
             }
           />
@@ -665,37 +910,19 @@ function AppShell() {
         endlessHaul ? (
           <EndlessHaulCard
             gameId={endlessHaul.gameId}
-            cashEarned={runCashEarned}
+            cashEarned={runHaul?.cashEarned ?? 0}
             report={endlessHaul.report}
             loading={endlessHaul.loading}
-            onBack={() => {
-              setShowBackToGames(false);
-              setEndlessHaul(null);
-              navigate(gamesPath());
-            }}
+            onPlayAgain={playAgain}
+            onBack={backToGames}
           />
-        ) : (
-          <div className="rewards-done" role="dialog" aria-label="Rewards claimed">
-            <div className="rewards-done__card">
-              <p className="eyebrow">Rewards claimed</p>
-              <h2>Nice haul</h2>
-              <div className="rewards-done__cash">
-                <CashAmount amount={runCashEarned} size={28} />
-                <span className="rewards-done__cash-label">Cash earned</span>
-              </div>
-              <button
-                type="button"
-                className="btn btn--primary btn--lg"
-                onClick={() => {
-                  setShowBackToGames(false);
-                  navigate(gamesPath());
-                }}
-              >
-                Back to Games
-              </button>
-            </div>
-          </div>
-        )
+        ) : runHaul ? (
+          <RewardsHaulCard
+            summary={runHaul}
+            onPlayAgain={playAgain}
+            onBackToGames={backToGames}
+          />
+        ) : null
       ) : null}
     </>
   );

@@ -8,6 +8,8 @@ import {
   BLIMP_MIN_GAP_S,
   CATCH_CLEAR_BANANAS,
   CATCH_LIVES,
+  CATCH_LOGIC_H,
+  CATCH_LOGIC_W,
   CASH_PER_BANANA,
   GREEN_UNLOCK_S,
   KIND_DAMAGE,
@@ -324,8 +326,8 @@ const INITIAL: CatchState = {
   cashEarned: 0,
   drops: [],
   playerX: 0.5,
-  fieldW: 360,
-  fieldH: 480,
+  fieldW: CATCH_LOGIC_W,
+  fieldH: CATCH_LOGIC_H,
   cleared: false,
 };
 
@@ -353,6 +355,8 @@ export function useBananaCatch() {
   const dropsRef = useRef<Drop[]>([]);
   const paintRef = useRef<(() => void) | null>(null);
   const movePlayerRef = useRef<((x: number) => void) | null>(null);
+  const bananaFxRef = useRef<((x: number, y: number) => void) | null>(null);
+  const displayWRef = useRef(CATCH_LOGIC_W);
 
   const nextId = useCallback(() => {
     const id = nextIdRef.current;
@@ -368,10 +372,17 @@ export function useBananaCatch() {
     if (balance != null) setCoinBalanceRef.current(balance);
   }, []);
 
-  const setFieldSize = useCallback((w: number, h: number) => {
+  const setFieldSize = useCallback((_w: number, _h: number) => {
+    // Physics is locked to CATCH_LOGIC_* — display size is CSS-only.
     setState((s) =>
-      s.fieldW === w && s.fieldH === h ? s : { ...s, fieldW: w, fieldH: h },
+      s.fieldW === CATCH_LOGIC_W && s.fieldH === CATCH_LOGIC_H
+        ? s
+        : { ...s, fieldW: CATCH_LOGIC_W, fieldH: CATCH_LOGIC_H },
     );
+  }, []);
+
+  const setDisplayWidth = useCallback((w: number) => {
+    if (w > 0) displayWRef.current = w;
   }, []);
 
   const aimAt = useCallback((clientX: number, fieldLeft: number, fieldW: number) => {
@@ -380,13 +391,13 @@ export function useBananaCatch() {
     targetXRef.current = Math.min(1, Math.max(0, local));
   }, []);
 
-  /** Relative aim for pointer-lock (movementX deltas). */
+  /** Relative aim for pointer-lock (movementX deltas vs on-screen width). */
   const aimByDelta = useCallback((dxPx: number) => {
-    const fieldW = stateRef.current.fieldW;
-    if (fieldW <= 0 || !dxPx) return;
+    const displayW = displayWRef.current;
+    if (displayW <= 0 || !dxPx) return;
     targetXRef.current = Math.min(
       1,
-      Math.max(0, targetXRef.current + dxPx / fieldW),
+      Math.max(0, targetXRef.current + dxPx / displayW),
     );
   }, []);
 
@@ -452,7 +463,7 @@ export function useBananaCatch() {
       const s = stateRef.current;
       const { fieldW, fieldH } = s;
       const t = elapsedRef.current;
-      const ui = catchUiScale(fieldW, fieldH);
+      const ui = catchUiScale();
       const playerW = PLAYER_WIDTH * ui;
       const playerH = PLAYER_HEIGHT * ui;
       const margin = 40 * ui;
@@ -571,6 +582,7 @@ export function useBananaCatch() {
             bananas += 1;
             cashEarned += CASH_PER_BANANA;
             pendingCashRef.current += CASH_PER_BANANA;
+            bananaFxRef.current?.(d.x, d.y);
           } else {
             lives -= d.damage;
           }
@@ -636,8 +648,12 @@ export function useBananaCatch() {
     aimAt,
     aimByDelta,
     setFieldSize,
+    setDisplayWidth,
     setPaintLoop,
     setPlayerMover,
+    setBananaPickupFx: (fn: ((x: number, y: number) => void) | null) => {
+      bananaFxRef.current = fn;
+    },
     getLiveDrops: () => dropsRef.current,
   };
 }

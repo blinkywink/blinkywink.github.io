@@ -15,16 +15,15 @@ export type BloonlePuzzle = {
 };
 
 const MIN_SLUG = 5;
-/** Long enough for variety; still a readable Wordle row. */
-const MAX_SLUG = 12;
+/**
+ * Letter-only length after stripping spaces/punctuation.
+ * Board tiles shrink with `--bloonle-n`, so longer T5 names are fine.
+ * Keep a cap so extremes like "Plasma Monkey Fan Club" stay out.
+ */
+const MAX_SLUG = 16;
 
-/** Formal / obvious titles that aren't fun to type as one blob. */
-function isExcludedName(name: string, slug: string): boolean {
-  if (slug.length < MIN_SLUG || slug.length > MAX_SLUG) return true;
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 4) return true;
-  if (/^the\s/i.test(name)) return true;
-  return false;
+function isExcludedName(_name: string, slug: string): boolean {
+  return slug.length < MIN_SLUG || slug.length > MAX_SLUG;
 }
 
 function isBloonleEntity(entity: TowerEntity): boolean {
@@ -99,17 +98,57 @@ function hashDay(key: string): number {
   return h >>> 0;
 }
 
-export function puzzleForDay(key: string): BloonlePuzzle {
-  const idx = hashDay(key) % BLOONLE_POOL.length;
-  return BLOONLE_POOL[idx]!;
+/** Deterministic index permutation for a cycle (Spotify-style no-recent-repeat). */
+function cycleOrder(poolSize: number, cycle: number): number[] {
+  const indices = Array.from({ length: poolSize }, (_, i) => i);
+  return seededShuffle(indices, hashDay(`bloonle-cycle-v2-${cycle}`));
 }
 
-/** Random practice puzzle; optionally avoid a few recent slugs. */
+/**
+ * Daily answer — walks a shuffled full-pool cycle so nothing repeats until
+ * every word has appeared once (~pool size days), then reshuffles.
+ * Same day → same answer for everyone (deterministic).
+ */
+export function puzzleForDay(key: string): BloonlePuzzle {
+  const n = BLOONLE_POOL.length;
+  const day = dayNumber(key);
+  const cycle = Math.floor(day / n);
+  const offset = ((day % n) + n) % n;
+  const order = cycleOrder(n, cycle);
+  return BLOONLE_POOL[order[offset]!]!;
+}
+
+/**
+ * Practice pick — soft-avoid recent answers (weighted, Spotify-ish).
+ * Recent slugs are much less likely; older ones can still appear.
+ */
 export function puzzlePractice(avoid: string[] = []): BloonlePuzzle {
-  const blocked = new Set(avoid);
-  const options = BLOONLE_POOL.filter((p) => !blocked.has(p.slug));
-  const pool = options.length > 0 ? options : BLOONLE_POOL;
-  return pool[Math.floor(Math.random() * pool.length)]!;
+  const recent = avoid.slice(-12);
+  const weightOf = (slug: string): number => {
+    const idx = recent.lastIndexOf(slug);
+    if (idx < 0) return 8;
+    const age = recent.length - 1 - idx; // 0 = just played
+    if (age === 0) return 0.15;
+    if (age <= 2) return 0.4;
+    if (age <= 5) return 1;
+    return 3;
+  };
+
+  let total = 0;
+  const weights = BLOONLE_POOL.map((p) => {
+    const w = weightOf(p.slug);
+    total += w;
+    return w;
+  });
+  if (total <= 0) {
+    return BLOONLE_POOL[Math.floor(Math.random() * BLOONLE_POOL.length)]!;
+  }
+  let roll = Math.random() * total;
+  for (let i = 0; i < BLOONLE_POOL.length; i++) {
+    roll -= weights[i]!;
+    if (roll <= 0) return BLOONLE_POOL[i]!;
+  }
+  return BLOONLE_POOL[BLOONLE_POOL.length - 1]!;
 }
 
 export type LetterMark = "correct" | "present" | "absent";

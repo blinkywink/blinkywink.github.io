@@ -11,6 +11,8 @@ export type ExchangeInboxItem = {
   price: number;
   theirDegree: number;
   myDegree: number;
+  theirSeed: number | null;
+  mySeed: number | null;
   createdAt: string;
 };
 
@@ -31,6 +33,8 @@ function asItems(raw: unknown): ExchangeInboxItem[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((row) => {
     const r = row as Record<string, unknown>;
+    const theirSeed = Number(r.theirSeed);
+    const mySeed = Number(r.mySeed);
     return {
       id: String(r.id),
       partnerId: String(r.partnerId ?? ""),
@@ -40,6 +44,8 @@ function asItems(raw: unknown): ExchangeInboxItem[] {
       price: Math.max(0, Number(r.price) || 0),
       theirDegree: Math.max(1, Number(r.theirDegree) || 1),
       myDegree: Math.max(1, Number(r.myDegree) || 1),
+      theirSeed: Number.isFinite(theirSeed) ? Math.floor(theirSeed) : null,
+      mySeed: Number.isFinite(mySeed) ? Math.floor(mySeed) : null,
       createdAt: String(r.createdAt ?? ""),
     };
   });

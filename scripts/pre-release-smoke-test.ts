@@ -507,6 +507,9 @@ async function smokeFlows(
 
     const bloonle = await rpcOk(sbA, "claim_bloonle_daily", { p_guess_count: 3 });
     push("daily:claim_bloonle_daily", bloonle != null);
+
+    const blowfree = await rpcOk(sbA, "claim_blowfree_daily");
+    push("daily:claim_blowfree_daily", blowfree != null);
   } catch (e) {
     push("smoke:uncaught", false, e instanceof Error ? e.message : String(e));
   } finally {

@@ -38,6 +38,7 @@ function profileFromGuest(coins: number): Profile {
     last_daily_claim: null,
     last_daily_card_claim: null,
     last_bloonle_day: null,
+    last_blowfree_day: null,
     avatar_card_id: null,
     avatar_zoom: 1.25,
     avatar_x: 0.5,
@@ -122,6 +123,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
       : null,
     last_bloonle_day: data.last_bloonle_day
       ? String(data.last_bloonle_day).slice(0, 10)
+      : null,
+    last_blowfree_day: data.last_blowfree_day
+      ? String(data.last_blowfree_day).slice(0, 10)
       : null,
     avatar_card_id: data.avatar_card_id ?? null,
     avatar_zoom: Number(data.avatar_zoom ?? 1.25),

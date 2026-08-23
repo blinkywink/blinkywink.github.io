@@ -25,17 +25,20 @@ export const PLAYER_HEIGHT = 100;
 /** Monkey gif has lots of empty corners, keep the catch body tighter. */
 export const PLAYER_HIT = { wFrac: 0.52, hFrac: 0.55, yLift: 8 };
 
-/** Design field size used for responsive sprite / speed scaling. */
-export const CATCH_REF_W = 560;
-export const CATCH_REF_H = 420;
+/**
+ * Fixed logic playfield (px). Portrait board tuned for a mid
+ * 1080p↔1440p feel so difficulty stays the same on every screen.
+ */
+export const CATCH_LOGIC_W = 580;
+export const CATCH_LOGIC_H = 820;
 
-/** Scale gameplay px with the live field so phones aren't huge/tiny. */
-export function catchUiScale(fieldW: number, fieldH: number): number {
-  if (fieldW <= 0 || fieldH <= 0) return 1;
-  return Math.min(
-    1.12,
-    Math.max(0.52, Math.min(fieldW / CATCH_REF_W, fieldH / CATCH_REF_H)),
-  );
+/** @deprecated kept for call sites — always 1 (logic field is fixed). */
+export const CATCH_REF_W = CATCH_LOGIC_W;
+export const CATCH_REF_H = CATCH_LOGIC_H;
+
+/** Gameplay scale is locked to the logic field. */
+export function catchUiScale(_fieldW?: number, _fieldH?: number): number {
+  return 1;
 }
 
 export type DropKind =
