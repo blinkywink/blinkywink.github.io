@@ -2,7 +2,7 @@
 
 Accounts use **username + password** stored in Postgres (`public.accounts`).
 Sessions are opaque tokens in `public.app_sessions`. The browser sends
-`x-bloon-session` on API calls — **no Supabase Email Auth, no mailer**.
+`x-bloon-session` on API calls - **no Supabase Email Auth, no mailer**.
 
 ## Setup
 

@@ -82,28 +82,28 @@ export function isFlawlessClear(input: {
   );
 }
 
-/** Extra Cash on a flawless clear — doubles what you banked that run. */
+/** Extra Cash on a flawless clear - doubles what you banked that run. */
 export function perfectRunBonus(runCash: number): number {
   if (!Number.isFinite(runCash) || runCash <= 0) return 0;
   return Math.round(runCash);
 }
 
-/** Bloonle daily solve — hard cap. */
+/** Bloonle daily solve - hard cap. */
 export function bloonleDailyReward(): number {
   return 3000;
 }
 
-/** Practice puzzles — hard cap. */
+/** Practice puzzles - hard cap. */
 export function bloonlePracticeReward(): number {
   return 2500;
 }
 
-/** Blow Free daily clear — one hard grid per UTC day. */
+/** Blow Free daily clear - one hard grid per UTC day. */
 export function blowFreeDailyReward(): number {
   return 2800;
 }
 
-/** Blow Free practice — still pays, but not daily money. */
+/** Blow Free practice - still pays, but not daily money. */
 export function blowFreePracticeReward(): number {
   return 450;
 }
@@ -122,7 +122,7 @@ export function bloonleSolveReward(
 }
 
 /**
- * Round Check — one freeplay-round puzzle inside a 4-solve run.
+ * Round Check - one freeplay-round puzzle inside a 4-solve run.
  * First-try solve = 1000; four perfects = 4000.
  * Misses pay almost nothing so binary-search spam can't farm cash.
  */
@@ -142,13 +142,13 @@ export function roundCheckPuzzleReward(input: {
     return Math.min(cap, Math.round(cap * guessMult));
   }
 
-  // Unsolved: only a tiny tip if you were extremely close — otherwise 0.
+  // Unsolved: only a tiny tip if you were extremely close - otherwise 0.
   if (dist <= 1) return 25;
   if (dist <= 2) return 10;
   return 0;
 }
 
-/** @deprecated Use roundCheckPuzzleReward — kept for any stray imports. */
+/** @deprecated Use roundCheckPuzzleReward - kept for any stray imports. */
 export function roundCheckReward(input: {
   guessCount: number;
   distance: number;

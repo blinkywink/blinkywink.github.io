@@ -63,7 +63,7 @@ export function EquippedHeroPanel({
   );
 }
 
-/** Owned-hero gallery for Collection — click opens focus with equip. */
+/** Owned-hero gallery for Collection - click opens focus with equip. */
 export function HeroCollectionShelf({
   ownedHeroIds,
   equippedHeroId,
@@ -308,7 +308,7 @@ export function HeroCardFace({
   const rafRef = useRef<number | null>(null);
   const [active, setActive] = useState(false);
   const interactive = mode === "focus";
-  /** Animated layers only in fullscreen — keeps shelves cheap. */
+  /** Animated layers only in fullscreen - keeps shelves cheap. */
   const liveFx = mode === "focus";
 
   const style = {

@@ -29,7 +29,7 @@ export type GameId =
 
 type Props = {
   onPlay: (game: GameId) => void;
-  /** Embed on home hub — games grid only, full width. */
+  /** Embed on home hub - games grid only, full width. */
   embed?: boolean;
   /** Cap how many tiles render (home hub uses 3). Ignored when `pick` is set. */
   limit?: number;
@@ -361,7 +361,7 @@ const BLOW_PREVIEW_END: Record<
 };
 
 /**
- * Mini solved 5×5 — winding pipes (not stripes), every cell filled,
+ * Mini solved 5×5 - winding pipes (not stripes), every cell filled,
  * same joint/arm geometry as the real Blow Free board.
  */
 const BLOW_PREVIEW_CELLS: BlowPreviewCell[] = [
@@ -624,7 +624,7 @@ function MapPreview() {
   );
 }
 
-/** Games hub — playable titles only. */
+/** Games hub - playable titles only. */
 export function ArcadeHome({
   onPlay,
   embed = false,
@@ -722,7 +722,7 @@ export function ArcadeHome({
     {
       id: "roundcheck" as const,
       title: "ROUND CHECK",
-      blurb: "Guess the round 1–100 in 4 or less. Higher or lower.",
+      blurb: "Guess the round 1-100 in 4 or less. Higher or lower.",
       label: "Round Check, Guess the freeplay round 1 to 100 in 4 or less, higher or lower",
       preview: <RoundCheckPreview />,
     },

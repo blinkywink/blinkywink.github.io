@@ -73,7 +73,7 @@ begin
   end if;
 
   if b.coins_in_window + p_amount > max_per_minute then
-    raise exception 'Cash earn rate limit — try again in a minute';
+    raise exception 'Cash earn rate limit - try again in a minute';
   end if;
 
   if b.coins_today + p_amount > max_per_day then
@@ -152,7 +152,7 @@ begin
   end if;
 
   if b.cards_in_window + want > max_per_minute then
-    raise exception 'Card earn rate limit — try again in a minute';
+    raise exception 'Card earn rate limit - try again in a minute';
   end if;
 
   if b.cards_today + want > max_per_day then

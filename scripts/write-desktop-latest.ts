@@ -71,7 +71,7 @@ if (macTar) {
   };
   console.log(`Mac updater: ${path.basename(macTar)}`);
 } else {
-  console.warn("Skip Mac — no .app.tar.gz found");
+  console.warn("Skip Mac - no .app.tar.gz found");
 }
 
 if (winExe) {
@@ -81,7 +81,7 @@ if (winExe) {
   };
   console.log(`Windows updater: ${path.basename(winExe)}`);
 } else {
-  console.warn("Skip Windows — no NSIS .exe found");
+  console.warn("Skip Windows - no NSIS .exe found");
 }
 
 if (!Object.keys(platforms).length) {

@@ -65,7 +65,7 @@ function main() {
 
   const wavs = walk(PUBLIC);
   if (!wavs.length) {
-    console.log("No WAV files under public/ — nothing to convert.");
+    console.log("No WAV files under public/ - nothing to convert.");
     return;
   }
 

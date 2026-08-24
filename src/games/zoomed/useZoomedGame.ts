@@ -46,7 +46,7 @@ export type ZoomedState = {
   bestStreak: number;
   correctCount: number;
   answeredCount: number;
-  /** Wrong guesses used on the current question (0–maxAttempts). */
+  /** Wrong guesses used on the current question (0-maxAttempts). */
   attemptsUsed: number;
   /** Run hearts remaining. */
   lives: number;
@@ -61,7 +61,7 @@ export type ZoomedState = {
   resumeRound: number | null;
   /** True when the main 10 finished with lives left. */
   clearedRun: boolean;
-  /** Flawless clear — Cash was doubled. */
+  /** Flawless clear - Cash was doubled. */
   perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
@@ -138,7 +138,7 @@ export function useZoomedGame() {
   useEffect(() => {
     if (didApplyHeroInit.current) return;
     didApplyHeroInit.current = true;
-    // Don't reshuffle round 1 here — swapping the challenge while the
+    // Don't reshuffle round 1 here - swapping the challenge while the
     // canvas is still loading the first pick can grade the wrong map/tower.
     resetRunFlags();
   }, [resetRunFlags]);
@@ -470,7 +470,7 @@ export function useZoomedGame() {
     });
   }, [onCorrectCash, onGwenStreakProc, setCoinBalance, streakBonusPct]);
 
-  /** Give up on this question — lose a life, reveal, then advance. */
+  /** Give up on this question - lose a life, reveal, then advance. */
   const skip = useCallback(() => {
     const s = stateRef.current;
     if (s.phase !== "playing" || !s.challenge) return;

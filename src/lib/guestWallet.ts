@@ -1,4 +1,4 @@
-/** Guest wallet — persists without an account (cookie + localStorage). */
+/** Guest wallet - persists without an account (cookie + localStorage). */
 
 export type GuestWallet = {
   coins: number;

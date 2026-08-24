@@ -48,7 +48,7 @@ begin
 end;
 $$;
 
--- Paragon feeds require the paragon in inventory — listed paragons earn no XP.
+-- Paragon feeds require the paragon in inventory - listed paragons earn no XP.
 create or replace function public.feed_paragons_from_cards(
   p_card_ids text[],
   p_new_ids text[] default '{}'

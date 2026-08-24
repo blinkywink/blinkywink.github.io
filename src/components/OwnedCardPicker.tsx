@@ -186,7 +186,7 @@ export function OwnedCardPicker({
     });
   }
 
-  /** Same grid DOM as CardLab — MonkeyCard preview, no extras. Owned only. */
+  /** Same grid DOM as CardLab - MonkeyCard preview, no extras. Owned only. */
   function renderCardGrid(cards: MonkeyCardSpec[], resetKey: string) {
     return (
       <VisibleCardGrid
@@ -281,7 +281,7 @@ export function OwnedCardPicker({
     </div>
   );
 
-  // ——— Towers ———
+  // --- Towers ---
   if (view.kind === "towers") {
     return (
       <div className="card-lab card-lab--picker">
@@ -360,7 +360,7 @@ export function OwnedCardPicker({
     );
   }
 
-  // ——— All owned ———
+  // --- All owned ---
   if (view.kind === "all") {
     return (
       <div className="card-lab card-lab--picker">
@@ -417,7 +417,7 @@ export function OwnedCardPicker({
     );
   }
 
-  // ——— Single tower (owned cards only) ———
+  // --- Single tower (owned cards only) ---
   const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;
 
   return (

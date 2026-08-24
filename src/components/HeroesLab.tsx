@@ -371,7 +371,7 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
     setBusy(false);
   }
 
-  // ——— Detail focus ———
+  // --- Detail focus ---
   if (selected) {
     return (
       <div className="card-lab heroes-lab heroes-lab--focus">
@@ -572,7 +572,7 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
     );
   }
 
-  // ——— Grid ———
+  // --- Grid ---
   return (
     <div className="card-lab heroes-lab">
       <header className="card-lab__header">

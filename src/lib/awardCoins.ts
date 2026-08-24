@@ -2,7 +2,7 @@ import { getAccessToken, supabase } from "./supabase";
 import { awardGuestCoins } from "./guestWallet";
 import { loadAppSession } from "../auth/session";
 
-/** Credit Cash — cloud if signed in, guest cookie wallet otherwise. */
+/** Credit Cash - cloud if signed in, guest cookie wallet otherwise. */
 export async function awardCoins(amount: number): Promise<number | null> {
   if (!Number.isFinite(amount) || amount < 1) return null;
   const rounded = Math.round(amount);

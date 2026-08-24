@@ -21,7 +21,7 @@ export type DifficultyConfig = {
   brightness: [number, number];
   /** Contrast multiplier range. */
   contrast: [number, number];
-  /** Wave distortion amplitude (0–1). */
+  /** Wave distortion amplitude (0-1). */
   distortion: [number, number];
   /** Score multiplier for this tier. */
   scoreMultiplier: number;
@@ -29,7 +29,7 @@ export type DifficultyConfig = {
 
 /**
  * Crop fractions start roomy on easy, then tighten.
- * Zoom extras stay mild — “slightly zoomed” close-ups, not microscopic.
+ * Zoom extras stay mild - “slightly zoomed” close-ups, not microscopic.
  */
 export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   easy: {
@@ -105,7 +105,7 @@ export type ZoomedConfig = {
   cropCenterBias: number;
   /** Guesses allowed per question before the round is failed. */
   maxAttempts: number;
-  /** Hearts for the whole run — failing a question costs one. */
+  /** Hearts for the whole run - failing a question costs one. */
   maxLives: number;
   /**
    * Score multipliers for getting it right on attempt 1 / 2 / 3.
@@ -124,7 +124,7 @@ export const ZOOMED_CONFIG: ZoomedConfig = {
   attemptScoreMultipliers: [1, 0.55, 0.3],
 };
 
-/** Towers that tend to look similar — used by future modes / helpers. */
+/** Towers that tend to look similar - used by future modes / helpers. */
 export const VISUAL_SIMILARITY: Record<string, string[]> = {
   "Dart Monkey": ["Boomerang Monkey", "Ninja Monkey", "Dartling Gunner"],
   "Boomerang Monkey": ["Dart Monkey", "Tack Shooter", "Druid"],

@@ -171,13 +171,13 @@ export function useBlowFree() {
     return () => window.clearInterval(id);
   }, []);
 
-  /** Account already cleared today's daily elsewhere — show completed. */
+  /** Account already cleared today's daily elsewhere - show completed. */
   useEffect(() => {
     if (!alreadyClaimedToday) return;
     const day = utcToday();
     setState((s) => {
       if (s.mode !== "daily" || s.day !== day) return s;
-      // This device already cleared — leave haulReported alone so packs can fire.
+      // This device already cleared - leave haulReported alone so packs can fire.
       if (s.status === "won") {
         if (s.awarded) return s;
         const next: BlowState = {

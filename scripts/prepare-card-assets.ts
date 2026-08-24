@@ -218,7 +218,7 @@ async function extractAccent(imagePath: string): Promise<{
     if (score < 0.02) continue;
     const key = `${Math.round(r / 18)}-${Math.round(g / 18)}-${Math.round(b / 18)}`;
     const prev = buckets.get(key) ?? { r: 0, g: 0, b: 0, w: 0, peak: 0 };
-    // Weight by vividness only — not pixel mass — so rare brights win
+    // Weight by vividness only - not pixel mass - so rare brights win
     const weight = score * score;
     prev.r += r * weight;
     prev.g += g * weight;
@@ -372,7 +372,7 @@ async function main() {
   const merged = { ...existing } as Awaited<ReturnType<typeof prepareTower>>;
 
   for (const name of towerNames) {
-    console.log(`\n—— ${name} ——`);
+    console.log(`\n-- ${name} --`);
     try {
       const next = await prepareTower(name);
       Object.assign(merged, next);

@@ -55,7 +55,7 @@ export function generateTransform(
   const imgH = img.naturalHeight;
   const minSide = Math.min(imgW, imgH);
   const cropFrac = randRange(difficulty.cropSize[0], difficulty.cropSize[1]);
-  // Tiny absolute floor — high-res sources still read as detail, not noise
+  // Tiny absolute floor - high-res sources still read as detail, not noise
   const cropW = Math.max(18, Math.min(imgW, minSide * cropFrac));
   const cropH = Math.max(18, Math.min(imgH, minSide * cropFrac));
 
@@ -123,7 +123,7 @@ function getAnalysisImage(img: HTMLImageElement): {
 
 /**
  * Score a crop by color variety among opaque pixels.
- * Flat 1–2 color patches (or empty transparency) score low.
+ * Flat 1-2 color patches (or empty transparency) score low.
  */
 function scoreCropRegion(
   analysis: { w: number; h: number; data: Uint8ClampedArray },
@@ -150,7 +150,7 @@ function scoreCropRegion(
   let sumB2 = 0;
   const buckets = new Set<number>();
 
-  // Step through the region — denser samples for small crops
+  // Step through the region - denser samples for small crops
   const step = Math.max(1, Math.floor(Math.min(x1 - x0, y1 - y0) / 12));
 
   for (let y = y0; y < y1; y += step) {

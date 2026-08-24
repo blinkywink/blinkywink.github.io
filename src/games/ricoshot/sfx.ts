@@ -1,4 +1,4 @@
-/** Helium Pop SFX — reuses shared arcade buffers. */
+/** Helium Pop SFX - reuses shared arcade buffers. */
 
 import {
   playBloonPop,

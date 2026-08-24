@@ -49,7 +49,7 @@ type AudioClock = {
   lastSample: number;
 };
 
-/** Smooth chart clock — WebKit only updates currentTime in coarse steps. */
+/** Smooth chart clock - WebKit only updates currentTime in coarse steps. */
 function advanceSongClock(
   clock: AudioClock,
   sample: number,
@@ -119,19 +119,19 @@ export type HeroState = {
   artUrl: string | null;
   noteCount: number;
   duration: number;
-  /** Sparse UI clock — not used for note motion. */
+  /** Sparse UI clock - not used for note motion. */
   songTime: number;
   volume: number;
   instrument: PlayableInstrument | null;
   availableInstruments: PlayableInstrument[];
   paused: boolean;
-  /** Pack has vocals chart — show dart monkey. */
+  /** Pack has vocals chart - show dart monkey. */
   hasVocals: boolean;
   /** Synced lyrics available in this pack. */
   hasLyrics: boolean;
   /** Current synced lyric (when enabled in settings). */
   currentLyric: LyricDisplay | null;
-  /** Vocals stem is audible — bob / talk motion. */
+  /** Vocals stem is audible - bob / talk motion. */
   talking: boolean;
   /** Monkey mouth open frame. */
   singing: boolean;
@@ -263,7 +263,7 @@ export function useBloonHero() {
   const playerRef = useRef<StemPlayer | null>(null);
   const notesRef = useRef<ActiveNote[]>([]);
   const durationRef = useRef(0);
-  /** Last chart note time — not used alone to end the run. */
+  /** Last chart note time - not used alone to end the run. */
   const chartEndRef = useRef(0);
   const leadInRef = useRef(leadInSeconds(120));
   const originRef = useRef(0);
@@ -880,7 +880,7 @@ export function useBloonHero() {
         if (!n.holding || n.lane !== lane || n.releasedEarly) continue;
         const now = songTimeRef.current;
         if (now < n.t + n.dur - 0.08) {
-          // Early release: soft penalty only — keep combo, do not count a miss.
+          // Early release: soft penalty only - keep combo, do not count a miss.
           n.releasedEarly = true;
           n.holding = false;
           changed = true;
@@ -914,7 +914,7 @@ export function useBloonHero() {
       const now = songTimeNow();
       const approach = approachSec();
       const h = canvasCssRef.current.h || 480;
-      // Aim at the hit line if we don't connect — empty taps still fire a dart.
+      // Aim at the hit line if we don't connect - empty taps still fire a dart.
       let dartTargetY = (HIT_LINE_Y / 100) * h;
       let dartJudge: Judge = "good";
 
@@ -1196,7 +1196,7 @@ export function useBloonHero() {
 
       if (audioStarted && player && !pausedRef.current) {
         const delay = (songRef.current?.delayMs || 0) / 1000;
-        // Keep advancing after a short master stem ends — other stems / declared
+        // Keep advancing after a short master stem ends - other stems / declared
         // length may still have outro left (player.paused can flip true on ended).
         const sample = player.currentTime - delay;
         now = advanceSongClock(clockRef.current, sample, wallMs / 1000);
@@ -1291,7 +1291,7 @@ export function useBloonHero() {
       if (holdsChanged) rebuildHolding();
 
       // Advance miss scanner
-      // Missed notes: score only — they do not drain lives.
+      // Missed notes: score only - they do not drain lives.
       let missed = 0;
       let missLane = -1;
       let i = scanFromRef.current;
@@ -1370,7 +1370,7 @@ export function useBloonHero() {
         const hud = missHudAccumRef.current;
         hud.count += missed;
         hud.lane = missLane;
-        // Dense charts miss many notes/frame — don't React-reconcile each one.
+        // Dense charts miss many notes/frame - don't React-reconcile each one.
         if (wallMs - hud.at > 80) {
           hud.at = wallMs;
           const add = hud.count;

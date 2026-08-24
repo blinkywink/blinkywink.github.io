@@ -10,7 +10,7 @@ export const PACK_GOD_SIZE = 7;
 
 /**
  * Per-card tier odds (each slot rolls independently).
- * High tiers fixed by design; T0–T3 share the leftover ~96.5% with the
+ * High tiers fixed by design; T0-T3 share the leftover ~96.5% with the
  * peak at T2 (bell-ish from T0 → T3).
  *
  *   Paragon  0.10%
@@ -163,7 +163,7 @@ function fillFrom(
   }
 }
 
-/** All T5+ only (no T4). Paragons usually 0–1, rarely 2–3. */
+/** All T5+ only (no T4). Paragons usually 0-1, rarely 2-3. */
 function pullGodPackCards(
   pool: MonkeyCardSpec[],
   count: number,
@@ -234,7 +234,7 @@ function pullNormalPackCards(
   owned: ReadonlySet<string>,
   mods: PackTierMods = {},
 ): MonkeyCardSpec[] {
-  // Bags per tier — cards removed after pick so a pack has unique IDs.
+  // Bags per tier - cards removed after pick so a pack has unique IDs.
   // Ownership does not affect weight; every card in a tier is equal.
   const bags = new Map<PullTier, { c: MonkeyCardSpec; weight: number }[]>();
   for (const tier of TIER_ROLL_ORDER) bags.set(tier, []);
@@ -282,7 +282,7 @@ export type PackPullMods = PackTierMods & {
 
 /**
  * Open a pack:
- * - 0.25% god pack (T5+ only; usually 0–1 Paragon) — always 7 cards
+ * - 0.25% god pack (T5+ only; usually 0-1 Paragon) - always 7 cards
  * - Obyn may still add +1 on god or normal packs
  * - otherwise each card rolls tier odds independently (ownership ignored)
  * - duplicates convert to Cash in the opener

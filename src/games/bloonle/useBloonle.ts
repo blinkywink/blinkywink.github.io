@@ -212,7 +212,7 @@ export function useBloonle() {
     [onCorrectCash, refreshProfile],
   );
 
-  // Account already collected today's daily on another client — skip the puzzle.
+  // Account already collected today's daily on another client - skip the puzzle.
   useEffect(() => {
     if (!alreadyClaimedToday) return;
     const day = utcToday();

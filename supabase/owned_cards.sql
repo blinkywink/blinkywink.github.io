@@ -22,7 +22,7 @@ create policy "Users can read own cards"
   for select
   using (auth.uid() = user_id);
 
--- No direct insert/update/delete from clients — use award_cards RPC
+-- No direct insert/update/delete from clients - use award_cards RPC
 
 create or replace function public.award_cards(p_card_ids text[])
 returns text[]

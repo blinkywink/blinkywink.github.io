@@ -17,7 +17,7 @@ const NAV = [
   { to: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
-/** Fixed top bar — brand + main nav + account, stays on every screen. */
+/** Fixed top bar - brand + main nav + account, stays on every screen. */
 export function SiteHeader() {
   const { pathname } = useLocation();
   const navigate = useNavigate();

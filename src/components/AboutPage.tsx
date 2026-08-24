@@ -43,7 +43,7 @@ export function AboutPage() {
       </section>
 
       <section className="about-page__section">
-        <h2>Free — no sales</h2>
+        <h2>Free - no sales</h2>
         <p>
           {SITE_NAME} is completely free. There are no real-money purchases, no
           subscriptions, and nothing for sale on this site. All coins, packs, and
@@ -52,7 +52,7 @@ export function AboutPage() {
       </section>
 
       <section className="about-page__section">
-        <h2>Fan project — not affiliated with Ninja Kiwi</h2>
+        <h2>Fan project - not affiliated with Ninja Kiwi</h2>
         <p>
           This is an unofficial fan project made by{" "}
           <ExternalLink href={YOUTUBE_CHANNEL_URL}>blinkywink</ExternalLink>.
@@ -71,7 +71,7 @@ export function AboutPage() {
         <p>
           You can play in the browser or download the optional desktop app for
           Mac and Windows. The desktop build is the same game with faster
-          loading — it still talks to the same online account and collection.
+          loading - it still talks to the same online account and collection.
         </p>
       </section>
 
@@ -81,7 +81,7 @@ export function AboutPage() {
           The best place to reach me is the{" "}
           <ExternalLink href={DISCORD_INVITE_URL}>Discord server</ExternalLink>.
           If you enjoy the project, using creator code <strong>blinky</strong> in
-          BTD6 is always appreciated — but it has nothing to do with this site.
+          BTD6 is always appreciated - but it has nothing to do with this site.
         </p>
       </section>
 

@@ -141,7 +141,7 @@ export async function awardCursedHoloBadge(): Promise<boolean> {
   return Boolean(data);
 }
 
-/** Permanent once granted — selling cards later does not remove it. */
+/** Permanent once granted - selling cards later does not remove it. */
 export async function awardCollectedEveryCardBadge(): Promise<boolean> {
   if (!getAccessToken() || !loadAppSession()) return false;
   const { data, error } = await supabase.rpc(
@@ -156,7 +156,7 @@ export async function awardCollectedEveryCardBadge(): Promise<boolean> {
 
 /**
  * If the player owns every tower card and every shoppable hero, grant the badge.
- * Safe to call often — server insert is idempotent.
+ * Safe to call often - server insert is idempotent.
  */
 export async function maybeAwardCollectedEveryCardBadge(
   ownedCardIds: ReadonlySet<string>,
@@ -167,7 +167,7 @@ export async function maybeAwardCollectedEveryCardBadge(
   return awardCollectedEveryCardBadge();
 }
 
-/** Permanent once granted — selling cards later does not remove it. */
+/** Permanent once granted - selling cards later does not remove it. */
 export async function awardCollectedATowerBadge(): Promise<boolean> {
   if (!getAccessToken() || !loadAppSession()) return false;
   const { data, error } = await supabase.rpc("award_collected_a_tower_badge");

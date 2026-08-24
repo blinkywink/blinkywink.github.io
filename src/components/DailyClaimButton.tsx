@@ -17,7 +17,7 @@ type Props = {
   variant?: "hero" | "inline";
 };
 
-/** Daily Cash + shared daily card — claimable separately. */
+/** Daily Cash + shared daily card - claimable separately. */
 export function DailyClaimButton({ variant = "inline" }: Props) {
   const {
     isGuest,

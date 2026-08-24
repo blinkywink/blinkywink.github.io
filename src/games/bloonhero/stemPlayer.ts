@@ -1,4 +1,4 @@
-/** Multi-stem Clone Hero pack audio — play song + guitar + drums + vocals together. */
+/** Multi-stem Clone Hero pack audio - play song + guitar + drums + vocals together. */
 
 import { isDesktopShell } from "../../lib/desktopOnline";
 
@@ -16,7 +16,7 @@ export type StemPlayer = {
   play: () => Promise<void>;
   pause: () => void;
   setVolume: (v: number) => void;
-  /** 0–1 vocals loudness (0 if no vocals stem). */
+  /** 0-1 vocals loudness (0 if no vocals stem). */
   getVocalsLevel: () => number;
   destroy: () => void;
 };
@@ -288,7 +288,7 @@ export async function createStemPlayer(
           }
         }
       }
-      // Start together — never re-seek stems mid-playback (causes repeats on WebKit).
+      // Start together - never re-seek stems mid-playback (causes repeats on WebKit).
       await Promise.all(
         elements.map(async (el) => {
           if (!el.paused && !el.ended) return;

@@ -24,7 +24,7 @@ const publishableKey = (
   ?.trim()
   .replace(/^["']|["']$/g, "");
 
-/** False when Vercel/local env is missing VITE_SUPABASE_* — app stays guest-only. */
+/** False when Vercel/local env is missing VITE_SUPABASE_* - app stays guest-only. */
 export const supabaseConfigured = Boolean(url && publishableKey);
 
 /** Normalized project URL (for health checks / desktop online gate). */

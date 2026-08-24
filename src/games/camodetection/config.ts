@@ -45,7 +45,7 @@ export function recallSecondsForRound(round: number): number {
   );
 }
 
-/** Cash for a correct recall — tied to board size. */
+/** Cash for a correct recall - tied to board size. */
 export function pointsForCorrect(
   round: number,
   streakAfter: number,

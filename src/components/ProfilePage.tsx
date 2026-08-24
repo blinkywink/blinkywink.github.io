@@ -1013,7 +1013,7 @@ export function ProfilePage() {
                       {PREMIUM_SITE_THEMES.find((t) => t.id === themeOfferId)
                         ?.label ?? "Premium"}
                     </strong>
-                    <p>Locked — unlock to keep this theme.</p>
+                    <p>Locked - unlock to keep this theme.</p>
                   </div>
                   <button
                     type="button"
@@ -1042,7 +1042,7 @@ export function ProfilePage() {
               <div>
                 <h4>Auto Open</h4>
                 <p>
-                  One-time unlock. Opens packs like holding Space — turn it on
+                  One-time unlock. Opens packs like holding Space - turn it on
                   in the pack shop before you buy.
                 </p>
               </div>

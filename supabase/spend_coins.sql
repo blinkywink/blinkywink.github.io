@@ -1,4 +1,4 @@
--- Spend Cash (pack shop, etc.) — session auth via current_account_id().
+-- Spend Cash (pack shop, etc.) - session auth via current_account_id().
 -- Safe to re-run.
 
 create or replace function public.spend_coins(p_amount integer)

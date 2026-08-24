@@ -195,7 +195,7 @@ function spawnFormation(
     swayPhase: phase,
   };
 
-  // Single thick horizontal line (4–6)
+  // Single thick horizontal line (4-6)
   if (patternRoll < 0.58) {
     const count = 4 + Math.floor(Math.random() * 3);
     const totalW = (count - 1) * gap;
@@ -373,7 +373,7 @@ export function useBananaCatch() {
   }, []);
 
   const setFieldSize = useCallback((_w: number, _h: number) => {
-    // Physics is locked to CATCH_LOGIC_* — display size is CSS-only.
+    // Physics is locked to CATCH_LOGIC_* - display size is CSS-only.
     setState((s) =>
       s.fieldW === CATCH_LOGIC_W && s.fieldH === CATCH_LOGIC_H
         ? s

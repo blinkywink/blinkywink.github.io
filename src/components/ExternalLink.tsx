@@ -8,7 +8,7 @@ type Props = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
 };
 
 /**
- * External http(s) link — on desktop opens the system browser via Tauri opener.
+ * External http(s) link - on desktop opens the system browser via Tauri opener.
  */
 export function ExternalLink({ href, children, onClick, ...rest }: Props) {
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {

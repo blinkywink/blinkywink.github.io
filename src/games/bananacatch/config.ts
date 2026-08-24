@@ -32,7 +32,7 @@ export const PLAYER_HIT = { wFrac: 0.52, hFrac: 0.55, yLift: 8 };
 export const CATCH_LOGIC_W = 580;
 export const CATCH_LOGIC_H = 820;
 
-/** @deprecated kept for call sites — always 1 (logic field is fixed). */
+/** @deprecated kept for call sites - always 1 (logic field is fixed). */
 export const CATCH_REF_W = CATCH_LOGIC_W;
 export const CATCH_REF_H = CATCH_LOGIC_H;
 

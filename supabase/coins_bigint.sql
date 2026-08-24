@@ -7,7 +7,7 @@ alter table public.profiles
 alter table public.profiles
   alter column coins_earned type bigint using coins_earned::bigint;
 
--- Daily Cash claim — returns bigint balance.
+-- Daily Cash claim - returns bigint balance.
 create or replace function public.claim_daily_cash()
 returns json
 language plpgsql
@@ -108,7 +108,7 @@ begin
   end if;
 
   if b.coins_in_window + p_amount > max_per_minute then
-    raise exception 'Cash earn rate limit — try again in a minute';
+    raise exception 'Cash earn rate limit - try again in a minute';
   end if;
 
   if b.coins_today + p_amount > max_per_day then
@@ -143,7 +143,7 @@ $$;
 revoke all on function public.award_coins(integer) from public;
 grant execute on function public.award_coins(integer) to anon, authenticated;
 
--- Game dailies also assign into integer locals — bump those too.
+-- Game dailies also assign into integer locals - bump those too.
 create or replace function public.claim_blowfree_daily()
 returns json
 language plpgsql

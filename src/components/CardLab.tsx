@@ -109,7 +109,7 @@ function matchesCardQuery(card: MonkeyCardSpec, q: string): boolean {
   return hay.includes(q);
 }
 
-/** Player collection — owned cards in color, missing ones greyed out. */
+/** Player collection - owned cards in color, missing ones greyed out. */
 export function CardLab({
   initial,
   viewer = null,
@@ -120,7 +120,7 @@ export function CardLab({
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
   const [exchangeOpen, setExchangeOpen] = useState(false);
-  /** After pick — review You vs Them before sending. */
+  /** After pick - review You vs Them before sending. */
   const [exchangeCardId, setExchangeCardId] = useState<string | null>(null);
   const { owned: myOwned, paragonOf, visualSeedOf } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
@@ -260,7 +260,7 @@ export function CardLab({
   );
   const chromeOn = hasPlayerChrome(chromeStyle);
 
-  // Only T5+ / paragons have unique art seeds — lower tiers are identical copies.
+  // Only T5+ / paragons have unique art seeds - lower tiers are identical copies.
   const sharedOwned = useMemo(() => {
     const next = new Set<string>();
     if (!isRemote) return next;
@@ -519,8 +519,8 @@ export function CardLab({
                   </h2>
                   <p>
                     {exchangeCardId
-                      ? "Check art seed and degree differences, then send the request. They’ll name a Cash fee — you accept or decline."
-                      : "Only Tier 5+ cards and paragons are unique — pick one you both own. You’ll compare copies before sending."}
+                      ? "Check art seed and degree differences, then send the request. They’ll name a Cash fee - you accept or decline."
+                      : "Only Tier 5+ cards and paragons are unique - pick one you both own. You’ll compare copies before sending."}
                   </p>
                 </div>
                 <button
@@ -590,7 +590,7 @@ export function CardLab({
         )
       : null;
 
-  // ——— Tower picker ———
+  // --- Tower picker ---
   if (view.kind === "towers") {
     if (isRemote && remoteLoading) {
       return (
@@ -786,7 +786,7 @@ export function CardLab({
     );
   }
 
-  // ——— Heroes manage / upgrade (or read-only browse on remote) ———
+  // --- Heroes manage / upgrade (or read-only browse on remote) ---
   if (view.kind === "heroes") {
     if (isRemote && viewer) {
       return (
@@ -814,7 +814,7 @@ export function CardLab({
     );
   }
 
-  // ——— All owned cards ———
+  // --- All owned cards ---
   if (view.kind === "all") {
     return (
       <div
@@ -888,7 +888,7 @@ export function CardLab({
     );
   }
 
-  // ——— Single tower card page ———
+  // --- Single tower card page ---
   if (view.kind !== "tower") return null;
 
   const portrait = selectedMeta?.image ?? baseEntity(view.name)?.image;

@@ -7,7 +7,7 @@ export type SpendCoinsOpts = {
   shop?: boolean;
 };
 
-/** Spend Cash — cloud if signed in, guest cookie wallet otherwise. */
+/** Spend Cash - cloud if signed in, guest cookie wallet otherwise. */
 export async function spendCoins(
   amount: number,
   opts?: SpendCoinsOpts,

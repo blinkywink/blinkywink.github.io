@@ -1,4 +1,4 @@
--- Level 20 hero badge — permanent once any hero hits max level.
+-- Level 20 hero badge - permanent once any hero hits max level.
 -- Safe to re-run.
 
 alter table public.profile_badges

@@ -1,4 +1,4 @@
--- Degree 100 paragon badge — permanent once any paragon hits max degree.
+-- Degree 100 paragon badge - permanent once any paragon hits max degree.
 -- Safe to re-run.
 
 alter table public.profile_badges

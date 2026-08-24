@@ -218,7 +218,7 @@ async function broadcastPing(channelName: string): Promise<void> {
   });
 }
 
-/** Live poke — Realtime broadcast (no Supabase Auth required). */
+/** Live poke - Realtime broadcast (no Supabase Auth required). */
 export function subscribeInboxChannel(
   userId: string,
   onPing: () => void,

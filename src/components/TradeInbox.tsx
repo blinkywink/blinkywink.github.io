@@ -96,7 +96,7 @@ export function TradeInbox() {
           }
         }
         if (resolvedOutgoing) {
-          // Seller / exchange partner accepted or declined — pull Cash + cards.
+          // Seller / exchange partner accepted or declined - pull Cash + cards.
           await Promise.all([refreshCards(), refreshProfile()]);
           setNotice("An offer resolved. Cash and cards were refreshed.");
           setOpen(true);
@@ -130,7 +130,7 @@ export function TradeInbox() {
       }
       prevIncoming.current = hot;
     } catch {
-      // Quiet — header shouldn't spam errors while offline
+      // Quiet - header shouldn't spam errors while offline
     }
   }, [user, refreshCards, refreshProfile]);
 

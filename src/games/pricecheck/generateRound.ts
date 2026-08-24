@@ -88,7 +88,7 @@ export function createPriceRound(round: number): PriceRound {
 
     if (!preferClose) return candidate;
 
-    // Prefer within ~15–80% of each other; keep tightest seen as fallback
+    // Prefer within ~15-80% of each other; keep tightest seen as fallback
     if (ratio < bestRatio) {
       bestRatio = ratio;
       best = candidate;

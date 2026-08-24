@@ -317,7 +317,7 @@ export function HomeHub() {
         <p>BTD6 Creator code: blinky</p>
         <p className="arcade__footer-disclaimer">
           Not affiliated with Ninja Kiwi. This is a fan project. I am not selling
-          anything — it is a free game.
+          anything - it is a free game.
         </p>
       </footer>
 

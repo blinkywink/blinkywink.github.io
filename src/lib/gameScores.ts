@@ -72,7 +72,7 @@ function normalizeServerReport(
     .filter((row) => row.rank > 0);
 
   const bestScore = Math.max(Number(data.bestScore) || 0, score);
-  // Account best wins — never OR with this browser's cookie/localStorage.
+  // Account best wins - never OR with this browser's cookie/localStorage.
   const isNewBest = Boolean(data.isNewBest);
   saveLocalBestScore(gameId, bestScore);
 
@@ -120,7 +120,7 @@ export async function submitEndlessGameScore(
       "submit_game_score failed",
       err instanceof Error ? err.message : err,
     );
-    // Offline fallback only — still prefer any known local (may lag the account).
+    // Offline fallback only - still prefer any known local (may lag the account).
     return {
       gameId,
       score: scored,

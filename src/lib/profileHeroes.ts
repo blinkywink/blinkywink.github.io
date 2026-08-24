@@ -41,7 +41,7 @@ export function heroUnlockCost(heroId: string): number {
 /**
  * Cash to unlock (toLevel 1) or buy into `toLevel` (2..20).
  * Unlock varies by hero; levels scale from that base (~30% cheaper curve).
- * Server: public.hero_upgrade_cost — keep in sync.
+ * Server: public.hero_upgrade_cost - keep in sync.
  */
 export function heroUpgradeCost(toLevel: number, heroId?: string): number {
   const base = heroId ? heroUnlockCost(heroId) : HERO_UNLOCK_COST;
@@ -64,7 +64,7 @@ export function heroClearsRequiredForNextLevel(currentLevel: number): number {
   return 10 + 2 * (L - 1);
 }
 
-/** @deprecated use heroUpgradeCost — unlock floor only */
+/** @deprecated use heroUpgradeCost - unlock floor only */
 export const HERO_LEVEL_COST = HERO_UNLOCK_COST;
 
 export function isShoppableHeroId(id: string): id is ShoppableHeroId {

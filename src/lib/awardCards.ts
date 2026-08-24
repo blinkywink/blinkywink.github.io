@@ -177,7 +177,7 @@ export async function awardCards(cardIds: string[]): Promise<string[]> {
   return ids;
 }
 
-/** Fetch every owned card id (paginated — PostgREST caps ~1000 rows/request). */
+/** Fetch every owned card id (paginated - PostgREST caps ~1000 rows/request). */
 async function fetchOwnedCopiesFromTable(
   userId: string,
 ): Promise<OwnedCardCopy[]> {

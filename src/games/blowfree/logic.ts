@@ -129,7 +129,7 @@ export function extendPath(
     return { ...paths, [color]: path.slice(0, ownIdx + 1) };
   }
 
-  // Already hit the other bloon — pipe is locked (no drawing past it).
+  // Already hit the other bloon - pipe is locked (no drawing past it).
   if (pathComplete(level, paths, color)) return null;
 
   const occ = colorAt(level, paths, r, c);

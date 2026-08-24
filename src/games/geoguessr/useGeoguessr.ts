@@ -46,7 +46,7 @@ export type GeoguessrState = {
   bestStreak: number;
   correctCount: number;
   answeredCount: number;
-  /** Wrong guesses used on the current question (0–maxAttempts). */
+  /** Wrong guesses used on the current question (0-maxAttempts). */
   attemptsUsed: number;
   /** Run hearts remaining. */
   lives: number;
@@ -61,7 +61,7 @@ export type GeoguessrState = {
   resumeRound: number | null;
   /** True when the main 10 finished with lives left. */
   clearedRun: boolean;
-  /** Flawless clear — Cash was doubled. */
+  /** Flawless clear - Cash was doubled. */
   perfectRun: boolean;
   continueError: string | null;
   continueBusy: boolean;
@@ -143,7 +143,7 @@ export function useGeoguessr() {
   useEffect(() => {
     if (runInitialized.current) return;
     runInitialized.current = true;
-    // Keep the challenge from useState — regenerating here raced the
+    // Keep the challenge from useState - regenerating here raced the
     // canvas and could show map A while grading against map B.
     resetRunFlags();
   }, [resetRunFlags]);

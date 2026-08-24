@@ -55,10 +55,10 @@ import { useTowerComplete } from "./TowerCompleteProvider";
 type CardCollectionContextValue = {
   ready: boolean;
   owned: ReadonlySet<string>;
-  /** Active marketplace listings — count as owned for duplicate detection. */
+  /** Active marketplace listings - count as owned for duplicate detection. */
   listed: ReadonlySet<string>;
   owns: (cardId: string) => boolean;
-  /** Inventory or active listing — use for pack dupes, not collection UI. */
+  /** Inventory or active listing - use for pack dupes, not collection UI. */
   countsAsOwned: (cardId: string) => boolean;
   ownedCount: number;
   paragons: ReadonlyMap<string, ParagonState>;
@@ -208,7 +208,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       .catch(() => undefined);
   }, [hydrated, isGuest, profile, ownedIds, refreshProfile]);
 
-  // Permanent completion badge — keep checking; award is idempotent.
+  // Permanent completion badge - keep checking; award is idempotent.
   useEffect(() => {
     if (!hydrated || isGuest || !profile) return;
     const held = new Set<string>([...ownedIds, ...listedIds]);

@@ -141,11 +141,11 @@ function burst(
       color,
     });
   }
-  // Hard cap — big T5 volleys used to spawn hundreds and hitch.
+  // Hard cap - big T5 volleys used to spawn hundreds and hitch.
   if (into.length > 90) into.splice(0, into.length - 90);
 }
 
-/** Particle / trail / shake scale by ninja tier (0–5). */
+/** Particle / trail / shake scale by ninja tier (0-5). */
 function fxScale(tier: number) {
   const t = Math.max(0, Math.min(5, tier));
   return {

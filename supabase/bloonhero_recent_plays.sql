@@ -23,7 +23,7 @@ create index if not exists bloonhero_recent_plays_md5_played_at_idx
 
 alter table public.bloonhero_recent_plays enable row level security;
 
--- No direct client reads/writes — use RPCs below.
+-- No direct client reads/writes - use RPCs below.
 drop policy if exists bloonhero_recent_select on public.bloonhero_recent_plays;
 drop policy if exists bloonhero_recent_insert on public.bloonhero_recent_plays;
 

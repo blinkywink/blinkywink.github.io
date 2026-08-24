@@ -16,7 +16,7 @@ export type EnchorHit = {
   video_start_time: number;
   hasVideoBackground: boolean;
   modchart?: boolean;
-  /** Clone Hero style score 0–6; -1 = N/A. */
+  /** Clone Hero style score 0-6; -1 = N/A. */
   diff_guitar?: number;
   diff_vocals?: number;
   diff_band?: number;
@@ -78,7 +78,7 @@ export function expertNotesFor(
   return expert?.count ?? null;
 }
 
-/** Song.ini difficulty score (0–6). Null when missing / -1. */
+/** Song.ini difficulty score (0-6). Null when missing / -1. */
 export function diffScoreFor(
   hit: EnchorHit,
   instrument: PlayableInstrument,
@@ -134,7 +134,7 @@ export async function searchEnchor(
   query: string,
   opts?: { page?: number; perPage?: number },
 ): Promise<EnchorSearchResponse> {
-  // Over-fetch then filter — Encore doesn't always expose hasVocals as a query flag.
+  // Over-fetch then filter - Encore doesn't always expose hasVocals as a query flag.
   const body = {
     search: query.trim(),
     instrument: "guitar",

@@ -1,4 +1,4 @@
-/** Short UI / pack / hero SFX — Web Audio for low-latency play. */
+/** Short UI / pack / hero SFX - Web Audio for low-latency play. */
 
 const SLICE_SRC = "/sounds/pack-slice.mp3";
 const CARD_FOCUS_SRC = "/sounds/card-focus.mp3";
@@ -47,7 +47,7 @@ function loadVolume(): number {
   }
 }
 
-/** Master SFX volume 0–1 (default 50%). */
+/** Master SFX volume 0-1 (default 50%). */
 export function getSfxVolume(): number {
   return masterVolume;
 }
@@ -160,7 +160,7 @@ function playBuffer(
     start(buf);
     return;
   }
-  // First hit may wait one decode — kick it now; subsequent plays are instant.
+  // First hit may wait one decode - kick it now; subsequent plays are instant.
   void decode(src).then((decoded) => {
     if (decoded) start(decoded);
   });
@@ -242,7 +242,7 @@ export function playCardWhoosh(): void {
   playBuffer(WHOOSH_SRC, 0.32);
 }
 
-/** BTD6-style bloon pop (Bloon Hero hits). `volume` is 0–1 relative to the game's pop slider. */
+/** BTD6-style bloon pop (Bloon Hero hits). `volume` is 0-1 relative to the game's pop slider. */
 export function playBloonPop(volume = 1): void {
   const v = Math.max(0, Math.min(1, volume));
   if (v <= 0.001) return;

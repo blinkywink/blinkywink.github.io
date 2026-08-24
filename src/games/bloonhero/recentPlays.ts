@@ -64,7 +64,7 @@ export async function recordBloonHeroPlay(hit: EnchorHit): Promise<void> {
     p_song_length: hit.song_length ?? null,
   });
   if (error) {
-    // Non-fatal — song pick should still work offline / pre-migration.
+    // Non-fatal - song pick should still work offline / pre-migration.
     console.warn("Bloon Hero recent play not saved:", error.message);
   }
 }

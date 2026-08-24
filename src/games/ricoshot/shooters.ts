@@ -1,4 +1,4 @@
-/** Helium Pop — ninja upgrades only; all throw the classic shuriken. */
+/** Helium Pop - ninja upgrades only; all throw the classic shuriken. */
 
 export type ShooterId =
   | "base"
@@ -24,7 +24,7 @@ export type ShooterDef = {
   /** Short hover tip explaining the gimmick. */
   blurb: string;
   icon: string;
-  /** Upgrade tier 0–5 (base = 0). */
+  /** Upgrade tier 0-5 (base = 0). */
   tier: number;
   /** Path 0 = base, 1 top / 2 mid / 3 bot. */
   path: 0 | 1 | 2 | 3;
@@ -50,7 +50,7 @@ export type ShooterDef = {
 
 /**
  * Power scales with stage HP budget (3 shots):
- * T0–1 clear light packs, T2 gains real damage, T3 multi/AoE,
+ * T0-1 clear light packs, T2 gains real damage, T3 multi/AoE,
  * T4 spray/burst, T5 deletes dense heavy fields.
  */
 export const SHOOTERS: Record<ShooterId, ShooterDef> = {
@@ -79,7 +79,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   discipline: {
     id: "discipline",
     name: "Ninja Discipline",
-    blurb: "Faster star with a bit more bounce life — same pierce, snappier line.",
+    blurb: "Faster star with a bit more bounce life - same pierce, snappier line.",
     icon: "/images/towers/ninja-monkey/ninja-discipline.webp",
     tier: 1,
     path: 1,
@@ -101,7 +101,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   sharp: {
     id: "sharp",
     name: "Sharp Shurikens",
-    blurb: "Deals 2 damage per hit and keeps piercing — great for greens and yellows.",
+    blurb: "Deals 2 damage per hit and keeps piercing - great for greens and yellows.",
     icon: "/images/towers/ninja-monkey/sharp-shurikens.webp",
     tier: 2,
     path: 1,
@@ -123,7 +123,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   double: {
     id: "double",
     name: "Double Shot",
-    blurb: "Fires two 2-damage stars in a tight fan — cover two bank lines at once.",
+    blurb: "Fires two 2-damage stars in a tight fan - cover two bank lines at once.",
     icon: "/images/towers/ninja-monkey/double-shot.webp",
     tier: 3,
     path: 1,
@@ -145,7 +145,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   jitsu: {
     id: "jitsu",
     name: "Bloonjitsu",
-    blurb: "Five sharp stars in a wide spray — each hits for 2 and peels a lane.",
+    blurb: "Five sharp stars in a wide spray - each hits for 2 and peels a lane.",
     icon: "/images/towers/ninja-monkey/bloonjitsu.webp",
     tier: 4,
     path: 1,
@@ -167,7 +167,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   grandmaster: {
     id: "grandmaster",
     name: "Grandmaster Ninja",
-    blurb: "Ten heavy stars (3 dmg each) — melts dense packs if you fan the aim.",
+    blurb: "Ten heavy stars (3 dmg each) - melts dense packs if you fan the aim.",
     icon: "/images/towers/ninja-monkey/grandmaster-ninja.webp",
     tier: 5,
     path: 1,
@@ -189,7 +189,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   distraction: {
     id: "distraction",
     name: "Distraction",
-    blurb: "Extra bounces and flight time — stay alive for long ricochet lines.",
+    blurb: "Extra bounces and flight time - stay alive for long ricochet lines.",
     icon: "/images/towers/ninja-monkey/distraction.webp",
     tier: 1,
     path: 2,
@@ -211,7 +211,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   espionage: {
     id: "espionage",
     name: "Counter-Espionage",
-    blurb: "Phases through wood walls and deals 2 damage — ignore soft barriers.",
+    blurb: "Phases through wood walls and deals 2 damage - ignore soft barriers.",
     icon: "/images/towers/ninja-monkey/counter-espionage.webp",
     tier: 2,
     path: 2,
@@ -233,7 +233,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   shinobi: {
     id: "shinobi",
     name: "Shinobi Tactics",
-    blurb: "Two stars that phase wood and hit for 2 — sneak past shelves.",
+    blurb: "Two stars that phase wood and hit for 2 - sneak past shelves.",
     icon: "/images/towers/ninja-monkey/shinobi-tactics.webp",
     tier: 3,
     path: 2,
@@ -299,7 +299,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   seeking: {
     id: "seeking",
     name: "Seeking Shuriken",
-    blurb: "Short seeker that peels a layer and deletes wood — strong vs MOABs.",
+    blurb: "Short seeker that peels a layer and deletes wood - strong vs MOABs.",
     icon: "/images/towers/ninja-monkey/seeking-shuriken.webp",
     tier: 1,
     path: 3,
@@ -321,7 +321,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   caltrops: {
     id: "caltrops",
     name: "Caltrops",
-    blurb: "Two short seekers — each peels a layer, shreds wood, chips MOABs.",
+    blurb: "Two short seekers - each peels a layer, shreds wood, chips MOABs.",
     icon: "/images/towers/ninja-monkey/caltrops.webp",
     tier: 2,
     path: 3,
@@ -343,7 +343,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   flash: {
     id: "flash",
     name: "Flash Bomb",
-    blurb: "Brief bomb — peels layers on contact, blasts wood/steel, melts MOABs.",
+    blurb: "Brief bomb - peels layers on contact, blasts wood/steel, melts MOABs.",
     icon: "/images/towers/ninja-monkey/flash-bomb.webp",
     tier: 3,
     path: 3,
@@ -365,7 +365,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   sticky: {
     id: "sticky",
     name: "Sticky Bomb",
-    blurb: "One heavy bomb — peels on hit, erases barriers, melts MOABs.",
+    blurb: "One heavy bomb - peels on hit, erases barriers, melts MOABs.",
     icon: "/images/towers/ninja-monkey/sticky-bomb.webp",
     tier: 4,
     path: 3,
@@ -387,7 +387,7 @@ export const SHOOTERS: Record<ShooterId, ShooterDef> = {
   bomber: {
     id: "bomber",
     name: "Master Bomber",
-    blurb: "Two barrier bombs — each peels a few layers, deletes steel, pops MOABs.",
+    blurb: "Two barrier bombs - each peels a few layers, deletes steel, pops MOABs.",
     icon: "/images/towers/ninja-monkey/master-bomber.webp",
     tier: 5,
     path: 3,
@@ -424,7 +424,7 @@ export function minNinjaTierForRound(round: number): number {
   return Math.min(5, round);
 }
 
-/** Round 1 → T0–T1, round 2 → T2 only, … round 5 → T5 only. */
+/** Round 1 → T0-T1, round 2 → T2 only, … round 5 → T5 only. */
 export function rollLoadout(round = 1): ShooterId[] {
   const lo = minNinjaTierForRound(round);
   const hi = maxNinjaTierForRound(round);

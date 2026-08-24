@@ -17,7 +17,7 @@ type Props = {
   roundKey: string;
   onSelect: (entity: TowerEntity) => void;
   status?: "idle" | "correct" | "wrong";
-  /** Wrong guesses this round — crossed out in the picker. */
+  /** Wrong guesses this round - crossed out in the picker. */
   eliminatedIds?: string[];
 };
 
@@ -108,7 +108,7 @@ export function AnswerSearch({
   const submit = (entity: TowerEntity) => {
     if (disabled || eliminated.has(entity.id)) return;
     onSelect(entity);
-    // Wrong guesses stay on this round — drop the typed pick so the next try is fresh.
+    // Wrong guesses stay on this round - drop the typed pick so the next try is fresh.
     // Correct answers leave this screen on the next render.
     setPickedTower(null);
     setQuery("");

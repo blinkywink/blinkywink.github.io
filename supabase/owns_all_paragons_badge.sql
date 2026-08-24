@@ -1,4 +1,4 @@
--- Owns all paragons badge — permanent once every tower paragon is owned.
+-- Owns all paragons badge - permanent once every tower paragon is owned.
 -- Safe to re-run.
 
 alter table public.profile_badges

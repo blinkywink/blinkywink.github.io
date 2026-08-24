@@ -1,6 +1,6 @@
 /**
  * Clone Hero / Rock Band `notes.mid` → Expert 5-lane notes.
- * Guitar: frets 96–100. Vocals: sung pitches mapped onto the same 5 lanes.
+ * Guitar: frets 96-100. Vocals: sung pitches mapped onto the same 5 lanes.
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 import {

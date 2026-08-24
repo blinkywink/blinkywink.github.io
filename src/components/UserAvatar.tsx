@@ -17,7 +17,7 @@ type Props = {
 };
 
 /**
- * Circular PFP — full card baked to one bitmap, then cropped like a photo.
+ * Circular PFP - full card baked to one bitmap, then cropped like a photo.
  * Every size shares the same image so previews stay accurate.
  */
 export function UserAvatar({
@@ -55,7 +55,7 @@ export function UserAvatar({
       return;
     }
     let cancelled = false;
-    // Keep prior src / tower art visible — do not flash blank while baking.
+    // Keep prior src / tower art visible - do not flash blank while baking.
     void getCardFaceImageUrl(cardId, opts)
       .then((url) => {
         if (!cancelled) setSrc(url);

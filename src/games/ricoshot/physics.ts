@@ -222,7 +222,7 @@ function cloneWalls(walls: RicoWall[]): RicoWall[] {
 
 /**
  * Simulate one projectile with optional shooter mods.
- * Walls crack on hit and shatter — dart can pass through when broken.
+ * Walls crack on hit and shatter - dart can pass through when broken.
  */
 export function traceShot(
   level: Pick<RicoLevel, "walls" | "sniper" | "bloons">,
@@ -321,7 +321,7 @@ export function traceShot(
         applyBloonDamage(i, at, bp, true);
       }
     }
-    // Bombs crack nearby wood only — steel needs a direct hit + budget.
+    // Bombs crack nearby wood only - steel needs a direct hit + budget.
     if (wallDamage > 0) {
       for (let wi = 0; wi < liveWalls.length; wi++) {
         const wall = liveWalls[wi]!;
@@ -428,7 +428,7 @@ export function traceShot(
             if (aoeRadius > 0 && explodeOnWall) {
               applyAoe({ x: pos.x, y: pos.y }, points.length);
             }
-            // Shelf gone — keep flying through.
+            // Shelf gone - keep flying through.
           } else {
             vel = bounceOffRect(pos, vel, wall, dartR);
             bounces++;
@@ -456,7 +456,7 @@ export function traceShot(
             applyAoe({ x: pos.x, y: pos.y }, points.length);
           }
           if (shattered) {
-            // Wood is gone — keep flying through the gap.
+            // Wood is gone - keep flying through the gap.
           } else if (explodeOnWall) {
             // Soft wood ate the bomb.
             done = true;
@@ -502,7 +502,7 @@ export function traceShot(
           if (aoeRadius > 0) {
             applyAoe(bp, points.length - 1, i);
           }
-          // Pierce budget is for pack peels — MOABs don't burn it out.
+          // Pierce budget is for pack peels - MOABs don't burn it out.
           if (!boss) bloonHitCount += 1;
           if (stopOnBloon || bloonHitCount >= maxBloonHits) {
             done = true;
@@ -556,7 +556,7 @@ export function fireShooter(
     bloonDamage: def.bloonDamage,
     wallDamage: def.wallDamage,
     steelBreakBudget,
-    // Bottom path: wall/MOAB specialists — weak vs normal bloons.
+    // Bottom path: wall/MOAB specialists - weak vs normal bloons.
     bossDamageMul: def.path === 3 ? (def.tier >= 5 ? 12 : def.tier >= 4 ? 9 : def.tier >= 3 ? 7 : 3) : 0.45,
     phaseWood: def.phase === "wood",
     phaseAll: def.phase === "all",
@@ -564,7 +564,7 @@ export function fireShooter(
     aoeRadius: def.aoeRadius,
     stopOnBloon: def.stopOnBloon,
     explodeOnWall: def.explodeOnWall,
-    // Bottom path peels a few layers then dies — no endless empty passes.
+    // Bottom path peels a few layers then dies - no endless empty passes.
     maxBloonHits:
       def.path === 3
         ? def.tier >= 5
@@ -861,7 +861,7 @@ function cheatsBlocked(level: RicoLevel): boolean {
 }
 
 /**
- * Soft solvability — full clear of ceramic packs is impossible with 3×1-dmg
+ * Soft solvability - full clear of ceramic packs is impossible with 3×1-dmg
  * traces, so only require meaningful progress per shot.
  */
 function clearableInShots(
@@ -953,7 +953,7 @@ export function generateRicoLevel(round: number): RicoLevel {
   const start = (round * 5 + randInt(0, layouts.length - 1)) % layouts.length;
   const sniper = sniperHome();
 
-  // Keep this bounded — Next runs on the main thread.
+  // Keep this bounded - Next runs on the main thread.
   const maxAttempts = round >= 4 ? 40 : 64;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const layout = layouts[(start + attempt) % layouts.length]!;
@@ -1060,7 +1060,7 @@ function fallbackLevel(round: number, kinds: BloonKind[]): RicoLevel {
     if (cheatsBlocked(level)) return level;
   }
 
-  // Absolute last resort — still a juicy pack of bloons
+  // Absolute last resort - still a juicy pack of bloons
   return {
     walls,
     sniper,

@@ -192,7 +192,7 @@ async function smokeFlows(
   const push = (name: string, ok: boolean, detail?: string) => {
     results.push({ name, ok, detail });
     const mark = ok ? "PASS" : "FAIL";
-    console.log(`  [${mark}] ${name}${detail ? ` — ${detail}` : ""}`);
+    console.log(`  [${mark}] ${name}${detail ? ` - ${detail}` : ""}`);
   };
 
   try {
@@ -448,7 +448,7 @@ async function smokeFlows(
     });
     push("paragons:feed_paragons_from_cards", Array.isArray(fed));
 
-    // Profile cosmetics (may fail if card not owned — use cardA)
+    // Profile cosmetics (may fail if card not owned - use cardA)
     await rpcOk(sbA, "set_profile_avatar", {
       p_card_id: cardA,
       p_zoom: 1.25,
@@ -490,7 +490,7 @@ async function smokeFlows(
     });
     push("arcade:submit_game_score", score != null);
 
-    // Daily claims — ok if already claimed today
+    // Daily claims - ok if already claimed today
     const dailyCash = await sbA.rpc("claim_daily_cash");
     push(
       "daily:claim_daily_cash",
@@ -567,7 +567,7 @@ async function main(): Promise<void> {
   const audit = await auditRpcs(pgClient, clientRpcs);
   for (const r of audit) {
     const mark = r.ok ? "PASS" : "FAIL";
-    console.log(`  [${mark}] ${r.name}${r.detail ? ` — ${r.detail}` : ""}`);
+    console.log(`  [${mark}] ${r.name}${r.detail ? ` - ${r.detail}` : ""}`);
   }
 
   console.log("\n--- Live flow smoke test ---");

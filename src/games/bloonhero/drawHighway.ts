@@ -33,9 +33,9 @@ export type DartFx = {
   /** seconds to reach the target Y */
   dur: number;
   judge: Judge;
-  /** Absolute canvas Y (css px) — spawn below highway */
+  /** Absolute canvas Y (css px) - spawn below highway */
   startY: number;
-  /** Absolute canvas Y (css px) — bloon center at hit */
+  /** Absolute canvas Y (css px) - bloon center at hit */
   endY: number;
 };
 
@@ -295,7 +295,7 @@ function drawReceptor(
   ctx.restore();
 }
 
-/** Lean canvas highway — bloon notes + outline receptors. */
+/** Lean canvas highway - bloon notes + outline receptors. */
 export function drawHeroHighway(
   ctx: CanvasRenderingContext2D,
   cssW: number,

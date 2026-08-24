@@ -2,7 +2,7 @@ import { towerEntities } from "../../data/towers";
 import type { TowerEntity } from "../../data/types";
 import { bloonleDailyReward, bloonlePracticeReward } from "../rewards";
 
-/** Strip to lowercase a–z only (no spaces, dashes, etc.). */
+/** Strip to lowercase a-z only (no spaces, dashes, etc.). */
 export function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[^a-z]/g, "");
 }
@@ -105,7 +105,7 @@ function cycleOrder(poolSize: number, cycle: number): number[] {
 }
 
 /**
- * Daily answer — walks a shuffled full-pool cycle so nothing repeats until
+ * Daily answer - walks a shuffled full-pool cycle so nothing repeats until
  * every word has appeared once (~pool size days), then reshuffles.
  * Same day → same answer for everyone (deterministic).
  */
@@ -119,7 +119,7 @@ export function puzzleForDay(key: string): BloonlePuzzle {
 }
 
 /**
- * Practice pick — soft-avoid recent answers (weighted, Spotify-ish).
+ * Practice pick - soft-avoid recent answers (weighted, Spotify-ish).
  * Recent slugs are much less likely; older ones can still appear.
  */
 export function puzzlePractice(avoid: string[] = []): BloonlePuzzle {

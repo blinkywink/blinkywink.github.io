@@ -4,7 +4,7 @@ import { hashSeed, mulberry32 } from "../lib/cardSeed";
 type Props = {
   seed: string;
   colors: string[];
-  /** Soft motion — focus cards only. */
+  /** Soft motion - focus cards only. */
   animated?: boolean;
   /** Paragon backgrounds go denser / more chromatic than T5. */
   intensity?: "standard" | "paragon" | "paragon-apex";
@@ -109,7 +109,7 @@ function shiftHue(hex: string, deg: number): string {
   return rgbToHex((rr + m) * 255, (gg + m) * 255, (bb + m) * 255);
 }
 
-/** Widen palette — paragons stay on the wiki icon blues / neon violets. */
+/** Widen palette - paragons stay on the wiki icon blues / neon violets. */
 function buildPalette(
   colors: string[],
   rand: () => number,
@@ -174,7 +174,7 @@ const ACCENTS: AccentLayer[] = [
   "noise",
 ];
 
-/** Seeded abstract multi-color backdrop — composition unique per card id. */
+/** Seeded abstract multi-color backdrop - composition unique per card id. */
 export function CardVisualizerBg({
   seed,
   colors,
@@ -192,7 +192,7 @@ export function CardVisualizerBg({
     const crazy = intensity === "paragon" || intensity === "paragon-apex";
     const rng = mulberry32(hashSeed(`${seed}::bg::${intensity}`));
     const rand = () => rng();
-    // Paragons only expand the color range — same layout density as T5
+    // Paragons only expand the color range - same layout density as T5
     const palette = buildPalette(colors, rand, crazy);
 
     // Crossbow Master avoids the busiest particle motifs
@@ -420,7 +420,7 @@ export function CardVisualizerBg({
         : 0.72 + 0.28 * Math.sin(phase * 2.7);
 
     const draw = (tRaw: number) => {
-      // Keep motion calm — seeded speeds used to run too hot
+      // Keep motion calm - seeded speeds used to run too hot
       const t = tRaw * 0.4;
       const parent = canvas.parentElement;
       if (!parent) return;

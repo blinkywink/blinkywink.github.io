@@ -1,4 +1,4 @@
--- Auto-generated shop T4/T5 pool — do not edit by hand
+-- Auto-generated shop T4/T5 pool - do not edit by hand
 insert into public.shop_card_pool (card_id, tier) values
   ('alchemist-4-0-0', 4),
   ('alchemist-4-0-1', 4),

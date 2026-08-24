@@ -5,7 +5,7 @@ import { MonkeyCard } from "../components/MonkeyCard";
 import { cardSpecById } from "./cardCatalog";
 import { clampParagonDegree, PARAGON_MIN_DEGREE } from "./paragonProgress";
 
-/** Authoring size — matches `.monkey-card` face width. */
+/** Authoring size - matches `.monkey-card` face width. */
 export const CARD_FACE_W = 400;
 export const CARD_FACE_H = (CARD_FACE_W * 3.5) / 2.5;
 const PIXEL_RATIO = 2;
@@ -27,7 +27,7 @@ export type CardFaceBakeOpts = {
 const inflight = new Map<string, Promise<string>>();
 const ready = new Map<string, string>();
 
-/** Serialize DOM bakes — parallel offscreen cards thrash WebKit / Tauri. */
+/** Serialize DOM bakes - parallel offscreen cards thrash WebKit / Tauri. */
 let bakeQueue: Promise<unknown> = Promise.resolve();
 
 function enqueueBake<T>(fn: () => Promise<T>): Promise<T> {
@@ -227,7 +227,7 @@ async function rasterizeCardFace(
   const host = document.createElement("div");
   host.className = "card-face-raster";
   host.setAttribute("aria-hidden", "true");
-  // Off-screen but fully opaque — opacity:0 makes html-to-image blank on WebKit.
+  // Off-screen but fully opaque - opacity:0 makes html-to-image blank on WebKit.
   host.style.cssText = [
     "position:fixed",
     "left:-10000px",

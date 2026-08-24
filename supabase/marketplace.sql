@@ -196,7 +196,7 @@ begin
     raise exception 'Not enough Cash';
   end if;
 
-  -- Transfer only — does not inflate lifetime coins_earned.
+  -- Transfer only - does not inflate lifetime coins_earned.
   update public.profiles
   set coins = coins + listing.price
   where id = listing.seller_id;

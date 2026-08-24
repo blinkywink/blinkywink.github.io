@@ -1,4 +1,4 @@
--- Collected a tower badge — permanent once any tower's full set is owned.
+-- Collected a tower badge - permanent once any tower's full set is owned.
 -- Safe to re-run.
 
 alter table public.profile_badges

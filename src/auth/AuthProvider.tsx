@@ -411,7 +411,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       const msg = rpcErrorText(error);
       if (/ALREADY_CLAIMED/i.test(msg)) {
-        // Server already paid today — sync local state so the button grays out.
+        // Server already paid today - sync local state so the button grays out.
         const fresh = await fetchProfile(session.userId);
         if (fresh) {
           setProfile(fresh);
@@ -424,7 +424,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (/integer out of range/i.test(msg)) {
         return {
-          error: "Cash is over the old 2.1B limit — ask an admin to run coins_bigint.sql.",
+          error: "Cash is over the old 2.1B limit - ask an admin to run coins_bigint.sql.",
         };
       }
       return { error: msg || "Claim failed. Try again." };
@@ -435,7 +435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       last_daily_claim?: string;
     }>(data);
     if (raw?.coins == null) {
-      // Claim may have succeeded without a parseable payload — refresh.
+      // Claim may have succeeded without a parseable payload - refresh.
       const fresh = await fetchProfile(session.userId);
       if (fresh?.last_daily_claim === utcToday()) {
         setProfile(fresh);

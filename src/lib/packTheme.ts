@@ -4,7 +4,7 @@ import type { TowerEntity } from "../data/types";
 import { towerIdSlug } from "./pathCombos";
 
 export const PACK_SIZE = 10;
-/** Tower packs from clearing a game / bonus pick — smaller than shop packs. */
+/** Tower packs from clearing a game / bonus pick - smaller than shop packs. */
 export const REWARD_PACK_SIZE = 5;
 export const BTD6_PACK_ART = "/images/ui/monkey-pack.jpg";
 
@@ -47,7 +47,7 @@ export type PackDef = {
   /** Set for category packs */
   category?: TowerCategory | null;
   cardCount: number;
-  /** Only for kind === "btd6" — painted cover art */
+  /** Only for kind === "btd6" - painted cover art */
   coverArt?: string;
 };
 
@@ -273,7 +273,7 @@ export function dayStamp(d = new Date()): string {
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
-/** Next UTC midnight (ms since epoch) — when featured tower packs rotate. */
+/** Next UTC midnight (ms since epoch) - when featured tower packs rotate. */
 export function nextUtcMidnightMs(now = new Date()): number {
   return Date.UTC(
     now.getUTCFullYear(),

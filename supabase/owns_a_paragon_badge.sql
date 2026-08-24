@@ -1,4 +1,4 @@
--- Owns a paragon badge — permanent once any paragon is owned.
+-- Owns a paragon badge - permanent once any paragon is owned.
 -- Safe to re-run.
 
 alter table public.profile_badges

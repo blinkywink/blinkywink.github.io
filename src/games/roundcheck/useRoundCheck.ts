@@ -169,7 +169,7 @@ export function useRoundCheck() {
           award(piece);
           const lives = s.lives - 1;
           const dead = lives <= 0;
-          // Need at least one solve to clear — dying with 0 solves is a miss.
+          // Need at least one solve to clear - dying with 0 solves is a miss.
           // Clear only via 4 solves; lives gate how many misses you can eat.
           return {
             ...s,

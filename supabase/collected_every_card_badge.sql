@@ -1,4 +1,4 @@
--- Collected every card badge — permanent once granted.
+-- Collected every card badge - permanent once granted.
 -- Safe to re-run.
 
 alter table public.profile_badges

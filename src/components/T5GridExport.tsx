@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { pickT5GridCards } from "../lib/t5GridPicker";
 import { MonkeyCard } from "./MonkeyCard";
 
-/** Real MonkeyCard previews — same rendering as the PFP card picker. */
+/** Real MonkeyCard previews - same rendering as the PFP card picker. */
 export function T5GridExport({ seed: seedProp }: { seed?: number }) {
   const [params] = useSearchParams();
   const seed = useMemo(() => {

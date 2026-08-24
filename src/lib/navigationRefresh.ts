@@ -1,4 +1,4 @@
-/** Route enter hooks — background refresh without busting in-memory cache. */
+/** Route enter hooks - background refresh without busting in-memory cache. */
 
 const routeEnterListeners = new Set<(pathname: string) => void>();
 

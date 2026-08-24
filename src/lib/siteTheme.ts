@@ -1,4 +1,4 @@
-/** Site color theme — local cache + account sync when signed in. */
+/** Site color theme - local cache + account sync when signed in. */
 
 import { loadAppSession } from "../auth/session";
 import { cacheInvalidate } from "./cache";

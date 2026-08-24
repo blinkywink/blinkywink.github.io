@@ -94,7 +94,7 @@ function asStateMap(
   return out;
 }
 
-/** `null` means the server read failed — keep whatever the UI already has. */
+/** `null` means the server read failed - keep whatever the UI already has. */
 export async function fetchOwnParagons(): Promise<ParagonMap | null> {
   const app = loadAppSession();
   if (!getAccessToken() || !app) {
@@ -198,7 +198,7 @@ export async function applyParagonFeeds(
   cacheInvalidate("player-paragons:");
 
   if (!Array.isArray(data) || data.length === 0) {
-    // RPC skipped (paragon row not owned yet) — keep local XP and retry later.
+    // RPC skipped (paragon row not owned yet) - keep local XP and retry later.
     queuePendingFeeds(app.userId, rpcPayload);
     return preview;
   }

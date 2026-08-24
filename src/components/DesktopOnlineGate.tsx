@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { assertOnlineBackend, isDesktopShell } from "../lib/desktopOnline";
 
-/** Blocks interaction on desktop until Supabase is reachable — app shell renders underneath. */
+/** Blocks interaction on desktop until Supabase is reachable - app shell renders underneath. */
 export function DesktopOnlineGate() {
   const [blocked, setBlocked] = useState(false);
   const [message, setMessage] = useState("Checking connection…");

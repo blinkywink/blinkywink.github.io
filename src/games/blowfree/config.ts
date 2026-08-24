@@ -1,4 +1,4 @@
-/** Blow Free — daily Flow Free with colored bloons. */
+/** Blow Free - daily Flow Free with colored bloons. */
 
 export type BlowColor =
   | "red"

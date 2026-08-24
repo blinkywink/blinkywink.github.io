@@ -1,6 +1,6 @@
 # Bloon Arcade
 
-Fan-made **BTD6 mini-game arcade**. The first game is **Zoomed** — identify heavily cropped / altered Monkey Tower upgrade icons as fast as you can.
+Fan-made **BTD6 mini-game arcade**. The first game is **Zoomed** - identify heavily cropped / altered Monkey Tower upgrade icons as fast as you can.
 
 Unofficial fan project. Bloons TD 6 belongs to Ninja Kiwi. Tower icons are cached locally from the [Bloons Wiki Upgrades page](https://bloons.fandom.com/wiki/Upgrades) for offline play.
 

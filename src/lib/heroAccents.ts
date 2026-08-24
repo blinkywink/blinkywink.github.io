@@ -1,4 +1,4 @@
-/** Theme accents for hero plates — palette shifts each visual tier. */
+/** Theme accents for hero plates - palette shifts each visual tier. */
 
 export type HeroAccent = {
   primary: string;
@@ -9,7 +9,7 @@ export type HeroAccent = {
 
 /**
  * Visual card tiers (levels → stage):
- * 0 = Lv 1–5 · 1 = 6–10 · 2 = 11–15 · 3 = 16–19 · 4 = 20 ultra
+ * 0 = Lv 1-5 · 1 = 6-10 · 2 = 11-15 · 3 = 16-19 · 4 = 20 ultra
  */
 export function heroVisualTier(level: number): 0 | 1 | 2 | 3 | 4 {
   const n = Math.max(1, Math.min(20, Math.floor(level) || 1));
@@ -27,7 +27,7 @@ type TierPalette = {
   rgb: [number, number, number];
 };
 
-/** Four escalating palettes per hero (tier 0–3); tier 4 reuses 3 colors + ultra VFX. */
+/** Four escalating palettes per hero (tier 0-3); tier 4 reuses 3 colors + ultra VFX. */
 const HERO_TIER_PALETTES: Record<string, TierPalette[]> = {
   quincy: [
     { primary: "#E8A44A", secondary: "#5A8F3C", tertiary: "#C4A36A", rgb: [232, 164, 74] },

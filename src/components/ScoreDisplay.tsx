@@ -24,7 +24,7 @@ type PopupProps = {
   feedback: Feedback | null;
 };
 
-/** Compact feedback under the prompt — misses use the image flash instead. */
+/** Compact feedback under the prompt - misses use the image flash instead. */
 export function ScorePopup({ feedback }: PopupProps) {
   if (!feedback || feedback.kind === "miss") return null;
 

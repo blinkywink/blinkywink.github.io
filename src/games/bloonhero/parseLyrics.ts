@@ -4,12 +4,12 @@
  */
 import { parseMidi, type MidiEvent } from "midi-file";
 
-/** One timed lyric unit — a syllable within a word group. */
+/** One timed lyric unit - a syllable within a word group. */
 export type LyricCue = {
   /** Seconds from song start (after chart offset). */
   start: number;
   end: number;
-  /** @deprecated Revealed portion only — prefer fullWord + revealedChars. */
+  /** @deprecated Revealed portion only - prefer fullWord + revealedChars. */
   text: string;
   /** Complete word once all syllables in the group have landed. */
   fullWord: string;
@@ -21,11 +21,11 @@ export type LyricDisplay = {
   fullWord: string;
   visible: string;
   pending: string;
-  /** 0–1 — fades out after hold when the next word is far away. */
+  /** 0-1 - fades out after hold when the next word is far away. */
   opacity: number;
 };
 
-/** @deprecated Alias for chart loaders — each entry is one timed cue, not a full line. */
+/** @deprecated Alias for chart loaders - each entry is one timed cue, not a full line. */
 export type LyricPhrase = LyricCue;
 
 type TempoEvent = { tick: number; bpm: number };
@@ -100,7 +100,7 @@ function normalizeQuoted(raw: string): string {
   return s.trim();
 }
 
-/** Skip chart/MIDI markers — not sung lyric syllables. */
+/** Skip chart/MIDI markers - not sung lyric syllables. */
 function isNonLyricMarker(text: string): boolean {
   const t = text.trim();
   if (!t) return true;
@@ -152,7 +152,7 @@ function wordBounds(timed: TimedSyl[], index: number): { start: number; end: num
   let end = index;
   while (end < timed.length - 1 && timed[end]!.syl.joinNext) end++;
 
-  // "ev" then "everybody" — same word, no hyphen (pair only, never whole phrases).
+  // "ev" then "everybody" - same word, no hyphen (pair only, never whole phrases).
   if (
     index > 0 &&
     isPrefixPair(timed, index - 1, index) &&
@@ -243,7 +243,7 @@ function buildCues(
 
     const gapTicks = Math.max(resolution * 3, 96);
     if (timed.length > 0 && lastTick > 0 && ev.tick - lastTick > gapTicks) {
-      // Long gap — treat as a new phrase for word grouping only.
+      // Long gap - treat as a new phrase for word grouping only.
     }
 
     timed.push({ tick: ev.tick, syl });
@@ -297,7 +297,7 @@ function buildCues(
   return cues.filter((c) => c.text.length > 0);
 }
 
-/** Lyric events live in the global `[Events]` block only — not instrument tracks. */
+/** Lyric events live in the global `[Events]` block only - not instrument tracks. */
 function collectChartLyricEvents(text: string): RawEv[] {
   const out: RawEv[] = [];
   for (const line of parseBlock(text, "Events")) {
@@ -399,7 +399,7 @@ function classifyMidiText(text: string): RawEv["kind"] | null {
   return null;
 }
 
-/** PART VOCALS only — ignore [idle]/[play] markers on other tracks. */
+/** PART VOCALS only - ignore [idle]/[play] markers on other tracks. */
 function collectVocalsLyricEvents(track: MidiTrack): RawEv[] {
   const out: RawEv[] = [];
   let tick = 0;

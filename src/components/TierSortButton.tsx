@@ -3,7 +3,7 @@ type Props = {
   onToggle: () => void;
 };
 
-/** Compact “Sort” + arrow — high→low vs low→high. */
+/** Compact “Sort” + arrow - high→low vs low→high. */
 export function TierSortButton({ highFirst, onToggle }: Props) {
   return (
     <button

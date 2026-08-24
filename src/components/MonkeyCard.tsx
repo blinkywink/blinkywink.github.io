@@ -46,7 +46,7 @@ type Props = {
    * even when laid out as a preview-sized face.
    */
   bake?: boolean;
-  /** Paragon degree 1–100. Falls back to the signed-in collection. */
+  /** Paragon degree 1-100. Falls back to the signed-in collection. */
   degree?: number;
   /** Per-copy art seed. Falls back to the signed-in collection. */
   visualSeed?: number | null;
@@ -59,7 +59,7 @@ type Props = {
 
 const accents = cardAccents as unknown as Record<string, Accent>;
 
-/** Shared look from wiki Paragon icon — electric blue + neon violet. */
+/** Shared look from wiki Paragon icon - electric blue + neon violet. */
 const PARAGON_ACCENT = {
   primary: "#0f7dfe",
   secondary: "#b401fe",
@@ -104,7 +104,7 @@ function accentStrength(tier: number): number {
 }
 
 /** Path slots: 0 → thin line; otherwise a row of 5 circles filled up to that tier.
- *  Paragon is tier 6 — one row of 6 filled circles (not a 5-5-5 path grid). */
+ *  Paragon is tier 6 - one row of 6 filled circles (not a 5-5-5 path grid). */
 function PathPipGrid({
   levels,
   isParagon,
@@ -292,7 +292,7 @@ function popScore(hex: string, towerTint: string): number {
   return score;
 }
 
-/** Bright, saturated palette color from the art — skip brown/mud. */
+/** Bright, saturated palette color from the art - skip brown/mud. */
 function contrastAccent(
   accent: Accent | undefined,
   towerTint: string,

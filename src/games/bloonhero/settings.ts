@@ -3,19 +3,19 @@
 export type HeroKeybinds = [string, string, string, string, string];
 
 export type HeroSettings = {
-  /** 0.7–1.8 — higher = notes travel faster (shorter approach). */
+  /** 0.7-1.8 - higher = notes travel faster (shorter approach). */
   trackSpeed: number;
-  /** 0.6–1.8 — note / receptor size multiplier. */
+  /** 0.6-1.8 - note / receptor size multiplier. */
   bloonScale: number;
-  /** 0–1 — bloon pop hit SFX volume. */
+  /** 0-1 - bloon pop hit SFX volume. */
   popVolume: number;
   /** Show synced chart lyrics during play. */
   lyricsEnabled: boolean;
-  /** 0.4–2.8 — synced lyric subtitle size. */
+  /** 0.4-2.8 - synced lyric subtitle size. */
   lyricsScale: number;
-  /** Vertical offset in px (−60–200) added to lyric position. */
+  /** Vertical offset in px (−60-200) added to lyric position. */
   lyricsOffsetY: number;
-  /** Keys for lanes 0–4. Lowercase. */
+  /** Keys for lanes 0-4. Lowercase. */
   keys: HeroKeybinds;
 };
 

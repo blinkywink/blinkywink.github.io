@@ -47,7 +47,7 @@ create index if not exists trade_offers_trade_idx
 alter table public.trades enable row level security;
 alter table public.trade_offers enable row level security;
 
--- No direct table access — use RPCs only
+-- No direct table access - use RPCs only
 drop policy if exists "No direct trade reads" on public.trades;
 drop policy if exists "No direct offer reads" on public.trade_offers;
 

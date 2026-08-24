@@ -29,7 +29,7 @@ const ZERO: HeroEffectStats = {
 };
 
 /**
- * Mild passives only — L1 is a nibble (~2–5% niche), L20 is a treat (~12–18%),
+ * Mild passives only - L1 is a nibble (~2-5% niche), L20 is a treat (~12-18%),
  * never run-defining. Anchors: perfect quiz ~2525 Cash, BTD6 pack 1750,
  * featured clear 500, T5 0.7%, Paragon 0.1%.
  */
@@ -56,7 +56,7 @@ const L1: Record<string, HeroEffectStats> = {
 };
 
 const L20: Record<string, HeroEffectStats> = {
-  /** ~+400 on a perfect 10-correct run — not another full quiz. */
+  /** ~+400 on a perfect 10-correct run - not another full quiz. */
   quincy: { ...ZERO, bonusCashPerCorrect: 40 },
   gwendolin: { ...ZERO, streakBonusPct: 0.12 },
   "obyn-greenfoot": { ...ZERO, extraCardChance: 0.08 },

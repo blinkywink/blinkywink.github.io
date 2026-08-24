@@ -1,6 +1,6 @@
-/** Helium Pop — bank shots to peel bloons (red/blue/green HP). */
+/** Helium Pop - bank shots to peel bloons (red/blue/green HP). */
 
-/** Portrait arena — fits phone viewport when CSS-scaled. */
+/** Portrait arena - fits phone viewport when CSS-scaled. */
 export const RICO_W = 390;
 export const RICO_H = 560;
 
@@ -14,7 +14,7 @@ export const BLOON_R = 16;
 export const BLOON_HIT_PAD = 5;
 /** Physics / trail core size. */
 export const DART_R = 11;
-/** Drawn shuriken size — collision uses this so look matches feel. */
+/** Drawn shuriken size - collision uses this so look matches feel. */
 export const DART_DRAW_R = 20;
 /** ~80% of the original snappy speed. */
 export const DART_SPEED = 448;
@@ -24,7 +24,7 @@ export const MAX_BOUNCES = 22;
 export const FLIGHT_PLAYBACK_RATE = 3;
 /** Hits to shatter a wall (shows cracks as HP drops). */
 export const WALL_MAX_HP = 3;
-/** Steel shelves — only deleted by bottom-path direct hits (budgeted). */
+/** Steel shelves - only deleted by bottom-path direct hits (budgeted). */
 export const STEEL_MAX_HP = 1;
 
 /**
@@ -79,7 +79,7 @@ export const BLOON_HP: Record<BloonKind, number> = {
   moab: 22,
 };
 
-/** Drawn / hit radius — MOABs are chunky bosses. */
+/** Drawn / hit radius - MOABs are chunky bosses. */
 export const BLOON_RADIUS: Record<BloonKind, number> = {
   red: BLOON_R,
   blue: BLOON_R,
@@ -109,7 +109,7 @@ export const BLOON_IMGS: Record<BloonKind, string> = {
   lead: "/images/bloons/btd6/lead.webp",
   rainbow: "/images/bloons/btd6/rainbow.webp",
   ceramic: "/images/bloons/btd6/ceramic.webp",
-  // Same landscape asset as Banana Catch — draw rotated 90° CW.
+  // Same landscape asset as Banana Catch - draw rotated 90° CW.
   moab: "/images/bloons/moab.webp",
 };
 
@@ -221,7 +221,7 @@ export function wallsFromRects(
   return walls;
 }
 
-/** Subtle sway — amp grows a little by round, never far from home. */
+/** Subtle sway - amp grows a little by round, never far from home. */
 export function swayForRound(round: number): Pick<
   RicoBloon,
   "swayPhase" | "swaySpeed" | "swayAmp"
@@ -262,16 +262,16 @@ export function makeBloon(
 
 export function bloonCountForRound(round: number): number {
   // Keep pack size in step with ninja power (3 shots).
-  if (round <= 1) return 7 + Math.floor(Math.random() * 2); // 7–8
-  if (round === 2) return 9 + Math.floor(Math.random() * 2); // 9–10
-  if (round === 3) return 11 + Math.floor(Math.random() * 2); // 11–12
-  if (round === 4) return 13 + Math.floor(Math.random() * 3); // 13–15
+  if (round <= 1) return 7 + Math.floor(Math.random() * 2); // 7-8
+  if (round === 2) return 9 + Math.floor(Math.random() * 2); // 9-10
+  if (round === 3) return 11 + Math.floor(Math.random() * 2); // 11-12
+  if (round === 4) return 13 + Math.floor(Math.random() * 3); // 13-15
   // R5: ~2 solid T5 shots to clear; one lucky wipe is rare.
-  return 15 + Math.floor(Math.random() * 3); // 15–17
+  return 15 + Math.floor(Math.random() * 3); // 15-17
 }
 
 /**
- * Strength climbs with tier power — early stages stay red/blue/green,
+ * Strength climbs with tier power - early stages stay red/blue/green,
  * T5 packs heavies plus guaranteed MOAB-class bosses.
  */
 export function kindsForRound(round: number, count: number): BloonKind[] {
@@ -307,7 +307,7 @@ export function kindsForRound(round: number, count: number): BloonKind[] {
                 { kind: "zebra", w: 8 },
               ]
             : [
-                // Dense heavies — bomber splash can't cover the whole field.
+                // Dense heavies - bomber splash can't cover the whole field.
                 { kind: "lead", w: 18 },
                 { kind: "rainbow", w: 22 },
                 { kind: "ceramic", w: 42 },
@@ -351,7 +351,7 @@ export function ricoPuzzleReward(input: {
   return base + roundBonus + shotBonus + multiBonus;
 }
 
-/** Full-run clear bonus — total run payout still capped at RICO_RUN_REWARD_CAP. */
+/** Full-run clear bonus - total run payout still capped at RICO_RUN_REWARD_CAP. */
 export function ricoRunClearBonus(perfect: boolean): number {
   return perfect ? 150 : 80;
 }

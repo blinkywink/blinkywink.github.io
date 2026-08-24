@@ -1,4 +1,4 @@
-/** BTD6 freeplay round compositions (rounds 1–100). */
+/** BTD6 freeplay round compositions (rounds 1-100). */
 
 export type BloonBase =
   | "red"

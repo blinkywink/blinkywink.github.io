@@ -63,7 +63,7 @@ function parseDesktopConfig(raw: string): DesktopRemoteConfig | null {
   }
 }
 
-/** Live site config (Rust fetch — not the bundled copy). */
+/** Live site config (Rust fetch - not the bundled copy). */
 export async function fetchDesktopRemoteConfig(): Promise<DesktopRemoteConfig | null> {
   try {
     const { invoke } = await import("@tauri-apps/api/core");

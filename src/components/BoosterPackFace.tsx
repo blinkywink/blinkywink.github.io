@@ -10,7 +10,7 @@ type Props = {
   className?: string;
 };
 
-/** Printed face only — sits inside `.booster__face`. */
+/** Printed face only - sits inside `.booster__face`. */
 export function BoosterPackFace({ pack, className = "" }: Props) {
   if (pack.kind === "btd6") {
     return (
@@ -95,7 +95,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
   );
 }
 
-/** Length class — font-size is in cqi so shelf + opener stay proportional. */
+/** Length class - font-size is in cqi so shelf + opener stay proportional. */
 function packNameClass(title: string): string {
   const n = title.replace(/\s+/g, "").length;
   if (n >= 12) return "is-xl";

@@ -54,7 +54,7 @@ const RARE_SUSPENSE_MS = 1450;
 const RARE_PARAGON_SUSPENSE_MS = 1900;
 /** While holding Space, T4 cards force a beat so you can see them. */
 const T4_SPACE_HOLD_MS = 1500;
-/** Visual-only pack gag after the 3rd card — not a real pull. */
+/** Visual-only pack gag after the 3rd card - not a real pull. */
 const JUMPSCARE_CHANCE = 1 / 10000;
 const JUMPSCARE_AFTER_INDEX = 2;
 const JUMPSCARE_IMG = "/images/jumpscare/cursed-holo-monkey.png";
@@ -125,7 +125,7 @@ function sideOfLine(p: Pt, a: Pt, b: Pt): number {
   return Math.sign((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x));
 }
 
-/** Split the 0–100 pack square with an infinite line through a→b into two clip polygons. */
+/** Split the 0-100 pack square with an infinite line through a→b into two clip polygons. */
 function splitClips(a: Pt, b: Pt): [string, string] {
   const corners: Pt[] = [
     { x: 0, y: 0 },
@@ -236,8 +236,8 @@ type Props = {
   /** Defaults to the all-towers BTD6 pack. Pass a tower pack to preview the template. */
   pack?: PackDef;
   /**
-   * shop — buy with Cash first (default).
-   * reward — clear-run prize; starts sealed, no purchase.
+   * shop - buy with Cash first (default).
+   * reward - clear-run prize; starts sealed, no purchase.
    */
   mode?: "shop" | "reward";
 };
@@ -316,7 +316,7 @@ export function PackOpenerTest({
   /** Guards enter→ready so stale timers can't snap scale mid-animation. */
   const enterSeqRef = useRef(0);
   const enterStartedAtRef = useRef(0);
-  /** Sync lock — React buyBusy alone races on Space-hold / key-repeat. */
+  /** Sync lock - React buyBusy alone races on Space-hold / key-repeat. */
   const buyLockRef = useRef(false);
   const autoOpenActiveRef = useRef(false);
   const preloadRef = useRef<HTMLImageElement[]>([]);
@@ -652,7 +652,7 @@ export function PackOpenerTest({
     }
     const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
     if (gate === "rare") {
-      // No key-repeat / hold-through — must let go and press again.
+      // No key-repeat / hold-through - must let go and press again.
       if (e.repeat || needFreshSpaceRef.current) return false;
       return true;
     }
@@ -912,7 +912,7 @@ export function PackOpenerTest({
     if (next >= pullsRef.current.length) {
       setPhaseBoth("done");
       // Holding Space through the last card should buy another without a re-tap.
-      // Reward packs are free post-game grants — not purchasable again.
+      // Reward packs are free post-game grants - not purchasable again.
       if (spaceHeldRef.current && mode !== "reward") {
         later(() => {
           if (phaseRef.current === "done" && spaceHeldRef.current) {
@@ -959,7 +959,7 @@ export function PackOpenerTest({
     [buyAnother, mode, nextCard, showCardAt],
   );
 
-  /** Same pacing as holding Space — keeps spaceHeld and ticks flings via Space gates. */
+  /** Same pacing as holding Space - keeps spaceHeld and ticks flings via Space gates. */
   const startAutoOpen = useCallback(() => {
     if (mode === "reward") return;
     if (!autoPackUnlockedFromProfile(profile)) return;
@@ -1050,7 +1050,7 @@ export function PackOpenerTest({
         if (spaceCanFling(e)) flingAway();
       } else if (p === "done") {
         if (focusedRef.current) return;
-        // Fresh Space only. Hold-through repacks are queued in nextCard —
+        // Fresh Space only. Hold-through repacks are queued in nextCard -
         // key-repeat here was double-charging packs.
         if (mode !== "reward" && !e.repeat) void buyAnother();
       }
@@ -1085,7 +1085,7 @@ export function PackOpenerTest({
     onClose,
   ]);
 
-  /** Pack-local % — not clamped, so the streak can start/end off the pack. */
+  /** Pack-local % - not clamped, so the streak can start/end off the pack. */
   const localPoint = (e: React.PointerEvent): Pt | null => {
     const el = packRef.current;
     if (!el) return null;

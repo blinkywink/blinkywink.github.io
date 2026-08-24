@@ -47,7 +47,7 @@ function writeFeaturedBonusGame(game: FeaturedBonusGame): void {
   }
 }
 
-/** Current glowing bonus game — creates one if missing. */
+/** Current glowing bonus game - creates one if missing. */
 export function getOrCreateFeaturedBonusGame(): FeaturedBonusGame {
   const cur = readFeaturedBonusGame();
   if (cur) return cur;

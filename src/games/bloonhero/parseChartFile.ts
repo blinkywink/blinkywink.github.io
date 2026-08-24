@@ -1,6 +1,6 @@
 /**
  * Minimal Clone Hero / Moonscraper `.chart` parser.
- * Frets 0–4 map to lanes D F J K L (guitar, bass, and drums treated the same).
+ * Frets 0-4 map to lanes D F J K L (guitar, bass, and drums treated the same).
  */
 
 import {
@@ -128,7 +128,7 @@ function trackHasPlayableNotes(lines: string[]): boolean {
   return false;
 }
 
-/** Instruments present in this .chart with at least one 0–4 fret gem. */
+/** Instruments present in this .chart with at least one 0-4 fret gem. */
 export function listChartInstruments(text: string): PlayableInstrument[] {
   const found: PlayableInstrument[] = [];
   for (const inst of PLAYABLE_INSTRUMENTS) {
@@ -156,7 +156,7 @@ export function parseChartFile(
     const tick = Number(m[1]);
     const fret = Number(m[2]);
     const sustainTicks = Number(m[3]);
-    // Frets 0-4 = gems / pads. Higher = force, tap, open, accents — skip.
+    // Frets 0-4 = gems / pads. Higher = force, tap, open, accents - skip.
     if (fret < 0 || fret > 4) continue;
     const t = tickToSeconds(tick, meta.resolution, tempos) - meta.offsetSec;
     const span =

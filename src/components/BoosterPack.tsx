@@ -5,7 +5,7 @@ import { BoosterPackFace } from "./BoosterPackFace";
 type Props = {
   pack: PackDef;
   open?: boolean;
-  /** Foil shimmer / breathe — off on shelf for perf. */
+  /** Foil shimmer / breathe - off on shelf for perf. */
   effects?: boolean;
   children?: ReactNode;
   packRef?: Ref<HTMLDivElement>;

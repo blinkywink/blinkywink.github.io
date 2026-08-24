@@ -31,7 +31,7 @@ export type ParagonApplyResult = ParagonState & {
 };
 
 /**
- * Duplicate XP by max path tier. T0/T1 are crumbs — first degree takes
+ * Duplicate XP by max path tier. T0/T1 are crumbs - first degree takes
  * thousands of them. T5s move the bar; a Paragon dupe skips +3 degrees.
  */
 export const PARAGON_XP_BY_TIER = [
@@ -80,7 +80,7 @@ export function xpToNextDegree(degree: number): number {
   return Math.round(2400 * d ** 1.18 + 800);
 }
 
-/** 0 = deg 1–19, 1 = 20–39 … 4 = 80–99, 5 = deg 100. */
+/** 0 = deg 1-19, 1 = 20-39 … 4 = 80-99, 5 = deg 100. */
 export function paragonStage(degree: number): 0 | 1 | 2 | 3 | 4 | 5 {
   const d = clampParagonDegree(degree);
   if (d >= PARAGON_MAX_DEGREE) return 5;
@@ -132,7 +132,7 @@ function roundParagonAsk(n: number): number {
 }
 
 /**
- * Suggested Cash ask from pack grind: deg 1 is ~80–100k (the Paragon pull),
+ * Suggested Cash ask from pack grind: deg 1 is ~80-100k (the Paragon pull),
  * then each extra degree adds dedicated tower-pack cost (~1k Cash each).
  */
 export function suggestedParagonValue(degree: number): number {
@@ -156,7 +156,7 @@ export function feedForCard(card: MonkeyCardSpec): ParagonFeed | null {
   };
 }
 
-/** @deprecated use feedForCard — amounts for a duplicate of this card. */
+/** @deprecated use feedForCard - amounts for a duplicate of this card. */
 export function feedForDuplicate(card: MonkeyCardSpec): ParagonFeed | null {
   return feedForCard(card);
 }
@@ -244,7 +244,7 @@ export function mergeParagonStates(
   return { degree: left.degree, xp: Math.max(left.xp, right.xp) };
 }
 
-/** Keep whichever copy is further along — never let a stale fetch wipe XP. */
+/** Keep whichever copy is further along - never let a stale fetch wipe XP. */
 export function mergeParagonMaps(
   current: Record<string, ParagonState>,
   incoming: Record<string, ParagonState>,

@@ -1,4 +1,4 @@
--- Cursed Holo badge — awarded when a player hits the pack jumpscare.
+-- Cursed Holo badge - awarded when a player hits the pack jumpscare.
 -- Safe to re-run.
 
 alter table public.profile_badges

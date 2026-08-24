@@ -94,7 +94,7 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
         return;
       }
       if (state.haulReported || dailyHaulLock.current) return;
-      // Claim in localStorage first — Play again remounts before setState lands.
+      // Claim in localStorage first - Play again remounts before setState lands.
       if (!claimDailyHaulOnce(state.day)) {
         dailyHaulLock.current = true;
         markHaulReported();
@@ -183,10 +183,10 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
             {done
               ? "Practice cleared."
               : needFill
-                ? "All bloons linked — keep snaking until every cell is filled."
+                ? "All bloons linked - keep snaking until every cell is filled."
                 : isDaily
                   ? "Connect matching bloons. Fill every cell to win."
-                  : "Practice — same rules, smaller payout."}
+                  : "Practice - same rules, smaller payout."}
           </p>
         ) : null}
 

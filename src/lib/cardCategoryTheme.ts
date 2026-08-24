@@ -1,4 +1,4 @@
-/** Soft T0–T3 field color by BTD6 class. */
+/** Soft T0-T3 field color by BTD6 class. */
 export const CATEGORY_TINT: Record<string, string> = {
   Primary: "#3eb0f4",
   Military: "#4ed05a",

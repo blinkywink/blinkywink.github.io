@@ -1,4 +1,4 @@
-/** Tiny in-memory TTL cache — cuts duplicate fetches while browsing. */
+/** Tiny in-memory TTL cache - cuts duplicate fetches while browsing. */
 
 type Entry = {
   value: unknown;
@@ -22,7 +22,7 @@ export function cacheGet<T>(key: string): T | undefined {
   return hit.value as T;
 }
 
-/** Last stored value even after TTL — for instant paint while revalidating. */
+/** Last stored value even after TTL - for instant paint while revalidating. */
 export function cacheGetStale<T>(key: string): T | undefined {
   const hit = store.get(key);
   return hit ? (hit.value as T) : undefined;

@@ -71,10 +71,10 @@ if (!mac && !win) {
 }
 
 if (mac) copy(mac, "blinkywink-mac.dmg");
-else console.warn("Skip Mac — no .dmg found");
+else console.warn("Skip Mac - no .dmg found");
 
 if (win) copy(win, "blinkywink-windows-setup.exe");
-else console.warn("Skip Windows — no NSIS .exe found");
+else console.warn("Skip Windows - no NSIS .exe found");
 
 console.log("\nSite download URLs:");
 console.log("  /downloads/blinkywink-mac.dmg");

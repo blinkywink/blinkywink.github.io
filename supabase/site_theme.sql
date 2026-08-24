@@ -1,4 +1,4 @@
--- Site color theme — synced to the signed-in account (also cached locally for guests).
+-- Site color theme - synced to the signed-in account (also cached locally for guests).
 -- Safe to re-run. Prefer site_theme_premium.sql for the full unlock model.
 
 alter table public.profiles

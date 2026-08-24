@@ -1,4 +1,4 @@
-/** Guest monkey-card ownership — localStorage only (too large for cookies). */
+/** Guest monkey-card ownership - localStorage only (too large for cookies). */
 
 import {
   needsVisualSeed,

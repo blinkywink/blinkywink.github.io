@@ -1,7 +1,7 @@
 export type Profile = {
   id: string;
   username: string;
-  /** Cash — current spendable balance. */
+  /** Cash - current spendable balance. */
   coins: number;
   /** Lifetime Cash earned (never decreases on spend). */
   coins_earned: number;
@@ -24,7 +24,7 @@ export type Profile = {
   avatar_y: number;
   /** Up to 3 owned card ids shown on the public collection page. */
   showcase_card_ids?: string[] | null;
-  /** Purchased showcase slot capacity (0–3). */
+  /** Purchased showcase slot capacity (0-3). */
   showcase_slots?: number | null;
   /** One-time unlock for custom profile accent color. */
   accent_unlocked?: boolean | null;

@@ -1,4 +1,4 @@
--- Shared shop shelf: 4 direct-sale T4/T5 cards. Global stock — buy replaces for everyone.
+-- Shared shop shelf: 4 direct-sale T4/T5 cards. Global stock - buy replaces for everyone.
 -- Safe to re-run. Then run shop_card_pool_seed.sql.
 
 create table if not exists public.shop_card_pool (
@@ -97,7 +97,7 @@ begin
   end if;
 
   if picked_id is null then
-    raise exception 'Shop card pool is empty — run shop_card_pool_seed.sql';
+    raise exception 'Shop card pool is empty - run shop_card_pool_seed.sql';
   end if;
 
   card_id := picked_id;

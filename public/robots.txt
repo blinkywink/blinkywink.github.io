@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Build/export helpers — not for players or indexing
+# Build/export helpers - not for players or indexing
 Disallow: /__
 
 Sitemap: https://monkeycards.app/sitemap.xml

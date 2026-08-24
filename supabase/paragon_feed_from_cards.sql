@@ -1,4 +1,4 @@
--- Apply Paragon XP/degrees from pulled card ids (text[] — same shape as award_cards).
+-- Apply Paragon XP/degrees from pulled card ids (text[] - same shape as award_cards).
 -- First copies (p_new_ids) never feed. Duplicates of a tower's cards feed that
 -- tower's Paragon, and only if the player already owns that Paragon.
 -- Also harden apply_paragon_feeds so a bad jsonb payload can't silently no-op.

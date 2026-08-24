@@ -290,7 +290,7 @@ function AppShell() {
 
   const creditHeroClear = useCallback(
     async (cleared: boolean) => {
-      // Always hit the RPC on clear — don't gate on client `equipped`
+      // Always hit the RPC on clear - don't gate on client `equipped`
       // (stale/null context was silently skipping progress).
       if (!cleared) return;
       const result = await recordHeroClear();
@@ -386,7 +386,7 @@ function AppShell() {
       } else {
         setRewardPack(null);
         setBonusChoices(null);
-        // Quiz fails keep their Continue screen — don't stack Nice Haul on top.
+        // Quiz fails keep their Continue screen - don't stack Nice Haul on top.
         if (opts.alwaysHaul || opts.cleared || opts.haulAfter) {
           setShowBackToGames(true);
         }

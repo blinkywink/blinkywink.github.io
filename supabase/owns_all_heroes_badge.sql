@@ -1,4 +1,4 @@
--- Owns all heroes badge — permanent once every shoppable hero is unlocked.
+-- Owns all heroes badge - permanent once every shoppable hero is unlocked.
 -- Safe to re-run.
 
 alter table public.profile_badges

@@ -17,7 +17,7 @@ export const PRICE_CHECK_CONFIG = {
 
 /** How many towers each side may roll this round (grows over the run). */
 export function sideSizeForRound(round: number): number {
-  // 1–2: 1 | 3–4: 2 | 5–6: 3 | 7–8: 4 | 9+: 5
+  // 1-2: 1 | 3-4: 2 | 5-6: 3 | 7-8: 4 | 9+: 5
   return Math.min(
     PRICE_CHECK_CONFIG.maxSideSize,
     1 + Math.floor((round - 1) / 2),
@@ -37,7 +37,7 @@ export function pointsForCorrect(
   );
 }
 
-/** Cash lost on a miss — more than a hit pays, so random guessing bleeds. */
+/** Cash lost on a miss - more than a hit pays, so random guessing bleeds. */
 export function penaltyForWrong(round: number): number {
   const wouldEarn = pointsForCorrect(round, 0);
   return Math.max(

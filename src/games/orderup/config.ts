@@ -36,7 +36,7 @@ export function pointsForPlacement(input: {
     input.perfect ? (input.streakBonusPct ?? 0) : 0,
   );
   if (input.perfect || placed >= hand) return full;
-  // Scale by share correct — e.g. 3/5 ≈ 60% of the round payout.
+  // Scale by share correct - e.g. 3/5 ≈ 60% of the round payout.
   return Math.max(1, Math.round((full * placed) / hand));
 }
 
@@ -52,13 +52,13 @@ export function handSizeForRound(round: number): number {
  * Early = obvious gaps; only late rounds get near-ties.
  */
 export function targetCostRatio(round: number): { min: number; max: number } {
-  // 3 towers — very different
+  // 3 towers - very different
   if (round <= 2) return { min: 8, max: 80 };
   if (round === 3) return { min: 4.5, max: 30 };
-  // 4 towers — still clear
+  // 4 towers - still clear
   if (round <= 5) return { min: 3, max: 14 };
   if (round === 6) return { min: 2.2, max: 7 };
-  // 5 towers — still readable, then slowly closer
+  // 5 towers - still readable, then slowly closer
   if (round <= 8) return { min: 1.85, max: 4.5 };
   if (round <= 10) return { min: 1.4, max: 2.6 };
   // free play keeps squeezing gently

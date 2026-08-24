@@ -48,7 +48,7 @@ export function useCatchBgm(phase: CatchPhase, volume: number) {
       audio.src = src;
       audio.volume = volumeRef.current;
       void audio.play().catch(() => {
-        /* autoplay blocked until a gesture — Start covers that */
+        /* autoplay blocked until a gesture - Start covers that */
       });
     };
     playNextRef.current = playNext;

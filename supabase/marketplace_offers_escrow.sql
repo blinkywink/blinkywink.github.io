@@ -1,4 +1,4 @@
--- Marketplace counter-offers — escrow Cash on offer, verify transfer on accept.
+-- Marketplace counter-offers - escrow Cash on offer, verify transfer on accept.
 -- Safe to re-run. Apply to production after the original marketplace_offers.sql.
 
 alter table public.marketplace_offers
@@ -143,7 +143,7 @@ begin
 end;
 $$;
 
--- Buyer makes a lower Cash offer — Cash is held immediately.
+-- Buyer makes a lower Cash offer - Cash is held immediately.
 create or replace function public.make_listing_offer(
   p_listing_id uuid,
   p_offer_price integer

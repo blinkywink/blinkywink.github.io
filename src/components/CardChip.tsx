@@ -13,7 +13,7 @@ type Props = {
   actionLabel?: string;
 };
 
-/** Lightweight card row — portrait thumb + text, not a full MonkeyCard. */
+/** Lightweight card row - portrait thumb + text, not a full MonkeyCard. */
 export function CardChip({
   cardId,
   card: cardProp,

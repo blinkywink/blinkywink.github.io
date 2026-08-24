@@ -7,7 +7,7 @@ export const HUB_PEEK_CARD_IDS = [
   "super-monkey-0-5-0",
 ] as const;
 
-/** Market tile listing preview — distinct from the Cards fan. */
+/** Market tile listing preview - distinct from the Cards fan. */
 export const HUB_MARKET_PEEK_CARD_ID = "banana-farm-0-0-5";
 
 export type HubPeekCardId = (typeof HUB_PEEK_CARD_IDS)[number];

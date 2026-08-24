@@ -569,7 +569,7 @@ body {
   }
 }
 
-/* Soft RGB LED fade — glows drift and hue-cycle slowly. */
+/* Soft RGB LED fade - glows drift and hue-cycle slowly. */
 @property --rgb-hue {
   syntax: "<number>";
   inherits: true;
@@ -887,7 +887,7 @@ p {
   background: var(--theme-accent-bg);
 }
 
-/* Hamburger — mobile only */
+/* Hamburger - mobile only */
 .site-nav-mobile {
   display: none;
   position: relative;
@@ -1083,7 +1083,7 @@ p {
   color: rgba(240, 240, 244, 0.62);
 }
 
-/* Games lock to the visible viewport — no page scroll */
+/* Games lock to the visible viewport - no page scroll */
 .site-main:has(.price-page),
 .site-main:has(.orderup-page),
 .site-main:has(.bloonle-page),
@@ -1114,7 +1114,7 @@ body:has(.rico-page) {
 }
 
 /*
- * Shared game shell — every *-page fills the viewport under the header and
+ * Shared game shell - every *-page fills the viewport under the header and
  * scales width via --game-max-w. Per-game rules only override tokens / chrome.
  */
 .zoomed-page,
@@ -1603,7 +1603,7 @@ body:has(.rico-page) {
   z-index: 2;
 }
 
-/* Market: listing peek — featured card + ask tag */
+/* Market: listing peek - featured card + ask tag */
 .home-hub__market-stage {
   position: relative;
   width: 100%;
@@ -2110,7 +2110,7 @@ body:has(.rico-page) {
   color: rgba(240, 240, 244, 0.45);
 }
 
-/* Embed /games tiles — 3 across on hub */
+/* Embed /games tiles - 3 across on hub */
 .arcade--embed {
   width: 100%;
   margin: 0;
@@ -2159,7 +2159,7 @@ body:has(.rico-page) {
     gap: 0.85rem;
   }
 
-  /* Full-width stacked tiles — preview beside title on phones */
+  /* Full-width stacked tiles - preview beside title on phones */
   .arcade--embed .game-card,
   .arcade__featured--hub .game-card {
     flex-direction: row;
@@ -4177,7 +4177,7 @@ body:has(.rico-page) {
   font-weight: 800;
 }
 
-/* Zoomed game — shell via shared tokens above */
+/* Zoomed game - shell via shared tokens above */
 .zoomed-page > .game-header {
   flex-shrink: 0;
   margin-bottom: 0.35rem;
@@ -4305,7 +4305,7 @@ body:has(.rico-page) {
 
 .zoomed-stage {
   position: relative;
-  /* Size to the image — don't eat blank vertical space */
+  /* Size to the image - don't eat blank vertical space */
   flex: 0 1 auto;
   width: 100%;
   margin: 0 auto;
@@ -5493,7 +5493,7 @@ body:has(.rico-page) {
   font-weight: 800;
 }
 
-/* —— Post-pack exit —— */
+/* -- Post-pack exit -- */
 .rewards-done {
   position: fixed;
   inset: 0;
@@ -5827,7 +5827,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Monkey Card Lab (collectible prototype) ——— */
+/* --- Monkey Card Lab (collectible prototype) --- */
 .card-lab {
   /* Face is authored at 400px; preview uses a unitless scale (length÷length is flaky). */
   --card-face-w: 400px;
@@ -6490,7 +6490,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .card-focus__panel {
-  /* Scale focus cards with the viewport — roomy but not full-bleed */
+  /* Scale focus cards with the viewport - roomy but not full-bleed */
   --card-face-w: min(72vw, calc(60vh * 2.5 / 3.5));
   position: relative;
   z-index: 1;
@@ -6578,7 +6578,7 @@ body.rewards-overlay-open .sweeper-result {
   width: min(100%, 400px);
   aspect-ratio: 2.5 / 3.5;
   perspective: 1200px;
-  /* Stable hit target — does not tilt with the card */
+  /* Stable hit target - does not tilt with the card */
   touch-action: none;
   cursor: grab;
 }
@@ -6792,7 +6792,7 @@ body.rewards-overlay-open .sweeper-result {
   border-radius: 22px;
   pointer-events: none;
   z-index: 9;
-  /* Soft moving rim shine only — no static double outline ring */
+  /* Soft moving rim shine only - no static double outline ring */
   box-shadow: none;
   background: linear-gradient(
     125deg,
@@ -6848,7 +6848,7 @@ body.rewards-overlay-open .sweeper-result {
   z-index: 1;
   pointer-events: none;
   opacity: calc(var(--opacity) * 0.55 * var(--holo-mul, 1));
-  /* Soft wide rainbow wash — not sharp zebra stripes */
+  /* Soft wide rainbow wash - not sharp zebra stripes */
   background:
     linear-gradient(
       125deg,
@@ -7076,7 +7076,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 /* Sit behind the card. Particles use leftover positions just outside
-   the face — this box itself must stay empty so it never reads as a
+   the face - this box itself must stay empty so it never reads as a
    second card. */
 .monkey-card__paragon-field {
   position: absolute;
@@ -7352,7 +7352,7 @@ body.rewards-overlay-open .sweeper-result {
 
 .monkey-card--preview .monkey-card__paragon-corner {
   transform: none;
-  /* Thumbs / market grid — keep ribbon in proportion with other chrome. */
+  /* Thumbs / market grid - keep ribbon in proportion with other chrome. */
   width: min(3.3rem, 14.25cqi);
   right: min(0.18rem, 0.8cqi);
 }
@@ -7362,7 +7362,7 @@ body.rewards-overlay-open .sweeper-result {
   top: 0;
   left: 50%;
   z-index: 0;
-  /* % of the corner (rem-capped) — never the full card width. */
+  /* % of the corner (rem-capped) - never the full card width. */
   width: 52%;
   height: 132%;
   transform: translateX(-50%);
@@ -8081,7 +8081,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 
-/* ——— Pack opener (slice + swipe) ——— */
+/* --- Pack opener (slice + swipe) --- */
 .pack-opener {
   position: fixed;
   inset: 0;
@@ -8313,7 +8313,7 @@ body.rewards-overlay-open .sweeper-result {
   pointer-events: auto;
 }
 
-/* Pokémon-style foil booster — one aligned pack (no broken 3D faces) */
+/* Pokémon-style foil booster - one aligned pack (no broken 3D faces) */
 .booster-wrap {
   --pack-d: clamp(14px, 2.8vw, 22px);
   position: relative;
@@ -8608,7 +8608,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .pack-face--tower {
-  /* Clean silver foil field — same for every tower pack */
+  /* Clean silver foil field - same for every tower pack */
   background:
     linear-gradient(
       160deg,
@@ -8690,7 +8690,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .pack-face__hero img {
-  /* Identical frame for every tower — never crop for the title */
+  /* Identical frame for every tower - never crop for the title */
   width: 100%;
   height: 100%;
   max-width: 100%;
@@ -8734,7 +8734,7 @@ body.rewards-overlay-open .sweeper-result {
   text-shadow: none;
 }
 
-/* Proportional to pack width — same look on shelf + opener */
+/* Proportional to pack width - same look on shelf + opener */
 .pack-face__name.is-sm {
   font-size: 16cqi;
 }
@@ -8784,7 +8784,7 @@ body.rewards-overlay-open .sweeper-result {
   inset: 0;
 }
 
-/* Home pack shelf — preview of template faces */
+/* Home pack shelf - preview of template faces */
 .pack-shelf {
   position: relative;
   z-index: 1;
@@ -8842,7 +8842,7 @@ body.rewards-overlay-open .sweeper-result {
   padding: 14px 0.4rem 0.4rem;
   border-radius: 14px;
   outline: none;
-  /* Hit target stays put — avoids hover flicker */
+  /* Hit target stays put - avoids hover flicker */
   transform: none;
 }
 
@@ -8879,11 +8879,11 @@ body.rewards-overlay-open .sweeper-result {
 
 .pack-shelf__booster .booster__model {
   animation: none !important;
-  /* Flat on shelf — 3D tilt was causing uneven hover edges */
+  /* Flat on shelf - 3D tilt was causing uneven hover edges */
   transform: none;
 }
 
-/* BTD6 cover can overflow its frame and glitch under hover — clip cleanly */
+/* BTD6 cover can overflow its frame and glitch under hover - clip cleanly */
 .pack-shelf__booster .booster__art img {
   width: 100%;
   height: 100%;
@@ -9070,7 +9070,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* Full holo card preview — fills most of the viewport */
+/* Full holo card preview - fills most of the viewport */
 .pack-opener__card {
   position: relative;
   z-index: 5;
@@ -9229,12 +9229,12 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .pack-opener__card-glow--t5 {
-  /* Soft gold bloom via drop-shadow on the card — no rectangular ring */
+  /* Soft gold bloom via drop-shadow on the card - no rectangular ring */
   display: none;
 }
 
 .pack-opener__card-glow--paragon {
-  /* Soft violet bloom via drop-shadow on the card — no rectangular ring */
+  /* Soft violet bloom via drop-shadow on the card - no rectangular ring */
   display: none;
 }
 
@@ -9408,7 +9408,7 @@ body.rewards-overlay-open .sweeper-result {
   animation: pack-suspense-label 1.45s ease-out both;
 }
 
-/* ——— Paragon: overload build (not a recolor of T5) ——— */
+/* --- Paragon: overload build (not a recolor of T5) --- */
 .pack-opener__suspense--paragon {
   animation: pack-suspense-para-in 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
@@ -10342,7 +10342,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Price Check ——— */
+/* --- Price Check --- */
 .price-page {
   position: relative;
 }
@@ -10521,7 +10521,7 @@ body.rewards-overlay-open .sweeper-result {
   overflow: hidden;
 }
 
-/* 1 tower — fill the panel with one huge portrait */
+/* 1 tower - fill the panel with one huge portrait */
 .price-side--n1 .price-side__art {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -10535,7 +10535,7 @@ body.rewards-overlay-open .sweeper-result {
   aspect-ratio: 1;
 }
 
-/* 2 — big pair side-by-side */
+/* 2 - big pair side-by-side */
 .price-side--n2 .price-side__art {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr;
@@ -10543,7 +10543,7 @@ body.rewards-overlay-open .sweeper-result {
   justify-items: stretch;
 }
 
-/* 3 — triangle: two on top, one wide / or 2+1 */
+/* 3 - triangle: two on top, one wide / or 2+1 */
 .price-side--n3 .price-side__art {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -10558,7 +10558,7 @@ body.rewards-overlay-open .sweeper-result {
   max-height: 100%;
 }
 
-/* 4 — 2×2 */
+/* 4 - 2×2 */
 .price-side--n4 .price-side__art {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -10566,7 +10566,7 @@ body.rewards-overlay-open .sweeper-result {
   justify-items: stretch;
 }
 
-/* 5 — 3 + 2 */
+/* 5 - 3 + 2 */
 .price-side--n5 .price-side__art {
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -10733,7 +10733,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Order Up ——— */
+/* --- Order Up --- */
 .orderup-page {
   position: relative;
 }
@@ -11068,7 +11068,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Round Check ——— */
+/* --- Round Check --- */
 .roundcheck-page {
   width: min(44rem, calc(100% - var(--page-gutter)));
   margin: 0 auto;
@@ -11432,7 +11432,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* —— Helium Pop —— */
+/* -- Helium Pop -- */
 .rico-page {
   --game-max-w: 44rem;
   --game-gutter: 0.5rem;
@@ -11514,7 +11514,7 @@ body.rewards-overlay-open .sweeper-result {
   margin-top: 0;
 }
 
-/* Exact portrait contain — board fills slot, no empty frame */
+/* Exact portrait contain - board fills slot, no empty frame */
 .rico-stage {
   position: relative;
   width: min(100cqw, calc(100cqh * 390 / 560));
@@ -11613,7 +11613,7 @@ body.rewards-overlay-open .sweeper-result {
   overflow: visible;
 }
 
-/* Portaled to document.body — escapes shooter backdrop-filter containing block. */
+/* Portaled to document.body - escapes shooter backdrop-filter containing block. */
 .rico-float-tip {
   position: fixed;
   left: var(--tip-x, 50%);
@@ -11839,7 +11839,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Bloonle ——— */
+/* --- Bloonle --- */
 .bloonle-page {
   position: relative;
 }
@@ -12254,7 +12254,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Camo Detection ——— */
+/* --- Camo Detection --- */
 .camo-page {
   position: relative;
 }
@@ -12502,7 +12502,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Bloons Sweeper ——— */
+/* --- Bloons Sweeper --- */
 .sweeper-page {
   --sweeper-ink: #f4efe8;
   gap: 0.55rem;
@@ -12748,7 +12748,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Blow Free ——— */
+/* --- Blow Free --- */
 .blowfree-page {
   --blow-ink: #eef2f8;
   gap: 0.45rem;
@@ -12850,7 +12850,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .blowfree-grid {
-  /* Largest square that fits the stage — full width on phones. */
+  /* Largest square that fits the stage - full width on phones. */
   width: min(100cqw, 100cqh);
   max-width: 100%;
   max-height: 100%;
@@ -12879,7 +12879,7 @@ body.rewards-overlay-open .sweeper-result {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Center knob — keeps L-turns from filling the outer corner. */
+/* Center knob - keeps L-turns from filling the outer corner. */
 .blowfree-joint {
   position: absolute;
   z-index: 1;
@@ -13000,7 +13000,7 @@ body.rewards-overlay-open .sweeper-result {
   padding-top: 1.25rem;
 }
 
-/* ——— Banana Catch ——— */
+/* --- Banana Catch --- */
 .catch-page {
   --catch-ink: #f4f1e6;
   gap: 0.4rem;
@@ -13121,7 +13121,7 @@ body.rewards-overlay-open .sweeper-result {
 
 .catch-field {
   position: relative;
-  /* Locked 580×820 portrait logic — contain inside the board slot */
+  /* Locked 580×820 portrait logic - contain inside the board slot */
   width: min(100cqw, calc(100cqh * 580 / 820));
   height: min(100cqh, calc(100cqw * 820 / 580));
   border-radius: 20px;
@@ -13303,7 +13303,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Bloon Hero ——— */
+/* --- Bloon Hero --- */
 .hero-page {
   --hero-ink: #f4f1e6;
   gap: 0.4rem;
@@ -13504,7 +13504,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .hero-lyrics.is-fading-out {
-  /* Fade-out only — new words snap in at full opacity. */
+  /* Fade-out only - new words snap in at full opacity. */
   transition: opacity 0.12s linear;
 }
 
@@ -14395,7 +14395,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* ——— Leaderboard ——— */
+/* --- Leaderboard --- */
 .board-page {
   width: min(var(--content-max), calc(100% - var(--page-gutter)));
   margin-inline: auto;
@@ -14717,7 +14717,7 @@ body.rewards-overlay-open .sweeper-result {
   justify-self: start;
 }
 
-/* —— Bonus pack picker (streak / fast Bloonle) —— */
+/* -- Bonus pack picker (streak / fast Bloonle) -- */
 .bonus-pick {
   position: fixed;
   inset: 0;
@@ -14833,7 +14833,7 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-/* —— Marketplace —— */
+/* -- Marketplace -- */
 .market-page {
   /* Same preview sizing as CardLab so listings match collection cards. */
   --card-face-w: 400px;
@@ -15941,7 +15941,7 @@ button.card-chip:hover:not(:disabled) {
   padding-bottom: 0.5rem;
 }
 
-/* Selection chrome only — card face uses the same .card-lab__grid preview rules. */
+/* Selection chrome only - card face uses the same .card-lab__grid preview rules. */
 .card-lab__grid > .pick-item {
   width: var(--card-preview-w);
   position: relative;
@@ -16134,7 +16134,7 @@ button.card-chip:hover:not(:disabled) {
 
 @media (max-width: 720px) {
   .trade-summary {
-    /* Stacked sides are tall — sticky would eat the whole phone screen. */
+    /* Stacked sides are tall - sticky would eat the whole phone screen. */
     position: static;
     padding: 0.6rem;
     gap: 0.6rem;
@@ -16541,7 +16541,7 @@ button.card-chip:hover:not(:disabled) {
   gap: 0.4rem;
 }
 
-/* User avatar — resolution-safe circular crop (same on 1080p / retina). */
+/* User avatar - resolution-safe circular crop (same on 1080p / retina). */
 .user-avatar {
   position: relative;
   display: inline-block;
@@ -17756,7 +17756,7 @@ button.card-chip:hover:not(:disabled) {
   }
 }
 
-/* —— Heroes (shop / profile / collection / procs) —— */
+/* -- Heroes (shop / profile / collection / procs) -- */
 .hero-proc-stack {
   position: fixed;
   top: calc(var(--site-header-h, 3.75rem) + 0.35rem);
@@ -18060,7 +18060,7 @@ button.hero-proc--action:focus-visible {
     0 0 12px rgba(var(--hero-r), var(--hero-g), var(--hero-b), 0.18);
 }
 
-/* —— Tier 0 (Lv 1–5): soft wash —— */
+/* -- Tier 0 (Lv 1-5): soft wash -- */
 .hero-card--tier-0 .hero-card__plate {
   background:
     radial-gradient(
@@ -18076,7 +18076,7 @@ button.hero-proc--action:focus-visible {
     );
 }
 
-/* —— Tier 1 (Lv 6–10): angled dual-tone + frame —— */
+/* -- Tier 1 (Lv 6-10): angled dual-tone + frame -- */
 .hero-card--tier-1 .hero-card__plate {
   background:
     linear-gradient(
@@ -18091,7 +18091,7 @@ button.hero-proc--action:focus-visible {
     0 0 18px rgba(var(--hero-r), var(--hero-g), var(--hero-b), 0.32);
 }
 
-/* —— Tier 2 (Lv 11–15): cross-hatch aurora —— */
+/* -- Tier 2 (Lv 11-15): cross-hatch aurora -- */
 .hero-card--tier-2 .hero-card__plate {
   background:
     radial-gradient(
@@ -18117,7 +18117,7 @@ button.hero-proc--action:focus-visible {
     0 0 22px rgba(var(--hero-r), var(--hero-g), var(--hero-b), 0.4);
 }
 
-/* —— Tier 3 (Lv 16–19): prismatic lattice —— */
+/* -- Tier 3 (Lv 16-19): prismatic lattice -- */
 .hero-card--tier-3 .hero-card__plate {
   background:
     conic-gradient(
@@ -18136,7 +18136,7 @@ button.hero-proc--action:focus-visible {
     0 0 28px rgba(var(--hero-r), var(--hero-g), var(--hero-b), 0.5);
 }
 
-/* —— Tier 4 (Lv 20 ultra): dark void + chroma ring —— */
+/* -- Tier 4 (Lv 20 ultra): dark void + chroma ring -- */
 .hero-card--tier-4 .hero-card__plate {
   background:
     radial-gradient(
@@ -18228,7 +18228,7 @@ button.hero-proc--action:focus-visible {
   mix-blend-mode: soft-light;
 }
 
-/* Shared VFX layer base — animates transform/opacity only (GPU-cheap) */
+/* Shared VFX layer base - animates transform/opacity only (GPU-cheap) */
 .hero-card__vfx {
   position: absolute;
   inset: 0;
@@ -18250,7 +18250,7 @@ button.hero-proc--action:focus-visible {
   box-shadow: inset 0 0 0 1px transparent;
 }
 
-/* Tier 1–3: drifting light wash */
+/* Tier 1-3: drifting light wash */
 .hero-card--live-fx.hero-card--tier-1 .hero-card__vfx--drift,
 .hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--drift,
 .hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--drift {
@@ -18286,7 +18286,7 @@ button.hero-proc--action:focus-visible {
   animation: hero-vfx-sweep 4.2s linear infinite;
 }
 
-/* Tier 2–3: floating orb dots */
+/* Tier 2-3: floating orb dots */
 .hero-card--live-fx.hero-card--tier-2 .hero-card__vfx--orbs,
 .hero-card--live-fx.hero-card--tier-3 .hero-card__vfx--orbs {
   opacity: 0.9;
@@ -18451,7 +18451,7 @@ button.hero-proc--action:focus-visible {
   z-index: 4;
 }
 
-/* Tower-style title block — scales with card width via cqi */
+/* Tower-style title block - scales with card width via cqi */
 .hero-card__head {
   position: absolute;
   top: 0;
@@ -18563,7 +18563,7 @@ button.hero-proc--action:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-/* Card Collection — owned heroes in a centered horizontal row */
+/* Card Collection - owned heroes in a centered horizontal row */
 .hero-shelf {
   margin: 0.85rem auto 0.35rem;
   width: 100%;
@@ -18657,7 +18657,7 @@ button.hero-proc--action:focus-visible {
   }
 }
 
-/* ——— Heroes lab (Collection → Heroes) ——— */
+/* --- Heroes lab (Collection → Heroes) --- */
 .heroes-lab__banner {
   width: min(960px, calc(100% - 2rem));
   margin: 0 auto 0.75rem;
@@ -19202,7 +19202,7 @@ button.hero-proc--action:focus-visible {
   }
 }
 
-/* Local export page — home hub card/pack peeks. */
+/* Local export page - home hub card/pack peeks. */
 .hub-peek-export {
   --card-face-w: 400px;
   --card-preview-w: 280px;
@@ -19249,7 +19249,7 @@ button.hero-proc--action:focus-visible {
   transform: none !important;
 }
 
-/* Local export page only — real MonkeyCard previews, no clipping. */
+/* Local export page only - real MonkeyCard previews, no clipping. */
 .t5-grid-export {
   --card-face-w: 400px;
   --card-preview-w: 240px;

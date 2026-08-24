@@ -97,7 +97,7 @@ function endpointBlockers(pairs: DraftPair[], exceptIndex: number): Set<string> 
   return blocked;
 }
 
-/** Inward spiral — breaks row/column stripe layouts. */
+/** Inward spiral - breaks row/column stripe layouts. */
 function spiralPath(size: number): Cell[] {
   const cells: Cell[] = [];
   let top = 0;

@@ -13,7 +13,7 @@ import { isAudioStemFile } from "./stemPlayer";
 
 export type LoadedSong = {
   chart: ParsedChart;
-  /** Filled after StemPlayer create — used for revoke. */
+  /** Filled after StemPlayer create - used for revoke. */
   audioUrls: string[];
   /** Raw stem payloads for the player. */
   stemFiles: { name: string; data: Uint8Array }[];

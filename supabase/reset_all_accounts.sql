@@ -7,7 +7,7 @@
 -- Preview (safe):
 --   select public.preview_reset_all_accounts();
 --
--- Execute (destructive — only when you mean it):
+-- Execute (destructive - only when you mean it):
 --   select public.reset_all_accounts_to_fresh('RESET_ALL_ACCOUNTS');
 --
 -- Or use: npm run reset-accounts -- --dry-run

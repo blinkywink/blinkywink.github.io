@@ -4,7 +4,7 @@ type Props = {
   blurb?: string;
 };
 
-/** Left-aligned page title — same rhythm as Card Collection. */
+/** Left-aligned page title - same rhythm as Card Collection. */
 export function PageHeader({ eyebrow, title, blurb }: Props) {
   return (
     <header className="page-header">

@@ -56,7 +56,7 @@ export function placeMines(
     }
   }
 
-  // Fisher–Yates partial shuffle for mine count
+  // Fisher-Yates partial shuffle for mine count
   const mineCount = Math.min(cfg.mines, slots.length);
   for (let i = 0; i < mineCount; i++) {
     const j = i + Math.floor(Math.random() * (slots.length - i));

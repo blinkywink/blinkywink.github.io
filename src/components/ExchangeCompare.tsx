@@ -19,7 +19,7 @@ type Props = {
 };
 
 function seedLabel(seed: number | null | undefined): string {
-  if (seed == null || !Number.isFinite(seed)) return "—";
+  if (seed == null || !Number.isFinite(seed)) return "-";
   return `#${Math.floor(seed)}`;
 }
 
@@ -124,7 +124,7 @@ export function ExchangeCompare({ cardId, mine, theirs, className = "" }: Props)
               className="card-focus card-focus--over-sheet"
               role="dialog"
               aria-modal="true"
-              aria-label={`${focused.label} — ${card.entity.name}`}
+              aria-label={`${focused.label} - ${card.entity.name}`}
             >
               <button
                 type="button"
