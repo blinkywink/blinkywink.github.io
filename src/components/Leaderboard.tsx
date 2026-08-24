@@ -223,6 +223,9 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   return (
     <div className="board-page">
       <main className="board-main">
+        <p className="board-sub">
+          Ranked by lifetime Cash earned from games, not your current balance.
+        </p>
         <div className="board-toolbar">
           <label className="board-search">
             <input

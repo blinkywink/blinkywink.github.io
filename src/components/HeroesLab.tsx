@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import type { HeroEntity } from "../data/heroes";
 import { heroBlurb } from "../lib/heroEffects";
@@ -32,16 +33,193 @@ const LOOK_LEVELS = [1, 5, 10, 15, 20] as const;
 
 /** Milestone strip plus current level when it isn't already one of those. */
 function previewStripLevels(currentLevel: number): number[] {
-  const cur = Math.max(1, Math.min(HERO_MAX_LEVEL, Math.floor(currentLevel) || 1));
+  const cur = Math.max(
+    1,
+    Math.min(HERO_MAX_LEVEL, Math.floor(currentLevel) || 1),
+  );
   const levels = new Set<number>(LOOK_LEVELS);
   levels.add(cur);
   return [...levels].sort((a, b) => a - b);
 }
 
+export type HeroesViewer = {
+  username: string;
+  ownedHeroIds?: string[] | null;
+  equippedHeroId?: string | null;
+  heroLevels?: Record<string, number> | null;
+};
+
 type Props = {
   onBack: () => void;
   initialHeroId?: string;
 };
+
+/** Shop-style grid + fullscreen card for someone else's heroes. */
+export function RemoteHeroesBrowse({
+  viewer,
+  onBack,
+  initialHeroId,
+}: {
+  viewer: HeroesViewer;
+  onBack: () => void;
+  initialHeroId?: string;
+}) {
+  const heroes = useMemo(() => shoppableHeroes(), []);
+  const owned = useMemo(
+    () => new Set(normalizeOwnedHeroIds(viewer.ownedHeroIds)),
+    [viewer.ownedHeroIds],
+  );
+  const levels = useMemo(
+    () => normalizeHeroLevels(viewer.heroLevels),
+    [viewer.heroLevels],
+  );
+  const equippedId = viewer.equippedHeroId
+    ? String(viewer.equippedHeroId).toLowerCase()
+    : null;
+
+  const ownedHeroes = useMemo(
+    () => heroes.filter((h) => owned.has(h.id)),
+    [heroes, owned],
+  );
+
+  const [focusedId, setFocusedId] = useState<string | null>(
+    () => initialHeroId?.toLowerCase() ?? null,
+  );
+
+  useEffect(() => {
+    if (initialHeroId) setFocusedId(initialHeroId.toLowerCase());
+  }, [initialHeroId]);
+
+  const focused = useMemo(() => {
+    if (!focusedId) return null;
+    return ownedHeroes.find((h) => h.id === focusedId) ?? null;
+  }, [focusedId, ownedHeroes]);
+
+  useEffect(() => {
+    if (!focused) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      setFocusedId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [focused]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || focused) return;
+      e.preventDefault();
+      onBack();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focused, onBack]);
+
+  const focusLevel = focused
+    ? heroLevelFromProfile(levels, focused.id)
+    : 1;
+
+  const focusPortal = focused
+    ? createPortal(
+        <div
+          className="card-focus shop-hero-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={focused.name}
+        >
+          <button
+            type="button"
+            className="card-focus__backdrop"
+            aria-label="Close"
+            onClick={() => setFocusedId(null)}
+          />
+          <div className="card-focus__panel shop-hero-focus__panel">
+            <div className="card-focus__face">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-focus__close"
+                aria-label="Close"
+                onClick={() => setFocusedId(null)}
+              >
+                ✕
+              </button>
+              <HeroCardFace
+                hero={focused}
+                level={focusLevel}
+                size="lg"
+                mode="focus"
+                hideCaption
+              />
+            </div>
+            <h2 className="shop-hero-focus__name">{focused.name}</h2>
+            <p className="shop-hero-focus__blurb">
+              Lv {focusLevel}
+              {equippedId === focused.id ? " · Equipped" : ""}
+            </p>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div className="card-lab heroes-lab heroes-lab--remote">
+      <header className="card-lab__header">
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          onClick={onBack}
+        >
+          ← Cards
+        </button>
+        <div className="card-lab__titles card-lab__titles--tower">
+          <h1>{viewer.username}&apos;s Heroes</h1>
+          <p className="card-lab__blurb">
+            {ownedHeroes.length === 0
+              ? "No heroes unlocked yet."
+              : `${ownedHeroes.length} unlocked · tap a card to view.`}
+          </p>
+        </div>
+      </header>
+
+      {ownedHeroes.length > 0 ? (
+        <div className="heroes-lab__browse-grid">
+          {ownedHeroes.map((hero) => {
+            const lv = heroLevelFromProfile(levels, hero.id);
+            const isEq = equippedId === hero.id;
+            return (
+              <button
+                key={hero.id}
+                type="button"
+                className={`heroes-lab__browse-card${isEq ? " is-equipped" : ""}`}
+                onClick={() => {
+                  playCardFocus();
+                  setFocusedId(hero.id);
+                }}
+              >
+                <HeroCardFace
+                  hero={hero}
+                  level={lv}
+                  equipped={isEq}
+                  hideCaption
+                  size="md"
+                  mode="preview"
+                />
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+      {focusPortal}
+    </div>
+  );
+}
 
 /** Full-page hero manage / upgrade screen (Collection → Heroes). */
 export function HeroesLab({ onBack, initialHeroId }: Props) {
@@ -118,7 +296,9 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
     : 0;
   const need =
     mine && !maxed ? heroClearsRequiredForNextLevel(realLevel) : 0;
-  const ready = Boolean(mine && !maxed && heroLevelUpReady(realLevel, progress));
+  const ready = Boolean(
+    mine && !maxed && heroLevelUpReady(realLevel, progress),
+  );
   const upgradePrice =
     mine && !maxed && selected
       ? heroUpgradeCost(realLevel + 1, selected.id)
@@ -241,7 +421,11 @@ export function HeroesLab({ onBack, initialHeroId }: Props) {
               {heroBlurb(selected.id, displayLevel)}
             </p>
 
-            <div className="heroes-lab__previews" role="group" aria-label="Level looks">
+            <div
+              className="heroes-lab__previews"
+              role="group"
+              aria-label="Level looks"
+            >
               <p className="heroes-lab__previews-label">Looks</p>
               <div className="heroes-lab__previews-row">
                 {stripLevels.map((lv) => {

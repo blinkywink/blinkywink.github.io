@@ -14446,8 +14446,11 @@ body.rewards-overlay-open .sweeper-result {
 
 .board-sub {
   margin: 0;
+  max-width: 36rem;
   font-family: var(--font-body);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.4;
   color: rgba(240, 240, 244, 0.62);
 }
 
@@ -18667,6 +18670,58 @@ button.hero-proc--action:focus-visible {
   width: min(960px, calc(100% - 2rem));
   margin: 0 auto 2.5rem;
   justify-items: stretch;
+}
+
+.heroes-lab__browse-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem 0.75rem;
+  width: min(36rem, calc(100% - 2rem));
+  margin: 0 auto 2.5rem;
+  align-items: start;
+}
+
+.heroes-lab__browse-card {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.heroes-lab__browse-card .hero-card-scene,
+.heroes-lab__browse-card .hero-card {
+  width: 100%;
+  max-width: none;
+  pointer-events: none;
+}
+
+.heroes-lab__browse-card:hover,
+.heroes-lab__browse-card:focus-visible {
+  transform: translateY(-3px);
+  outline: none;
+}
+
+.heroes-lab__browse-card:active {
+  transform: translateY(-1px);
+}
+
+.heroes-lab__browse-card.is-equipped .hero-card__plate {
+  box-shadow:
+    0 0 0 2px rgba(240, 200, 74, 0.85),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  .heroes-lab__browse-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem 0.45rem;
+    width: min(100%, calc(100% - 1.25rem));
+  }
 }
 
 .heroes-lab__card {

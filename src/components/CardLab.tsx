@@ -30,7 +30,7 @@ import {
 } from "../lib/profileCosmetics";
 import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { EquippedHeroPanel } from "./HeroCollectionStrip";
-import { HeroesLab } from "./HeroesLab";
+import { HeroesLab, RemoteHeroesBrowse } from "./HeroesLab";
 import { MonkeyCard } from "./MonkeyCard";
 import { TierSortButton } from "./TierSortButton";
 import { VisibleCardGrid } from "./VisibleCardGrid";
@@ -348,8 +348,11 @@ export function CardLab({
   const totalOwned = owned.size;
   const totalCards = ALL_TOWER_SPECS.length;
   const ownedHeroCount = useMemo(
-    () => normalizeOwnedHeroIds(profile?.owned_hero_ids).length,
-    [profile?.owned_hero_ids],
+    () =>
+      normalizeOwnedHeroIds(
+        isRemote ? viewer?.ownedHeroIds : profile?.owned_hero_ids,
+      ).length,
+    [isRemote, viewer?.ownedHeroIds, profile?.owned_hero_ids],
   );
   const totalHeroes = useMemo(() => shoppableHeroes().length, []);
   const showcaseCards = useMemo(() => {
@@ -710,21 +713,21 @@ export function CardLab({
             </span>
           </button>
 
-          {!isRemote ? (
-            <button
-              type="button"
-              className="card-lab__all-btn card-lab__all-btn--heroes"
-              onClick={() => {
-                setQuery("");
-                setView({ kind: "heroes" });
-              }}
-            >
-              <span className="card-lab__all-btn-title">Heroes</span>
-              <span className="card-lab__all-btn-meta">
-                {ownedHeroCount} / {totalHeroes} unlocked · equip & level up
-              </span>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="card-lab__all-btn card-lab__all-btn--heroes"
+            onClick={() => {
+              setQuery("");
+              setView({ kind: "heroes" });
+            }}
+          >
+            <span className="card-lab__all-btn-title">Heroes</span>
+            <span className="card-lab__all-btn-meta">
+              {isRemote
+                ? `${ownedHeroCount} / ${totalHeroes} unlocked`
+                : `${ownedHeroCount} / ${totalHeroes} unlocked · equip & level up`}
+            </span>
+          </button>
 
           <label className="card-lab__search">
             <span className="card-lab__search-label">Search towers</span>
@@ -783,17 +786,31 @@ export function CardLab({
     );
   }
 
-  // ——— Heroes manage / upgrade ———
-  if (view.kind === "heroes" && !isRemote) {
-    return (
-      <>
-                <HeroesLab
+  // ——— Heroes manage / upgrade (or read-only browse on remote) ———
+  if (view.kind === "heroes") {
+    if (isRemote && viewer) {
+      return (
+        <RemoteHeroesBrowse
+          viewer={{
+            username: viewer.username,
+            ownedHeroIds: viewer.ownedHeroIds,
+            equippedHeroId: viewer.equippedHeroId,
+            heroLevels: viewer.heroLevels,
+          }}
           initialHeroId={initial?.heroId}
           onBack={() => {
             setView({ kind: "towers" });
           }}
         />
-      </>
+      );
+    }
+    return (
+      <HeroesLab
+        initialHeroId={initial?.heroId}
+        onBack={() => {
+          setView({ kind: "towers" });
+        }}
+      />
     );
   }
 
