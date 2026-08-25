@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.13",
-  "version": "1.0.13",
-  "shopDay": "2026-8-23",
+  "minDesktopVersion": "1.0.14",
+  "version": "1.0.14",
+  "shopDay": "2026-8-25",
   "featuredTowers": [
-    "Mermonkey",
-    "Bomb Shooter",
-    "Ninja Monkey"
+    "Monkey Village",
+    "Heli Pilot",
+    "Wizard Monkey"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",
