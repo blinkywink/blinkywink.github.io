@@ -53,7 +53,6 @@ import {
 } from "./lib/gameScores";
 import { fetchPublicPlayerPage, peekPublicPlayerPage } from "./lib/playerPage";
 import { recordHeroClear } from "./lib/profileHeroes";
-import { heroById } from "./data/heroes";
 import { lazyRoute } from "./lib/lazyRoute";
 import {
   collectionPath,
@@ -280,32 +279,13 @@ function AppShell() {
     async (cleared: boolean) => {
       // Always hit the RPC on clear - don't gate on client `equipped`
       // (stale/null context was silently skipping progress).
+      // Toasts: HeroFxProvider only when a hero becomes ready to level up.
       if (!cleared) return;
       const result = await recordHeroClear();
-      if (!result) return;
-      if (!result.heroId) {
-        if (!equipped) {
-          notifyHeroProc({
-            heroId: "quincy",
-            message: "Equip a hero to earn clear XP",
-          });
-        }
-        return;
-      }
+      if (!result?.heroId) return;
       await refreshProfile();
-      const name = heroById(result.heroId)?.name ?? "Hero";
-      if (result.ready) {
-        // HeroFxProvider toasts once when profile shows a ready level-up.
-        return;
-      }
-      if (result.required > 0) {
-        notifyHeroProc({
-          heroId: result.heroId,
-          message: `${name}: ${result.progress}/${result.required} clears`,
-        });
-      }
     },
-    [equipped, notifyHeroProc, refreshProfile],
+    [refreshProfile],
   );
 
   const settleFeaturedBonus = useCallback(
@@ -456,8 +436,11 @@ function AppShell() {
       });
       queueClearAndBonusPacks({
         cleared: info.cleared,
+        // Fresh daily solve only - never practice / revisit / 0-guess skips.
         wantBonus:
-          info.cleared && info.guesses <= BLOONLE_BONUS_MAX_TRIES,
+          info.cleared &&
+          info.guesses > 0 &&
+          info.guesses <= BLOONLE_BONUS_MAX_TRIES,
         haulAfter: true,
       });
       void recordGameRun("bloonle", info.cleared);
@@ -577,7 +560,8 @@ function AppShell() {
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared && info.mode === "daily",
-        haulAfter: true,
+        // Practice stays on the in-game result; only daily opens Nice Haul.
+        haulAfter: info.mode === "daily",
       });
       void recordGameRun("blowfree", info.cleared);
       void creditHeroClear(info.cleared);

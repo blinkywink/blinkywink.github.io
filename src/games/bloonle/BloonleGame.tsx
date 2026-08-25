@@ -3,13 +3,13 @@ import { GameHeader } from "../../components/GameHeader";
 import { isTypingTarget } from "../../lib/keyboard";
 import { bloonleSolveReward } from "../rewards";
 import { dayNumber, type LetterMark } from "./dictionary";
-import { useBloonle } from "./useBloonle";
+import { claimBloonleDailyHaulOnce, useBloonle } from "./useBloonle";
 
 type Props = {
   onBack: () => void;
   /** Fired once when solved in ≤3 guesses. */
   onFastSolve?: (guessCount: number) => void;
-  /** Fired once when a round ends (win or lose). */
+  /** Fired once when a daily round ends (win or lose). Not on revisit. */
   onRunEnd?: (info: {
     cleared: boolean;
     coinsEarned: number;
@@ -69,26 +69,52 @@ export function BloonleGame({
     backspace,
     submit,
     playNext,
+    markHaulReported,
     keyMarks,
     maxGuesses,
   } = useBloonle();
   const len = state.puzzle.slug.length;
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
-  const prevStatus = useRef(state.status);
+  /** Opening an already-finished daily must never re-trigger Nice Haul / packs. */
+  const openedAlreadyDone = useRef(
+    state.mode === "daily" && state.status !== "playing",
+  );
+  const dailyHaulLock = useRef(state.haulReported);
+  const fastSolveLock = useRef(false);
 
   useEffect(() => {
-    const was = prevStatus.current;
-    prevStatus.current = state.status;
-    if (was !== "playing") return;
+    if (state.mode !== "daily") return;
+    if (state.status === "playing") return;
+
+    if (openedAlreadyDone.current) {
+      if (!state.haulReported && !dailyHaulLock.current) {
+        dailyHaulLock.current = true;
+        claimBloonleDailyHaulOnce(state.day);
+        markHaulReported();
+      }
+      return;
+    }
+
+    if (state.haulReported || dailyHaulLock.current) return;
+    if (!claimBloonleDailyHaulOnce(state.day)) {
+      dailyHaulLock.current = true;
+      markHaulReported();
+      return;
+    }
+    dailyHaulLock.current = true;
+    markHaulReported();
+
+    const guesses = state.guesses.length;
     if (state.status === "won") {
-      const guesses = state.guesses.length;
-      // Award is applied async; compute the same payout for Nice Haul now.
       const coinsEarned =
         state.reward > 0
           ? state.reward
           : bloonleSolveReward(state.mode, guesses);
-      if (guesses > 0 && guesses <= 3) onFastSolve?.(guesses);
+      if (!fastSolveLock.current && guesses > 0 && guesses <= 3) {
+        fastSolveLock.current = true;
+        onFastSolve?.(guesses);
+      }
       onRunEnd?.({
         cleared: true,
         coinsEarned,
@@ -97,20 +123,22 @@ export function BloonleGame({
       });
       return;
     }
-    if (state.status === "lost") {
-      onRunEnd?.({
-        cleared: false,
-        coinsEarned: 0,
-        guesses: state.guesses.length,
-        answer: state.puzzle.slug,
-      });
-    }
+
+    onRunEnd?.({
+      cleared: false,
+      coinsEarned: 0,
+      guesses,
+      answer: state.puzzle.slug,
+    });
   }, [
     state.status,
-    state.guesses.length,
     state.mode,
+    state.day,
+    state.guesses.length,
     state.reward,
     state.puzzle.slug,
+    state.haulReported,
+    markHaulReported,
     onFastSolve,
     onRunEnd,
   ]);
@@ -238,6 +266,8 @@ export function BloonleGame({
                 </p>
               ) : null}
               {state.status === "won" &&
+              isDaily &&
+              !state.haulReported &&
               state.guesses.length > 0 &&
               state.guesses.length <= 3 ? (
                 <p className="bloonle-result__pack">
@@ -289,7 +319,6 @@ export function BloonleGame({
                       className="bloonle-key bloonle-key--wide"
                       onClick={backspace}
                       disabled={done}
-                      aria-label="Backspace"
                     >
                       ⌫
                     </button>

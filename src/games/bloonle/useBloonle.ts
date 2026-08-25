@@ -29,26 +29,37 @@ type Persisted = {
   status: BloonleStatus;
   awarded: boolean;
   reward: number;
+  /** Nice Haul / free pack already fired for today's daily. */
+  haulReported: boolean;
 };
 
-const STORAGE_KEY = "bloon-arcade:bloonle:daily:v3";
+const STORAGE_KEY = "bloon-arcade:bloonle:daily:v4";
 
 function loadPersisted(day: string): Persisted | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem("bloon-arcade:bloonle:daily:v3");
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Persisted;
+    const parsed = JSON.parse(raw) as Persisted & { haulReported?: boolean };
     if (parsed.day !== day) return null;
     if (!Array.isArray(parsed.guesses)) return null;
+    const status: BloonleStatus =
+      parsed.status === "won" || parsed.status === "lost"
+        ? parsed.status
+        : "playing";
+    // Migrate finished dailies as already hauled so revisit can't re-grant packs.
+    const haulReported =
+      typeof parsed.haulReported === "boolean"
+        ? parsed.haulReported
+        : status !== "playing";
     return {
       day: parsed.day,
       guesses: parsed.guesses.filter((g) => typeof g === "string"),
-      status:
-        parsed.status === "won" || parsed.status === "lost"
-          ? parsed.status
-          : "playing",
+      status,
       awarded: Boolean(parsed.awarded),
       reward: Number(parsed.reward) || 0,
+      haulReported,
     };
   } catch {
     return null;
@@ -56,7 +67,20 @@ function loadPersisted(day: string): Persisted | null {
 }
 
 function savePersisted(data: Persisted) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+}
+
+/** Sync claim so remounts can't re-fire Nice Haul before React commits. */
+export function claimBloonleDailyHaulOnce(day: string): boolean {
+  const saved = loadPersisted(day);
+  if (!saved || saved.status === "playing") return false;
+  if (saved.haulReported) return false;
+  savePersisted({ ...saved, haulReported: true });
+  return true;
 }
 
 function rebuildGuesses(slugs: string[], answer: string): BloonleGuess[] {
@@ -76,6 +100,7 @@ type State = {
   toast: string | null;
   awarded: boolean;
   reward: number;
+  haulReported: boolean;
   msUntilNext: number;
   /** Recent practice answers so we don't immediate-repeat. */
   recentSlugs: string[];
@@ -97,6 +122,7 @@ function makeDailyState(): State {
     if (guesses.some((g) => g.letters === puzzle.slug)) status = "won";
     else if (guesses.length >= BLOONLE_CONFIG.maxGuesses) status = "lost";
   }
+  const finished = status !== "playing";
   return {
     mode: "daily",
     day,
@@ -107,6 +133,9 @@ function makeDailyState(): State {
     toast: null,
     awarded: guesses.length ? (saved?.awarded ?? false) : false,
     reward: guesses.length ? (saved?.reward ?? 0) : 0,
+    haulReported: finished
+      ? (saved?.haulReported ?? true)
+      : (saved?.haulReported ?? false),
     msUntilNext: Math.max(0, nextMidnightMs() - Date.now()),
     recentSlugs: [puzzle.slug],
   };
@@ -124,6 +153,7 @@ function makePracticeState(recentSlugs: string[], day: string): State {
     toast: null,
     awarded: false,
     reward: 0,
+    haulReported: false,
     msUntilNext: Math.max(0, nextMidnightMs() - Date.now()),
     recentSlugs: [...recentSlugs, puzzle.slug].slice(-12),
   };
@@ -140,7 +170,9 @@ export function useBloonle() {
   isGuestRef.current = isGuest;
   const accountDailyReady = isGuest || (ready && Boolean(profile));
   const alreadyClaimedToday =
-    !isGuest && Boolean(profile?.last_bloonle_day) && profile?.last_bloonle_day === utcToday();
+    !isGuest &&
+    Boolean(profile?.last_bloonle_day) &&
+    profile?.last_bloonle_day === utcToday();
 
   // Midnight rollover → new daily
   useEffect(() => {
@@ -174,6 +206,7 @@ export function useBloonle() {
       status: BloonleStatus,
       awarded: boolean,
       reward: number,
+      haulReported: boolean,
     ) => {
       savePersisted({
         day,
@@ -181,6 +214,7 @@ export function useBloonle() {
         status,
         awarded,
         reward,
+        haulReported,
       });
     },
     [],
@@ -212,24 +246,19 @@ export function useBloonle() {
     [onCorrectCash, refreshProfile],
   );
 
-  // Account already collected today's daily on another client - skip the puzzle.
+  // Account already collected today's daily - show completed, never re-haul.
   useEffect(() => {
     if (!alreadyClaimedToday) return;
     const day = utcToday();
     setState((s) => {
       if (s.mode !== "daily" || s.day !== day) return s;
-      if (s.awarded && s.status !== "playing") return s;
-      persistDaily(
-        s.day,
-        s.guesses,
-        "won",
-        true,
-        s.reward,
-      );
+      if (s.status !== "playing" && s.awarded && s.haulReported) return s;
+      persistDaily(s.day, s.guesses, "won", true, s.reward, true);
       return {
         ...s,
         status: "won",
         awarded: true,
+        haulReported: true,
         current: "",
       };
     });
@@ -261,7 +290,14 @@ export function useBloonle() {
       else if (guesses.length >= BLOONLE_CONFIG.maxGuesses) status = "lost";
 
       if (s.mode === "daily") {
-        persistDaily(s.day, guesses, status, s.awarded, s.reward);
+        persistDaily(
+          s.day,
+          guesses,
+          status,
+          s.awarded,
+          s.reward,
+          s.haulReported,
+        );
       }
 
       if (status === "won") {
@@ -274,7 +310,14 @@ export function useBloonle() {
               if (cur.puzzle.slug !== s.puzzle.slug) return cur;
               const reward = r.reward || cur.reward;
               if (mode === "daily") {
-                persistDaily(cur.day, cur.guesses, "won", r.awarded, reward);
+                persistDaily(
+                  cur.day,
+                  cur.guesses,
+                  "won",
+                  r.awarded,
+                  reward,
+                  cur.haulReported,
+                );
               }
               return {
                 ...cur,
@@ -293,7 +336,25 @@ export function useBloonle() {
         status,
       };
     });
-  }, [awardIfNeeded, persistDaily, showToast]);
+  }, [accountDailyReady, awardIfNeeded, persistDaily, showToast]);
+
+  const markHaulReported = useCallback(() => {
+    setState((s) => {
+      if (s.haulReported) return s;
+      const next = { ...s, haulReported: true };
+      if (s.mode === "daily") {
+        persistDaily(
+          s.day,
+          s.guesses,
+          s.status,
+          s.awarded,
+          s.reward,
+          true,
+        );
+      }
+      return next;
+    });
+  }, [persistDaily]);
 
   const playNext = useCallback(() => {
     setState((s) => {
@@ -302,16 +363,19 @@ export function useBloonle() {
     });
   }, []);
 
-  const typeLetter = useCallback((ch: string) => {
-    const letter = ch.toLowerCase();
-    if (!/^[a-z]$/.test(letter)) return;
-    setState((s) => {
-      if (s.status !== "playing") return s;
-      if (s.mode === "daily" && !accountDailyReady) return s;
-      if (s.current.length >= s.puzzle.slug.length) return s;
-      return { ...s, current: s.current + letter };
-    });
-  }, [accountDailyReady]);
+  const typeLetter = useCallback(
+    (ch: string) => {
+      const letter = ch.toLowerCase();
+      if (!/^[a-z]$/.test(letter)) return;
+      setState((s) => {
+        if (s.status !== "playing") return s;
+        if (s.mode === "daily" && !accountDailyReady) return s;
+        if (s.current.length >= s.puzzle.slug.length) return s;
+        return { ...s, current: s.current + letter };
+      });
+    },
+    [accountDailyReady],
+  );
 
   const backspace = useCallback(() => {
     setState((s) => {
@@ -345,9 +409,18 @@ export function useBloonle() {
       backspace,
       submit,
       playNext,
+      markHaulReported,
       keyMarks,
       maxGuesses: BLOONLE_CONFIG.maxGuesses,
     }),
-    [state, typeLetter, backspace, submit, playNext, keyMarks],
+    [
+      state,
+      typeLetter,
+      backspace,
+      submit,
+      playNext,
+      markHaulReported,
+      keyMarks,
+    ],
   );
 }

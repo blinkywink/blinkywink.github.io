@@ -66,7 +66,11 @@ function loadPersisted(day: string): Persisted | null {
       paths: parsed.paths && typeof parsed.paths === "object" ? parsed.paths : {},
       status: parsed.status === "won" ? "won" : "playing",
       awarded: Boolean(parsed.awarded),
-      haulReported: Boolean(parsed.haulReported),
+      haulReported:
+        typeof parsed.haulReported === "boolean"
+          ? parsed.haulReported
+          : // Migrate: finished daily already got its haul.
+            parsed.status === "won",
       reward: Number(parsed.reward) || 0,
       levelId: String(parsed.levelId ?? ""),
     };
@@ -177,18 +181,8 @@ export function useBlowFree() {
     const day = utcToday();
     setState((s) => {
       if (s.mode !== "daily" || s.day !== day) return s;
-      // This device already cleared - leave haulReported alone so packs can fire.
-      if (s.status === "won") {
-        if (s.awarded) return s;
-        const next: BlowState = {
-          ...s,
-          awarded: true,
-          reward: s.reward || blowFreeDailyReward(),
-        };
-        persistFrom(next);
-        return next;
-      }
-      // Cross-device: skip the puzzle; don't re-fire haul/packs.
+      if (s.status === "won" && s.awarded && s.haulReported) return s;
+      // Never re-fire haul/packs on revisit or cross-device sync.
       const next: BlowState = {
         ...s,
         status: "won",
