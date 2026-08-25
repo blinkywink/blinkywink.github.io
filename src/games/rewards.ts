@@ -6,7 +6,7 @@ export const SHARED_RUN = {
   continueCost: 100,
 } as const;
 
-/** Bonus tower-pack pick when you get this many right in a 10-round quiz. */
+/** Bonus category pack when you get this many right in a 10-round quiz. */
 export const QUIZ_BONUS_MIN_CORRECT = 7;
 
 export function earnsQuizBonusPack(correctCount: number): boolean {

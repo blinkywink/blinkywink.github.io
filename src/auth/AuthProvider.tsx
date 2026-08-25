@@ -27,6 +27,7 @@ import {
   saveAppSession,
   type AppSession,
 } from "./session";
+import { parseFreeCategoryCounts, refreshFreeCategoryPacks } from "../lib/freeCategoryPacks";
 
 const GUEST_ID = "guest";
 
@@ -145,7 +146,7 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     return null;
   }
   if (!data) return null;
-  return {
+  const profile: Profile = {
     ...data,
     last_daily_claim: data.last_daily_claim
       ? String(data.last_daily_claim).slice(0, 10)
@@ -187,7 +188,15 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
       !Array.isArray(data.hero_clear_progress)
         ? (data.hero_clear_progress as Record<string, number>)
         : {},
+    free_category_packs: parseFreeCategoryCounts(
+      (data as { free_category_packs?: unknown }).free_category_packs,
+    ),
   };
+
+  // Free pack balances are owned by grant/consume/get RPCs.
+  // Do not overwrite the in-memory cache from a profile select - that race
+  // (hero clear refresh right after a grant) was wiping fresh credits.
+  return profile;
 }
 
 type RpcSession = {
@@ -302,6 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (cancelled || !loaded) return;
       setProfile(loaded);
       await reconcileSiteThemeWithAccount(loaded.site_theme);
+      if (!cancelled) void refreshFreeCategoryPacks(userId);
     })();
 
     return () => {

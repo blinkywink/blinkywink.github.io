@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
 import {
   allCategoryPacks,
   dayStamp,
@@ -7,7 +9,15 @@ import {
   msUntilShopRotation,
   packPrice,
   type PackDef,
+  type TowerCategory,
 } from "../lib/packTheme";
+import {
+  getFreeCategoryCounts,
+  refreshFreeCategoryPacks,
+  subscribeFreeCategoryPacks,
+  type FreeCategoryCounts,
+} from "../lib/freeCategoryPacks";
+import { subscribeRouteEnter } from "../lib/navigationRefresh";
 import {
   getRemoteFeaturedTowers,
   subscribeRemoteFeatured,
@@ -49,9 +59,42 @@ function useShopClock() {
   return { remaining, shopDay };
 }
 
+function useFreeCategoryCounts(userId: string | null | undefined) {
+  const { pathname } = useLocation();
+  const [counts, setCounts] = useState<FreeCategoryCounts>(() =>
+    getFreeCategoryCounts(userId),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const pull = () => {
+      setCounts(getFreeCategoryCounts(userId));
+      void refreshFreeCategoryPacks(userId ?? null).then((next) => {
+        if (!cancelled) setCounts(next);
+      });
+    };
+    pull();
+    const unsubPacks = subscribeFreeCategoryPacks(() => {
+      setCounts(getFreeCategoryCounts(userId));
+    });
+    const unsubRoute = subscribeRouteEnter((path) => {
+      if (path === "/shop" || path.startsWith("/shop/")) pull();
+    });
+    return () => {
+      cancelled = true;
+      unsubPacks();
+      unsubRoute();
+    };
+  }, [userId, pathname]);
+
+  return counts;
+}
+
 export function ShopPage({ onPackFinished }: Props) {
+  const { session } = useAuth();
   const [activePack, setActivePack] = useState<PackDef | null>(null);
   const { remaining, shopDay } = useShopClock();
+  const freeCounts = useFreeCategoryCounts(session?.userId);
   const [remoteTowers, setRemoteTowers] = useState(getRemoteFeaturedTowers);
   useEffect(() => subscribeRemoteFeatured(() => {
     setRemoteTowers(getRemoteFeaturedTowers());
@@ -69,6 +112,10 @@ export function ShopPage({ onPackFinished }: Props) {
   const renderPackButton = (pack: PackDef) => {
     const price = packPrice(pack);
     const free = price <= 0;
+    const freeCredit =
+      pack.kind === "category" && pack.category
+        ? freeCounts[pack.category as TowerCategory] ?? 0
+        : 0;
     return (
       <button
         key={pack.id}
@@ -102,6 +149,9 @@ export function ShopPage({ onPackFinished }: Props) {
               </>
             )}
           </span>
+          {freeCredit > 0 ? (
+            <span className="pack-shelf__free">Free ×{freeCredit}</span>
+          ) : null}
         </span>
       </button>
     );

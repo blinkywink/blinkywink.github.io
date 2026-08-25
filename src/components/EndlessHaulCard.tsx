@@ -13,6 +13,8 @@ type Props = {
   loading: boolean;
   onPlayAgain: () => void;
   onBack: () => void;
+  onDismiss: () => void;
+  onPlayNextBonus?: () => void;
 };
 
 export function EndlessHaulCard({
@@ -22,6 +24,8 @@ export function EndlessHaulCard({
   loading,
   onPlayAgain,
   onBack,
+  onDismiss,
+  onPlayNextBonus,
 }: Props) {
   const label = scoreLabel(gameId);
   const score = report?.score ?? 0;
@@ -31,6 +35,14 @@ export function EndlessHaulCard({
   return (
     <div className="rewards-done" role="dialog" aria-label="Run summary">
       <div className="rewards-done__card rewards-done__card--endless">
+        <button
+          type="button"
+          className="rewards-done__close"
+          aria-label="Close"
+          onClick={onDismiss}
+        >
+          ✕
+        </button>
         <p className="eyebrow">Run over</p>
         <h2>{isNew ? "New high score!" : "Nice haul"}</h2>
 
@@ -80,9 +92,18 @@ export function EndlessHaulCard({
         </div>
 
         <div className="rewards-done__actions">
+          {onPlayNextBonus ? (
+            <button
+              type="button"
+              className="btn btn--primary btn--lg"
+              onClick={onPlayNextBonus}
+            >
+              Play next bonus game
+            </button>
+          ) : null}
           <button
             type="button"
-            className="btn btn--primary btn--lg"
+            className={`btn btn--lg${onPlayNextBonus ? " btn--secondary" : " btn--primary"}`}
             onClick={onPlayAgain}
           >
             Play again

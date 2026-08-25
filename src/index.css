@@ -5506,6 +5506,7 @@ body:has(.rico-page) {
 }
 
 .rewards-done__card {
+  position: relative;
   width: min(22rem, 100%);
   padding: 1.6rem 1.4rem 1.35rem;
   border-radius: 22px;
@@ -5516,6 +5517,69 @@ body:has(.rico-page) {
   display: grid;
   gap: 0.75rem;
   justify-items: center;
+}
+
+.rewards-done__close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 240, 244, 0.85);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rewards-done__close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.rewards-done__pack {
+  width: 100%;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(125, 211, 162, 0.1);
+  border: 1px solid rgba(125, 211, 162, 0.35);
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+}
+
+.rewards-done__pack-art {
+  --booster-w: 5.5rem;
+  --booster-h: calc(var(--booster-w) * 1.62);
+  width: var(--booster-w);
+  height: var(--booster-h);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+
+.rewards-done__pack-art .booster__model {
+  animation: none !important;
+  transform: none;
+}
+
+.rewards-done__pack-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9de0b5;
+}
+
+.rewards-done__pack-note {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.68);
 }
 
 .rewards-done__card h2 {
@@ -8901,6 +8965,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .pack-shelf__label {
+  position: relative;
   display: grid;
   gap: 0.25rem;
   justify-items: center;
@@ -8930,6 +8995,21 @@ body.rewards-overlay-open .sweeper-result {
   width: 1.25rem;
   height: 1.25rem;
   object-fit: contain;
+}
+
+.pack-shelf__free {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 0.12rem;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9de0b5;
+  pointer-events: none;
 }
 
 @media (max-width: 720px) {

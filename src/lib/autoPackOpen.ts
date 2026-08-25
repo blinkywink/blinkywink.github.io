@@ -3,7 +3,7 @@ import { loadAppSession } from "../auth/session";
 import { cacheInvalidate } from "./cache";
 
 /** One-time unlock for hands-free pack opening. */
-export const AUTO_PACK_OPEN_COST = 50_000;
+export const AUTO_PACK_OPEN_COST = 20_000;
 
 export function autoPackUnlockedFromProfile(row: {
   auto_pack_unlocked?: boolean | null;

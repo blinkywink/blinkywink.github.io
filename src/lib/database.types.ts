@@ -32,6 +32,8 @@ export type Profile = {
   accent_color?: string | null;
   /** One-time unlock for hands-free pack opening. */
   auto_pack_unlocked?: boolean | null;
+  /** Stackable free category pack opens (Primary/Military/Magic/Support). */
+  free_category_packs?: Record<string, number> | null;
   /** Site-wide color theme id (synced across devices). */
   site_theme?: string | null;
   /** Premium theme ids unlocked with Cash. */
@@ -84,6 +86,7 @@ export type Database = {
           accent_unlocked?: boolean;
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
+          free_category_packs?: Record<string, number>;
           site_theme?: string;
           site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
@@ -113,6 +116,7 @@ export type Database = {
           accent_unlocked?: boolean;
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
+          free_category_packs?: Record<string, number>;
           site_theme?: string;
           site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
@@ -381,6 +385,18 @@ export type Database = {
       buy_auto_pack_open: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      grant_free_category_pack: {
+        Args: { p_category?: string | null };
+        Returns: unknown;
+      };
+      consume_free_category_pack: {
+        Args: { p_category: string };
+        Returns: unknown;
+      };
+      get_free_category_packs: {
+        Args: Record<string, never>;
+        Returns: unknown;
       };
       award_cursed_holo_badge: {
         Args: Record<string, never>;

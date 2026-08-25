@@ -1,4 +1,4 @@
--- One-time unlock: Auto Pack Open (50 000 Cash).
+-- One-time unlock: Auto Pack Open (20 000 Cash).
 -- Safe to re-run.
 
 alter table public.profiles
@@ -14,7 +14,7 @@ declare
   uid uuid := public.current_account_id();
   unlocked boolean;
   new_balance integer;
-  cost constant integer := 50000;
+  cost constant integer := 20000;
 begin
   if uid is null then
     raise exception 'Not authenticated';

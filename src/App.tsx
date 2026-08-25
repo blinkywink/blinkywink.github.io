@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, Suspense, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ReactNode } from "react";
 import {
   Navigate,
   Route,
@@ -7,11 +7,9 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { useCardCollection } from "./auth/CardCollectionProvider";
 import { useAuth } from "./auth/AuthProvider";
 import { useHeroFx } from "./auth/HeroFxProvider";
 import { ArcadeHome, type GameId } from "./components/ArcadeHome";
-import { BonusPackPicker } from "./components/BonusPackPicker";
 import { CardLab, type CardsOpenOpts } from "./components/CardLab";
 import { LoadingDots } from "./components/LoadingDots";
 import { EndlessHaulCard } from "./components/EndlessHaulCard";
@@ -24,7 +22,6 @@ import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
 import { Marketplace } from "./components/Marketplace";
-import { PackOpenerTest } from "./components/PackOpenerTest";
 import { ParagonDegreeLab } from "./components/ParagonDegreeLab";
 import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
@@ -40,16 +37,13 @@ import { LivePlayerSync } from "./components/LivePlayerSync";
 import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
+import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
 import {
+  getOrCreateFeaturedBonusGame,
   resolveFeaturedBonusGame,
   type FeaturedBonusGame,
 } from "./lib/featuredBonus";
 import { heroEffectsAtLevel } from "./lib/heroEffects";
-import {
-  pickRewardTowerPack,
-  pickRewardTowerPackChoices,
-  type PackDef,
-} from "./lib/packTheme";
 import {
   submitEndlessGameScore,
   type EndlessGameId,
@@ -108,11 +102,6 @@ const BloonHeroGame = lazyRoute(() =>
 function LazyGame({ children }: { children: ReactNode }) {
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
 }
-
-type RewardPackState = {
-  pack: PackDef;
-  reason: "clear" | "bonus";
-};
 
 type CollectionLocationState = CardsOpenOpts | null;
 
@@ -271,13 +260,10 @@ function LeaderboardPage() {
 }
 
 function AppShell() {
-  const { owned } = useCardCollection();
-  const { setCoinBalance, refreshProfile } = useAuth();
+  const { session, setCoinBalance, refreshProfile } = useAuth();
   const { equipped, notifyHeroProc } = useHeroFx();
   const navigate = useNavigate();
   const location = useLocation();
-  const [rewardPack, setRewardPack] = useState<RewardPackState | null>(null);
-  const [bonusChoices, setBonusChoices] = useState<PackDef[] | null>(null);
   const [bonusToast, setBonusToast] = useState<string | null>(null);
   const [showBackToGames, setShowBackToGames] = useState(false);
   const [runHaul, setRunHaul] = useState<RunHaulSummary | null>(null);
@@ -343,12 +329,6 @@ function AppShell() {
     [equipped?.heroId, notifyHeroProc, setCoinBalance],
   );
 
-  const finishRewards = useCallback(() => {
-    setRewardPack(null);
-    setBonusChoices(null);
-    setShowBackToGames(true);
-  }, []);
-
   const beginEndlessHaul = useCallback(
     (gameId: EndlessGameId, score: number) => {
       setEndlessHaul({ gameId, report: null, loading: true });
@@ -368,31 +348,24 @@ function AppShell() {
       /** Open Nice Haul after this run even on a miss (non-quiz games). */
       haulAfter?: boolean;
     }) => {
-      const free = opts.cleared ? pickRewardTowerPack(owned) : null;
-      const exclude = new Set(free?.tower ? [free.tower] : []);
-      const choices = opts.wantBonus
-        ? pickRewardTowerPackChoices(owned, 3, exclude)
-        : [];
+      void (async () => {
+        let granted: Awaited<ReturnType<typeof grantFreeCategoryPack>> = null;
+        if (opts.wantBonus) {
+          granted = await grantFreeCategoryPack(session?.userId ?? null);
+          if (granted) {
+            setRunHaul((prev) =>
+              prev ? { ...prev, categoryPack: granted } : prev,
+            );
+          }
+        }
 
-      setShowBackToGames(false);
-
-      // Stay on the game route. Pack / picker overlays cover the results UI.
-      if (free) {
-        setRewardPack({ pack: free, reason: "clear" });
-        setBonusChoices(choices.length ? choices : null);
-      } else if (choices.length) {
-        setRewardPack(null);
-        setBonusChoices(choices);
-      } else {
-        setRewardPack(null);
-        setBonusChoices(null);
-        // Quiz fails keep their Continue screen - don't stack Nice Haul on top.
-        if (opts.alwaysHaul || opts.cleared || opts.haulAfter) {
+        // Stay on the game route. Nice Haul covers the results UI.
+        if (opts.alwaysHaul || opts.cleared || opts.haulAfter || granted) {
           setShowBackToGames(true);
         }
-      }
+      })();
     },
-    [owned],
+    [session?.userId],
   );
 
   const quizRewardHandlers = useMemo(() => {
@@ -458,18 +431,6 @@ function AppShell() {
     ],
   );
 
-  const offerBloonleBonus = useCallback(
-    (guesses: number) => {
-      if (guesses > BLOONLE_BONUS_MAX_TRIES) return;
-      const choices = pickRewardTowerPackChoices(owned, 3);
-      if (!choices.length) return;
-      setShowBackToGames(false);
-      setRewardPack(null);
-      setBonusChoices(choices);
-    },
-    [owned],
-  );
-
   const onBloonleRunEnd = useCallback(
     (info: {
       cleared: boolean;
@@ -489,14 +450,18 @@ function AppShell() {
           `Answer: ${info.answer}`,
         ],
       });
-      // Bloonle has no clear pack; still show haul so results aren't hidden.
-      setShowBackToGames(true);
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        wantBonus:
+          info.cleared && info.guesses <= BLOONLE_BONUS_MAX_TRIES,
+        haulAfter: true,
+      });
       void (async () => {
         await creditHeroClear(info.cleared);
         void settleFeaturedBonus("bloonle", info.cleared);
       })();
     },
-    [settleFeaturedBonus, creditHeroClear],
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
   const onRoundCheckRunEnd = useCallback(
@@ -657,19 +622,10 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
-  const afterPackDone = useCallback(() => {
-    if (bonusChoices?.length) {
-      setRewardPack(null);
-      return;
-    }
-    finishRewards();
-  }, [bonusChoices, finishRewards]);
-
   const goHome = () => navigate("/");
   const goGames = () => navigate(gamesPath());
 
-  const rewardsOverlayOpen =
-    Boolean(rewardPack) || Boolean(bonusChoices) || showBackToGames;
+  const rewardsOverlayOpen = showBackToGames;
 
   useEffect(() => {
     document.body.classList.toggle("rewards-overlay-open", rewardsOverlayOpen);
@@ -695,6 +651,23 @@ function AppShell() {
     dismissHaul();
     navigate(gamesPath());
   }, [dismissHaul, navigate]);
+
+  const playNextBonus = useCallback(() => {
+    const next = getOrCreateFeaturedBonusGame();
+    dismissHaul();
+    setGameReplayKey((k) => k + 1);
+    navigate(gamePath(next), { replace: true });
+  }, [dismissHaul, navigate]);
+
+  // Dismiss Nice Haul when leaving the page (header nav, etc.).
+  const haulPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (haulPathRef.current === location.pathname) return;
+    haulPathRef.current = location.pathname;
+    setShowBackToGames(false);
+    setEndlessHaul(null);
+    setRunHaul(null);
+  }, [location.pathname]);
 
   if (location.pathname === "/__t5-grid-export") {
     return <T5GridExport />;
@@ -778,7 +751,6 @@ function AppShell() {
                 <BloonleGame
                   key={gameReplayKey}
                   onBack={goGames}
-                  onFastSolve={offerBloonleBonus}
                   onRunEnd={onBloonleRunEnd}
                 />
               </LazyGame>
@@ -879,35 +851,7 @@ function AppShell() {
         </div>
       ) : null}
 
-      {rewardPack ? (
-        <PackOpenerTest
-          open
-          mode="reward"
-          pack={rewardPack.pack}
-          onClose={() => {
-            setRewardPack(null);
-            if (!bonusChoices?.length) {
-              finishRewards();
-            }
-          }}
-          onFinished={() => {
-            afterPackDone();
-          }}
-        />
-      ) : null}
-
-      {!rewardPack && bonusChoices ? (
-        <BonusPackPicker
-          open
-          options={bonusChoices}
-          onPick={(pack) => {
-            setBonusChoices(null);
-            setRewardPack({ pack, reason: "bonus" });
-          }}
-        />
-      ) : null}
-
-      {showBackToGames && !rewardPack && !bonusChoices ? (
+      {showBackToGames ? (
         endlessHaul ? (
           <EndlessHaulCard
             gameId={endlessHaul.gameId}
@@ -916,12 +860,16 @@ function AppShell() {
             loading={endlessHaul.loading}
             onPlayAgain={playAgain}
             onBack={backToGames}
+            onDismiss={dismissHaul}
+            onPlayNextBonus={playNextBonus}
           />
         ) : runHaul ? (
           <RewardsHaulCard
             summary={runHaul}
             onPlayAgain={playAgain}
             onBackToGames={backToGames}
+            onDismiss={dismissHaul}
+            onPlayNextBonus={playNextBonus}
           />
         ) : null
       ) : null}

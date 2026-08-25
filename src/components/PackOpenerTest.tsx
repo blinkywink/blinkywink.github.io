@@ -28,6 +28,12 @@ import {
 import { awardCursedHoloBadge } from "../lib/profileBadges";
 import { awardCoins } from "../lib/awardCoins";
 import { autoPackUnlockedFromProfile } from "../lib/autoPackOpen";
+import {
+  consumeFreeCategoryPack,
+  getFreeCategoryCount,
+  refreshFreeCategoryPacks,
+  subscribeFreeCategoryPacks,
+} from "../lib/freeCategoryPacks";
 import { isTypingTarget } from "../lib/keyboard";
 import { playBuy, playCardFocus, playCardWhoosh, playJumpscare, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadJumpscareSound, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
@@ -252,7 +258,30 @@ export function PackOpenerTest({
 }: Props) {
   const pack = packProp ?? btd6Pack();
   const price = packPrice(pack);
-  const { profile, setCoinBalance, refreshProfile } = useAuth();
+  const { session, profile, setCoinBalance, refreshProfile } = useAuth();
+  const userId = session?.userId ?? null;
+  const [freeCategoryCredit, setFreeCategoryCredit] = useState(0);
+
+  useEffect(() => {
+    if (pack.kind !== "category" || !pack.category) {
+      setFreeCategoryCredit(0);
+      return;
+    }
+    const cat = pack.category;
+    let cancelled = false;
+    const sync = () => {
+      if (!cancelled) setFreeCategoryCredit(getFreeCategoryCount(userId, cat));
+    };
+    sync();
+    if (open) {
+      void refreshFreeCategoryPacks(userId).then(() => sync());
+    }
+    const unsub = subscribeFreeCategoryPacks(sync);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [pack.category, pack.kind, userId, open]);
   const { awardCards, feedParagonsFromCards, owned, listed, paragonOf } =
     useCardCollection();
   const ownedForDup = useMemo(
@@ -543,6 +572,20 @@ export function PackOpenerTest({
       return;
     }
     setBuyError(null);
+
+    if (pack.kind === "category" && pack.category) {
+      const freeLeft = getFreeCategoryCount(userId, pack.category);
+      if (freeLeft > 0) {
+        const ok = await consumeFreeCategoryPack(userId, pack.category);
+        if (ok) {
+          playBuy();
+          setPhaseBoth("sealed");
+          return;
+        }
+        // Server said no - fall through to a paid open.
+      }
+    }
+
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
     if (charge > 0 && (profile?.coins ?? 0) < charge) {
@@ -569,12 +612,14 @@ export function PackOpenerTest({
     setPhaseBoth("sealed");
   }, [
     mode,
+    pack.category,
     pack.kind,
     price,
     profile?.coins,
     refreshProfile,
     setCoinBalance,
     trySaudaDiscount,
+    userId,
   ]);
 
   const finishCardEnter = useCallback((seq?: number) => {
@@ -833,6 +878,27 @@ export function PackOpenerTest({
   const buyAnother = useCallback(async () => {
     if (buyLockRef.current || mode === "reward") return;
     setBuyError(null);
+
+    if (pack.kind === "category" && pack.category) {
+      const freeLeft = getFreeCategoryCount(userId, pack.category);
+      if (freeLeft > 0) {
+        const ok = await consumeFreeCategoryPack(userId, pack.category);
+        if (ok) {
+          buyLockRef.current = true;
+          setBuyBusy(true);
+          resetToSealed();
+          playBuy();
+          later(() => {
+            buyLockRef.current = false;
+            setBuyBusy(false);
+            if (!autoOpenActiveRef.current) autoSlashOpen();
+          }, 160);
+          return;
+        }
+        // Server said no - fall through to a paid open.
+      }
+    }
+
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
     if (charge <= 0) {
@@ -877,6 +943,7 @@ export function PackOpenerTest({
   }, [
     autoSlashOpen,
     mode,
+    pack.category,
     pack.kind,
     price,
     profile?.coins,
@@ -886,6 +953,7 @@ export function PackOpenerTest({
     setCoinBalance,
     stopAutoOpen,
     trySaudaDiscount,
+    userId,
   ]);
 
   const nextCard = useCallback(() => {
@@ -1540,6 +1608,8 @@ export function PackOpenerTest({
               >
                 {buyBusy ? (
                   "Buying…"
+                ) : freeCategoryCredit > 0 ? (
+                  "Open free"
                 ) : price <= 0 ? (
                   "Open"
                 ) : (
@@ -1621,7 +1691,11 @@ export function PackOpenerTest({
                   void buyAnother();
                 }}
               >
-                {buyBusy ? "Buying…" : "Buy another · Space"}
+                {buyBusy
+                  ? "Buying…"
+                  : freeCategoryCredit > 0
+                    ? "Open free · Space"
+                    : "Buy another · Space"}
               </button>
             ) : null}
             <button type="button" className="btn btn--primary" onClick={handleDone}>
