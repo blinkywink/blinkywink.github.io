@@ -73,6 +73,7 @@ import {
   subscribeSfxVolume,
 } from "../lib/packSounds";
 import {
+  accountStatsPath,
   collectionPath,
   userCollectionPath,
 } from "../lib/routes";
@@ -732,6 +733,8 @@ export function ProfilePage() {
             </div>
             <p className="profile-home__links">
               <Link to={collectionPath()}>My cards</Link>
+              <span aria-hidden="true">·</span>
+              <Link to={accountStatsPath()}>Stats</Link>
               <span aria-hidden="true">·</span>
               <Link to={userCollectionPath(user.username)}>Public page</Link>
             </p>

@@ -55,6 +55,9 @@ export function TradeRoom() {
     if (settledRef.current) return;
     settledRef.current = true;
     void refreshCards();
+    void import("../lib/accountStats").then((m) => {
+      void m.recordTradeCompleted();
+    });
   }, [refreshCards]);
 
   const load = useCallback(async () => {

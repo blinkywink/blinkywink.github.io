@@ -34,6 +34,8 @@ export type Profile = {
   auto_pack_unlocked?: boolean | null;
   /** Stackable free category pack opens (Primary/Military/Magic/Support). */
   free_category_packs?: Record<string, number> | null;
+  /** Lifetime play / shop / trade counters (from tracking start). */
+  account_stats?: Record<string, unknown> | null;
   /** Site-wide color theme id (synced across devices). */
   site_theme?: string | null;
   /** Premium theme ids unlocked with Cash. */
@@ -87,6 +89,7 @@ export type Database = {
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
           free_category_packs?: Record<string, number>;
+          account_stats?: Record<string, unknown>;
           site_theme?: string;
           site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
@@ -117,6 +120,7 @@ export type Database = {
           accent_color?: string | null;
           auto_pack_unlocked?: boolean;
           free_category_packs?: Record<string, number>;
+          account_stats?: Record<string, unknown>;
           site_theme?: string;
           site_themes_unlocked?: string[];
           aura_unlocked?: boolean;
@@ -396,6 +400,18 @@ export type Database = {
       };
       get_free_category_packs: {
         Args: Record<string, never>;
+        Returns: unknown;
+      };
+      bump_account_stats: {
+        Args: { p_delta?: Record<string, number>; p_game_id?: string | null };
+        Returns: unknown;
+      };
+      get_account_stats: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      get_public_account_stats: {
+        Args: { p_username: string };
         Returns: unknown;
       };
       award_cursed_holo_badge: {

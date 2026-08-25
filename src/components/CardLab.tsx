@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towerEntities } from "../data/towers";
@@ -28,6 +28,7 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { accountStatsPath, userAccountStatsPath } from "../lib/routes";
 import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { EquippedHeroPanel } from "./HeroCollectionStrip";
 import { HeroesLab, RemoteHeroesBrowse } from "./HeroesLab";
@@ -728,6 +729,17 @@ export function CardLab({
                 : `${ownedHeroCount} / ${totalHeroes} unlocked · equip & level up`}
             </span>
           </button>
+
+          <Link
+            to={
+              isRemote && viewer
+                ? userAccountStatsPath(viewer.username)
+                : accountStatsPath()
+            }
+            className="card-lab__all-btn card-lab__all-btn--stats"
+          >
+            <span className="card-lab__all-btn-title">Stats</span>
+          </Link>
 
           <label className="card-lab__search">
             <span className="card-lab__search-label">Search towers</span>

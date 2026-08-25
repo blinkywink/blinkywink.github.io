@@ -253,6 +253,9 @@ export function TradeInbox() {
       await pingInbox(item.partnerId).catch(() => undefined);
       if (result === "completed") {
         await Promise.all([refreshCards(), refreshProfile()]);
+        void import("../lib/accountStats").then((m) => {
+          void m.recordExchangeCompleted();
+        });
         setNotice(
           item.price > 0
             ? `Exchanged ${offerCardLabel(item.cardId)} for ${item.price.toLocaleString()} Cash.`

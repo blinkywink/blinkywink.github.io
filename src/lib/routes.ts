@@ -73,6 +73,14 @@ export function paragonLabPath(): string {
   return "/profile/paragon-lab";
 }
 
+export function accountStatsPath(): string {
+  return "/collection/stats";
+}
+
+export function userAccountStatsPath(username: string): string {
+  return `/user/${encodeURIComponent(username)}/stats`;
+}
+
 export function tradePath(tradeId: string): string {
   return `/trade/${encodeURIComponent(tradeId)}`;
 }

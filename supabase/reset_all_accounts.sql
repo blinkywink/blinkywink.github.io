@@ -141,6 +141,7 @@ begin
     aura_card_id = null,
     auto_pack_unlocked = false,
     free_category_packs = '{}'::jsonb,
+    account_stats = '{}'::jsonb,
     owned_hero_ids = '{}'::text[],
     equipped_hero_id = null,
     hero_levels = '{}'::jsonb,

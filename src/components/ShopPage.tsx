@@ -134,9 +134,21 @@ export function ShopPage({ onPackFinished }: Props) {
         />
         <span className="pack-shelf__label">
           <strong>{pack.title}</strong>
-          <span className="pack-shelf__price">
+          <span
+            className={`pack-shelf__price${freeCredit > 0 ? " is-free" : ""}`}
+          >
             {free ? (
               "Free"
+            ) : freeCredit > 0 ? (
+              <>
+                <img
+                  src="/images/ui/money-icon.webp"
+                  alt=""
+                  width={22}
+                  height={22}
+                />
+                Free ×{freeCredit}
+              </>
             ) : (
               <>
                 <img
@@ -149,9 +161,6 @@ export function ShopPage({ onPackFinished }: Props) {
               </>
             )}
           </span>
-          {freeCredit > 0 ? (
-            <span className="pack-shelf__free">Free ×{freeCredit}</span>
-          ) : null}
         </span>
       </button>
     );

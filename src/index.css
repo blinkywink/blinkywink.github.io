@@ -5933,9 +5933,9 @@ body.rewards-overlay-open .sweeper-result {
 
 .card-lab__titles > .player-badges {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  max-width: min(100%, 18rem);
+  max-width: 100%;
   margin: 0.15rem 0 0.35rem;
   gap: 0.15rem;
 }
@@ -5945,11 +5945,29 @@ body.rewards-overlay-open .sweeper-result {
   height: 28px;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 641px) {
   .card-lab__titles > .player-badges {
-    max-width: 100%;
+    gap: 0.22rem;
   }
 
+  .card-lab__titles > .player-badges .rank-medal {
+    width: 40px;
+    height: 40px;
+  }
+
+  .card-lab__titles > .player-badges .player-badges__more {
+    min-width: 1.35rem;
+    font-size: 1.15rem;
+  }
+
+  .card-lab__titles > .player-badges .rank-medal-wrap::after {
+    max-width: 22rem;
+    padding: 0.48rem 0.72rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
   .card-lab__titles > .player-badges .rank-medal {
     width: 22px;
     height: 22px;
@@ -6034,18 +6052,168 @@ body.rewards-overlay-open .sweeper-result {
   color: rgba(232, 240, 200, 0.75);
 }
 
+/* Soft green → teal → cool-green steps across the three buttons */
 .card-lab__all-btn--heroes {
-  border-color: #3a4a5a;
-  background: linear-gradient(165deg, #161c28 0%, #10141c 100%);
+  border-color: #3a5c48;
+  background: linear-gradient(165deg, #16241e 0%, #121816 100%);
 }
 
 .card-lab__all-btn--heroes:hover,
 .card-lab__all-btn--heroes:focus-visible {
-  border-color: #6a9acc;
+  border-color: #5a9a72;
 }
 
 .card-lab__all-btn--heroes .card-lab__all-btn-meta {
+  color: rgba(200, 236, 214, 0.78);
+}
+
+.card-lab__all-btn--stats {
+  text-decoration: none;
+  color: inherit;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.48rem 1rem;
+  border-radius: 12px;
+  border-color: #3a524c;
+  background: linear-gradient(165deg, #141f1c 0%, #101614 100%);
+}
+
+.card-lab__all-btn--stats:hover,
+.card-lab__all-btn--stats:focus-visible {
+  border-color: #5a8a7a;
+}
+
+.card-lab__all-btn--stats .card-lab__all-btn-title {
+  font-size: 1rem;
+}
+
+.card-lab__all-btn--stats .card-lab__all-btn-meta {
+  color: rgba(190, 230, 220, 0.75);
+  font-size: 0.82rem;
+}
+
+/* Account stats page */
+.account-stats-page {
+  width: min(40rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.account-stats-page__head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.account-stats-page__head h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+}
+
+.account-stats-page__blurb {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.7);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.account-stats-page__links {
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  font-weight: 800;
+}
+
+.account-stats-page__links a {
+  color: #c9e6ff;
+  text-decoration: none;
+}
+
+.account-stats-page__links a:hover {
+  text-decoration: underline;
+}
+
+.account-stats-page__guest {
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: rgba(240, 240, 244, 0.72);
+}
+
+.account-stats-page__grid {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.account-stats-page__section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.account-stats-page__section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+.account-stats-page__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.account-stats-page__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label value"
+    "note value";
+  gap: 0.15rem 0.85rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(165deg, rgba(28, 32, 42, 0.95), rgba(16, 18, 24, 0.95));
+}
+
+.account-stats-page__label {
+  grid-area: label;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: rgba(240, 240, 244, 0.78);
+}
+
+.account-stats-page__value {
+  grid-area: value;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  justify-self: end;
+}
+
+.account-stats-page__note {
+  grid-area: note;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.card-lab__all-btn--stats .card-lab__all-btn-meta {
   color: rgba(200, 220, 245, 0.75);
+  font-size: 0.82rem;
 }
 
 .card-lab__search--inline {
@@ -8271,6 +8439,24 @@ body.rewards-overlay-open .sweeper-result {
   font-variant-numeric: tabular-nums;
 }
 
+.pack-opener__free-left {
+  margin: 0.15rem 0 0;
+  z-index: 3;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.8vw, 1.15rem);
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9de0b5;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.pack-opener__free-left--done {
+  margin: 0;
+  text-shadow: none;
+}
+
 .pack-opener__god-burst {
   position: absolute;
   inset: 0;
@@ -8997,19 +9183,11 @@ body.rewards-overlay-open .sweeper-result {
   object-fit: contain;
 }
 
-.pack-shelf__free {
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translateX(-50%);
-  margin-top: 0.12rem;
-  white-space: nowrap;
-  font-family: var(--font-display);
-  font-size: 0.82rem;
+.pack-shelf__price.is-free {
+  color: #9de0b5;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #9de0b5;
-  pointer-events: none;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 720px) {
@@ -17298,31 +17476,92 @@ button.card-chip:hover:not(:disabled) {
     0 0 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.35);
 }
 
-.card-lab.has-player-chrome .card-lab__all-btn:not(.card-lab__all-btn--heroes) {
-  border-color: var(--player-accent);
+/* Accent gradient: All Cards → Heroes → Stats (same family, stepped hue/mix) */
+.card-lab.has-player-chrome {
+  --lab-accent-1: var(--player-accent);
+  --lab-accent-2: color-mix(in srgb, var(--player-accent) 72%, #6ec8b8);
+  --lab-accent-3: color-mix(in srgb, var(--player-accent) 48%, #7a9a98);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn {
+  border-color: var(--lab-accent-1);
   background:
     radial-gradient(
       circle at 12% 0%,
-      rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.38),
+      color-mix(in srgb, var(--lab-accent-1) 38%, transparent),
       transparent 55%
     ),
     linear-gradient(
       165deg,
-      color-mix(in srgb, var(--player-accent) 18%, #101014) 0%,
+      color-mix(in srgb, var(--lab-accent-1) 18%, #101014) 0%,
       #101014 100%
     );
   box-shadow:
-    0 0 0 1px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.4),
-    0 10px 28px rgba(var(--player-accent-r), var(--player-accent-g), var(--player-accent-b), 0.28);
+    0 0 0 1px color-mix(in srgb, var(--lab-accent-1) 40%, transparent),
+    0 10px 28px color-mix(in srgb, var(--lab-accent-1) 28%, transparent);
 }
 
-.card-lab.has-player-chrome .card-lab__all-btn:not(.card-lab__all-btn--heroes):hover,
-.card-lab.has-player-chrome .card-lab__all-btn:not(.card-lab__all-btn--heroes):focus-visible {
-  border-color: color-mix(in srgb, var(--player-accent) 70%, #fff);
+.card-lab.has-player-chrome .card-lab__all-btn:hover,
+.card-lab.has-player-chrome .card-lab__all-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--lab-accent-1) 70%, #fff);
 }
 
-.card-lab.has-player-chrome .card-lab__all-btn:not(.card-lab__all-btn--heroes) .card-lab__all-btn-meta {
-  color: color-mix(in srgb, var(--player-accent) 55%, #f0f0f4);
+.card-lab.has-player-chrome .card-lab__all-btn .card-lab__all-btn-meta {
+  color: color-mix(in srgb, var(--lab-accent-1) 55%, #f0f0f4);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--heroes {
+  border-color: var(--lab-accent-2);
+  background:
+    radial-gradient(
+      circle at 12% 0%,
+      color-mix(in srgb, var(--lab-accent-2) 36%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--lab-accent-2) 16%, #101014) 0%,
+      #101014 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--lab-accent-2) 38%, transparent),
+    0 10px 28px color-mix(in srgb, var(--lab-accent-2) 24%, transparent);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--heroes:hover,
+.card-lab.has-player-chrome .card-lab__all-btn--heroes:focus-visible {
+  border-color: color-mix(in srgb, var(--lab-accent-2) 70%, #fff);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--heroes .card-lab__all-btn-meta {
+  color: color-mix(in srgb, var(--lab-accent-2) 55%, #f0f0f4);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--stats {
+  border-color: var(--lab-accent-3);
+  background:
+    radial-gradient(
+      circle at 12% 0%,
+      color-mix(in srgb, var(--lab-accent-3) 32%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--lab-accent-3) 14%, #101014) 0%,
+      #101014 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--lab-accent-3) 34%, transparent),
+    0 8px 22px color-mix(in srgb, var(--lab-accent-3) 20%, transparent);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--stats:hover,
+.card-lab.has-player-chrome .card-lab__all-btn--stats:focus-visible {
+  border-color: color-mix(in srgb, var(--lab-accent-3) 70%, #fff);
+}
+
+.card-lab.has-player-chrome .card-lab__all-btn--stats .card-lab__all-btn-meta {
+  color: color-mix(in srgb, var(--lab-accent-3) 55%, #f0f0f4);
 }
 
 .card-lab.has-player-chrome .card-lab__avatar,

@@ -191,6 +191,11 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     free_category_packs: parseFreeCategoryCounts(
       (data as { free_category_packs?: unknown }).free_category_packs,
     ),
+    account_stats:
+      (data as { account_stats?: unknown }).account_stats &&
+      typeof (data as { account_stats?: unknown }).account_stats === "object"
+        ? ((data as { account_stats: Record<string, unknown> }).account_stats)
+        : {},
   };
 
   // Free pack balances are owned by grant/consume/get RPCs.

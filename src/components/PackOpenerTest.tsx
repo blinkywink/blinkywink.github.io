@@ -28,6 +28,7 @@ import {
 import { awardCursedHoloBadge } from "../lib/profileBadges";
 import { awardCoins } from "../lib/awardCoins";
 import { autoPackUnlockedFromProfile } from "../lib/autoPackOpen";
+import { recordPackOpened } from "../lib/accountStats";
 import {
   consumeFreeCategoryPack,
   getFreeCategoryCount,
@@ -348,6 +349,10 @@ export function PackOpenerTest({
   /** Sync lock - React buyBusy alone races on Space-hold / key-repeat. */
   const buyLockRef = useRef(false);
   const autoOpenActiveRef = useRef(false);
+  /** Last pack opened in this session used a free credit - auto stops when free runs out. */
+  const lastOpenWasFreeRef = useRef(false);
+  /** Paid Cash for the current sealed pack (not free / reward). */
+  const lastPackPurchasedRef = useRef(false);
   const preloadRef = useRef<HTMLImageElement[]>([]);
   const pendingPullsRef = useRef<{
     cards: MonkeyCardSpec[];
@@ -398,6 +403,8 @@ export function PackOpenerTest({
     readyAtRef.current = 0;
     buyLockRef.current = false;
     autoOpenActiveRef.current = false;
+    lastOpenWasFreeRef.current = false;
+    lastPackPurchasedRef.current = false;
     preloadRef.current = [];
     pendingPullsRef.current = null;
     setBuyBusy(false);
@@ -578,6 +585,8 @@ export function PackOpenerTest({
       if (freeLeft > 0) {
         const ok = await consumeFreeCategoryPack(userId, pack.category);
         if (ok) {
+          lastOpenWasFreeRef.current = true;
+          lastPackPurchasedRef.current = false;
           playBuy();
           setPhaseBoth("sealed");
           return;
@@ -593,6 +602,8 @@ export function PackOpenerTest({
       return;
     }
     if (charge <= 0) {
+      lastOpenWasFreeRef.current = false;
+      lastPackPurchasedRef.current = false;
       playBuy();
       setPhaseBoth("sealed");
       return;
@@ -606,6 +617,8 @@ export function PackOpenerTest({
       setBuyError("Purchase failed, try again.");
       return;
     }
+    lastOpenWasFreeRef.current = false;
+    lastPackPurchasedRef.current = true;
     playBuy();
     setCoinBalance(balance);
     void refreshProfile();
@@ -692,7 +705,9 @@ export function PackOpenerTest({
 
   const spaceCanFling = useCallback((e: KeyboardEvent): boolean => {
     if (jumpscareRef.current) {
-      if (e.repeat || needFreshSpaceRef.current) return false;
+      // Cursed holo always needs a deliberate press - Auto never swipes it.
+      if (e.repeat) return false;
+      needFreshSpaceRef.current = false;
       return true;
     }
     const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
@@ -773,6 +788,11 @@ export function PackOpenerTest({
         if (unlocked.length) await awardCards(newIds);
         await feedParagonsFromCards(pulledIds, newIds);
       })();
+      void recordPackOpened({
+        purchased: mode !== "reward" && lastPackPurchasedRef.current,
+        cardsPulled: cards.length,
+        paragonsPulled: cards.filter((c) => c.isParagon).length,
+      });
       if (reveal) {
         showCardAt(0);
       } else {
@@ -785,6 +805,7 @@ export function PackOpenerTest({
       dupCashMods,
       feedParagonsFromCards,
       flushUnpaidDupCash,
+      mode,
       ownedForDup,
       owned,
       listed,
@@ -884,6 +905,8 @@ export function PackOpenerTest({
       if (freeLeft > 0) {
         const ok = await consumeFreeCategoryPack(userId, pack.category);
         if (ok) {
+          lastOpenWasFreeRef.current = true;
+          lastPackPurchasedRef.current = false;
           buyLockRef.current = true;
           setBuyBusy(true);
           resetToSealed();
@@ -895,13 +918,21 @@ export function PackOpenerTest({
           }, 160);
           return;
         }
-        // Server said no - fall through to a paid open.
+        // Server said no - fall through unless Auto was burning free packs.
+      }
+
+      // Auto was chaining free opens - stop instead of spending Cash.
+      if (autoOpenActiveRef.current && lastOpenWasFreeRef.current) {
+        stopAutoOpen();
+        return;
       }
     }
 
     const charge =
       pack.kind === "btd6" ? trySaudaDiscount(price).price : price;
     if (charge <= 0) {
+      lastOpenWasFreeRef.current = false;
+      lastPackPurchasedRef.current = false;
       buyLockRef.current = true;
       setBuyBusy(true);
       resetToSealed();
@@ -931,6 +962,8 @@ export function PackOpenerTest({
       setBuyError("Purchase failed, try again.");
       return;
     }
+    lastOpenWasFreeRef.current = false;
+    lastPackPurchasedRef.current = true;
     setCoinBalance(balance);
     void refreshProfile();
     resetToSealed();
@@ -1038,6 +1071,7 @@ export function PackOpenerTest({
     const p = phaseRef.current;
     if (p === "sealed") autoSlashOpen();
     else if (p === "ready") {
+      if (jumpscareRef.current) return;
       const fake = { repeat: false } as KeyboardEvent;
       if (spaceCanFling(fake)) flingAway();
     } else if (p === "done") {
@@ -1050,11 +1084,11 @@ export function PackOpenerTest({
     if (!open || !autoOpenActive) return;
     const id = window.setInterval(() => {
       if (!autoOpenActiveRef.current || buyLockRef.current) return;
+      // Cursed holo stays up until the player swipes it themselves.
+      if (jumpscareRef.current) return;
       spaceHeldRef.current = true;
       if (phaseRef.current !== "ready") return;
-      const gate = jumpscareRef.current
-        ? "rare"
-        : spaceHoldGate(pullsRef.current[indexRef.current]);
+      const gate = spaceHoldGate(pullsRef.current[indexRef.current]);
       // Holding Space can't clear a rare by itself; Auto taps once like a fresh press.
       if (gate === "rare" && needFreshSpaceRef.current) {
         needFreshSpaceRef.current = false;
@@ -1598,6 +1632,12 @@ export function PackOpenerTest({
             ) : null}
           </div>
 
+          {freeCategoryCredit > 0 && phase !== "shop" ? (
+            <p className="pack-opener__free-left" aria-live="polite">
+              Free ×{freeCategoryCredit}
+            </p>
+          ) : null}
+
           {phase === "shop" ? (
             <div className="pack-opener__buy">
               <button
@@ -1609,7 +1649,9 @@ export function PackOpenerTest({
                 {buyBusy ? (
                   "Buying…"
                 ) : freeCategoryCredit > 0 ? (
-                  "Open free"
+                  <>
+                    Open free · ×{freeCategoryCredit}
+                  </>
                 ) : price <= 0 ? (
                   "Open"
                 ) : (
@@ -1650,6 +1692,11 @@ export function PackOpenerTest({
               ✕
             </button>
           </div>
+          {freeCategoryCredit > 0 ? (
+            <p className="pack-opener__free-left pack-opener__free-left--done">
+              Free ×{freeCategoryCredit} left
+            </p>
+          ) : null}
           {duplicates.size > 0 ? (
             <p className="pack-opener__done-stats">
               {duplicates.size} duplicate
@@ -1694,7 +1741,7 @@ export function PackOpenerTest({
                 {buyBusy
                   ? "Buying…"
                   : freeCategoryCredit > 0
-                    ? "Open free · Space"
+                    ? `Open free · ×${freeCategoryCredit} · Space`
                     : "Buy another · Space"}
               </button>
             ) : null}

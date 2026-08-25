@@ -18,6 +18,7 @@ import {
   type RunHaulSummary,
 } from "./components/RewardsHaulCard";
 import { AboutPage } from "./components/AboutPage";
+import { AccountStatsPage } from "./components/AccountStatsPage";
 import { HomeHub } from "./components/HomeHub";
 import { Leaderboard } from "./components/Leaderboard";
 import { ListingPage } from "./components/ListingPage";
@@ -38,6 +39,7 @@ import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
 import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
+import { recordGameRun } from "./lib/accountStats";
 import {
   getOrCreateFeaturedBonusGame,
   resolveFeaturedBonusGame,
@@ -383,6 +385,7 @@ function AppShell() {
           cashEarned: info.coinsEarned,
           details: [`${info.correctCount} correct`],
         });
+        void recordGameRun(game, info.cleared);
         queueClearAndBonusPacks({
           cleared: info.cleared,
           wantBonus: earnsQuizBonusPack(info.correctCount),
@@ -415,6 +418,7 @@ function AppShell() {
         ],
       });
       beginEndlessHaul("camodetection", info.score);
+      void recordGameRun("camodetection", info.cleared);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
@@ -456,6 +460,7 @@ function AppShell() {
           info.cleared && info.guesses <= BLOONLE_BONUS_MAX_TRIES,
         haulAfter: true,
       });
+      void recordGameRun("bloonle", info.cleared);
       void (async () => {
         await creditHeroClear(info.cleared);
         void settleFeaturedBonus("bloonle", info.cleared);
@@ -488,6 +493,7 @@ function AppShell() {
         wantBonus: info.cleared,
         haulAfter: true,
       });
+      void recordGameRun("roundcheck", info.cleared);
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("roundcheck", info.cleared);
     },
@@ -518,6 +524,7 @@ function AppShell() {
         wantBonus: info.cleared,
         haulAfter: true,
       });
+      void recordGameRun("heliumpop", info.cleared);
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("heliumpop", info.cleared);
     },
@@ -544,6 +551,7 @@ function AppShell() {
         wantBonus: true,
         haulAfter: true,
       });
+      void recordGameRun("bloonssweeper", true);
       void creditHeroClear(true);
       void settleFeaturedBonus("bloonssweeper", true);
     },
@@ -571,6 +579,7 @@ function AppShell() {
         wantBonus: info.cleared && info.mode === "daily",
         haulAfter: true,
       });
+      void recordGameRun("blowfree", info.cleared);
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("blowfree", info.cleared);
     },
@@ -586,6 +595,7 @@ function AppShell() {
         details: [`${info.score.toLocaleString("en-US")} bananas`],
       });
       beginEndlessHaul("bananacatch", info.score);
+      void recordGameRun("bananacatch", info.cleared);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared,
@@ -616,6 +626,7 @@ function AppShell() {
         wantBonus: info.didWell,
         haulAfter: true,
       });
+      void recordGameRun("bloonhero", info.cleared);
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus("bloonhero", info.cleared);
     },
@@ -686,6 +697,8 @@ function AppShell() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/shop" element={<ShopRoute />} />
           <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/collection/stats" element={<AccountStatsPage />} />
+          <Route path="/user/:username/stats" element={<AccountStatsPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route
             path="/marketplace"
