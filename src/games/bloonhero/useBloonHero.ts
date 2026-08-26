@@ -1074,6 +1074,8 @@ export function useBloonHero() {
 
     const tick = () => {
       if (endedRef.current) return;
+      /* Stop drawing while backgrounded — big heat saver on phones. */
+      if (typeof document !== "undefined" && document.hidden) return;
       const leadIn = leadInRef.current;
       const wallMs = performance.now();
       let now = songTimeRef.current;
@@ -1460,9 +1462,19 @@ export function useBloonHero() {
     };
 
     frameRef.current = requestAnimationFrame(tick);
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frameRef.current);
+        return;
+      }
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = requestAnimationFrame(tick);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [state.phase, finishRun, rebuildHolding, resizeCanvas, approachSec, bloonScale, highwayLabels]);
 

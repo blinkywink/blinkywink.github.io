@@ -437,7 +437,9 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
       const rect = canvas.getBoundingClientRect();
       if (rect.width < 2 || rect.height < 2) return;
       // Backing store matches on-screen pixels so tower/bloon sprites stay sharp
-      const dpr = Math.min(3, window.devicePixelRatio || 1);
+      // Cap DPR on phones to cut GPU fill-rate / heat (looks the same on 3x panels).
+      const dprCap = window.matchMedia("(max-width: 820px)").matches ? 2 : 3;
+      const dpr = Math.min(dprCap, window.devicePixelRatio || 1);
       const pw = Math.max(1, Math.round(rect.width * dpr));
       const ph = Math.max(1, Math.round(rect.height * dpr));
       if (canvas.width !== pw || canvas.height !== ph) {

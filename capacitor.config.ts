@@ -20,9 +20,11 @@ const config: CapacitorConfig = {
     },
   },
   ios: {
-    contentInset: "automatic",
+    /* We pad with env(safe-area-inset-*) ourselves (viewport-fit=cover). */
+    contentInset: "never",
     preferredContentMode: "mobile",
     scrollEnabled: true,
+    backgroundColor: "#0a0a0e",
   },
 };
 
