@@ -62,8 +62,8 @@ function IosSideloadDialog({
         </button>
         <h2 id={titleId}>iOS install</h2>
         <p className="ios-sideload__blurb">
-          Not on the App Store — you’ll need to sideload the IPA. Stuck? Ask in
-          Discord and someone can walk you through it.
+          This app isnt on the App Store, it has to be sideloaded. If you want
+          help you can ask in the discord.
         </p>
         <div className="ios-sideload__actions">
           <ExternalLink href={DISCORD_INVITE_URL} className="btn btn--primary">

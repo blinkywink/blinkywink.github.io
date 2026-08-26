@@ -2464,35 +2464,6 @@ body:has(.roundcheck-page) {
   padding: 0;
 }
 
-.howto-play__viz--apps {
-  min-height: 9.5rem;
-  padding: 0.55rem;
-  background:
-    linear-gradient(160deg, rgba(120, 180, 255, 0.12), transparent 50%),
-    #101018;
-}
-
-.howto-play__apps {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.35rem;
-  width: 100%;
-}
-
-.howto-play__apps span {
-  display: grid;
-  place-items: center;
-  padding: 0.45rem 0.25rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(240, 240, 244, 0.88);
-}
-
 .howto-play__card-img {
   display: block;
   width: 100%;

@@ -45,5 +45,7 @@ jobs:
             echo "No manifest changes"
           else
             git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
+            # Rebase if another push landed while OTA was building (common race).
+            git pull --rebase origin main
             git push origin HEAD:main
           fi

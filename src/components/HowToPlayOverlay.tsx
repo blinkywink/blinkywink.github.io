@@ -202,17 +202,6 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
                 </div>
                 <figcaption>Collect cards</figcaption>
               </figure>
-              <figure className="howto-play__example">
-                <div className="howto-play__viz howto-play__viz--apps">
-                  <div className="howto-play__apps" aria-hidden>
-                    <span>Windows</span>
-                    <span>Mac</span>
-                    <span>Android</span>
-                    <span>iOS</span>
-                  </div>
-                </div>
-                <figcaption>Download the app</figcaption>
-              </figure>
             </div>
             <ul className="howto-play__list">
               <li>Play arcade games to earn Cash</li>
