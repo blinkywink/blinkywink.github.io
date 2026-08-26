@@ -442,19 +442,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
           <div className="market-page__shop-link">
             <MarketToShopLink />
           </div>
-          <button
-            type="button"
-            className="market-page__refresh"
-            onClick={() => {
-              void load(true);
-              if (showMineOnly) void loadMine();
-            }}
-            disabled={loading}
-            aria-label="Refresh listings"
-            title="Refresh"
-          >
-            Refresh
-          </button>
         </div>
 
         <div className="market-tabs" role="tablist" aria-label="Marketplace">

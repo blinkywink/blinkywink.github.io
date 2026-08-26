@@ -83,6 +83,7 @@ import {
   playCardFocus,
   setSfxVolume,
   subscribeSfxVolume,
+  unlockSfxAudio,
 } from "../lib/packSounds";
 import {
   accountStatsPath,
@@ -952,11 +953,15 @@ export function ProfilePage() {
                 max={100}
                 step={1}
                 value={Math.round(sfxVolume * 100)}
+                onPointerDown={() => unlockSfxAudio()}
+                onInput={(e) => {
+                  setSfxVolume(Number(e.currentTarget.value) / 100);
+                }}
                 onChange={(e) => {
-                  const next = Number(e.target.value) / 100;
-                  setSfxVolume(next);
+                  setSfxVolume(Number(e.currentTarget.value) / 100);
                 }}
                 onPointerUp={() => {
+                  unlockSfxAudio();
                   if (getSfxVolume() > 0) playCardFocus();
                 }}
               />

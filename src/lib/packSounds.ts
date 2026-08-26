@@ -27,6 +27,7 @@ const HERO_EQUIP_VO = new Set([
 const buffers = new Map<string, AudioBuffer>();
 const loading = new Map<string, Promise<AudioBuffer | null>>();
 let audioCtx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
 let heroVoSource: AudioBufferSourceNode | null = null;
 let masterVolume = loadVolume();
 const volumeListeners = new Set<(v: number) => void>();
@@ -47,6 +48,22 @@ function loadVolume(): number {
   }
 }
 
+/** Slider → output gain. Squared so low % actually sounds quiet on phones. */
+function masterOutputGain(): number {
+  const v = clamp01(masterVolume);
+  if (v <= 0.001) return 0;
+  return Math.pow(v, 1.65) * 0.7;
+}
+
+function applyMasterGain(): void {
+  if (!audioCtx || !masterGain) return;
+  try {
+    masterGain.gain.setValueAtTime(masterOutputGain(), audioCtx.currentTime);
+  } catch {
+    masterGain.gain.value = masterOutputGain();
+  }
+}
+
 /** Master SFX volume 0-1 (default 50%). */
 export function getSfxVolume(): number {
   return masterVolume;
@@ -60,6 +77,7 @@ export function setSfxVolume(next: number): void {
   } catch {
     /* ignore */
   }
+  applyMasterGain();
   for (const fn of volumeListeners) fn(masterVolume);
 }
 
@@ -70,9 +88,8 @@ export function subscribeSfxVolume(fn: (v: number) => void): () => void {
   };
 }
 
-function level(gain = 1): number {
-  /** Keep the profile slider scale; bake in a quieter default mix. */
-  return masterVolume * 0.5 * clamp01(gain);
+function sampleGain(gain = 1): number {
+  return clamp01(gain);
 }
 
 function ctx(): AudioContext | null {
@@ -87,10 +104,21 @@ function ctx(): AudioContext | null {
       audioCtx = new AC();
     }
     if (audioCtx.state === "suspended") void audioCtx.resume();
+    if (!masterGain || masterGain.context !== audioCtx) {
+      masterGain = audioCtx.createGain();
+      masterGain.connect(audioCtx.destination);
+      applyMasterGain();
+    }
     return audioCtx;
   } catch {
     return null;
   }
+}
+
+/** Call from a user gesture so iOS unlocks Web Audio. */
+export function unlockSfxAudio(): void {
+  const ac = ctx();
+  if (ac && ac.state === "suspended") void ac.resume();
 }
 
 function decode(src: string): Promise<AudioBuffer | null> {
@@ -122,10 +150,12 @@ function playBuffer(
   opts?: { replaceHero?: boolean },
 ): void {
   if (typeof window === "undefined") return;
-  const vol = level(gain);
-  if (vol <= 0.001) return;
+  if (masterOutputGain() <= 0.001) return;
   const ac = ctx();
-  if (!ac) return;
+  if (!ac || !masterGain) return;
+  const bus = masterGain;
+  const rel = sampleGain(gain);
+  if (rel <= 0.001) return;
 
   const start = (buf: AudioBuffer) => {
     try {
@@ -139,10 +169,14 @@ function playBuffer(
       }
       const node = ac.createBufferSource();
       const g = ac.createGain();
-      g.gain.value = vol;
+      try {
+        g.gain.setValueAtTime(rel, ac.currentTime);
+      } catch {
+        g.gain.value = rel;
+      }
       node.buffer = buf;
       node.connect(g);
-      g.connect(ac.destination);
+      g.connect(bus);
       if (opts?.replaceHero) {
         heroVoSource = node;
         node.onended = () => {

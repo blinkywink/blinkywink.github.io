@@ -291,7 +291,8 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
         step={1}
         value={Math.round(state.volume * 100)}
         aria-label="Bloon Hero volume"
-        onChange={(e) => setVolume(Number(e.target.value) / 100)}
+        onInput={(e) => setVolume(Number(e.currentTarget.value) / 100)}
+        onChange={(e) => setVolume(Number(e.currentTarget.value) / 100)}
       />
     </label>
   );
@@ -402,8 +403,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
             step={5}
             value={Math.round((settings.popVolume ?? 1) * 100)}
             aria-label="Pop volume"
+            onInput={(e) => {
+              const popVolume = Number(e.currentTarget.value) / 100;
+              updateSettings({ popVolume });
+            }}
             onChange={(e) => {
-              const popVolume = Number(e.target.value) / 100;
+              const popVolume = Number(e.currentTarget.value) / 100;
               updateSettings({ popVolume });
               playBloonPop(popVolume);
             }}

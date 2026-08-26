@@ -71,7 +71,7 @@ export function SiteHeader() {
     };
   }, [menuOpen]);
 
-  /* Modern mobile: no website top bar; Shop gets a corner cash overlay. */
+  /* Modern mobile: no website top bar; Shop/Market get a corner cash overlay. */
   if (modernMobile) {
     return shopCashOverlay ? <ShopCashOverlay /> : null;
   }

@@ -191,12 +191,16 @@ export async function createStemPlayer(
 
   const applyOutputGain = () => {
     const g = userVolume * normGain;
-    if (masterGain) {
-      masterGain.gain.value = g;
+    if (masterGain && audioCtx) {
+      try {
+        masterGain.gain.setValueAtTime(g, audioCtx.currentTime);
+      } catch {
+        masterGain.gain.value = g;
+      }
       return;
     }
     // Fallback without Web Audio: can only attenuate (HTML volume ≤ 1).
-    const htmlVol = Math.min(1, g);
+    const htmlVol = Math.min(1, Math.max(0, g));
     for (const el of elements) el.volume = htmlVol;
   };
 

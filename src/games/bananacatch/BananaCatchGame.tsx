@@ -375,7 +375,8 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
                 value={Math.round(musicVolume * 100)}
                 aria-label="Banana Catch music volume"
                 onPointerDown={() => resumeBgm()}
-                onChange={(e) => onMusicVolume(Number(e.target.value) / 100)}
+                onInput={(e) => onMusicVolume(Number(e.currentTarget.value) / 100)}
+                onChange={(e) => onMusicVolume(Number(e.currentTarget.value) / 100)}
               />
             </label>
           ) : null}

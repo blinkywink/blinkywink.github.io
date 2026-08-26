@@ -15788,27 +15788,6 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
-.market-page__refresh {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0.25rem 0;
-  color: rgba(240, 240, 244, 0.5);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.market-page__refresh:hover:not(:disabled) {
-  color: rgba(240, 240, 244, 0.85);
-}
-
-.market-page__refresh:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
 .market-sub {
   margin: 0;
   font-weight: 700;
@@ -17964,6 +17943,13 @@ button.card-chip:hover:not(:disabled) {
   width: min(100%, 28rem);
   accent-color: var(--theme-accent);
   cursor: pointer;
+  touch-action: none;
+}
+
+.catch-volume input[type="range"],
+.hero-volume input[type="range"],
+.hero-settings__row input[type="range"] {
+  touch-action: none;
 }
 
 .profile-settings__select {

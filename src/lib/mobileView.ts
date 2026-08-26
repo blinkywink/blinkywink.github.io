@@ -127,5 +127,10 @@ export function showsMobileAppNav(pathname: string): boolean {
 }
 
 export function isShopPath(pathname: string): boolean {
-  return pathname === "/shop" || pathname.startsWith("/shop/");
+  if (pathname === "/shop" || pathname.startsWith("/shop/")) return true;
+  /* Market is reached from Shop — keep the floating cash there too. */
+  if (pathname === "/marketplace" || pathname.startsWith("/marketplace/")) {
+    return true;
+  }
+  return false;
 }

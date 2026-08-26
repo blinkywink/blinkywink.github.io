@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { CurrencyChip } from "./CurrencyChip";
 
-/** Floating cash readout for Modern mobile Shop (not a real header). */
+/** Floating cash readout for Modern mobile Shop + Market. */
 export function ShopCashOverlay() {
   const { user, profile } = useAuth();
   if (profile == null) return null;
