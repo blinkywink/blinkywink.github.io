@@ -370,19 +370,18 @@ function AppShell() {
       /** Open Nice Haul after this run even on a miss (non-quiz games). */
       haulAfter?: boolean;
     }) => {
-      void (async () => {
-        let granted: Awaited<ReturnType<typeof grantFreeCategoryPack>> = null;
-        if (opts.wantBonus) {
-          granted = await grantFreeCategoryPack(session?.userId ?? null);
-          if (granted) {
-            setRunHaul((prev) =>
-              prev ? { ...prev, categoryPack: granted } : prev,
-            );
-          }
-        }
+      const shouldHaul =
+        opts.alwaysHaul || opts.cleared || opts.haulAfter || opts.wantBonus;
+      // Open haul immediately so pack grant latency can't leave the old results UI up.
+      if (shouldHaul) setShowBackToGames(true);
 
-        // Stay on the game route. Nice Haul covers the results UI.
-        if (opts.alwaysHaul || opts.cleared || opts.haulAfter || granted) {
+      void (async () => {
+        if (!opts.wantBonus) return;
+        const granted = await grantFreeCategoryPack(session?.userId ?? null);
+        if (granted) {
+          setRunHaul((prev) =>
+            prev ? { ...prev, categoryPack: granted } : prev,
+          );
           setShowBackToGames(true);
         }
       })();
@@ -409,6 +408,7 @@ function AppShell() {
         queueClearAndBonusPacks({
           cleared: info.cleared,
           wantBonus: earnsQuizBonusPack(info.correctCount),
+          haulAfter: true,
         });
         void creditHeroClear(info.cleared);
         void settleFeaturedBonus(game, info.cleared);
@@ -560,23 +560,24 @@ function AppShell() {
       coinsEarned: number;
       difficulty: keyof typeof SWEEPER_DIFFICULTIES;
     }) => {
-      if (!info.cleared) return;
       setEndlessHaul(null);
       const diffLabel = SWEEPER_DIFFICULTIES[info.difficulty].label;
       setRunHaul({
         game: "bloonssweeper",
-        cleared: true,
+        cleared: info.cleared,
         cashEarned: info.coinsEarned,
-        details: [`${diffLabel} board`, "Board cleared"],
+        details: info.cleared
+          ? [`${diffLabel} board`, "Board cleared"]
+          : [`${diffLabel} board`, "Hit a red bloon"],
       });
       queueClearAndBonusPacks({
-        cleared: true,
-        wantBonus: true,
+        cleared: info.cleared,
+        wantBonus: info.cleared,
         haulAfter: true,
       });
-      void recordGameRun("bloonssweeper", true);
-      void creditHeroClear(true);
-      void settleFeaturedBonus("bloonssweeper", true);
+      void recordGameRun("bloonssweeper", info.cleared);
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus("bloonssweeper", info.cleared);
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -600,8 +601,7 @@ function AppShell() {
       queueClearAndBonusPacks({
         cleared: info.cleared,
         wantBonus: info.cleared && info.mode === "daily",
-        // Practice stays on the in-game result; only daily opens Nice Haul.
-        haulAfter: info.mode === "daily",
+        haulAfter: true,
       });
       void recordGameRun("blowfree", info.cleared);
       void creditHeroClear(info.cleared);

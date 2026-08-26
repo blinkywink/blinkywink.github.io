@@ -82,6 +82,20 @@ body,
     user-select: text;
     -webkit-touch-callout: default;
   }
+
+  /* iOS zooms focused fields under 16px — bump every text control. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([type="hidden"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+html[data-native="1"]
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([type="hidden"]),
+html[data-native="1"] textarea,
+html[data-native="1"] select {
+  font-size: max(16px, 1em);
 }
 
 html {
@@ -1261,8 +1275,8 @@ p {
   position: fixed;
   top: max(0.55rem, env(safe-area-inset-top, 0px));
   right: max(0.65rem, env(safe-area-inset-right, 0px));
-  /* Above pack opener / card buy focus (same idea as site-header cash). */
-  z-index: 2050;
+  /* Above pack opener (2100) so Cash stays readable while opening. */
+  z-index: 2200;
   pointer-events: none;
 }
 
@@ -8961,7 +8975,8 @@ body.rewards-overlay-open .sweeper-result {
 .pack-opener {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  /* Above mobile bottom nav (1900) + site header (2000) so Auto Open isn't stolen by tabs. */
+  z-index: 2100;
   display: grid;
   place-items: center;
   padding: 1rem;
@@ -11153,15 +11168,23 @@ body.rewards-overlay-open .sweeper-result {
 
 .pack-opener__auto-btn {
   position: fixed;
-  left: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
-  z-index: 8;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin-inline: auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  min-height: 2.5rem;
+  min-height: 2.85rem;
+  min-width: 9.5rem;
+  padding: 0.65rem 1.35rem;
   pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pack-opener__auto-btn.is-on {
@@ -14665,6 +14688,7 @@ body.rewards-overlay-open .sweeper-result {
   color: inherit;
   padding: 0.7rem 0.85rem;
   font: inherit;
+  font-size: 1rem;
 }
 
 .hero-search__filter {
@@ -16051,6 +16075,7 @@ body.rewards-overlay-open .sweeper-result {
   color: #f0f0f4;
   padding: 0.65rem 0.85rem;
   font: inherit;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -16186,7 +16211,10 @@ body.rewards-overlay-open .sweeper-result {
   color: #f0f0f4;
   padding: 0.55rem 0.65rem;
   font: inherit;
+  font-size: 1rem;
   font-weight: 800;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .market-empty {
@@ -16864,6 +16892,8 @@ a.market-card__seller:hover {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(8, 12, 20, 0.65);
   color: inherit;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 /* Trade room */
@@ -17203,6 +17233,8 @@ button.card-chip:hover:not(:disabled) {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #121218;
   color: #f0f0f4;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .trade-picker__note {
@@ -17617,7 +17649,10 @@ button.card-chip:hover:not(:disabled) {
   color: #f0f0f4;
   padding: 0.6rem 0.7rem;
   font: inherit;
+  font-size: 1rem;
   font-weight: 800;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .listing-offer-hint {

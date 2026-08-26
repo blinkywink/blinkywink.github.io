@@ -1201,8 +1201,16 @@ export function PackOpenerTest({
 
   const onSlashDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (phaseRef.current !== "sealed") return;
-    // Don't steal clicks from close / backdrop
+    // Don't steal clicks from close / Auto Open / other controls
     if ((e.target as HTMLElement).closest("button")) return;
+    /* Keep a bottom dock clear so near-misses on Auto Open don't start a slash. */
+    if (
+      mode !== "reward" &&
+      autoPackUnlockedFromProfile(profile) &&
+      e.clientY > window.innerHeight - 96
+    ) {
+      return;
+    }
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     preloadPackSounds();
@@ -1799,7 +1807,13 @@ export function PackOpenerTest({
           type="button"
           className={`btn btn--secondary pack-opener__auto-btn${autoOpenActive ? " is-on" : ""}`}
           disabled={buyBusy}
-          onClick={() => {
+          onPointerDown={(e) => {
+            /* Don't let sealed-pack slash / card swipe steal the tap. */
+            e.stopPropagation();
+          }}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
             if (autoOpenActive) stopAutoOpen();
             else startAutoOpen();
           }}

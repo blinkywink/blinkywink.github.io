@@ -26,11 +26,19 @@ export function BloonsSweeperGame({ onBack, onRunEnd }: Props) {
   useEffect(() => {
     const was = prevStatus.current;
     prevStatus.current = state.status;
-    if (was === "won") return;
+    if (was === "won" || was === "lost") return;
     if (state.status === "won") {
       onRunEnd?.({
         cleared: true,
         coinsEarned: state.reward,
+        difficulty: state.difficulty,
+      });
+      return;
+    }
+    if (state.status === "lost") {
+      onRunEnd?.({
+        cleared: false,
+        coinsEarned: 0,
         difficulty: state.difficulty,
       });
     }
