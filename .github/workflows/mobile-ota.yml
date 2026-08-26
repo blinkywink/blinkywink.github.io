@@ -1,0 +1,49 @@
+name: Mobile OTA web bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "vite.config.ts"
+      - "capacitor.config.ts"
+      - "scripts/publish-mobile-ota.ts"
+      - ".github/workflows/mobile-ota.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  ota:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Publish OTA web zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/publish-mobile-ota.ts
+
+      - name: Commit mobile-latest.json for the site mirror
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/mobile-latest.json
+          if git diff --staged --quiet; then
+            echo "No manifest changes"
+          else
+            git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
+            git push origin HEAD:main
+          fi

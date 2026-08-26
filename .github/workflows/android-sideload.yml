@@ -54,3 +54,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx tsx scripts/publish-mobile-asset.ts android-artifacts/MonkeyCards.apk
+
+      - name: Raise OTA native floor for this APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/publish-mobile-ota.ts --skip-build --raise-native-floor

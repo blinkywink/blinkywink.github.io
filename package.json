@@ -35,7 +35,8 @@
     "mobile:open": "npx cap open ios",
     "mobile:open:android": "npx cap open android",
     "mobile:ipa": "tsx scripts/build-ios-ipa.ts",
-    "mobile:apk": "tsx scripts/build-android-apk.ts"
+    "mobile:apk": "tsx scripts/build-android-apk.ts",
+    "mobile:ota": "tsx scripts/publish-mobile-ota.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -45,6 +46,7 @@
     "@capacitor/keyboard": "^8.0.5",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
+    "@capgo/capacitor-updater": "^8.51.14",
     "@fontsource/fredoka": "^5.3.0",
     "@fontsource/luckiest-guy": "^5.3.0",
     "@fontsource/nunito": "^5.3.0",

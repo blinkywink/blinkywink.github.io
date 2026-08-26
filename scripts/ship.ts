@@ -58,6 +58,13 @@ switch (target) {
       `\nWhen green: https://github.com/${REPO}/releases/download/mobile/MonkeyCards.ipa`,
     );
     break;
+  case "ota":
+  case "web":
+    workflow("Mobile OTA web bundle");
+    console.log(
+      `\nWhen green: https://github.com/${REPO}/releases/download/mobile/MonkeyCards-web.zip`,
+    );
+    break;
   case "mobile":
     workflow("Android sideload APK");
     workflow("iOS sideload IPA");

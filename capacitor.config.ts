@@ -18,6 +18,11 @@ const config: CapacitorConfig = {
       style: "DARK",
       backgroundColor: "#0a0a0e",
     },
+    CapacitorUpdater: {
+      autoUpdate: false,
+      statsUrl: "",
+      /* Self-hosted OTA — app fetches mobile-latest.json and downloads the zip. */
+    },
   },
   ios: {
     /* We pad with env(safe-area-inset-*) ourselves (viewport-fit=cover). */

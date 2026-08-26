@@ -47,3 +47,18 @@ npm run mobile:sync && npm run mobile:ipa
 ```
 
 Prefer `npm run ship` so everything stays in the cloud.
+
+## Mobile OTA (no App Store)
+
+Sideloaded APK/IPA can pull **web** updates automatically (same “Updating” screen as desktop).
+
+- On launch, the app checks `mobile-latest.json` and downloads `MonkeyCards-web.zip` when newer.
+- Most game/UI changes ship via OTA when `main` updates (workflow **Mobile OTA web bundle**).
+- If the native shell is too old (`minNativeVersion`), play is blocked with:  
+  **Sorry, you need to redownload the app to update.**  
+  (links to the `mobile` release APK/IPA)
+
+```bash
+npm run ship -- ota          # force publish web OTA now
+npm run ship -- apk          # new native APK (+ raises minNativeVersion floor)
+```

@@ -35,6 +35,7 @@ import { RouteFallback } from "./components/RouteFallback";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
 import { DesktopUpdateGate } from "./components/DesktopUpdateGate";
+import { MobileUpdateGate } from "./components/MobileUpdateGate";
 import { LivePlayerSync } from "./components/LivePlayerSync";
 import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
@@ -940,6 +941,7 @@ export default function App() {
       <ScrollToTop />
       <DesktopOnlineGate />
       <DesktopUpdateGate />
+      <MobileUpdateGate />
       <LivePlayerSync />
       <NavigationRefresh>
         <AppShell />

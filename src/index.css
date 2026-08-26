@@ -1714,6 +1714,12 @@ body:has(.roundcheck-page) {
   justify-content: center;
 }
 
+.desktop-online-gate__meta {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(240, 240, 244, 0.45);
+}
+
 .desktop-update-toast {
   position: fixed;
   right: 1rem;
