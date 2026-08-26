@@ -20,7 +20,8 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: --bundles dmg
+            # `app` produces the signed .app.tar.gz the updater needs; dmg is the download button.
+            args: --bundles app,dmg
           - platform: windows-latest
             args: --bundles nsis
     runs-on: ${{ matrix.platform }}
@@ -73,7 +74,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/desktop-latest.json public/desktop-config.json
+          git add public/desktop-latest.json public/desktop-config.json desktop-latest.json desktop-config.json
           if git diff --staged --quiet; then
             echo "No manifest changes"
           else

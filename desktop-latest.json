@@ -1,0 +1,17 @@
+{
+  "version": "1.0.18",
+  "notes": "Monkey Cards desktop 1.0.18",
+  "pub_date": "2026-08-26T19:11:12.900Z",
+  "shopDay": "2026-8-26",
+  "featuredTowers": [
+    "Monkey Ace",
+    "Alchemist",
+    "Skywarden"
+  ],
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVpseFNrV0ZUMjBVUjc5TmJ4YnQzazlJLzZUeDFISEFJTlFoK3cvY0FvazVYWWdXK0VVTHJLRi9YckdUa1o3Q2tpVmt5MVgwOWQrT0c2c0JGN25EK2drPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3NzcxMzU4CWZpbGU6TW9ua2V5IENhcmRzXzEuMC4xOF94NjQtc2V0dXAuZXhlCm8vMkJuakgwQlNlR1VpWmYrMWdSNnNueEh6RXByTUNPUlFCcGJCVWZjU2pGMkNRODU3Z2pxak9sclQ5eXFGTnVoek4rcW0vMXZkeUE1ZjNsdTIrakFRPT0K",
+      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.18/blinkywink-windows-setup.exe"
+    }
+  }
+}

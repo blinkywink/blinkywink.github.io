@@ -165,6 +165,11 @@ const manifest = {
 };
 
 fs.writeFileSync(OUT_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+// GitHub Pages serves the repo root (not Vite public/), so keep root mirrors too.
+fs.writeFileSync(
+  path.join(ROOT, "desktop-latest.json"),
+  `${JSON.stringify(manifest, null, 2)}\n`,
+);
 const latestJson = path.join(STAGE, "latest.json");
 fs.copyFileSync(OUT_JSON, latestJson);
 upload.push(latestJson);
@@ -180,6 +185,10 @@ config.shopDay = shopDay;
 config.featuredTowers = featuredTowers;
 config.message = "This desktop app is out of date. Update to keep playing.";
 fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(ROOT, "desktop-config.json"),
+  `${JSON.stringify(config, null, 2)}\n`,
+);
 
 gh([
   "release",

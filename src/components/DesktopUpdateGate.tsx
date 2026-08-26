@@ -66,7 +66,9 @@ export function DesktopUpdateGate() {
       try {
         update = await check({ timeout: 15_000 });
       } catch (err) {
-        if (versionBehind || shopStale) {
+        // Only hard-block when the installed binary is behind. Shop/tower
+        // drift is already applied from the manifest above.
+        if (versionBehind) {
           setStatus("blocked");
           setMessage("Could not reach the update server. Try again.");
         } else {
@@ -76,13 +78,11 @@ export function DesktopUpdateGate() {
       }
 
       if (!update) {
-        if (versionBehind || shopStale) {
+        if (versionBehind) {
           setStatus("blocked");
           setMessage(
-            shopStale
-              ? "The shop changed. Download the latest app to keep playing."
-              : (remote?.message ??
-                "This desktop app is out of date. Download the latest version."),
+            remote?.message ??
+              "This desktop app is out of date. Download the latest version.",
           );
         }
         return;
