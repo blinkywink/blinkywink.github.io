@@ -984,6 +984,12 @@ p {
   .shop-page {
     padding-top: 0.35rem;
   }
+
+  html[data-mobile-chrome="modern"] .shop-page {
+    /* Floating market + cash sit in the safe-area band; keep shop tight. */
+    padding-top: 0.15rem;
+    padding-bottom: 1.5rem;
+  }
 }
 
 .shop-page__market-link {
@@ -993,7 +999,6 @@ p {
 
 @media (max-width: 820px) {
   .shop-page__market-link {
-    /* Stick while scrolling shop; stay under pack/buy overlays (z ~1000+). */
     display: block;
     position: sticky;
     top: max(0.55rem, env(safe-area-inset-top, 0px));
@@ -1006,6 +1011,18 @@ p {
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Modern / IPA: pin next to cash (same top), out of document flow. */
+  html[data-mobile-chrome="modern"] .shop-page__market-link {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 0.95rem);
+    left: max(0.65rem, env(safe-area-inset-left, 0px));
+    margin: 0;
+    z-index: 2040;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(10, 10, 14, 0.94);
   }
 
   .shop-page__market-link .shop-market-swap {
@@ -1239,6 +1256,12 @@ p {
     right: max(0.8rem, env(safe-area-inset-right, 0px));
   }
 
+  html[data-mobile-chrome="modern"] .shop-cash-overlay {
+    /* Match market chip; slightly lower than before so it clears the island. */
+    top: calc(env(safe-area-inset-top, 0px) + 0.95rem);
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
   .shop-cash-overlay .coin-chip {
     gap: 0.45rem;
   }
@@ -1406,7 +1429,8 @@ html[data-native="1"] .shop-direct__card .monkey-card-scene--preview {
 .site-main:has(.catch-page),
 .site-main:has(.hero-page),
 .site-main:has(.zoomed-page),
-.site-main:has(.rico-page) {
+.site-main:has(.rico-page),
+.site-main:has(.roundcheck-page) {
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
@@ -1421,7 +1445,8 @@ body:has(.blowfree-page),
 body:has(.catch-page),
 body:has(.hero-page),
 body:has(.zoomed-page),
-body:has(.rico-page) {
+body:has(.rico-page),
+body:has(.roundcheck-page) {
   overflow: hidden;
   height: 100dvh;
 }
@@ -1439,7 +1464,8 @@ body:has(.rico-page) {
 .blowfree-page,
 .catch-page,
 .hero-page,
-.rico-page {
+.rico-page,
+.roundcheck-page {
   width: min(var(--game-max-w), calc(100% - var(--game-gutter)));
   margin: 0 auto;
   padding: var(--game-pad-y) 0 calc(var(--game-pad-y) + 0.1rem);
@@ -11974,13 +12000,10 @@ body.rewards-overlay-open .sweeper-result {
 
 /* --- Round Check --- */
 .roundcheck-page {
-  width: min(44rem, calc(100% - var(--page-gutter)));
-  margin: 0 auto;
-  padding: 0.25rem 0 1.5rem;
-  min-height: calc(100dvh - 5.5rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  --game-max-w: 44rem;
+  --game-gutter: var(--page-gutter);
+  --game-pad-y: 0.2rem;
+  gap: 0.35rem;
 }
 
 .roundcheck-page > .game-header {
@@ -11994,7 +12017,8 @@ body.rewards-overlay-open .sweeper-result {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.55rem;
+  overflow: hidden;
 }
 
 .roundcheck-top {
@@ -12084,7 +12108,8 @@ body.rewards-overlay-open .sweeper-result {
   justify-content: center;
   align-content: center;
   padding: 1.15rem 0.75rem;
-  min-height: 12rem;
+  min-height: 0;
+  overflow: auto;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -12332,7 +12357,7 @@ body.rewards-overlay-open .sweeper-result {
   .roundcheck-board {
     padding: 0.85rem 0.45rem;
     gap: 0.75rem 0.9rem;
-    min-height: 10rem;
+    min-height: 0;
   }
 }
 
