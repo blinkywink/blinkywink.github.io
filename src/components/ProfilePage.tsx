@@ -57,9 +57,13 @@ import {
   type LogoHomeId,
 } from "../lib/logoHome";
 import {
+  getMobileNavSizeId,
   getMobileViewId,
+  MOBILE_NAV_SIZE_OPTIONS,
   MOBILE_VIEW_OPTIONS,
+  setMobileNavSizeId,
   setMobileViewId,
+  type MobileNavSizeId,
   type MobileViewId,
 } from "../lib/mobileView";
 import {
@@ -118,6 +122,9 @@ export function ProfilePage() {
   );
   const [mobileViewSaved, setMobileViewSaved] = useState<MobileViewId>(() =>
     getMobileViewId(),
+  );
+  const [mobileNavSize, setMobileNavSize] = useState<MobileNavSizeId>(() =>
+    getMobileNavSizeId(),
   );
   const [siteTheme, setSiteThemeState] = useState(() => getSiteThemeId());
   const [themeOfferId, setThemeOfferId] = useState<SiteThemeId | null>(null);
@@ -1136,7 +1143,7 @@ export function ProfilePage() {
                 <h4>Mobile View</h4>
                 <p>
                   Classic keeps the website top bar. Modern uses a bottom app
-                  bar (cash floats in the Shop corner).
+                  bar.
                 </p>
               </div>
             </div>
@@ -1166,6 +1173,39 @@ export function ProfilePage() {
             >
               Save
             </button>
+          </div>
+
+          <div className="profile-settings__block profile-settings__block--mobile-only">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Nav bar size</h4>
+                <p>
+                  Scales the Modern bottom bar height, icons, and labels.
+                </p>
+              </div>
+            </div>
+            <div
+              className="profile-settings__nav-size"
+              role="group"
+              aria-label="Nav bar size"
+            >
+              {MOBILE_NAV_SIZE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`profile-settings__nav-size-btn${
+                    mobileNavSize === opt.id ? " is-active" : ""
+                  }`}
+                  aria-pressed={mobileNavSize === opt.id}
+                  onClick={() => {
+                    setMobileNavSizeId(opt.id);
+                    setMobileNavSize(opt.id);
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="profile-settings__block profile-settings__block--mobile-only">

@@ -51,6 +51,61 @@ export function subscribeMobileView(fn: (id: MobileViewId) => void): () => void 
   };
 }
 
+/** Bottom tab bar size (Modern mobile only). */
+export const MOBILE_NAV_SIZE_OPTIONS = [
+  { id: "sm", label: "S" },
+  { id: "md", label: "M" },
+  { id: "lg", label: "L" },
+] as const;
+
+export type MobileNavSizeId = (typeof MOBILE_NAV_SIZE_OPTIONS)[number]["id"];
+
+const NAV_SIZE_KEY = "bloon.mobileNavSize";
+const DEFAULT_NAV_SIZE: MobileNavSizeId = "lg";
+
+const navSizeListeners = new Set<(id: MobileNavSizeId) => void>();
+
+function isMobileNavSizeId(value: string): value is MobileNavSizeId {
+  return MOBILE_NAV_SIZE_OPTIONS.some((o) => o.id === value);
+}
+
+function readNavSize(): MobileNavSizeId {
+  if (typeof window === "undefined") return DEFAULT_NAV_SIZE;
+  try {
+    const raw = window.localStorage.getItem(NAV_SIZE_KEY);
+    if (raw && isMobileNavSizeId(raw)) return raw;
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_NAV_SIZE;
+}
+
+let navSize = readNavSize();
+
+export function getMobileNavSizeId(): MobileNavSizeId {
+  return navSize;
+}
+
+export function setMobileNavSizeId(next: MobileNavSizeId): void {
+  if (!isMobileNavSizeId(next)) return;
+  navSize = next;
+  try {
+    window.localStorage.setItem(NAV_SIZE_KEY, next);
+  } catch {
+    /* ignore */
+  }
+  for (const fn of navSizeListeners) fn(navSize);
+}
+
+export function subscribeMobileNavSize(
+  fn: (id: MobileNavSizeId) => void,
+): () => void {
+  navSizeListeners.add(fn);
+  return () => {
+    navSizeListeners.delete(fn);
+  };
+}
+
 /** Main hub routes that show the modern bottom tab bar. */
 export function showsMobileAppNav(pathname: string): boolean {
   if (pathname === "/" || pathname === "/about" || pathname === "/profile") {

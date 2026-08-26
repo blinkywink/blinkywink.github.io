@@ -40,7 +40,9 @@ import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
 import {
+  getMobileNavSizeId,
   showsMobileAppNav,
+  subscribeMobileNavSize,
 } from "./lib/mobileView";
 import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
 import { recordGameRun } from "./lib/accountStats";
@@ -271,17 +273,22 @@ function MobileChromeSync() {
   const view = useMobileView();
   const modern = compact && view === "modern";
   const showNav = modern && showsMobileAppNav(pathname);
+  const [navSize, setNavSize] = useState(() => getMobileNavSizeId());
+
+  useEffect(() => subscribeMobileNavSize(setNavSize), []);
 
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.mobileChrome = modern ? "modern" : "classic";
     root.dataset.mobileNav = showNav ? "1" : "0";
+    root.dataset.mobileNavSize = compact ? navSize : "lg";
     return () => {
       delete root.dataset.mobileChrome;
       delete root.dataset.mobileNav;
+      delete root.dataset.mobileNavSize;
       delete root.dataset.mobileCash;
     };
-  }, [modern, showNav]);
+  }, [modern, showNav, compact, navSize]);
 
   return null;
 }

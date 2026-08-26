@@ -1143,8 +1143,33 @@ p {
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] {
-    /* Content strip + home-indicator; padding on the nav adds the inset. */
-    --site-bottom-nav-h: calc(3.65rem + env(safe-area-inset-bottom, 0px));
+    --mobile-nav-content-h: 4.55rem;
+    --mobile-nav-icon: 1.75rem;
+    --mobile-nav-pfp: 2rem;
+    --mobile-nav-font: 0.76rem;
+    --mobile-nav-gap: 0.24rem;
+    --mobile-nav-pad-y: 0.42rem;
+    --site-bottom-nav-h: calc(
+      var(--mobile-nav-content-h) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"][data-mobile-nav-size="sm"] {
+    --mobile-nav-content-h: 3.15rem;
+    --mobile-nav-icon: 1.15rem;
+    --mobile-nav-pfp: 1.3rem;
+    --mobile-nav-font: 0.55rem;
+    --mobile-nav-gap: 0.1rem;
+    --mobile-nav-pad-y: 0.28rem;
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"][data-mobile-nav-size="md"] {
+    --mobile-nav-content-h: 3.65rem;
+    --mobile-nav-icon: 1.35rem;
+    --mobile-nav-pfp: 1.55rem;
+    --mobile-nav-font: 0.62rem;
+    --mobile-nav-gap: 0.18rem;
+    --mobile-nav-pad-y: 0.35rem;
   }
 
   /*
@@ -1236,9 +1261,8 @@ p {
     box-sizing: border-box;
     width: 100%;
     width: 100dvw;
-    /* Fixed content height; safe-area is padding only (not double-counted). */
     height: var(--site-bottom-nav-h);
-    padding: 0.35rem 0.25rem 0;
+    padding: var(--mobile-nav-pad-y, 0.35rem) 0.25rem 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background:
       linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent 70%),
@@ -1251,14 +1275,14 @@ p {
     display: grid;
     justify-items: center;
     align-content: center;
-    gap: 0.18rem;
+    gap: var(--mobile-nav-gap, 0.18rem);
     min-width: 0;
     padding: 0.2rem 0.15rem;
     border-radius: 10px;
     color: rgba(240, 240, 244, 0.55);
     text-decoration: none;
     font-family: var(--font-display);
-    font-size: 0.62rem;
+    font-size: var(--mobile-nav-font, 0.62rem);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
@@ -1268,8 +1292,8 @@ p {
   }
 
   .mobile-app-nav__icon {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: var(--mobile-nav-icon, 1.35rem);
+    height: var(--mobile-nav-icon, 1.35rem);
     display: grid;
     place-items: center;
   }
@@ -1282,8 +1306,8 @@ p {
 
   .mobile-app-nav__icon--you .mobile-app-nav__pfp,
   .mobile-app-nav__icon--you .user-avatar {
-    width: 1.55rem !important;
-    height: 1.55rem !important;
+    width: var(--mobile-nav-pfp, 1.55rem) !important;
+    height: var(--mobile-nav-pfp, 1.55rem) !important;
     box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.28);
   }
 
@@ -1292,8 +1316,8 @@ p {
   }
 
   .mobile-app-nav__link--you-pfp .mobile-app-nav__icon--you {
-    width: 1.55rem;
-    height: 1.55rem;
+    width: var(--mobile-nav-pfp, 1.55rem);
+    height: var(--mobile-nav-pfp, 1.55rem);
   }
 
   .mobile-app-nav__link.is-active .mobile-app-nav__icon--you .user-avatar {
@@ -17779,6 +17803,34 @@ button.card-chip:hover:not(:disabled) {
 
 .profile-settings__save {
   justify-self: start;
+}
+
+.profile-settings__nav-size {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  max-width: 16rem;
+}
+
+.profile-settings__nav-size-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.7rem 0.5rem;
+  background: transparent;
+  color: rgba(240, 240, 244, 0.65);
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.profile-settings__nav-size-btn.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f0f4;
 }
 
 .profile-settings__sign-out {
