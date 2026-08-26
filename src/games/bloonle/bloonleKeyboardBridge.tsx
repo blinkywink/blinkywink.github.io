@@ -19,11 +19,17 @@ let setCovering: ((on: boolean) => void) | null = null;
 
 function nativeShowKeyboard() {
   if (!isNativeShell()) return;
-  void import("@capacitor/keyboard")
-    .then(({ Keyboard }) => Keyboard.show())
-    .catch(() => {
-      /* plugin optional on web */
-    });
+  try {
+    /* Optional native plugin — don't static-import (breaks Vite when not installed). */
+    const cap = (
+      window as unknown as {
+        Capacitor?: { Plugins?: { Keyboard?: { show?: () => void } } };
+      }
+    ).Capacitor;
+    void cap?.Plugins?.Keyboard?.show?.();
+  } catch {
+    /* focus-only fallback */
+  }
 }
 
 /** Call during a user gesture (pointer/click) before opening Bloonle. */
