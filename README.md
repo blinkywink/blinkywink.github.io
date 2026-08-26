@@ -24,8 +24,13 @@ Username accounts need the SQL + Edge Function in [`supabase/AUTH_SETUP.md`](sup
 | `npm run dev` | Local development server |
 | `npm run build` | Production build |
 | `npm run preview` | Preview the production build |
+| `npm run clean` | Wipe local build leftovers |
+| `npm run ship -- apk\|ios\|desktop\|mobile\|all` | Trigger **cloud** builds (see [`docs/shipping.md`](docs/shipping.md)) |
 | `npm run download-assets` | Re-scrape BTD6 tower/upgrade images + regenerate `src/data/towers.json` |
 | `npm run download-assets:force` | Same, but re-download and re-upscale every image |
+
+Desktop auto-update and Mac/Windows download buttons use GitHub Releases. Mobile sideload APK/IPA publish to the rolling `mobile` release — details in [`docs/shipping.md`](docs/shipping.md).
+
 
 ## Asset pipeline
 

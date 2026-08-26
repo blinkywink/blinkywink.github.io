@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Monkey Cards</string>
+    <string name="title_activity_main">Monkey Cards</string>
+    <string name="package_name">co.blinkywink.arcade</string>
+    <string name="custom_url_scheme">co.blinkywink.arcade</string>
+</resources>

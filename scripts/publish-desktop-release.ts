@@ -101,12 +101,16 @@ function listReleaseTags(): string[] {
   return rows.map((r) => String(r.tagName ?? "")).filter(Boolean);
 }
 
-/** Drop every GitHub release except the one we just published. */
+/** Drop every prior desktop (v*) GitHub release except the one we just published. */
 function deleteOlderReleases(keepTag: string) {
   const env = { ...process.env };
   delete env.GH_TOKEN;
   for (const oldTag of listReleaseTags()) {
     if (oldTag === keepTag) continue;
+    if (!/^v\d+\.\d+\.\d+/.test(oldTag)) {
+      console.log(`Keeping non-desktop tag ${oldTag}`);
+      continue;
+    }
     console.log(`Deleting old release ${oldTag}`);
     const del = spawnSync(
       "gh",

@@ -15,6 +15,8 @@
     "desktop:write-latest": "tsx scripts/write-desktop-latest.ts",
     "desktop:publish": "tsx scripts/publish-desktop-release.ts",
     "desktop:release": "tsx scripts/release-desktop.ts",
+    "ship": "tsx scripts/ship.ts",
+    "clean": "tsx scripts/clean-build.ts",
     "tauri": "tauri",
     "download-assets": "tsx scripts/download-btd6-assets.ts",
     "download-assets:force": "tsx scripts/download-btd6-assets.ts --force",
@@ -29,10 +31,14 @@
     "reset-accounts": "tsx scripts/reset-all-accounts.ts",
     "smoke-test": "tsx scripts/pre-release-smoke-test.ts",
     "mobile:sync": "npm run build && npx cap sync ios",
+    "mobile:sync:android": "npm run build && npx cap sync android",
     "mobile:open": "npx cap open ios",
-    "mobile:ipa": "tsx scripts/build-ios-ipa.ts"
+    "mobile:open:android": "npx cap open android",
+    "mobile:ipa": "tsx scripts/build-ios-ipa.ts",
+    "mobile:apk": "tsx scripts/build-android-apk.ts"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.0",

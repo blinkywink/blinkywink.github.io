@@ -7,7 +7,7 @@ on:
       - "ios-*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   ipa:
@@ -41,3 +41,9 @@ jobs:
             ios-artifacts/README.txt
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish to mobile release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/publish-mobile-asset.ts ios-artifacts/MonkeyCards.ipa

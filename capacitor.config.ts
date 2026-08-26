@@ -26,6 +26,10 @@ const config: CapacitorConfig = {
     scrollEnabled: true,
     backgroundColor: "#0a0a0e",
   },
+  android: {
+    backgroundColor: "#0a0a0e",
+    allowMixedContent: false,
+  },
 };
 
 export default config;

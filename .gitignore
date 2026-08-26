@@ -14,11 +14,21 @@ ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
 ios/App/App.xcodeproj/xcuserdata/
 ios-artifacts/
 
+# Capacitor Android
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android-artifacts/
+*.keystore
+*.jks
+
 # Desktop installers (stage locally; host elsewhere — too large for git)
 public/downloads/*.dmg
 public/downloads/*.exe
 public/downloads/*.tar.gz
 public/downloads/*.sig
+.ci-desktop-stage/
 
 # Updater signing private key — never commit
 src-tauri/.updater-key

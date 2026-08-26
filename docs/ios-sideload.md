@@ -1,17 +1,28 @@
 # Sideload IPA (Capacitor iOS)
 
-## Build on GitHub (recommended)
+## Cloud (recommended)
 
-1. **Actions → iOS sideload IPA → Run workflow**
-2. Download the **MonkeyCards-ios-sideload** artifact (`MonkeyCards.ipa`)
-3. Open the IPA in your sideload tool and sign with your free Apple ID
+```bash
+npm run ship -- ios
+```
 
-Web build uses public `VITE_*` values from `.env.production` (same client keys the website already ships). Free Apple ID installs expire about every 7 days; re-sign to renew.
+When the **iOS sideload IPA** workflow is green:
 
-## Local (needs full Xcode app, not only CLT)
+1. Download from the rolling release:  
+   https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards.ipa  
+   (or Actions → artifact **MonkeyCards-ios-sideload**)
+2. Open the IPA in Sideloadly / AltStore / etc. and sign with your Apple ID
+
+Free Apple ID installs expire about every 7 days; re-sign to renew.
+
+Web build uses public `VITE_*` values from `.env.production`.
+
+## Local (needs full Xcode app)
 
 ```bash
 npm run mobile:sync
 npm run mobile:ipa
 # → ios-artifacts/MonkeyCards.ipa
 ```
+
+See also [shipping.md](./shipping.md) for APK / desktop cloud builds.

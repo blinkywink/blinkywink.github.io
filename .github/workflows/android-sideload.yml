@@ -1,0 +1,56 @@
+name: Android sideload APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "android-*"
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build web + sync Capacitor Android
+        run: npm run build && npx cap sync android
+
+      - name: Build APK
+        run: |
+          chmod +x android/gradlew
+          npm run mobile:apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MonkeyCards-android-sideload
+          path: |
+            android-artifacts/MonkeyCards.apk
+            android-artifacts/README.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish to mobile release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/publish-mobile-asset.ts android-artifacts/MonkeyCards.apk
