@@ -1143,7 +1143,37 @@ p {
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] {
+    /* Content strip + home-indicator; padding on the nav adds the inset. */
     --site-bottom-nav-h: calc(3.65rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /*
+   * Lock the shell to the *small* viewport (svh). Unlike dvh/vh, svh does not
+   * resize when mobile browser chrome expands/collapses — so the fixed bottom
+   * nav stays put. Scroll lives in .site-main instead of the document.
+   */
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"],
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] body {
+    height: 100%;
+    height: 100vh;
+    height: 100svh;
+    max-height: 100vh;
+    max-height: 100svh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .site-main {
+    height: 100vh;
+    height: 100svh;
+    max-height: 100vh;
+    max-height: 100svh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: var(--site-bottom-nav-h, 0px);
   }
 
   html[data-mobile-chrome="modern"] .site-main {
@@ -1151,7 +1181,7 @@ p {
   }
 
   html[data-mobile-chrome="modern"] {
-    --game-h: calc(100dvh - var(--site-header-h));
+    --game-h: calc(100svh - var(--site-header-h));
   }
 }
 
@@ -1203,9 +1233,13 @@ p {
     right: 0;
     bottom: 0;
     z-index: 1900;
-    height: var(--site-bottom-nav-h);
-    padding: 0.35rem 0.25rem env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
+    width: 100%;
+    width: 100dvw;
+    /* Fixed content height; safe-area is padding only (not double-counted). */
+    height: var(--site-bottom-nav-h);
+    padding: 0.35rem 0.25rem 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background:
       linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent 70%),
       rgba(10, 10, 14, 0.94);
@@ -2778,7 +2812,9 @@ body:has(.rico-page) {
   border: 2px solid #3a3a44;
   border-radius: 12px;
   padding: 0.65rem 0.75rem;
+  /* 16px+ so iOS Safari doesn't zoom the page on focus */
   font: inherit;
+  font-size: 1rem;
   font-weight: 700;
   text-transform: none;
   letter-spacing: normal;
@@ -10935,8 +10971,9 @@ body.rewards-overlay-open .sweeper-result {
   border-radius: calc(22px * var(--card-preview-scale));
 }
 
-/* zoom (not transform) so the portrait's layout box matches the visible thumb.
-   transform+overflow:hidden made WebKit skip decoding these images. */
+/* transform scale (same as market/collection). Avoid `zoom` — Safari mobile
+   scales summary thumbs inconsistently inside the pack-done panel. Images are
+   already decoded from the reveal, so WebKit decode-skip isn't an issue here. */
 .pack-opener__summary-grid .monkey-card-scene--preview > .monkey-card {
   --opacity: 0;
   position: absolute;
@@ -10944,8 +10981,8 @@ body.rewards-overlay-open .sweeper-result {
   top: 0;
   width: var(--card-face-w);
   height: calc(var(--card-face-w) * 3.5 / 2.5);
-  transform: none;
-  zoom: var(--card-preview-scale);
+  zoom: unset;
+  transform: scale(var(--card-preview-scale));
   transform-origin: top left;
   transform-style: flat;
 }
@@ -11096,8 +11133,31 @@ body.rewards-overlay-open .sweeper-result {
 
 @media (max-width: 560px) {
   .pack-opener__summary-grid {
-    --card-preview-w: 96px;
-    --card-preview-scale: 0.24;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.45rem 0.3rem;
+    --card-preview-w: 100%;
+    --card-preview-h: auto;
+    --card-preview-scale: 1;
+  }
+
+  .pack-opener__summary-card {
+    width: 100%;
+    container-type: inline-size;
+  }
+
+  .pack-opener__summary-grid .monkey-card-scene--preview {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2.5 / 3.5;
+    border-radius: calc(22px * (100cqi / 400));
+    clip-path: inset(0 round calc(22px * (100cqi / 400)));
+  }
+
+  .pack-opener__summary-grid .monkey-card-scene--preview > .monkey-card {
+    width: var(--card-face-w);
+    height: calc(var(--card-face-w) * 3.5 / 2.5);
+    transform: scale(calc(100cqi / 400));
+    transform-origin: top left;
   }
 }
 
@@ -15868,12 +15928,8 @@ body.rewards-overlay-open .sweeper-result {
     box-shadow 0.12s ease;
 }
 
-.market-chip:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f0f0f4;
-}
-
+/* No hover restyle — :hover was higher specificity than .is-on, so clicking
+   while hovered never showed the selected gold state. */
 .market-chip.is-on {
   border-color: rgba(240, 200, 74, 0.55);
   background: rgba(240, 200, 74, 0.16);
@@ -17780,6 +17836,12 @@ button.card-chip:hover:not(:disabled) {
 .profile-auth__form {
   display: grid;
   gap: 0.85rem;
+}
+
+.profile-auth__form input {
+  padding: 0.85rem 0.9rem;
+  font-size: 1rem;
+  border-radius: 14px;
 }
 
 .profile-auth__form .btn {
