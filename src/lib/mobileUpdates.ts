@@ -4,11 +4,11 @@ import { APP_VERSION } from "./appVersion";
 import { isOlderVersion } from "./desktopDownloads";
 
 export const MOBILE_APK_URL =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards.apk";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.apk";
 export const MOBILE_IPA_URL =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards.ipa";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.ipa";
 export const MOBILE_RELEASE_PAGE =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/tag/mobile";
+  "https://github.com/blinkywink/blinkywink.github.io/releases/latest";
 
 export type MobileLatestManifest = {
   /** Latest web bundle version (OTA). */

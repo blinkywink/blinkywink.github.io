@@ -65,9 +65,13 @@ function downloadAll(tag: string) {
 }
 
 const version = readDesktopVersion();
+// Prefer an explicit tag — Actions may force GITHUB_REF_NAME to the branch
+// (e.g. "main" on workflow_dispatch) even when the step sets it.
 const tag =
-  process.env.GITHUB_REF_NAME?.trim() ||
   process.env.DESKTOP_RELEASE_TAG?.trim() ||
+  (/^v\d+\.\d+\.\d+$/.test(process.env.GITHUB_REF_NAME?.trim() ?? "")
+    ? process.env.GITHUB_REF_NAME!.trim()
+    : "") ||
   releaseTag(version);
 
 if (!/^v\d+\.\d+\.\d+$/.test(tag)) {

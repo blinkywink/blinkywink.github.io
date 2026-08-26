@@ -1,7 +1,7 @@
 {
-  "version": "1.0.17",
-  "notes": "Monkey Cards desktop 1.0.17",
-  "pub_date": "2026-08-26T03:17:02.520Z",
+  "version": "1.0.18",
+  "notes": "Monkey Cards desktop 1.0.18",
+  "pub_date": "2026-08-26T19:11:12.900Z",
   "shopDay": "2026-8-26",
   "featuredTowers": [
     "Monkey Ace",
@@ -9,13 +9,9 @@
     "Skywarden"
   ],
   "platforms": {
-    "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVVPaUN3dlArQWdWWlRQM25ZeWdOZmlVQ05SMEJwcTZ5c1RpNmcwMUI3VnJUU0ZLdmdNckNwc3RSMm5zdFZIV0JsWEdMVjJ4VG45aVp1Tms1U2cyOGd3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3NzE0MDc2CWZpbGU6TW9ua2V5IENhcmRzLmFwcC50YXIuZ3oKK2VQNEVUQ2t2NTJUUG4rU0c2QzdTVjJPSEx5Q1ZEbmpBaVB0aUk3ekpmZ001RzRVY1RZQy84QzNWNWpjVWo2THRhU0Y1eEtvTGREbURpc2NObUdCQVE9PQo=",
-      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.17/blinkywink-mac.app.tar.gz"
-    },
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbWFCRkZGYlFYcUZDK09Sa05kOVhndE9SV0JBOENRZXRldmtJMmNnOXBWaHdqVy9wV1c0ZTVsK3ZxN2JoVTdVZGo1eWdIMnJVcGJtV1VmUldWVXVlYkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3NzE0MjIxCWZpbGU6TW9ua2V5IENhcmRzXzEuMC4xN194NjQtc2V0dXAuZXhlCnhScWh4OC9kRHNTeWNvRmprRWNJdUN0MEVmSlA2SElIRnJhYUVEUEVUamVIc1g5a1BlcXhWaUZRL21FeGtvanBiR0VnMk5mM05qMmNoOWdyMGtVS0RRPT0K",
-      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.17/blinkywink-windows-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSaWtWc3loS3ovbVpseFNrV0ZUMjBVUjc5TmJ4YnQzazlJLzZUeDFISEFJTlFoK3cvY0FvazVYWWdXK0VVTHJLRi9YckdUa1o3Q2tpVmt5MVgwOWQrT0c2c0JGN25EK2drPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3NzcxMzU4CWZpbGU6TW9ua2V5IENhcmRzXzEuMC4xOF94NjQtc2V0dXAuZXhlCm8vMkJuakgwQlNlR1VpWmYrMWdSNnNueEh6RXByTUNPUlFCcGJCVWZjU2pGMkNRODU3Z2pxak9sclQ5eXFGTnVoek4rcW0vMXZkeUE1ZjNsdTIrakFRPT0K",
+      "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/v1.0.18/blinkywink-windows-setup.exe"
     }
   }
 }

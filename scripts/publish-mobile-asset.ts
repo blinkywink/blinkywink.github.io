@@ -1,5 +1,7 @@
 /**
- * Upsert a file onto the rolling GitHub Release tag `mobile`.
+ * Upsert a file onto the rolling GitHub Release tag `mobile` (OTA / sideload
+ * pipeline) and mirror it onto the latest desktop release so APK/IPA show up
+ * on the newest release page and `releases/latest/download/…`.
  *
  *   npx tsx scripts/publish-mobile-asset.ts android-artifacts/MonkeyCards.apk
  *   npx tsx scripts/publish-mobile-asset.ts ios-artifacts/MonkeyCards.ipa
@@ -42,6 +44,14 @@ function releaseExists(tag: string): boolean {
   return result.status === 0;
 }
 
+function latestDesktopTag(): string | null {
+  const out = gh(
+    ["release", "view", "--repo", REPO, "--json", "tagName", "--jq", ".tagName"],
+    { pipe: true },
+  ).trim();
+  return /^v\d+\.\d+\.\d+$/.test(out) ? out : null;
+}
+
 if (!releaseExists(MOBILE_TAG)) {
   gh([
     "release",
@@ -71,3 +81,21 @@ const name = path.basename(abs);
 console.log(
   `\nPublished https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${name}`,
 );
+
+const latest = latestDesktopTag();
+if (latest && latest !== MOBILE_TAG) {
+  gh([
+    "release",
+    "upload",
+    latest,
+    "--repo",
+    REPO,
+    "--clobber",
+    abs,
+  ]);
+  console.log(
+    `Mirrored to latest release: https://github.com/${REPO}/releases/download/${latest}/${name}`,
+  );
+} else {
+  console.warn("No v* latest release to mirror onto — skipped.");
+}

@@ -28,8 +28,10 @@ npm run ship -- all           # desktop + mobile
 | Platform | URL |
 |---|---|
 | Mac / Windows / updater | https://github.com/blinkywink/blinkywink.github.io/releases/latest |
-| Android APK | https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards.apk |
-| iOS IPA | https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards.ipa |
+| Android APK | https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.apk |
+| iOS IPA | https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.ipa |
+
+APK / IPA are also kept on the rolling `mobile` release for OTA (`MonkeyCards-web.zip`, `mobile-latest.json`).
 
 ## Secrets (already used by desktop CI)
 
