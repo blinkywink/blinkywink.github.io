@@ -305,7 +305,7 @@ export function HomeHub() {
         >
           <div className="home-hub__download">
             <p id="hub-download" className="home-hub__download-copy">
-              Download for Windows or Mac for faster loading times.
+              Download the app for faster loading times.
             </p>
             <DesktopDownloadButtons />
           </div>

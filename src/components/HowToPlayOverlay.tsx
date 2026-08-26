@@ -202,6 +202,17 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
                 </div>
                 <figcaption>Collect cards</figcaption>
               </figure>
+              <figure className="howto-play__example">
+                <div className="howto-play__viz howto-play__viz--apps">
+                  <div className="howto-play__apps" aria-hidden>
+                    <span>Windows</span>
+                    <span>Mac</span>
+                    <span>Android</span>
+                    <span>iOS</span>
+                  </div>
+                </div>
+                <figcaption>Download the app</figcaption>
+              </figure>
             </div>
             <ul className="howto-play__list">
               <li>Play arcade games to earn Cash</li>
@@ -299,8 +310,8 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
             <h2 id="howto-play-title">Get the app</h2>
             <div className="howto-play__body">
               <p>
-                Finally, if you download the Windows or Mac version, you will
-                get a better experience.
+                Download the app for faster loading times — Windows, Mac,
+                Android, or iOS.
               </p>
               <DesktopDownloadButtons className="howto-play__downloads" />
               <ExternalLink

@@ -67,11 +67,11 @@ export function AboutPage() {
       </section>
 
       <section className="about-page__section">
-        <h2>Desktop app</h2>
+        <h2>Apps</h2>
         <p>
-          You can play in the browser or download the optional desktop app for
-          Mac and Windows. The desktop build is the same game with faster
-          loading - it still talks to the same online account and collection.
+          You can play in the browser or download the app for faster loading —
+          Windows, Mac, Android (APK), and iOS (sideload). Same account and
+          collection everywhere.
         </p>
       </section>
 
