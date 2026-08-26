@@ -27,6 +27,7 @@ import { ParagonDegreeLab } from "./components/ParagonDegreeLab";
 import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
+import { MobileAppNav, useIsCompactViewport, useMobileView } from "./components/MobileAppNav";
 import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
 import { HubPeekExport } from "./components/HubPeekExport";
@@ -38,6 +39,9 @@ import { LivePlayerSync } from "./components/LivePlayerSync";
 import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
 import { awardCoins } from "./lib/awardCoins";
+import {
+  showsMobileAppNav,
+} from "./lib/mobileView";
 import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
 import { recordGameRun } from "./lib/accountStats";
 import {
@@ -58,6 +62,7 @@ import {
   collectionPath,
   gamePath,
   gamesPath,
+  shopPath,
   userCollectionPath,
   type GamePath,
 } from "./lib/routes";
@@ -258,6 +263,27 @@ function LeaderboardPage() {
       }}
     />
   );
+}
+
+function MobileChromeSync() {
+  const { pathname } = useLocation();
+  const compact = useIsCompactViewport();
+  const view = useMobileView();
+  const modern = compact && view === "modern";
+  const showNav = modern && showsMobileAppNav(pathname);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.mobileChrome = modern ? "modern" : "classic";
+    root.dataset.mobileNav = showNav ? "1" : "0";
+    return () => {
+      delete root.dataset.mobileChrome;
+      delete root.dataset.mobileNav;
+      delete root.dataset.mobileCash;
+    };
+  }, [modern, showNav]);
+
+  return null;
 }
 
 function AppShell() {
@@ -647,6 +673,11 @@ function AppShell() {
     navigate(gamesPath());
   }, [dismissHaul, navigate]);
 
+  const openShop = useCallback(() => {
+    dismissHaul();
+    navigate(shopPath());
+  }, [dismissHaul, navigate]);
+
   const playNextBonus = useCallback(() => {
     const next = getOrCreateFeaturedBonusGame();
     dismissHaul();
@@ -673,6 +704,7 @@ function AppShell() {
 
   return (
     <>
+      <MobileChromeSync />
       <SiteHeader />
       <div className="site-main">
         <Routes>
@@ -841,6 +873,7 @@ function AppShell() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <MobileAppNav />
 
       {bonusToast ? (
         <div className="featured-bonus-toast" role="status">
@@ -857,6 +890,7 @@ function AppShell() {
             loading={endlessHaul.loading}
             onPlayAgain={playAgain}
             onBack={backToGames}
+            onOpenShop={openShop}
             onDismiss={dismissHaul}
             onPlayNextBonus={playNextBonus}
           />
@@ -865,6 +899,7 @@ function AppShell() {
             summary={runHaul}
             onPlayAgain={playAgain}
             onBackToGames={backToGames}
+            onOpenShop={openShop}
             onDismiss={dismissHaul}
             onPlayNextBonus={playNextBonus}
           />

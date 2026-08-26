@@ -31,11 +31,12 @@ import {
 import { userCollectionPath, listingPath } from "../lib/routes";
 import { CashAmount } from "./CurrencyChip";
 import { LoadingDots } from "./LoadingDots";
+import { MarketToShopLink } from "./ShopMarketSwap";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 import { VisibleCardGrid } from "./VisibleCardGrid";
 
-type Tab = "browse" | "sell" | "mine";
+type Tab = "browse" | "sell";
 
 type SellErrorBoundaryState = { error: string | null };
 
@@ -119,6 +120,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [sellQuery, setSellQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [hideOwned, setHideOwned] = useState(false);
+  const [showMineOnly, setShowMineOnly] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
@@ -227,11 +229,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
   }, [load, debouncedQuery, towerFilter, sortKey]);
 
   useEffect(() => {
-    if (tab === "mine") void loadMine();
-  }, [tab, loadMine]);
+    if (showMineOnly) void loadMine();
+  }, [showMineOnly, loadMine]);
 
   useEffect(() => {
-    if (tab !== "browse" || loading || !hasMore) return;
+    if (tab !== "browse" || showMineOnly || loading || !hasMore) return;
     const el = sentinelRef.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
@@ -246,7 +248,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [tab, loading, hasMore, loadMore, listings.length]);
+  }, [tab, showMineOnly, loading, hasMore, loadMore, listings.length]);
 
   const towersForSale = useMemo(
     () => baseTowers.map((t) => t.name).sort((a, b) => a.localeCompare(b)),
@@ -289,6 +291,17 @@ export function Marketplace({ onBack: _onBack }: Props) {
       );
     });
   }, [listings, sortKey, hideOwned, owned]);
+
+  const mineFiltered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return myListings.filter((row) => {
+      if (!q) return true;
+      const card = cardSpecById(row.cardId);
+      return card ? matchesCardQuery(card, q) : true;
+    });
+  }, [myListings, query]);
+
+  const displayListings = showMineOnly ? mineFiltered : browsedListings;
 
   const sellOwnedCards = useMemo(() => {
     const q = sellQuery.trim().toLowerCase();
@@ -357,7 +370,9 @@ export function Marketplace({ onBack: _onBack }: Props) {
       setSellStep("pick");
       setStatus(`Listed for ${price.toLocaleString()} Cash.`);
       await Promise.all([refreshCards(), refreshProfile(), load(true), loadMine()]);
-      setTab("mine");
+      setTab("browse");
+      setShowMineOnly(true);
+      setHideOwned(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not list card.");
       await Promise.all([refreshCards(), load(true)]);
@@ -367,7 +382,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
 
   const renderListing = (row: MarketplaceListing, mode: "browse" | "mine") => {
     const card = cardSpecById(row.cardId);
-    const mine = user?.id === row.sellerId;
     const openListing = () => navigate(listingPath(row.id));
     return (
       <article key={row.id} className="market-card">
@@ -416,13 +430,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
           ) : (
             <span className="market-card__yours">Your listing</span>
           )}
-          <button
-            type="button"
-            className="btn btn--secondary btn--sm market-card__action"
-            onClick={openListing}
-          >
-            {mode === "mine" || mine ? "Manage" : "View"}
-          </button>
         </div>
       </article>
     );
@@ -431,12 +438,30 @@ export function Marketplace({ onBack: _onBack }: Props) {
   return (
     <div className="market-page">
       <main className="market-main">
+        <div className="market-page__top">
+          <div className="market-page__shop-link">
+            <MarketToShopLink />
+          </div>
+          <button
+            type="button"
+            className="market-page__refresh"
+            onClick={() => {
+              void load(true);
+              if (showMineOnly) void loadMine();
+            }}
+            disabled={loading}
+            aria-label="Refresh listings"
+            title="Refresh"
+          >
+            Refresh
+          </button>
+        </div>
+
         <div className="market-tabs" role="tablist" aria-label="Marketplace">
           {(
             [
               ["browse", "Browse"],
               ["sell", "Sell"],
-              ["mine", "My listings"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -450,6 +475,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 setQuery("");
                 setError(null);
                 setStatus(null);
+                setShowMineOnly(false);
+                setHideOwned(false);
                 if (id === "sell") {
                   setSellStep("pick");
                   setSelected(new Set());
@@ -466,8 +493,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
         ) : !marketUnlocked ? (
           <p className="market-banner">
             Spend {MARKET_SHOP_SPEND_REQUIRED.toLocaleString()} Cash in the shop
-            before buying or listing on the market.{" "}
-            {marketSpendLeft.toLocaleString()} Cash left to unlock.
+            before buying or listing. {marketSpendLeft.toLocaleString()} left.
           </p>
         ) : null}
 
@@ -485,8 +511,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
         {tab !== "sell" ? (
           <div className="market-filters">
             <label className="market-search">
-              <span className="market-search__label">
-                {tab === "mine"
+              <span className="visually-hidden">
+                {showMineOnly
                   ? "Search your listings"
                   : "Search towers for sale"}
               </span>
@@ -494,70 +520,75 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Tower name, upgrade, seller…"
+                placeholder={
+                  showMineOnly
+                    ? "Search your listings…"
+                    : "Search towers, upgrades, sellers…"
+                }
                 autoComplete="off"
               />
             </label>
 
-            {tab === "browse" ? (
-              <div className="market-toolbar">
-                <label className="market-toolbar__field">
-                  <span>Tower</span>
-                  <select
-                    value={towerFilter}
-                    onChange={(e) => setTowerFilter(e.target.value)}
-                  >
-                    <option value="all">All towers</option>
-                    {towersForSale.map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="market-toolbar__field">
-                  <span>Sort</span>
-                  <select
-                    value={sortKey}
-                    onChange={(e) => setSortKey(e.target.value as SortKey)}
-                  >
-                    {SORT_OPTIONS.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="market-toolbar__check">
-                  <input
-                    type="checkbox"
-                    checked={hideOwned}
-                    onChange={(e) => setHideOwned(e.target.checked)}
-                  />
-                  Hide cards I own
-                </label>
+            <div className="market-toolbar">
+              <label className="market-toolbar__field">
+                <span className="visually-hidden">Tower</span>
+                <select
+                  value={towerFilter}
+                  onChange={(e) => setTowerFilter(e.target.value)}
+                  aria-label="Filter by tower"
+                  disabled={showMineOnly}
+                >
+                  <option value="all">All towers</option>
+                  {towersForSale.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="market-toolbar__field">
+                <span className="visually-hidden">Sort</span>
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value as SortKey)}
+                  aria-label="Sort listings"
+                  disabled={showMineOnly}
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div
+                className="market-toolbar__toggles"
+                role="group"
+                aria-label="Listing filters"
+              >
                 <button
                   type="button"
-                  className="btn btn--ghost btn--sm market-refresh"
-                  onClick={() => void load(true)}
-                  disabled={loading}
+                  className={`market-chip${hideOwned ? " is-on" : ""}`}
+                  aria-pressed={hideOwned}
+                  disabled={isGuest || showMineOnly}
+                  onClick={() => setHideOwned((v) => !v)}
                 >
-                  Refresh
+                  Hide owned
+                </button>
+                <button
+                  type="button"
+                  className={`market-chip${showMineOnly ? " is-on" : ""}`}
+                  aria-pressed={showMineOnly}
+                  disabled={isGuest || !user}
+                  onClick={() => {
+                    setShowMineOnly((v) => !v);
+                    setHideOwned(false);
+                  }}
+                >
+                  Your listings
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm market-refresh"
-                onClick={() => {
-                  void load(true);
-                  void loadMine();
-                }}
-                disabled={loading}
-              >
-                Refresh
-              </button>
-            )}
+            </div>
           </div>
         ) : null}
 
@@ -576,12 +607,12 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   Pick a card from your collection to list.
                 </p>
                 <label className="market-search">
-                  <span className="market-search__label">Search your cards</span>
+                  <span className="visually-hidden">Search your cards</span>
                   <input
                     type="search"
                     value={sellQuery}
                     onChange={(e) => setSellQuery(e.target.value)}
-                    placeholder="Tower name, upgrade…"
+                    placeholder="Search your cards…"
                     autoComplete="off"
                   />
                 </label>
@@ -691,60 +722,47 @@ export function Marketplace({ onBack: _onBack }: Props) {
             )}
           </div>
           </SellErrorBoundary>
-        ) : loading ? (
+        ) : loading && !showMineOnly ? (
           <LoadingDots label="Loading marketplace" />
-        ) : tab === "browse" ? (
-          browsedListings.length === 0 ? (
-            <p className="market-empty">
-              {listings.length === 0
+        ) : displayListings.length === 0 ? (
+          <p className="market-empty">
+            {showMineOnly
+              ? query.trim()
+                ? "No listings of yours match that search."
+                : "You have no active listings. Open Sell to post cards."
+              : listings.length === 0
                 ? debouncedQuery
                   ? "No listings match that search."
                   : "No listings yet. Be the first to sell."
                 : hideOwned
                   ? "No listings left after hiding cards you already own."
                   : "No listings match that search."}
-            </p>
-          ) : (
-            <>
-              <div className="market-section-head">
-                <h3>
-                  {sortKey === "newest" ? "Recently posted" : "Listings"}
-                </h3>
-                <span>
-                  {browsedListings.length}
-                  {hasMore ? "+" : ""} for sale
-                  {towerFilter !== "all" ? ` · ${towerFilter}` : ""}
-                </span>
-              </div>
-              <div className="market-grid">
-                {browsedListings.map((row) => renderListing(row, "browse"))}
-              </div>
-              {hasMore ? (
-                <div ref={sentinelRef} className="market-more">
-                  {loadingMore ? (
-                    <LoadingDots label="Loading more listings" />
-                  ) : null}
-                </div>
-              ) : null}
-            </>
-          )
+          </p>
         ) : (
-          myListings.length === 0 ? (
-            <p className="market-empty">
-              You have no active listings. Open Sell to post cards.
-            </p>
-          ) : (
-            <div className="market-grid">
-              {myListings
-                .filter((row) => {
-                  const q = query.trim().toLowerCase();
-                  if (!q) return true;
-                  const card = cardSpecById(row.cardId);
-                  return card ? matchesCardQuery(card, q) : true;
-                })
-                .map((row) => renderListing(row, "mine"))}
+          <>
+            <div className="market-section-head">
+              <span>
+                {showMineOnly
+                  ? `${displayListings.length} of yours`
+                  : `${displayListings.length}${hasMore ? "+" : ""} for sale`}
+                {!showMineOnly && towerFilter !== "all"
+                  ? ` · ${towerFilter}`
+                  : ""}
+              </span>
             </div>
-          )
+            <div className="market-grid">
+              {displayListings.map((row) =>
+                renderListing(row, showMineOnly ? "mine" : "browse"),
+              )}
+            </div>
+            {!showMineOnly && hasMore ? (
+              <div ref={sentinelRef} className="market-more">
+                {loadingMore ? (
+                  <LoadingDots label="Loading more listings" />
+                ) : null}
+              </div>
+            ) : null}
+          </>
         )}
       </main>
     </div>

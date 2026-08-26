@@ -28,6 +28,7 @@ import { DailyClaimButton } from "./DailyClaimButton";
 import { PackOpenerTest } from "./PackOpenerTest";
 import { ShopDirectShelf } from "./ShopDirectShelf";
 import { ShopHeroesShelf } from "./ShopHeroesShelf";
+import { ShopToMarketLink } from "./ShopMarketSwap";
 import { playCardFocus, preloadPackSounds } from "../lib/packSounds";
 
 type Props = {
@@ -168,6 +169,9 @@ export function ShopPage({ onPackFinished }: Props) {
 
   return (
     <div className="shop-page">
+      <div className="shop-page__market-link">
+        <ShopToMarketLink />
+      </div>
       <section className="pack-shelf" aria-label="Shop">
         <div className="pack-shelf__head">
           <h3 className="section-label">Featured</h3>

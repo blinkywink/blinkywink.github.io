@@ -1,5 +1,6 @@
 import { CashAmount } from "./CurrencyChip";
 import { BoosterPack } from "./BoosterPack";
+import { RewardsHaulActions } from "./RewardsHaulActions";
 import { categoryPack, type TowerCategory } from "../lib/packTheme";
 import type { GamePath } from "../lib/routes";
 
@@ -13,25 +14,11 @@ export type RunHaulSummary = {
   categoryPack?: TowerCategory | null;
 };
 
-export const GAME_HAUL_TITLES: Record<GamePath, string> = {
-  zoomed: "ZOOMED",
-  geoguessr: "GEOGUESSR",
-  pricecheck: "PRICE CHECK",
-  orderup: "ORDER UP",
-  bloonle: "BLOONLE",
-  camodetection: "CAMO DETECTION",
-  bloonssweeper: "BLOONS SWEEPER",
-  bananacatch: "BANANA CATCH",
-  bloonhero: "BLOON HERO",
-  roundcheck: "ROUND CHECK",
-  heliumpop: "HELIUM POP",
-  blowfree: "BLOW FREE",
-};
-
 type Props = {
   summary: RunHaulSummary;
   onPlayAgain: () => void;
   onBackToGames: () => void;
+  onOpenShop: () => void;
   onDismiss: () => void;
   onPlayNextBonus?: () => void;
 };
@@ -40,16 +27,16 @@ export function RewardsHaulCard({
   summary,
   onPlayAgain,
   onBackToGames,
+  onOpenShop,
   onDismiss,
   onPlayNextBonus,
 }: Props) {
-  const title = GAME_HAUL_TITLES[summary.game];
   const bonusPack = summary.categoryPack
     ? categoryPack(summary.categoryPack)
     : null;
 
   return (
-    <div className="rewards-done" role="dialog" aria-label="Run summary">
+    <div className="rewards-done" role="dialog" aria-label="Nice haul">
       <div className="rewards-done__card">
         <button
           type="button"
@@ -59,8 +46,7 @@ export function RewardsHaulCard({
         >
           ✕
         </button>
-        <p className="eyebrow">{title}</p>
-        <h2>{summary.cleared ? "Nice haul" : "Run over"}</h2>
+        <h2>Nice haul</h2>
 
         <p
           className={`rewards-done__outcome${summary.cleared ? " is-clear" : " is-miss"}`}
@@ -97,31 +83,12 @@ export function RewardsHaulCard({
           </div>
         ) : null}
 
-        <div className="rewards-done__actions">
-          {onPlayNextBonus ? (
-            <button
-              type="button"
-              className="btn btn--primary btn--lg"
-              onClick={onPlayNextBonus}
-            >
-              Play next bonus game
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className={`btn btn--lg${onPlayNextBonus ? " btn--secondary" : " btn--primary"}`}
-            onClick={onPlayAgain}
-          >
-            Play again
-          </button>
-          <button
-            type="button"
-            className="btn btn--secondary btn--lg"
-            onClick={onBackToGames}
-          >
-            Back to Games
-          </button>
-        </div>
+        <RewardsHaulActions
+          onPlayAgain={onPlayAgain}
+          onBackToGames={onBackToGames}
+          onOpenShop={onOpenShop}
+          onPlayNextBonus={onPlayNextBonus}
+        />
       </div>
     </div>
   );

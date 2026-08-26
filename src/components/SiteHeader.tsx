@@ -5,8 +5,14 @@ import {
   logoHomePage,
   subscribeLogoHome,
 } from "../lib/logoHome";
+import { isShopPath } from "../lib/mobileView";
 import { SITE_LOGO, SITE_NAME } from "../lib/brand";
 import { AccountBar } from "./AccountBar";
+import {
+  useIsCompactViewport,
+  useMobileView,
+} from "./MobileAppNav";
+import { ShopCashOverlay } from "./ShopCashOverlay";
 import { TradeInbox } from "./TradeInbox";
 
 const NAV = [
@@ -25,6 +31,10 @@ export function SiteHeader() {
   const [logoHome, setLogoHome] = useState(() => logoHomePage(getLogoHomeId()));
   const menuId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const compact = useIsCompactViewport();
+  const mobileView = useMobileView();
+  const modernMobile = compact && mobileView === "modern";
+  const shopCashOverlay = modernMobile && isShopPath(pathname);
 
   function onCardsNavClick(e: ReactMouseEvent<HTMLAnchorElement>) {
     if (pathname !== "/collection") return;
@@ -60,6 +70,11 @@ export function SiteHeader() {
       window.removeEventListener("touchstart", onPointer);
     };
   }, [menuOpen]);
+
+  /* Modern mobile: no website top bar; Shop gets a corner cash overlay. */
+  if (modernMobile) {
+    return shopCashOverlay ? <ShopCashOverlay /> : null;
+  }
 
   return (
     <header className="site-header">
@@ -117,7 +132,7 @@ export function SiteHeader() {
                 className="site-nav-mobile__panel"
                 aria-label="Main"
               >
-                {NAV.map((item) => (
+                {NAV.filter((item) => item.to !== "/marketplace").map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

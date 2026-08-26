@@ -38,6 +38,7 @@ import { ArcadeHome } from "./ArcadeHome";
 import { DesktopDownloadButtons } from "./DesktopDownloadButtons";
 import { ExternalLink } from "./ExternalLink";
 import { HowToPlayOverlay } from "./HowToPlayOverlay";
+import { useIsCompactViewport } from "./MobileAppNav";
 import { UserAvatar } from "./UserAvatar";
 import {
   hasPlayerChrome,
@@ -108,6 +109,9 @@ function writeHowtoOpen(open: boolean) {
 export function HomeHub() {
   const navigate = useNavigate();
   const { ready, user, isGuest, displayName } = useAuth();
+  const isMobile = useIsCompactViewport();
+  const gamePreviewLimit = isMobile ? 3 : 4;
+  const boardPreviewLimit = isMobile ? 4 : 5;
   const [howtoOpen, setHowtoOpen] = useState(readHowtoOpen);
   const [topPlayers, setTopPlayers] = useState<
     Awaited<ReturnType<typeof fetchTopLeaderboard>>
@@ -127,6 +131,9 @@ export function HomeHub() {
   }, []);
 
   const showHowtoBtn = ready && (isGuest || !user);
+  const gamePick = isMobile
+    ? (["bananacatch", "bloonle", "heliumpop"] as const)
+    : (["bananacatch", "bloonle", "heliumpop", "zoomed"] as const);
 
   useEffect(() => {
     writeHowtoOpen(howtoOpen);
@@ -140,10 +147,10 @@ export function HomeHub() {
           await fetchTopLeaderboard(force, {
             revalidate: !force,
             onRevalidate: (fresh) => {
-              if (!cancelled) setTopPlayers(fresh.slice(0, 5));
+              if (!cancelled) setTopPlayers(fresh.slice(0, boardPreviewLimit));
             },
           })
-        ).slice(0, 5);
+        ).slice(0, boardPreviewLimit);
         if (!cancelled) setTopPlayers(rows);
       } catch {
         if (!cancelled) setTopPlayers([]);
@@ -162,7 +169,7 @@ export function HomeHub() {
       window.removeEventListener("focus", onWake);
       document.removeEventListener("visibilitychange", onWake);
     };
-  }, []);
+  }, [boardPreviewLimit]);
 
   return (
     <div className="home-hub">
@@ -181,17 +188,19 @@ export function HomeHub() {
       ) : null}
 
       <section className="home-hub__section" aria-labelledby="hub-games">
-        <p className="home-hub__hello">
-          Hello, {ready ? displayName : "…"}
-        </p>
+        {!isMobile ? (
+          <p className="home-hub__hello">
+            Hello, {ready ? displayName : "…"}
+          </p>
+        ) : null}
         <div className="home-hub__head">
           <h2 id="hub-games">Games</h2>
           <Link to={gamesPath()}>All games →</Link>
         </div>
         <ArcadeHome
           embed
-          limit={4}
-          pick={["bananacatch", "bloonle", "heliumpop", "zoomed"]}
+          limit={gamePreviewLimit}
+          pick={[...gamePick]}
           onPlay={(game) => navigate(gamePath(game as GamePath))}
         />
 

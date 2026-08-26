@@ -10,6 +10,8 @@ import { createPortal } from "react-dom";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
+import { useIsCompactViewport } from "./MobileAppNav";
+import { ProfileAuthPanel } from "./ProfileAuthPanel";
 import {
   clamp01,
   clampAvatarZoom,
@@ -55,6 +57,12 @@ import {
   type LogoHomeId,
 } from "../lib/logoHome";
 import {
+  getMobileViewId,
+  MOBILE_VIEW_OPTIONS,
+  setMobileViewId,
+  type MobileViewId,
+} from "../lib/mobileView";
+import {
   buySiteTheme,
   FREE_SITE_THEMES,
   getSiteThemeId,
@@ -85,9 +93,18 @@ import { UserAvatar } from "./UserAvatar";
 type EditorStep = "pick" | "crop";
 
 export function ProfilePage() {
-  const { ready, user, profile, isGuest, refreshProfile, setCoinBalance } =
-    useAuth();
+  const {
+    ready,
+    user,
+    profile,
+    isGuest,
+    displayName,
+    refreshProfile,
+    setCoinBalance,
+    signOut,
+  } = useAuth();
   const { owned, paragonOf, visualSeedOf } = useCardCollection();
+  const isMobile = useIsCompactViewport();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorStep, setEditorStep] = useState<EditorStep>("pick");
   const [draft, setDraft] = useState<AvatarCrop>(DEFAULT_AVATAR_CROP);
@@ -96,6 +113,12 @@ export function ProfilePage() {
   const [colorDraft, setColorDraft] = useState("#F0C84A");
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [logoHome, setLogoHomeState] = useState(() => getLogoHomeId());
+  const [mobileViewDraft, setMobileViewDraft] = useState<MobileViewId>(() =>
+    getMobileViewId(),
+  );
+  const [mobileViewSaved, setMobileViewSaved] = useState<MobileViewId>(() =>
+    getMobileViewId(),
+  );
   const [siteTheme, setSiteThemeState] = useState(() => getSiteThemeId());
   const [themeOfferId, setThemeOfferId] = useState<SiteThemeId | null>(null);
   const [themeError, setThemeError] = useState<string | null>(null);
@@ -445,7 +468,23 @@ export function ProfilePage() {
   }
 
   if (isGuest || !user) {
-    return <Navigate to="/" replace />;
+    if (!isMobile) {
+      return <Navigate to="/" replace />;
+    }
+    return (
+      <div className="profile-page">
+        <main className="profile-main">
+          <ProfileAuthPanel />
+        </main>
+        <footer className="profile-page__footer">
+          <p>
+            v. {APP_VERSION}
+            <span aria-hidden> · </span>
+            thanks for playing!
+          </p>
+        </footer>
+      </div>
+    );
   }
 
   const editor = editorOpen
@@ -1089,6 +1128,60 @@ export function ProfilePage() {
                 ))}
               </select>
             </label>
+          </div>
+
+          <div className="profile-settings__block profile-settings__block--mobile-only">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Mobile View</h4>
+                <p>
+                  Classic keeps the website top bar. Modern uses a bottom app
+                  bar (cash floats in the Shop corner).
+                </p>
+              </div>
+            </div>
+            <label className="profile-settings__select">
+              <span className="profile-settings__volume-label">Layout</span>
+              <select
+                value={mobileViewDraft}
+                onChange={(e) =>
+                  setMobileViewDraft(e.target.value as MobileViewId)
+                }
+              >
+                {MOBILE_VIEW_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm profile-settings__save"
+              disabled={mobileViewDraft === mobileViewSaved}
+              onClick={() => {
+                setMobileViewId(mobileViewDraft);
+                setMobileViewSaved(mobileViewDraft);
+              }}
+            >
+              Save
+            </button>
+          </div>
+
+          <div className="profile-settings__block profile-settings__block--mobile-only">
+            <div className="profile-settings__row">
+              <div>
+                <h4>Account</h4>
+                <p>Signed in as {displayName || "player"}.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn btn--ghost profile-settings__sign-out"
+              onClick={() => void signOut()}
+            >
+              Sign out
+            </button>
           </div>
         </section>
       </main>
