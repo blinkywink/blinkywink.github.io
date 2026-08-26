@@ -1,8 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { useIsCompactViewport } from "../../components/MobileAppNav";
 import { isTypingTarget } from "../../lib/keyboard";
 import { bloonleSolveReward } from "../rewards";
+import {
+  armBloonleKeyboard,
+  useBloonleKeyboardSession,
+} from "./bloonleKeyboardBridge";
 import { dayNumber, type LetterMark } from "./dictionary";
 import { claimBloonleDailyHaulOnce, useBloonle } from "./useBloonle";
 
@@ -79,7 +83,6 @@ export function BloonleGame({
   const len = state.puzzle.slug.length;
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
-  const mobileInputRef = useRef<HTMLInputElement>(null);
   const [kbInset, setKbInset] = useState(0);
   /** Opening an already-finished daily must never re-trigger Nice Haul / packs. */
   const openedAlreadyDone = useRef(
@@ -172,28 +175,13 @@ export function BloonleGame({
     return () => window.removeEventListener("keydown", onKey);
   }, [typeLetter, backspace, submit, playNext, done]);
 
-  /* Mobile: open system keyboard as soon as Bloonle mounts / after each guess. */
-  useLayoutEffect(() => {
-    if (!compact || done) return;
-    const el = mobileInputRef.current;
-    if (!el) return;
-    const focus = () => {
-      try {
-        el.focus({ preventScroll: true });
-      } catch {
-        el.focus();
-      }
-    };
-    focus();
-    const t0 = window.setTimeout(focus, 0);
-    const t1 = window.setTimeout(focus, 80);
-    const t2 = window.setTimeout(focus, 250);
-    return () => {
-      window.clearTimeout(t0);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-  }, [compact, done, state.guesses.length, state.puzzle.slug]);
+  useBloonleKeyboardSession({
+    active: compact && !done,
+    value: state.current,
+    maxLength: len,
+    onChange: setCurrentDraft,
+    onSubmit: submit,
+  });
 
   /* Lift the board when the soft keyboard covers the lower viewport. */
   useEffect(() => {
@@ -298,30 +286,6 @@ export function BloonleGame({
           })}
         </div>
 
-        {compact && !done ? (
-          <input
-            ref={mobileInputRef}
-            className="bloonle-mobile-input"
-            value={state.current}
-            aria-label="Type your guess"
-            autoFocus
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck={false}
-            enterKeyHint="go"
-            inputMode="text"
-            maxLength={len}
-            onChange={(e) => setCurrentDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-          />
-        ) : null}
-
         {done ? (
           <div className="bloonle-result">
             <img
@@ -366,7 +330,10 @@ export function BloonleGame({
               <button
                 type="button"
                 className="btn btn--primary bloonle-result__play"
-                onClick={playNext}
+                onClick={() => {
+                  if (compact) armBloonleKeyboard();
+                  playNext();
+                }}
                 autoFocus
               >
                 Next puzzle

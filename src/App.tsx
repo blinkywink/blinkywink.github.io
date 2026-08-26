@@ -70,6 +70,10 @@ import {
   type GamePath,
 } from "./lib/routes";
 import { SWEEPER_DIFFICULTIES } from "./games/bloonssweeper/config";
+import {
+  armBloonleKeyboard,
+  BloonleKeyboardBridge,
+} from "./games/bloonle/bloonleKeyboardBridge";
 
 const ZoomedGame = lazyRoute(() =>
   import("./games/zoomed").then((m) => ({ default: m.ZoomedGame })),
@@ -673,6 +677,7 @@ function AppShell() {
 
   const playAgain = useCallback(() => {
     const game = runHaul?.game ?? endlessHaul?.gameId ?? null;
+    if (game === "bloonle") armBloonleKeyboard();
     dismissHaul();
     setGameReplayKey((k) => k + 1);
     if (game) navigate(gamePath(game as GamePath), { replace: true });
@@ -690,6 +695,7 @@ function AppShell() {
 
   const playNextBonus = useCallback(() => {
     const next = getOrCreateFeaturedBonusGame();
+    if (next === "bloonle") armBloonleKeyboard();
     dismissHaul();
     setGameReplayKey((k) => k + 1);
     navigate(gamePath(next), { replace: true });
@@ -715,6 +721,7 @@ function AppShell() {
   return (
     <>
       <MobileChromeSync />
+      <BloonleKeyboardBridge />
       <SiteHeader />
       <div className="site-main">
         <Routes>

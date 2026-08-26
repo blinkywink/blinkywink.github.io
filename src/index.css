@@ -12810,7 +12810,16 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .bloonle-page.is-kb-open .bloonle-hints {
+  margin-top: 0.2rem;
+  padding: 0.22rem 0.55rem 0.28rem;
+}
+
+.bloonle-page.is-kb-open .bloonle-hints__label {
   display: none;
+}
+
+.bloonle-page.is-kb-open .bloonle-hints p:not(.bloonle-hints__label) {
+  font-size: 0.8rem;
 }
 
 .bloonle-page > .game-header {
@@ -13090,6 +13099,38 @@ body.rewards-overlay-open .sweeper-result {
   background: transparent;
   font-size: 16px;
   z-index: 6;
+  cursor: text;
+}
+
+/* Always-mounted bridge — focused on Bloonle card tap, then covers the game shell. */
+.bloonle-kb-bridge {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  color: transparent;
+  caret-color: transparent;
+  background: transparent;
+  font-size: 16px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.bloonle-kb-bridge.is-covering {
+  left: 0;
+  right: 0;
+  top: var(--site-header-h, 0px);
+  bottom: var(--site-bottom-nav-h, 0px);
+  width: auto;
+  height: auto;
+  opacity: 0.01;
+  z-index: 40;
+  pointer-events: auto;
   cursor: text;
 }
 

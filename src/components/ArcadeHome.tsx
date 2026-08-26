@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { BLOON_IMAGES, LANES } from "../games/bloonhero/config";
+import { armBloonleKeyboard } from "../games/bloonle/bloonleKeyboardBridge";
 import {
   FEATURED_BONUS_CASH,
   FEATURED_BONUS_CHANGED,
@@ -777,7 +778,14 @@ export function ArcadeHome({
                   ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash`
                   : g.label
               }
-              onClick={() => onPlay(g.id)}
+              onPointerDown={() => {
+                /* iOS only opens the keyboard inside a user gesture — arm before navigate. */
+                if (g.id === "bloonle") armBloonleKeyboard();
+              }}
+              onClick={() => {
+                if (g.id === "bloonle") armBloonleKeyboard();
+                onPlay(g.id);
+              }}
             >
               {g.preview}
               <div className="game-card__foot">
