@@ -7,6 +7,7 @@ import {
   fetchDesktopRemoteConfig,
   isOlderVersion,
   mergeDesktopSignals,
+  type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
 import { ExternalLink } from "./ExternalLink";
