@@ -1343,6 +1343,7 @@ export function PackOpenerTest({
     mode !== "reward" &&
     !jumpscare &&
     autoPackUnlockedFromProfile(profile) &&
+    phase !== "shop" &&
     (phase !== "done" || autoOpenActive);
 
   return createPortal(

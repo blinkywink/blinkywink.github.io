@@ -11156,32 +11156,53 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 @media (max-width: 560px) {
+  .pack-opener__done {
+    padding: 0.85rem 0.7rem 1.05rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
   .pack-opener__summary-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.45rem 0.3rem;
-    --card-preview-w: 100%;
-    --card-preview-h: auto;
-    --card-preview-scale: 1;
+    /* Fixed thumb size — avoid cqi/zoom (Safari was leaving cards huge + clipped). */
+    --card-face-w: 400px;
+    --card-preview-w: 54px;
+    --card-preview-scale: 0.135;
+    --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
+    /* Columns sized to the card, not 1fr — stops huge gaps between thumbs. */
+    grid-template-columns: repeat(auto-fill, var(--card-preview-w));
+    justify-content: center;
+    gap: 0.45rem 0.4rem;
+    width: 100%;
+    overflow: visible;
   }
 
   .pack-opener__summary-card {
-    width: 100%;
-    container-type: inline-size;
+    width: var(--card-preview-w);
+    max-width: 100%;
+    container-type: normal;
   }
 
   .pack-opener__summary-grid .monkey-card-scene--preview {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 2.5 / 3.5;
-    border-radius: calc(22px * (100cqi / 400));
-    clip-path: inset(0 round calc(22px * (100cqi / 400)));
+    width: var(--card-preview-w);
+    height: var(--card-preview-h);
+    aspect-ratio: auto;
+    border-radius: calc(22px * var(--card-preview-scale));
+    clip-path: inset(0 round calc(22px * var(--card-preview-scale)));
   }
 
   .pack-opener__summary-grid .monkey-card-scene--preview > .monkey-card {
     width: var(--card-face-w);
     height: calc(var(--card-face-w) * 3.5 / 2.5);
-    transform: scale(calc(100cqi / 400));
+    transform: scale(var(--card-preview-scale));
     transform-origin: top left;
+  }
+}
+
+@media (max-width: 380px) {
+  .pack-opener__summary-grid {
+    --card-preview-w: 48px;
+    --card-preview-scale: 0.12;
+    gap: 0.4rem 0.32rem;
   }
 }
 

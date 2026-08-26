@@ -1095,10 +1095,7 @@ export function ProfilePage() {
             <div className="profile-settings__row">
               <div>
                 <h4>Auto Open</h4>
-                <p>
-                  One-time unlock. Opens packs like holding Space - turn it on
-                  in the pack shop before you buy.
-                </p>
+                <p>Turn it on in the shop after purchasing a pack.</p>
               </div>
             </div>
             {autoPackUnlockedFromProfile(profile) ? (
