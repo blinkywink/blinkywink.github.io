@@ -41,18 +41,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx tsx scripts/publish-mobile-ota.ts
 
-      - name: Commit mobile-latest.json for the site mirror
+      # Release asset is the source of truth (apps check GitHub first).
+      # Site mirror is best-effort so concurrent pushes don't fail the job.
+      - name: Mirror mobile-latest.json on the site
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          MANIFEST="$(mktemp)"
+          cp public/mobile-latest.json "$MANIFEST"
+          git fetch origin main
+          git checkout -B main origin/main
+          cp "$MANIFEST" public/mobile-latest.json
           git add public/mobile-latest.json
           if git diff --staged --quiet; then
             echo "No manifest changes"
-          else
-            git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
-            # Drop build dirt that blocks pull --rebase, then rebase onto latest main.
-            git reset --hard HEAD
-            git clean -fd
-            git pull --rebase origin main
-            git push origin HEAD:main
+            exit 0
           fi
+          git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
+          git push origin HEAD:main

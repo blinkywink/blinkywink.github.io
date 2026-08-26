@@ -65,35 +65,47 @@ function prevMinNative(version: string): string {
   return version;
 }
 
-if (!skipBuild) {
-  sh("npm run build");
+function fetchReleaseManifest(): {
+  version?: string;
+  minNativeVersion?: string;
+  url?: string;
+  checksum?: string;
+  message?: string;
+} | null {
+  const result = spawnSync(
+    "gh",
+    [
+      "release",
+      "download",
+      MOBILE_TAG,
+      "--repo",
+      REPO,
+      "--pattern",
+      "mobile-latest.json",
+      "--dir",
+      OUT_DIR,
+      "--clobber",
+    ],
+    { stdio: "pipe", env: process.env },
+  );
+  if (result.status !== 0) return null;
+  const path = join(OUT_DIR, "mobile-latest.json");
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf8")) as {
+      version?: string;
+      minNativeVersion?: string;
+      url?: string;
+      checksum?: string;
+      message?: string;
+    };
+  } catch {
+    return null;
+  }
 }
-if (!existsSync(join(DIST, "index.html"))) {
-  throw new Error("dist/index.html missing — build first");
-}
 
-mkdirSync(OUT_DIR, { recursive: true });
-const zipPath = join(OUT_DIR, ZIP_NAME);
-rmSync(zipPath, { force: true });
-sh(`zip -qr '${zipPath}' .`, DIST);
-
-const checksum = createHash("sha256").update(readFileSync(zipPath)).digest("hex");
-const version = readDesktopVersion();
-const minNativeVersion = raiseFloor ? version : prevMinNative(version);
-
-const manifest = {
-  version,
-  minNativeVersion,
-  url: ZIP_URL,
-  checksum,
-  message: "Sorry, you need to redownload the app to update.",
-};
-
-writeFileSync(PUBLIC_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
-const stagedJson = join(OUT_DIR, "mobile-latest.json");
-copyFileSync(PUBLIC_JSON, stagedJson);
-
-if (!releaseExists(MOBILE_TAG)) {
+function ensureMobileRelease() {
+  if (releaseExists(MOBILE_TAG)) return;
   gh([
     "release",
     "create",
@@ -107,6 +119,88 @@ if (!releaseExists(MOBILE_TAG)) {
     "--latest=false",
   ]);
 }
+
+function writeManifest(manifest: {
+  version: string;
+  minNativeVersion: string;
+  url: string;
+  checksum: string;
+  message: string;
+}) {
+  mkdirSync(OUT_DIR, { recursive: true });
+  writeFileSync(PUBLIC_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+  const stagedJson = join(OUT_DIR, "mobile-latest.json");
+  copyFileSync(PUBLIC_JSON, stagedJson);
+  return stagedJson;
+}
+
+const version = readDesktopVersion();
+
+// APK/IPA jobs only raise the native floor — never rewrite the web zip
+// (re-uploading the zip races with OTA and can 404 mid-clobber).
+if (raiseFloor && skipBuild) {
+  mkdirSync(OUT_DIR, { recursive: true });
+  const fromRelease = fetchReleaseManifest();
+  const fromPublic = existsSync(PUBLIC_JSON)
+    ? (JSON.parse(readFileSync(PUBLIC_JSON, "utf8")) as {
+        checksum?: string;
+        url?: string;
+      })
+    : null;
+  const checksum = String(fromRelease?.checksum ?? fromPublic?.checksum ?? "");
+  const url = String(fromRelease?.url ?? fromPublic?.url ?? ZIP_URL);
+  if (!/^[a-f0-9]{64}$/i.test(checksum)) {
+    throw new Error(
+      "Cannot raise native floor: no checksum in release or public/mobile-latest.json",
+    );
+  }
+  const stagedJson = writeManifest({
+    version,
+    minNativeVersion: version,
+    url,
+    checksum,
+    message: "Sorry, you need to redownload the app to update.",
+  });
+  ensureMobileRelease();
+  gh([
+    "release",
+    "upload",
+    MOBILE_TAG,
+    "--repo",
+    REPO,
+    "--clobber",
+    stagedJson,
+  ]);
+  console.log(`\nRaised minNativeVersion → ${version} (zip unchanged)`);
+  console.log(`  checksum: ${checksum}`);
+  console.log(`  wrote ${PUBLIC_JSON}`);
+  process.exit(0);
+}
+
+if (!skipBuild) {
+  sh("npm run build");
+}
+if (!existsSync(join(DIST, "index.html"))) {
+  throw new Error("dist/index.html missing — build first");
+}
+
+mkdirSync(OUT_DIR, { recursive: true });
+const zipPath = join(OUT_DIR, ZIP_NAME);
+rmSync(zipPath, { force: true });
+sh(`zip -qr '${zipPath}' .`, DIST);
+
+const checksum = createHash("sha256").update(readFileSync(zipPath)).digest("hex");
+const minNativeVersion = raiseFloor ? version : prevMinNative(version);
+
+const stagedJson = writeManifest({
+  version,
+  minNativeVersion,
+  url: ZIP_URL,
+  checksum,
+  message: "Sorry, you need to redownload the app to update.",
+});
+
+ensureMobileRelease();
 
 gh([
   "release",
