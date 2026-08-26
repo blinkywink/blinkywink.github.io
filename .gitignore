@@ -54,3 +54,4 @@ npm-debug.log*
 *.sln
 *.sw?
 .vercel
+.verify-upd/
