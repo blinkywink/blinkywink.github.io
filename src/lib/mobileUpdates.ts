@@ -23,8 +23,8 @@ export type MobileLatestManifest = {
 };
 
 const MANIFEST_URLS = [
-  "https://blinkywink.github.io/mobile-latest.json",
   "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
+  "https://blinkywink.github.io/mobile-latest.json",
 ];
 
 export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest | null> {
