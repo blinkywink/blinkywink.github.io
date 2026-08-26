@@ -7,12 +7,17 @@ on:
     paths:
       - "src/**"
       - "public/**"
+      - "!public/mobile-latest.json"
       - "index.html"
       - "package.json"
       - "vite.config.ts"
       - "capacitor.config.ts"
       - "scripts/publish-mobile-ota.ts"
       - ".github/workflows/mobile-ota.yml"
+
+concurrency:
+  group: mobile-ota
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -45,8 +50,9 @@ jobs:
             echo "No manifest changes"
           else
             git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
-            # Build leftovers (dist/, android-artifacts/, etc.) dirty the tree and
-            # block a plain pull --rebase; --autostash clears that race.
-            git pull --rebase --autostash origin main
+            # Drop build dirt that blocks pull --rebase, then rebase onto latest main.
+            git reset --hard HEAD
+            git clean -fd
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
