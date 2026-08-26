@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version tag to build (e.g. v1.0.18)"
+        required: true
 
 permissions:
   contents: write
@@ -19,8 +24,12 @@ jobs:
           - platform: windows-latest
             args: --bundles nsis
     runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -32,8 +41,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Monkey Cards ${{ github.ref_name }}"
+          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          releaseName: "Monkey Cards ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
           releaseBody: "Desktop update. The app installs this on next launch, then restarts."
           releaseDraft: false
           prerelease: false
@@ -42,6 +51,8 @@ jobs:
   finalize:
     needs: publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,7 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REF_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: npx tsx scripts/finalize-desktop-release.ts
       - name: Commit desktop-latest.json for the site mirror
         run: |
@@ -66,19 +77,22 @@ jobs:
           if git diff --staged --quiet; then
             echo "No manifest changes"
           else
-            git commit -m "chore: sync desktop-latest for ${{ github.ref_name }}"
+            git commit -m "chore: sync desktop-latest for ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
 
   cleanup-old-releases:
     needs: finalize
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Delete older desktop (v*) releases only
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          keep="${{ github.ref_name }}"
+          keep="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName \
             --jq '.[].tagName' | while read -r tag; do
             [ -z "$tag" ] && continue
