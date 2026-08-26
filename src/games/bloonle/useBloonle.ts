@@ -384,6 +384,23 @@ export function useBloonle() {
     });
   }, []);
 
+  /** Replace the in-progress guess (used by native mobile keyboard). */
+  const setCurrentDraft = useCallback(
+    (raw: string) => {
+      setState((s) => {
+        if (s.status !== "playing") return s;
+        if (s.mode === "daily" && !accountDailyReady) return s;
+        const cleaned = raw
+          .toLowerCase()
+          .replace(/[^a-z]/g, "")
+          .slice(0, s.puzzle.slug.length);
+        if (cleaned === s.current) return s;
+        return { ...s, current: cleaned };
+      });
+    },
+    [accountDailyReady],
+  );
+
   const keyMarks = useMemo(() => {
     const best = new Map<string, LetterMark>();
     const rank: Record<LetterMark, number> = {
@@ -407,6 +424,7 @@ export function useBloonle() {
       state,
       typeLetter,
       backspace,
+      setCurrentDraft,
       submit,
       playNext,
       markHaulReported,
@@ -417,6 +435,7 @@ export function useBloonle() {
       state,
       typeLetter,
       backspace,
+      setCurrentDraft,
       submit,
       playNext,
       markHaulReported,

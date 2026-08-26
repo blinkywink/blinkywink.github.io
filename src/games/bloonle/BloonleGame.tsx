@@ -1,5 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { GameHeader } from "../../components/GameHeader";
+import { useIsCompactViewport } from "../../components/MobileAppNav";
 import { isTypingTarget } from "../../lib/keyboard";
 import { bloonleSolveReward } from "../rewards";
 import { dayNumber, type LetterMark } from "./dictionary";
@@ -63,10 +64,12 @@ export function BloonleGame({
   onFastSolve,
   onRunEnd,
 }: Props) {
+  const compact = useIsCompactViewport();
   const {
     state,
     typeLetter,
     backspace,
+    setCurrentDraft,
     submit,
     playNext,
     markHaulReported,
@@ -76,6 +79,7 @@ export function BloonleGame({
   const len = state.puzzle.slug.length;
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   /** Opening an already-finished daily must never re-trigger Nice Haul / packs. */
   const openedAlreadyDone = useRef(
     state.mode === "daily" && state.status !== "playing",
@@ -167,6 +171,14 @@ export function BloonleGame({
     return () => window.removeEventListener("keydown", onKey);
   }, [typeLetter, backspace, submit, playNext, done]);
 
+  /* Mobile: keep system keyboard up while guessing. */
+  useEffect(() => {
+    if (!compact || done) return;
+    const el = mobileInputRef.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+  }, [compact, done, state.guesses.length, state.puzzle.slug]);
+
   const dayLabel = dayNumber(state.day) - dayNumber("2026-01-01") + 1;
 
   return (
@@ -213,6 +225,11 @@ export function BloonleGame({
               ["--bloonle-rows" as string]: maxGuesses,
             } as CSSProperties
           }
+          onPointerDown={() => {
+            if (compact && !done) {
+              mobileInputRef.current?.focus({ preventScroll: true });
+            }
+          }}
         >
           {Array.from({ length: maxGuesses }, (_, row) => {
             const guess = state.guesses[row];
@@ -240,6 +257,29 @@ export function BloonleGame({
               </div>
             );
           })}
+
+          {compact && !done ? (
+            <input
+              ref={mobileInputRef}
+              className="bloonle-mobile-input"
+              value={state.current}
+              aria-label="Type your guess"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint="go"
+              inputMode="text"
+              maxLength={len}
+              onChange={(e) => setCurrentDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+            />
+          ) : null}
         </div>
 
         {done ? (
@@ -295,51 +335,55 @@ export function BloonleGame({
           </div>
         ) : null}
 
-        <div className="bloonle-keyboard" aria-label="Keyboard">
-          {ROWS.map((row, ri) => (
-            <div key={ri} className="bloonle-keyboard__row">
-              {row.map((key) => {
-                if (key === "enter") {
+        {!compact ? (
+          <div className="bloonle-keyboard" aria-label="Keyboard">
+            {ROWS.map((row, ri) => (
+              <div key={ri} className="bloonle-keyboard__row">
+                {row.map((key) => {
+                  if (key === "enter") {
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className="bloonle-key bloonle-key--wide"
+                        onClick={done ? playNext : submit}
+                      >
+                        {done ? "Next" : "Enter"}
+                      </button>
+                    );
+                  }
+                  if (key === "back") {
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className="bloonle-key bloonle-key--wide"
+                        onClick={backspace}
+                        disabled={done}
+                      >
+                        ⌫
+                      </button>
+                    );
+                  }
+                  const mark = keyMarks.get(key);
                   return (
                     <button
                       key={key}
                       type="button"
-                      className="bloonle-key bloonle-key--wide"
-                      onClick={done ? playNext : submit}
-                    >
-                      {done ? "Next" : "Enter"}
-                    </button>
-                  );
-                }
-                if (key === "back") {
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      className="bloonle-key bloonle-key--wide"
-                      onClick={backspace}
+                      className={`bloonle-key${mark ? ` is-${mark}` : ""}`}
+                      onClick={() => typeLetter(key)}
                       disabled={done}
                     >
-                      ⌫
+                      {key}
                     </button>
                   );
-                }
-                const mark = keyMarks.get(key);
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`bloonle-key${mark ? ` is-${mark}` : ""}`}
-                    onClick={() => typeLetter(key)}
-                    disabled={done}
-                  >
-                    {key}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+                })}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="bloonle-mobile-hint">Tap the board and type</p>
+        )}
       </main>
     </div>
   );
