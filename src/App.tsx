@@ -44,6 +44,7 @@ import {
   showsMobileAppNav,
   subscribeMobileNavSize,
 } from "./lib/mobileView";
+import { isNativeShell } from "./lib/nativeShell";
 import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
 import { recordGameRun } from "./lib/accountStats";
 import {
@@ -271,7 +272,9 @@ function MobileChromeSync() {
   const { pathname } = useLocation();
   const compact = useIsCompactViewport();
   const view = useMobileView();
-  const modern = compact && view === "modern";
+  const native = isNativeShell();
+  /* IPA: always modern bottom chrome (no Safari UI to navigate with). */
+  const modern = native || (compact && view === "modern");
   const showNav = modern && showsMobileAppNav(pathname);
   const [navSize, setNavSize] = useState(() => getMobileNavSizeId());
 
@@ -281,14 +284,14 @@ function MobileChromeSync() {
     const root = document.documentElement;
     root.dataset.mobileChrome = modern ? "modern" : "classic";
     root.dataset.mobileNav = showNav ? "1" : "0";
-    root.dataset.mobileNavSize = compact ? navSize : "lg";
+    root.dataset.mobileNavSize = compact || native ? navSize : "lg";
     return () => {
       delete root.dataset.mobileChrome;
       delete root.dataset.mobileNav;
       delete root.dataset.mobileNavSize;
       delete root.dataset.mobileCash;
     };
-  }, [modern, showNav, compact, navSize]);
+  }, [modern, showNav, compact, native, navSize]);
 
   return null;
 }

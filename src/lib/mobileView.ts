@@ -1,5 +1,7 @@
 /** Mobile chrome: classic top bar vs modern bottom-nav app shell. Device only. */
 
+import { isNativeShell } from "./nativeShell";
+
 export const MOBILE_VIEW_OPTIONS = [
   { id: "modern", label: "Modern" },
   { id: "classic", label: "Classic" },
@@ -108,6 +110,9 @@ export function subscribeMobileNavSize(
 
 /** Main hub routes that show the modern bottom tab bar. */
 export function showsMobileAppNav(pathname: string): boolean {
+  /* Capacitor IPA has no browser chrome — keep the tab bar on every screen. */
+  if (isNativeShell()) return true;
+
   if (pathname === "/" || pathname === "/about" || pathname === "/profile") {
     return true;
   }

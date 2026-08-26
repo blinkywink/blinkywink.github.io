@@ -6,6 +6,7 @@ import {
   subscribeLogoHome,
 } from "../lib/logoHome";
 import { isShopPath } from "../lib/mobileView";
+import { isNativeShell } from "../lib/nativeShell";
 import { SITE_LOGO, SITE_NAME } from "../lib/brand";
 import { AccountBar } from "./AccountBar";
 import {
@@ -33,7 +34,9 @@ export function SiteHeader() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const compact = useIsCompactViewport();
   const mobileView = useMobileView();
-  const modernMobile = compact && mobileView === "modern";
+  const native = isNativeShell();
+  /* IPA always uses Modern chrome (bottom tabs); site header stays off. */
+  const modernMobile = native || (compact && mobileView === "modern");
   const shopCashOverlay = modernMobile && isShopPath(pathname);
 
   function onCardsNavClick(e: ReactMouseEvent<HTMLAnchorElement>) {

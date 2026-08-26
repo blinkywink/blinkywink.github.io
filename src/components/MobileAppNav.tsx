@@ -14,6 +14,7 @@ import {
   subscribeMobileView,
   type MobileViewId,
 } from "../lib/mobileView";
+import { isNativeShell } from "../lib/nativeShell";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { UserAvatar } from "./UserAvatar";
 
@@ -172,6 +173,7 @@ export function MobileAppNav() {
   const navigate = useNavigate();
   const compact = useIsCompactViewport();
   const view = useMobileView();
+  const native = isNativeShell();
 
   function onCardsNavClick(e: ReactMouseEvent<HTMLAnchorElement>) {
     if (pathname !== "/collection") return;
@@ -182,9 +184,10 @@ export function MobileAppNav() {
     });
   }
 
-  if (!compact || view !== "modern" || !showsMobileAppNav(pathname)) {
-    return null;
-  }
+  const show =
+    native ||
+    (compact && view === "modern" && showsMobileAppNav(pathname));
+  if (!show) return null;
 
   return (
     <nav className="mobile-app-nav" aria-label="Main">
