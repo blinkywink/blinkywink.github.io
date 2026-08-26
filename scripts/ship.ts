@@ -1,10 +1,14 @@
 /**
- * Trigger cloud builds. Nothing heavy runs on your machine.
+ * Ship builds.
+ *
+ * Desktop = local Mac + Windows (fast).
+ * Mobile APK/IPA/OTA = GitHub Actions.
  *
  *   npm run ship -- apk
  *   npm run ship -- ios
  *   npm run ship -- desktop
  *   npm run ship -- mobile
+ *   npm run ship -- ota
  *   npm run ship -- all
  *   npm run ship -- desktop minor
  */
@@ -17,11 +21,15 @@ const rest = args.slice(1);
 
 if (!target) {
   console.error(`Usage:
-  npm run ship -- apk|ios|desktop|mobile|all [desktop bump args]
+  npm run ship -- apk|ios|desktop|mobile|ota|all [desktop bump args]
 
-Downloads (after Actions finishes):
+Desktop builds run on this machine (Mac + Windows).
+Mobile APK / IPA / OTA run on GitHub Actions.
+
+Downloads:
   Desktop: https://github.com/${REPO}/releases/latest
-  Mobile:  https://github.com/${REPO}/releases/tag/mobile
+  Mobile:  https://github.com/${REPO}/releases/latest (APK/IPA mirrored)
+           + https://github.com/${REPO}/releases/tag/mobile (OTA zip)
 `);
   process.exit(1);
 }
@@ -48,14 +56,14 @@ switch (target) {
   case "android":
     workflow("Android sideload APK");
     console.log(
-      `\nWhen green: https://github.com/${REPO}/releases/download/mobile/MonkeyCards.apk`,
+      `\nWhen green: https://github.com/${REPO}/releases/latest/download/MonkeyCards.apk`,
     );
     break;
   case "ios":
   case "ipa":
     workflow("iOS sideload IPA");
     console.log(
-      `\nWhen green: https://github.com/${REPO}/releases/download/mobile/MonkeyCards.ipa`,
+      `\nWhen green: https://github.com/${REPO}/releases/latest/download/MonkeyCards.ipa`,
     );
     break;
   case "ota":
@@ -68,12 +76,13 @@ switch (target) {
   case "mobile":
     workflow("Android sideload APK");
     workflow("iOS sideload IPA");
-    console.log(`\nWhen green: https://github.com/${REPO}/releases/tag/mobile`);
+    console.log(`\nWhen green: https://github.com/${REPO}/releases/latest`);
     break;
   case "desktop":
     run("npx", ["tsx", "scripts/release-desktop.ts", ...rest]);
     break;
   case "all":
+    // Desktop first (local), then kick mobile cloud builds.
     run("npx", ["tsx", "scripts/release-desktop.ts", ...rest]);
     workflow("Android sideload APK");
     workflow("iOS sideload IPA");

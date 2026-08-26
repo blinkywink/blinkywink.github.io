@@ -1,29 +1,29 @@
-# Shipping builds (cloud-first)
+# Shipping builds
 
-All installers are built on **GitHub Actions**. Your machine only bumps a version or triggers a workflow.
+**Desktop (Mac + Windows):** build on your machine — much faster than Actions.  
+**Mobile (APK / IPA / OTA):** GitHub Actions.
 
-Auto-update for the desktop app still uses:
+Auto-update for the desktop app uses:
 
 - `https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/latest.json`
 - site mirror `desktop-latest.json`
 
-Mac / Windows download buttons on the site still point at `releases/latest`.
-
-APK / IPA are **not** on the site yet (rolling `mobile` release only) until you say so.
+Mac / Windows / Android / iOS download buttons on the site point at `releases/latest`.
 
 ## Commands
 
 ```bash
 npm run clean                 # wipe local leftovers
-npm run ship -- apk           # cloud APK → releases/tag/mobile
-npm run ship -- ios           # cloud IPA → releases/tag/mobile
-npm run ship -- mobile        # both mobile builds
-npm run ship -- desktop       # bump patch, tag v*, CI builds Mac+Windows+updater
+npm run ship -- desktop       # bump patch, build Mac+Win locally, publish
 npm run ship -- desktop minor
-npm run ship -- all           # desktop + mobile
+npm run ship -- apk           # cloud APK → latest + mobile release
+npm run ship -- ios           # cloud IPA → latest + mobile release
+npm run ship -- mobile        # both mobile builds
+npm run ship -- ota           # force publish web OTA now
+npm run ship -- all           # local desktop + cloud mobile
 ```
 
-## Downloads after Actions is green
+## Downloads after ship
 
 | Platform | URL |
 |---|---|
@@ -33,22 +33,24 @@ npm run ship -- all           # desktop + mobile
 
 APK / IPA are also kept on the rolling `mobile` release for OTA (`MonkeyCards-web.zip`, `mobile-latest.json`).
 
-## Secrets (already used by desktop CI)
+## Secrets (optional cloud desktop rebuild)
 
 - `TAURI_SIGNING_PRIVATE_KEY`
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
 
-## Local escape hatches (optional)
+Local desktop uses `src-tauri/.updater-key` via `npm run desktop:build`.
+
+## Local escape hatches
 
 ```bash
-npm run desktop:build              # Mac only, needs updater key
-npm run desktop:build:windows
-npm run desktop:publish            # upload local builds (legacy)
+npm run desktop:build              # Mac app+dmg+updater
+npm run desktop:build:windows      # Windows nsis (cargo-xwin)
+npm run desktop:publish            # upload local builds to the current version tag
 npm run mobile:sync:android && npm run mobile:apk
 npm run mobile:sync && npm run mobile:ipa
 ```
 
-Prefer `npm run ship` so everything stays in the cloud.
+Prefer `npm run ship` so version bump + publish stay consistent.
 
 ## Mobile OTA (no App Store)
 
@@ -58,7 +60,7 @@ Sideloaded APK/IPA can pull **web** updates automatically (same “Updating” s
 - Most game/UI changes ship via OTA when `main` updates (workflow **Mobile OTA web bundle**).
 - If the native shell is too old (`minNativeVersion`), play is blocked with:  
   **Sorry, you need to redownload the app to update.**  
-  (links to the `mobile` release APK/IPA)
+  (links to the latest APK/IPA)
 
 ```bash
 npm run ship -- ota          # force publish web OTA now

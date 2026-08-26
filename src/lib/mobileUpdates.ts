@@ -24,6 +24,7 @@ export type MobileLatestManifest = {
 
 const MANIFEST_URLS = [
   "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
+  "https://blinkywink.github.io/public/mobile-latest.json",
   "https://blinkywink.github.io/mobile-latest.json",
 ];
 

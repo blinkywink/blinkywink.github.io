@@ -55,7 +55,12 @@ function readSig(artifactPath: string): string {
   if (!fs.existsSync(sigPath)) {
     throw new Error(`Missing signature: ${sigPath}`);
   }
-  return fs.readFileSync(sigPath, "utf8").trim();
+  const raw = fs.readFileSync(sigPath, "utf8").trim();
+  // Tauri expects the signature field to be base64(minisign file bytes).
+  if (raw.startsWith("untrusted comment:")) {
+    return Buffer.from(`${raw}\n`).toString("base64");
+  }
+  return raw;
 }
 
 function copy(src: string, destName: string): string {
@@ -231,6 +236,10 @@ const manifest = {
 };
 
 fs.writeFileSync(OUT_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+fs.writeFileSync(
+  path.join(ROOT, "desktop-latest.json"),
+  `${JSON.stringify(manifest, null, 2)}\n`,
+);
 const latestJson = path.join(STAGE, "latest.json");
 fs.copyFileSync(OUT_JSON, latestJson);
 staged.push(latestJson);
@@ -246,7 +255,10 @@ config.shopDay = shopDay;
 config.featuredTowers = featuredTowers;
 config.message = "This desktop app is out of date. Update to keep playing.";
 fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
-
+fs.writeFileSync(
+  path.join(ROOT, "desktop-config.json"),
+  `${JSON.stringify(config, null, 2)}\n`,
+);
 const notes = `Desktop ${version}
 
 The app installs this update on the next check (launch, page change, or shop).`;

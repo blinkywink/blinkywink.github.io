@@ -1,6 +1,6 @@
 /**
- * Cloud-first desktop release: bump version, commit, tag, push.
- * GitHub Actions builds Mac + Windows, signs, and publishes updater assets.
+ * Local-first desktop release: bump version, build Mac + Windows here,
+ * publish to GitHub Releases + updater latest.json.
  *
  *   npm run desktop:release
  *   npm run desktop:release -- minor
@@ -17,6 +17,7 @@ import {
 
 const args = process.argv.slice(2);
 const noPush = args.includes("--no-push");
+const skipBuild = args.includes("--skip-build");
 const kindOrVersion = args.find((a) => !a.startsWith("--")) ?? "patch";
 
 const current = readDesktopVersion();
@@ -29,12 +30,14 @@ const next = /^\d+\.\d+\.\d+$/.test(kindOrVersion)
     : null;
 
 if (!next) {
-  console.error("Usage: npm run desktop:release -- [patch|minor|major|x.y.z]");
+  console.error(
+    "Usage: npm run desktop:release -- [patch|minor|major|x.y.z] [--no-push] [--skip-build]",
+  );
   process.exit(1);
 }
 
 writeDesktopVersion(next);
-console.log(`Version ${current} → ${next} (cloud build)`);
+console.log(`Version ${current} → ${next} (local Mac + Windows build)`);
 
 function run(command: string, cmdArgs: string[]) {
   const result = spawnSync(command, cmdArgs, {
@@ -66,17 +69,41 @@ if (commit.status !== 0) {
 }
 
 const tag = releaseTag(next);
+// Recreate tag locally so publish targets the right version.
+spawnSync("git", ["tag", "-d", tag], { stdio: "pipe" });
 run("git", ["tag", tag]);
 
+if (!skipBuild) {
+  console.log("\n→ Building Mac (app + dmg + updater)…");
+  run("npm", ["run", "desktop:build"]);
+  console.log("\n→ Building Windows (nsis + updater)…");
+  run("npm", ["run", "desktop:build:windows"]);
+}
+
+console.log("\n→ Publishing to GitHub Releases…");
+run("npm", ["run", "desktop:publish"]);
+
 if (!noPush) {
-  run("git", ["push"]);
-  run("git", ["push", "origin", tag]);
-  console.log(`\nPushed ${tag}. GitHub Actions is building Mac + Windows.`);
-  console.log(
-    "When green: https://github.com/blinkywink/blinkywink.github.io/releases/latest",
+  run("git", [
+    "add",
+    "public/desktop-latest.json",
+    "public/desktop-config.json",
+    "desktop-latest.json",
+    "desktop-config.json",
+  ]);
+  spawnSync(
+    "git",
+    ["commit", "-m", `chore: sync desktop-latest for ${tag}`],
+    { stdio: "inherit" },
   );
-  console.log("Auto-update uses that release's latest.json — no local build needed.");
+  run("git", ["push"]);
+  // Force-update remote tag to this commit (no Actions tag build — local publish already did it).
+  run("git", ["push", "origin", `refs/tags/${tag}`, "--force"]);
+  console.log(`\nPublished ${tag} from this machine.`);
+  console.log(
+    `Downloads: https://github.com/blinkywink/blinkywink.github.io/releases/latest`,
+  );
 } else {
-  console.log(`\nCreated local tag ${tag} (--no-push). Push when ready:`);
-  console.log(`  git push && git push origin ${tag}`);
+  console.log(`\nBuilt + published locally (--no-push). Push when ready:`);
+  console.log(`  git push && git push origin ${tag} --force`);
 }

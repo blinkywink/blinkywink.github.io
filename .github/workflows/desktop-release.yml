@@ -1,9 +1,8 @@
 name: Desktop release
 
+# Desktop installers are built locally (`npm run ship -- desktop`).
+# Keep this workflow for manual cloud rebuilds only.
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       tag:

@@ -37,7 +37,12 @@ function readSig(filePath: string): string {
   if (!fs.existsSync(sigPath)) {
     throw new Error(`Missing signature: ${sigPath}`);
   }
-  return fs.readFileSync(sigPath, "utf8").trim();
+  const raw = fs.readFileSync(sigPath, "utf8").trim();
+  // Tauri expects the signature field to be base64(minisign file bytes).
+  if (raw.startsWith("untrusted comment:")) {
+    return Buffer.from(`${raw}\n`).toString("base64");
+  }
+  return raw;
 }
 
 function pick(
