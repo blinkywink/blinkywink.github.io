@@ -12794,6 +12794,25 @@ body.rewards-overlay-open .sweeper-result {
   position: relative;
 }
 
+.bloonle-page.is-kb-open {
+  /* Soft keyboard covers bottom of visual viewport — shrink shell so board stays visible. */
+  padding-bottom: max(0px, calc(var(--bloonle-kb, 0px) - var(--site-bottom-nav-h, 0px)));
+}
+
+.bloonle-page.is-kb-open .bloonle-prompt__day,
+.bloonle-page.is-kb-open .bloonle-prompt__sub,
+.bloonle-page.is-kb-open .bloonle-toast--spacer {
+  display: none;
+}
+
+.bloonle-page.is-kb-open .bloonle-prompt h2 {
+  font-size: 0.95rem;
+}
+
+.bloonle-page.is-kb-open .bloonle-hints {
+  display: none;
+}
+
 .bloonle-page > .game-header {
   flex-shrink: 0;
   margin-bottom: 0.05rem;
@@ -12808,6 +12827,7 @@ body.rewards-overlay-open .sweeper-result {
   flex-direction: column;
   gap: 0.3rem;
   overflow: hidden;
+  position: relative;
 }
 
 .bloonle-prompt {
@@ -13053,29 +13073,23 @@ body.rewards-overlay-open .sweeper-result {
   width: 100%;
 }
 
-.bloonle-mobile-hint {
-  margin: 0.15rem 0 0;
-  flex-shrink: 0;
-  text-align: center;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: rgba(240, 240, 244, 0.45);
-}
-
 .bloonle-mobile-input {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   border: 0;
-  opacity: 0.02;
+  opacity: 0.01;
   color: transparent;
   caret-color: transparent;
   background: transparent;
   font-size: 16px;
-  z-index: 2;
+  z-index: 6;
   cursor: text;
 }
 

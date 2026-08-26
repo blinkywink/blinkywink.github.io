@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { useIsCompactViewport } from "../../components/MobileAppNav";
 import { isTypingTarget } from "../../lib/keyboard";
@@ -80,6 +80,7 @@ export function BloonleGame({
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const [kbInset, setKbInset] = useState(0);
   /** Opening an already-finished daily must never re-trigger Nice Haul / packs. */
   const openedAlreadyDone = useRef(
     state.mode === "daily" && state.status !== "playing",
@@ -171,18 +172,61 @@ export function BloonleGame({
     return () => window.removeEventListener("keydown", onKey);
   }, [typeLetter, backspace, submit, playNext, done]);
 
-  /* Mobile: keep system keyboard up while guessing. */
-  useEffect(() => {
+  /* Mobile: open system keyboard as soon as Bloonle mounts / after each guess. */
+  useLayoutEffect(() => {
     if (!compact || done) return;
     const el = mobileInputRef.current;
     if (!el) return;
-    el.focus({ preventScroll: true });
+    const focus = () => {
+      try {
+        el.focus({ preventScroll: true });
+      } catch {
+        el.focus();
+      }
+    };
+    focus();
+    const t0 = window.setTimeout(focus, 0);
+    const t1 = window.setTimeout(focus, 80);
+    const t2 = window.setTimeout(focus, 250);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [compact, done, state.guesses.length, state.puzzle.slug]);
+
+  /* Lift the board when the soft keyboard covers the lower viewport. */
+  useEffect(() => {
+    if (!compact || done) {
+      setKbInset(0);
+      return;
+    }
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKbInset(covered > 80 ? covered : 0);
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+    };
+  }, [compact, done]);
 
   const dayLabel = dayNumber(state.day) - dayNumber("2026-01-01") + 1;
 
   return (
-    <div className={`bloonle-page ${done ? "is-done" : ""}`}>
+    <div
+      className={`bloonle-page ${done ? "is-done" : ""}${kbInset > 0 ? " is-kb-open" : ""}`}
+      style={
+        {
+          ["--bloonle-kb" as string]: `${kbInset}px`,
+        } as CSSProperties
+      }
+    >
       <GameHeader title="BLOONLE" icon="" />
 
       <main className="bloonle-main">
@@ -225,11 +269,6 @@ export function BloonleGame({
               ["--bloonle-rows" as string]: maxGuesses,
             } as CSSProperties
           }
-          onPointerDown={() => {
-            if (compact && !done) {
-              mobileInputRef.current?.focus({ preventScroll: true });
-            }
-          }}
         >
           {Array.from({ length: maxGuesses }, (_, row) => {
             const guess = state.guesses[row];
@@ -257,30 +296,31 @@ export function BloonleGame({
               </div>
             );
           })}
-
-          {compact && !done ? (
-            <input
-              ref={mobileInputRef}
-              className="bloonle-mobile-input"
-              value={state.current}
-              aria-label="Type your guess"
-              autoCapitalize="none"
-              autoCorrect="off"
-              autoComplete="off"
-              spellCheck={false}
-              enterKeyHint="go"
-              inputMode="text"
-              maxLength={len}
-              onChange={(e) => setCurrentDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-            />
-          ) : null}
         </div>
+
+        {compact && !done ? (
+          <input
+            ref={mobileInputRef}
+            className="bloonle-mobile-input"
+            value={state.current}
+            aria-label="Type your guess"
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="go"
+            inputMode="text"
+            maxLength={len}
+            onChange={(e) => setCurrentDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+          />
+        ) : null}
 
         {done ? (
           <div className="bloonle-result">
@@ -381,9 +421,7 @@ export function BloonleGame({
               </div>
             ))}
           </div>
-        ) : (
-          <p className="bloonle-mobile-hint">Tap the board and type</p>
-        )}
+        ) : null}
       </main>
     </div>
   );
