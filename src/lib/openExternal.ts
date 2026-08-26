@@ -1,9 +1,10 @@
 import { isDesktopShell } from "./desktopOnline";
+import { isNativeShell } from "./nativeShell";
 
 export const DISCORD_INVITE_URL = "https://discord.gg/7XwcdHYzBE";
 export const YOUTUBE_CHANNEL_URL = "https://youtube.com/@blinkywink";
 
-/** Open http(s) links in the system browser (desktop) or a new tab (web). */
+/** Open http(s) links in the system browser (native/desktop) or a new tab (web). */
 export async function openExternal(url: string): Promise<void> {
   const href = String(url ?? "").trim();
   if (!/^https?:\/\//i.test(href)) return;
@@ -15,6 +16,16 @@ export async function openExternal(url: string): Promise<void> {
       return;
     } catch (err) {
       console.warn("openExternal failed", err);
+    }
+  }
+
+  if (isNativeShell()) {
+    try {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url: href });
+      return;
+    } catch (err) {
+      console.warn("openExternal Capacitor Browser failed", err);
     }
   }
 

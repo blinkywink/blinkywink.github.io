@@ -16,9 +16,11 @@ import "@fontsource/nunito/latin-700.css";
 import "@fontsource/nunito/latin-800.css";
 import "@fontsource/luckiest-guy/latin-400.css";
 import { initSiteTheme } from "./lib/siteTheme";
+import { initNativeShell } from "./lib/nativeShell";
 import "./index.css";
 
 initSiteTheme();
+void initNativeShell();
 
 const root = document.getElementById("root")!;
 
