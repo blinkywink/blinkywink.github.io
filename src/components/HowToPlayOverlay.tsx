@@ -298,10 +298,7 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
           <>
             <h2 id="howto-play-title">Get the app</h2>
             <div className="howto-play__body">
-              <p>
-                Download the app for faster loading times — Windows, Mac,
-                Android, or iOS.
-              </p>
+              <p>Download the app for faster loading times.</p>
               <DesktopDownloadButtons className="howto-play__downloads" />
               <ExternalLink
                 href={DISCORD_INVITE_URL}
