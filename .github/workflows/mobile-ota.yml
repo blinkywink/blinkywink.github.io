@@ -45,7 +45,8 @@ jobs:
             echo "No manifest changes"
           else
             git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
-            # Rebase if another push landed while OTA was building (common race).
-            git pull --rebase origin main
+            # Build leftovers (dist/, android-artifacts/, etc.) dirty the tree and
+            # block a plain pull --rebase; --autostash clears that race.
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
