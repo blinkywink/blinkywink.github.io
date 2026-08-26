@@ -7,26 +7,13 @@ import {
   fetchDesktopRemoteConfig,
   isOlderVersion,
   mergeDesktopSignals,
-  type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
-import { dailyTowerPicks, dayStamp } from "../lib/packTheme";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
 import { ExternalLink } from "./ExternalLink";
 
 type GateStatus = "idle" | "updating" | "blocked";
 
 const RECHECK_MS = 90_000;
-
-function sameTowers(a: string[], b: string[]): boolean {
-  return a.length === b.length && a.every((name, i) => name === b[i]);
-}
-
-function shopLooksStale(remote: DesktopRemoteConfig | null): boolean {
-  if (!remote?.featuredTowers?.length || !remote.shopDay) return false;
-  const today = dayStamp();
-  if (remote.shopDay !== today) return false;
-  return !sameTowers(dailyTowerPicks(3, today), remote.featuredTowers);
-}
 
 export function DesktopUpdateGate() {
   const [status, setStatus] = useState<GateStatus>("idle");
@@ -55,7 +42,6 @@ export function DesktopUpdateGate() {
       }
 
       const current = await getVersion();
-      const shopStale = shopLooksStale(remote);
       const versionBehind = Boolean(
         remote &&
           ((remote.version && isOlderVersion(current, remote.version)) ||
