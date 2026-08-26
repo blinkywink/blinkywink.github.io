@@ -52,20 +52,20 @@ function IosSideloadDialog({
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <h2 id={titleId}>iOS sideload</h2>
+        <h2 id={titleId}>iOS install</h2>
         <p>
-          This app is not on the App Store. It requires sideloading to install.
-          If you want help sideloading, you can ask in the Discord.
+          This app isn’t on the App Store — it has to be sideloaded. Need help?
+          Ask in the Discord and someone can walk you through it.
         </p>
         <div className="ios-sideload__actions">
           <ExternalLink href={DISCORD_INVITE_URL} className="btn btn--primary">
-            Ask on Discord
+            Ask in Discord
           </ExternalLink>
           <ExternalLink href={iosHref} className="btn btn--secondary">
             Download IPA
           </ExternalLink>
-          <button type="button" className="btn" onClick={onClose}>
-            Close
+          <button type="button" className="btn btn--ghost" onClick={onClose}>
+            Not now
           </button>
         </div>
       </div>
