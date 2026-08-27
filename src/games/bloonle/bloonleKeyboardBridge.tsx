@@ -32,7 +32,7 @@ function nativeShowKeyboard() {
   }
 }
 
-/** Call during a user gesture (pointer/click) before opening Bloonle. */
+/** Call during a user gesture (click) when opening Bloonle — not on pointerdown (scroll). */
 export function armBloonleKeyboard(): void {
   const el = inputEl;
   if (!el) return;
@@ -68,6 +68,27 @@ export function BloonleKeyboardBridge() {
     return () => {
       if (inputEl === ref.current) inputEl = null;
       if (setCovering === setCoveringState) setCovering = null;
+    };
+  }, []);
+
+  /* Dismiss keyboard if focused without an active Bloonle session (e.g. scroll touch). */
+  useEffect(() => {
+    const releaseIfOrphaned = () => {
+      if (session) return;
+      const el = inputEl;
+      if (el && document.activeElement === el) el.blur();
+    };
+    window.addEventListener("scroll", releaseIfOrphaned, {
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener("touchmove", releaseIfOrphaned, {
+      passive: true,
+      capture: true,
+    });
+    return () => {
+      window.removeEventListener("scroll", releaseIfOrphaned, true);
+      window.removeEventListener("touchmove", releaseIfOrphaned, true);
     };
   }, []);
 

@@ -778,11 +778,8 @@ export function ArcadeHome({
                   ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash`
                   : g.label
               }
-              onPointerDown={() => {
-                /* iOS only opens the keyboard inside a user gesture — arm before navigate. */
-                if (g.id === "bloonle") armBloonleKeyboard();
-              }}
               onClick={() => {
+                /* iOS needs focus in the same user gesture as navigate — click only, not pointerdown (scroll). */
                 if (g.id === "bloonle") armBloonleKeyboard();
                 onPlay(g.id);
               }}
