@@ -391,6 +391,7 @@ export function MonkeyCard({
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
   const androidNative = isAndroidNative();
+  const androidPreview = androidNative && isPreview && !bake;
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -436,10 +437,16 @@ export function MonkeyCard({
   const [canAnimateVis, setCanAnimateVis] = useState(false);
   const [fxOn, setFxOn] = useState(showFx);
   const visualizer =
-    usesVisualizer(tier) && !staticArt && !desktopPreview && fxOn;
+    usesVisualizer(tier) &&
+    !staticArt &&
+    !desktopPreview &&
+    fxOn &&
+    !androidPreview;
   const animateVisualizer = visualizer && wantsAnimatedVis && canAnimateVis;
   const holo = usesHoloFx(tier) && showFx;
   const paragonAmbient = isParagon && showFx && stage >= 1;
+  /** Blur/filter particles outside the card bounds glitch Android compositing. */
+  const paragonParticles = paragonAmbient && !androidNative;
 
   useEffect(() => {
     if (!wantsAnimatedVis) {
@@ -460,8 +467,8 @@ export function MonkeyCard({
       setFxOn(true);
       return;
     }
-    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
-      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
+    if (desktopPreview || staticArt || !usesVisualizer(tier) || androidPreview) {
+      setFxOn(!staticArt && !desktopPreview && !androidPreview && usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -473,13 +480,13 @@ export function MonkeyCard({
     const io = new IntersectionObserver(
       ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
       {
-        rootMargin: androidNative && isPreview ? "48px 0px" : "180px 0px",
+        rootMargin: androidNative && isPreview ? "24px 0px" : "180px 0px",
         threshold: 0.01,
       },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [androidNative, bake, desktopPreview, isPreview, staticArt, tier]);
+  }, [androidNative, androidPreview, bake, desktopPreview, isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -766,7 +773,7 @@ export function MonkeyCard({
       {...interactiveProps}
       style={accentStyle}
     >
-      {paragonAmbient ? (
+      {paragonParticles ? (
         <div
           className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
           aria-hidden
@@ -943,7 +950,7 @@ export function MonkeyCard({
 
         <div className="monkey-card__edge" aria-hidden="true" />
       </div>
-      {paragonAmbient ? (
+      {paragonParticles ? (
         <div
           className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
           aria-hidden

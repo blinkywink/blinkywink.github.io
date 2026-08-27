@@ -41,14 +41,26 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
         <div className="pack-face__wash" aria-hidden />
         <div className="pack-face__grid" aria-hidden />
         <div className="pack-face__category-mosaic" aria-hidden>
-          {theme.images.map((src, i) => (
-            <div
-              key={`${src}-${i}`}
-              className={`pack-face__category-slot pack-face__category-slot--${i}`}
-            >
-              <img src={src} alt="" draggable={false} decoding="async" loading={imgLoad} />
+          {lazyImages ? (
+            <div className="pack-face__category-slot pack-face__category-slot--solo">
+              <img
+                src={theme.images[0] ?? theme.images.at(-1)!}
+                alt=""
+                draggable={false}
+                decoding="async"
+                loading={imgLoad}
+              />
             </div>
-          ))}
+          ) : (
+            theme.images.map((src, i) => (
+              <div
+                key={`${src}-${i}`}
+                className={`pack-face__category-slot pack-face__category-slot--${i}`}
+              >
+                <img src={src} alt="" draggable={false} decoding="async" loading={imgLoad} />
+              </div>
+            ))
+          )}
         </div>
         <div className="pack-face__copy">
           <span className={`pack-face__name ${packNameClass(theme.title)}`}>

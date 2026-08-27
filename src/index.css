@@ -1484,6 +1484,8 @@ html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings {
   mask-image: none;
   inset: -18%;
   opacity: 0.9;
+  transform: none;
+  isolation: auto;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings-space {
@@ -1502,7 +1504,8 @@ html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring {
   width: 118%;
   aspect-ratio: 2.15 / 1;
   border-width: 2px;
-  animation: paragon-ring-breathe 4.2s ease-in-out infinite;
+  animation: paragon-ring-breathe 4.2s ease-in-out infinite !important;
+  transform: none;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--b .monkey-card__paragon-ring {
@@ -1513,6 +1516,21 @@ html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot-
 html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--c .monkey-card__paragon-ring {
   width: 132%;
   top: 58%;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card--paragon-s4 .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .monkey-card--paragon-s5 .monkey-card__paragon-aura {
+  animation: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .monkey-card__glare,
+html[data-native="1"][data-platform="android"] .monkey-card__sheen {
+  mix-blend-mode: soft-light;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__foil {
+  filter: saturate(1.08) brightness(1.04);
 }
 
 html[data-native="1"] .pack-opener__card-glow {
@@ -1550,15 +1568,24 @@ html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
 }
 
 /* Android perf — shop scroll + pack open (keep card reflections / paragon FX). */
-html[data-native="1"][data-platform="android"] .pack-shelf__item {
-  content-visibility: auto;
-  contain-intrinsic-size: 180px 280px;
-}
-
 html[data-native="1"][data-platform="android"] .pack-shelf__booster {
   filter: none;
   box-shadow: 0 14px 16px rgba(0, 0, 0, 0.35);
   transition: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-face__category-slot,
+html[data-native="1"][data-platform="android"] .pack-face__hero {
+  filter: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-face__category-slot--solo {
+  position: absolute;
+  inset: 8% 10% 18%;
+  width: auto;
+  height: auto;
+  transform: none;
+  z-index: 2;
 }
 
 html[data-native="1"][data-platform="android"] .pack-shelf__item:hover .pack-shelf__booster,
@@ -1584,11 +1611,15 @@ html[data-native="1"][data-platform="android"] .pack-opener__god-burst * {
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--paragon-fx {
-  overflow: visible;
+  overflow: hidden;
+}
+
+html[data-native="1"][data-platform="android"] .shop-direct__card {
+  content-visibility: auto;
+  contain-intrinsic-size: 160px 240px;
 }
 
 html[data-native="1"][data-platform="android"] .shop-direct__grid .monkey-card-scene--preview,
-html[data-native="1"][data-platform="android"] .pack-shelf,
 html[data-native="1"][data-platform="android"] .pack-opener__card .monkey-card-scene {
   contain: layout paint;
 }
