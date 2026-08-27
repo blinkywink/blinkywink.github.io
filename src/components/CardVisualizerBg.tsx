@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { hashSeed, mulberry32 } from "../lib/cardSeed";
-import { isNativeShell } from "../lib/nativeShell";
+import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 
 type Props = {
   seed: string;
@@ -415,11 +415,13 @@ export function CardVisualizerBg({
 
     const base = darken(palette[0]!, baseDark);
 
+    const android = isAndroidNative();
     const nativeShell = isNativeShell();
-    const maxDpr = nativeShell ? 1.25 : 2;
+    const maxDpr = android ? 1 : nativeShell ? 1.25 : 2;
+    const drawAnimated = animated && !android;
 
     const pulse = (t: number, phase: number, speed: number) =>
-      animated
+      drawAnimated
         ? 0.55 + 0.45 * Math.sin(t * speed + phase)
         : 0.72 + 0.28 * Math.sin(phase * 2.7);
 
@@ -535,7 +537,7 @@ export function CardVisualizerBg({
         for (const ray of list) {
           const a =
             ray.angle +
-            Math.sin(t * ray.speed + ray.phase) * (animated ? 0.08 : 0);
+            Math.sin(t * ray.speed + ray.phase) * (drawAnimated ? 0.08 : 0);
           const len =
             ray.len *
             Math.max(w, h) *
@@ -646,12 +648,12 @@ export function CardVisualizerBg({
             padX +
             (d.xi / Math.max(1, latticeN - 1)) * spanX +
             d.jitterX * w +
-            Math.sin(t * 0.7 + d.phase) * (animated ? 3 : 0);
+            Math.sin(t * 0.7 + d.phase) * (drawAnimated ? 3 : 0);
           const y =
             padY +
             (d.yi / Math.max(1, latticeM - 1)) * spanY +
             d.jitterY * h +
-            Math.cos(t * 0.6 + d.phase) * (animated ? 2 : 0);
+            Math.cos(t * 0.6 + d.phase) * (drawAnimated ? 2 : 0);
           return { ...d, x, y };
         });
         if (latticeLinks) {
@@ -707,7 +709,7 @@ export function CardVisualizerBg({
 
       if (isMode("cometTrails")) {
         for (const c of comets) {
-          const travel = animated ? ((t * c.speed + c.phase) % 1.4) - 0.2 : 0.35;
+          const travel = drawAnimated ? ((t * c.speed + c.phase) % 1.4) - 0.2 : 0.35;
           const ox = (c.x + Math.cos(c.angle) * travel * 0.35) * w;
           const oy = (c.y + Math.sin(c.angle) * travel * 0.25) * h;
           const ex = ox - Math.cos(c.angle) * c.len * w;
@@ -794,7 +796,7 @@ export function CardVisualizerBg({
 
       if (isMode("starfield")) {
         for (const s of stars) {
-          const a = animated
+          const a = drawAnimated
             ? s.alpha * (0.45 + 0.55 * Math.sin(t * s.speed + s.twinkle))
             : s.alpha;
           ctx.fillStyle = rgba(s.color, a);
@@ -894,7 +896,7 @@ export function CardVisualizerBg({
 
       if (has("sparks")) {
         for (const spark of sparks) {
-          const a = animated
+          const a = drawAnimated
             ? spark.alpha * (0.5 + 0.5 * Math.sin(t * spark.speed + spark.twinkle))
             : spark.alpha;
           ctx.fillStyle = rgba(spark.color, a);
@@ -924,9 +926,8 @@ export function CardVisualizerBg({
     let pageVisible =
       typeof document === "undefined" ||
       document.visibilityState !== "hidden";
-    const native = isNativeShell();
     /* Native WebViews heat up on 60fps canvas — ~30fps still looks smooth. */
-    const minFrameMs = native && animated ? 32 : 0;
+    const minFrameMs = nativeShell && drawAnimated ? 32 : 0;
     let lastFrameAt = 0;
 
     const isLive = () => inView && pageVisible;
@@ -942,8 +943,8 @@ export function CardVisualizerBg({
       }
       lastFrameAt = now;
       const t = (now - start) / 1000;
-      draw(animated ? t : 0);
-      if (animated) {
+      draw(drawAnimated ? t : 0);
+      if (drawAnimated) {
         rafRef.current = requestAnimationFrame(tick);
       }
     };
@@ -959,7 +960,7 @@ export function CardVisualizerBg({
         /* ignore */
       }
       draw(0);
-      if (animated && rafRef.current == null) {
+      if (drawAnimated && rafRef.current == null) {
         rafRef.current = requestAnimationFrame(tick);
       }
     };
@@ -968,12 +969,12 @@ export function CardVisualizerBg({
 
     const ro = new ResizeObserver(() => {
       if (!isLive()) return;
-      draw(animated ? (performance.now() - start) / 1000 : 0);
+      draw(drawAnimated ? (performance.now() - start) / 1000 : 0);
     });
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
     let io: IntersectionObserver | null = null;
-    if (animated && typeof IntersectionObserver !== "undefined") {
+    if (drawAnimated && typeof IntersectionObserver !== "undefined") {
       io = new IntersectionObserver(
         ([entry]) => {
           const next = Boolean(entry?.isIntersecting);
@@ -1002,7 +1003,7 @@ export function CardVisualizerBg({
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    if (animated) {
+    if (drawAnimated) {
       rafRef.current = requestAnimationFrame(tick);
     }
 

@@ -1554,6 +1554,67 @@ html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
   filter: none;
 }
 
+/* Android perf — shop scroll, pack open, paragon cards (keep ribbon/degree). */
+html[data-native="1"][data-platform="android"] .pack-shelf__booster {
+  filter: none;
+  transition: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-shelf__item:hover .pack-shelf__booster,
+html[data-native="1"][data-platform="android"] .pack-shelf__item:focus-visible .pack-shelf__booster,
+html[data-native="1"][data-platform="android"] .pack-shelf__item:active .pack-shelf__booster {
+  transform: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-shelf__booster .booster__art img {
+  transform: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-opener__backdrop {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(6, 20, 36, 0.94);
+}
+
+html[data-native="1"][data-platform="android"] .pack-opener__suspense-plate *,
+html[data-native="1"][data-platform="android"] .pack-opener__god-burst,
+html[data-native="1"][data-platform="android"] .pack-opener__god-burst *,
+html[data-native="1"][data-platform="android"] .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .monkey-card__glare,
+html[data-native="1"][data-platform="android"] .monkey-card__spark,
+html[data-native="1"][data-platform="android"] .monkey-card__sheen,
+html[data-native="1"][data-platform="android"] .monkey-card__edge,
+html[data-native="1"][data-platform="android"] .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .monkey-card__shadow,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-smoke,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-sparks,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-shine,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-degree-sheen {
+  animation: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-aura {
+  animation: none !important;
+  opacity: 0.82;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card--paragon-s4,
+html[data-native="1"][data-platform="android"] .monkey-card--paragon-s5 {
+  animation: none !important;
+  box-shadow: 0 16px 32px rgba(16, 0, 40, 0.42);
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--paragon-fx {
+  overflow: hidden;
+}
+
+html[data-native="1"][data-platform="android"] .shop-direct__grid .monkey-card-scene--preview,
+html[data-native="1"][data-platform="android"] .pack-shelf,
+html[data-native="1"][data-platform="android"] .pack-opener__card .monkey-card-scene {
+  contain: layout paint;
+}
+
 /* Shared utility page title (Market, Board, Profile, Trade) */
 .page-header {
   display: grid;

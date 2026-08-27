@@ -17,6 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
+import { isAndroidNative } from "../lib/nativeShell";
 import { categoryShell, categoryTint } from "../lib/cardCategoryTheme";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
@@ -384,6 +385,10 @@ export function MonkeyCard({
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
+  const androidLite = isAndroidNative();
+  const litePreview = androidLite && isPreview && !bake;
+  const liteFocus = androidLite && !isPreview && !bake;
+  const useStaticArt = staticArt || litePreview;
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -420,18 +425,24 @@ export function MonkeyCard({
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
   const desktopPreview = isPreview && isDesktopShell() && !bake;
-  const [fxOn, setFxOn] = useState(showFx);
+  const [fxOn, setFxOn] = useState(showFx && !litePreview);
   const visualizer =
-    usesVisualizer(tier) && !staticArt && !desktopPreview && fxOn;
-  const holo = usesHoloFx(tier) && showFx;
+    usesVisualizer(tier) &&
+    !useStaticArt &&
+    !desktopPreview &&
+    fxOn &&
+    !androidLite;
+  const holo = usesHoloFx(tier) && showFx && !androidLite;
+  const paragonAmbient =
+    isParagon && showFx && stage >= 1 && !liteFocus && !litePreview;
 
   useEffect(() => {
     if (bake) {
       setFxOn(true);
       return;
     }
-    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
-      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
+    if (desktopPreview || useStaticArt || !usesVisualizer(tier) || litePreview) {
+      setFxOn(false);
       return;
     }
     const el = sceneRef.current;
@@ -446,7 +457,7 @@ export function MonkeyCard({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [bake, desktopPreview, isPreview, staticArt, tier]);
+  }, [bake, desktopPreview, isPreview, litePreview, useStaticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -457,7 +468,7 @@ export function MonkeyCard({
     const src = entity.image;
     img.src = src;
     void img.decode().catch(() => undefined);
-  }, [entity.image, staticArt]);
+  }, [entity.image, useStaticArt]);
 
   const pathIcons = useMemo(() => {
     const iconFor = (id: string) =>
@@ -684,7 +695,7 @@ export function MonkeyCard({
           }
         },
       }
-    : locked
+    : locked || liteFocus
       ? {}
       : {
           onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {
@@ -724,7 +735,7 @@ export function MonkeyCard({
         isPreview ? "monkey-card-scene--preview" : "",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
-        isParagon && showFx && stage >= 1
+        isParagon && paragonAmbient
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
       ]
@@ -733,7 +744,7 @@ export function MonkeyCard({
       {...interactiveProps}
       style={accentStyle}
     >
-      {isParagon && showFx && stage >= 1 ? (
+      {paragonAmbient ? (
         <div
           className={`monkey-card__paragon-field monkey-card__paragon-field--s${stage}`}
           aria-hidden
@@ -750,15 +761,13 @@ export function MonkeyCard({
           ))}
         </div>
       ) : null}
-      {isParagon && showFx && stage >= 1 ? (
-        <ParagonRings stage={stage} />
-      ) : null}
+      {paragonAmbient ? <ParagonRings stage={stage} /> : null}
       <div
         ref={cardRef}
         style={accentStyle}
         className={`monkey-card monkey-card--fullart ${isPreview ? "monkey-card--preview" : ""} ${tierClass} ${visualizer ? "monkey-card--visualizer" : "monkey-card--flat-bg"} ${active ? "is-active" : ""} ${locked ? "monkey-card--locked" : ""}`}
       >
-        {showFx ? (
+        {showFx && !androidLite ? (
           <>
             <div className="monkey-card__glow" aria-hidden="true" />
             <div className="monkey-card__shadow" aria-hidden="true" />
@@ -775,7 +784,7 @@ export function MonkeyCard({
                     : `${entity.id}-${pathLabel}`
                 }
                 colors={palette}
-                animated={showFx}
+                animated={showFx && !androidLite}
                 intensity={isParagon ? "paragon" : "standard"}
               />
             ) : (
@@ -807,9 +816,9 @@ export function MonkeyCard({
               src={entity.image}
               alt=""
               draggable={false}
-              loading={bake || !isPreview || staticArt ? "eager" : "lazy"}
-              decoding={staticArt || bake ? "sync" : "async"}
-              fetchPriority={staticArt || bake || !isPreview ? "high" : "auto"}
+              loading={bake || !isPreview || useStaticArt ? "eager" : "lazy"}
+              decoding={useStaticArt || bake ? "sync" : "async"}
+              fetchPriority={useStaticArt || bake || !isPreview ? "high" : "auto"}
               onError={(e) => {
                 if (portraitTries.current >= 2) return;
                 portraitTries.current += 1;
@@ -903,16 +912,16 @@ export function MonkeyCard({
           </div>
         </div>
 
-        {isParagon ? (
+        {isParagon && !liteFocus ? (
           <div
             className={`monkey-card__paragon-aura monkey-card__paragon-aura--s${stage}`}
             aria-hidden
           />
         ) : null}
 
-        <div className="monkey-card__edge" aria-hidden="true" />
+        {!androidLite ? <div className="monkey-card__edge" aria-hidden="true" /> : null}
       </div>
-      {isParagon && showFx && stage >= 1 ? (
+      {paragonAmbient ? (
         <div
           className={`monkey-card__paragon-sparks monkey-card__paragon-sparks--s${stage}`}
           aria-hidden

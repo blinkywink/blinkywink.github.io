@@ -10,6 +10,12 @@ export function isNativeShell(): boolean {
   }
 }
 
+/** Android WebView — heavier GPU/compositing cost; cards use lite mode. */
+export function isAndroidNative(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.dataset.platform === "android";
+}
+
 /** Configure status bar / splash / OTA ready once the WebView is ready. */
 export async function initNativeShell(): Promise<void> {
   if (!isNativeShell()) return;
