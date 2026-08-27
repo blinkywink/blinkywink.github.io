@@ -8,15 +8,18 @@ import {
 type Props = {
   pack: PackDef;
   className?: string;
+  /** Shelf scroll: defer decoding category mosaic tiles. */
+  lazyImages?: boolean;
 };
 
 /** Printed face only - sits inside `.booster__face`. */
-export function BoosterPackFace({ pack, className = "" }: Props) {
+export function BoosterPackFace({ pack, className = "", lazyImages = false }: Props) {
+  const imgLoad = lazyImages ? "lazy" : "eager";
   if (pack.kind === "btd6") {
     return (
       <div className={`pack-face pack-face--btd6 ${className}`.trim()}>
         <div className="booster__art">
-          <img src={pack.coverArt} alt="" draggable={false} decoding="async" />
+          <img src={pack.coverArt} alt="" draggable={false} decoding="async" loading={imgLoad} />
         </div>
       </div>
     );
@@ -43,7 +46,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
               key={`${src}-${i}`}
               className={`pack-face__category-slot pack-face__category-slot--${i}`}
             >
-              <img src={src} alt="" draggable={false} decoding="async" />
+              <img src={src} alt="" draggable={false} decoding="async" loading={imgLoad} />
             </div>
           ))}
         </div>
@@ -81,7 +84,7 @@ export function BoosterPackFace({ pack, className = "" }: Props) {
       <div className="pack-face__grid" aria-hidden />
 
       <div className="pack-face__hero">
-        <img src={theme.image} alt="" draggable={false} decoding="async" />
+        <img src={theme.image} alt="" draggable={false} decoding="async" loading={imgLoad} />
       </div>
 
       <div className="pack-face__copy">

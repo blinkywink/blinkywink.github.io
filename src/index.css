@@ -1478,11 +1478,6 @@ html[data-native="1"] .monkey-card__paragon-star {
   filter: none;
 }
 
-html[data-native="1"] .monkey-card__paragon-shine,
-html[data-native="1"] .monkey-card__paragon-degree-sheen {
-  display: none !important;
-}
-
 /* Android Chrome: 3D ring + CSS mask often glitches the whole card layer. */
 html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings {
   -webkit-mask-image: none;
@@ -1554,9 +1549,15 @@ html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
   filter: none;
 }
 
-/* Android perf — shop scroll, pack open, paragon cards (keep ribbon/degree). */
+/* Android perf — shop scroll + pack open (keep card reflections / paragon FX). */
+html[data-native="1"][data-platform="android"] .pack-shelf__item {
+  content-visibility: auto;
+  contain-intrinsic-size: 180px 280px;
+}
+
 html[data-native="1"][data-platform="android"] .pack-shelf__booster {
   filter: none;
+  box-shadow: 0 14px 16px rgba(0, 0, 0, 0.35);
   transition: none;
 }
 
@@ -1578,35 +1579,12 @@ html[data-native="1"][data-platform="android"] .pack-opener__backdrop {
 
 html[data-native="1"][data-platform="android"] .pack-opener__suspense-plate *,
 html[data-native="1"][data-platform="android"] .pack-opener__god-burst,
-html[data-native="1"][data-platform="android"] .pack-opener__god-burst *,
-html[data-native="1"][data-platform="android"] .monkey-card__foil,
-html[data-native="1"][data-platform="android"] .monkey-card__glare,
-html[data-native="1"][data-platform="android"] .monkey-card__spark,
-html[data-native="1"][data-platform="android"] .monkey-card__sheen,
-html[data-native="1"][data-platform="android"] .monkey-card__edge,
-html[data-native="1"][data-platform="android"] .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .monkey-card__shadow,
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-smoke,
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-sparks,
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings,
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-shine,
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-degree-sheen {
-  animation: none !important;
-}
-
-html[data-native="1"][data-platform="android"] .monkey-card__paragon-aura {
-  animation: none !important;
-  opacity: 0.82;
-}
-
-html[data-native="1"][data-platform="android"] .monkey-card--paragon-s4,
-html[data-native="1"][data-platform="android"] .monkey-card--paragon-s5 {
-  animation: none !important;
-  box-shadow: 0 16px 32px rgba(16, 0, 40, 0.42);
+html[data-native="1"][data-platform="android"] .pack-opener__god-burst * {
+  animation-duration: 0.85s;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--paragon-fx {
-  overflow: hidden;
+  overflow: visible;
 }
 
 html[data-native="1"][data-platform="android"] .shop-direct__grid .monkey-card-scene--preview,

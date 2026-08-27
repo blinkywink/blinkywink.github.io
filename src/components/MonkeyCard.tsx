@@ -18,6 +18,11 @@ import {
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
 import { isAndroidNative } from "../lib/nativeShell";
+import {
+  onAnimatedVisualizerSlot,
+  releaseAnimatedVisualizer,
+  tryHoldAnimatedVisualizer,
+} from "../lib/cardVisualizerBudget";
 import { categoryShell, categoryTint } from "../lib/cardCategoryTheme";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
@@ -385,10 +390,7 @@ export function MonkeyCard({
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
-  const androidLite = isAndroidNative();
-  const litePreview = androidLite && isPreview && !bake;
-  const liteFocus = androidLite && !isPreview && !bake;
-  const useStaticArt = staticArt || litePreview;
+  const androidNative = isAndroidNative();
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -425,24 +427,41 @@ export function MonkeyCard({
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
   const desktopPreview = isPreview && isDesktopShell() && !bake;
-  const [fxOn, setFxOn] = useState(showFx && !litePreview);
+  const visId = useMemo(
+    () => `${catalogId}:${resolvedSeed ?? "default"}`,
+    [catalogId, resolvedSeed],
+  );
+  const wantsAnimatedVis =
+    showFx && !isPreview && !staticArt && !desktopPreview && usesVisualizer(tier);
+  const [canAnimateVis, setCanAnimateVis] = useState(false);
+  const [fxOn, setFxOn] = useState(showFx);
   const visualizer =
-    usesVisualizer(tier) &&
-    !useStaticArt &&
-    !desktopPreview &&
-    fxOn &&
-    !androidLite;
-  const holo = usesHoloFx(tier) && showFx && !androidLite;
-  const paragonAmbient =
-    isParagon && showFx && stage >= 1 && !liteFocus && !litePreview;
+    usesVisualizer(tier) && !staticArt && !desktopPreview && fxOn;
+  const animateVisualizer = visualizer && wantsAnimatedVis && canAnimateVis;
+  const holo = usesHoloFx(tier) && showFx;
+  const paragonAmbient = isParagon && showFx && stage >= 1;
+
+  useEffect(() => {
+    if (!wantsAnimatedVis) {
+      setCanAnimateVis(false);
+      return;
+    }
+    const claim = () => setCanAnimateVis(tryHoldAnimatedVisualizer(visId));
+    claim();
+    const off = onAnimatedVisualizerSlot(claim);
+    return () => {
+      off();
+      releaseAnimatedVisualizer(visId);
+    };
+  }, [wantsAnimatedVis, visId]);
 
   useEffect(() => {
     if (bake) {
       setFxOn(true);
       return;
     }
-    if (desktopPreview || useStaticArt || !usesVisualizer(tier) || litePreview) {
-      setFxOn(false);
+    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
+      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -453,11 +472,14 @@ export function MonkeyCard({
     }
     const io = new IntersectionObserver(
       ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
-      { rootMargin: "180px 0px", threshold: 0.01 },
+      {
+        rootMargin: androidNative && isPreview ? "48px 0px" : "180px 0px",
+        threshold: 0.01,
+      },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [bake, desktopPreview, isPreview, litePreview, useStaticArt, tier]);
+  }, [androidNative, bake, desktopPreview, isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -468,7 +490,7 @@ export function MonkeyCard({
     const src = entity.image;
     img.src = src;
     void img.decode().catch(() => undefined);
-  }, [entity.image, useStaticArt]);
+  }, [entity.image, staticArt]);
 
   const pathIcons = useMemo(() => {
     const iconFor = (id: string) =>
@@ -695,7 +717,7 @@ export function MonkeyCard({
           }
         },
       }
-    : locked || liteFocus
+    : locked || (androidNative && !isPreview)
       ? {}
       : {
           onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {
@@ -767,7 +789,7 @@ export function MonkeyCard({
         style={accentStyle}
         className={`monkey-card monkey-card--fullart ${isPreview ? "monkey-card--preview" : ""} ${tierClass} ${visualizer ? "monkey-card--visualizer" : "monkey-card--flat-bg"} ${active ? "is-active" : ""} ${locked ? "monkey-card--locked" : ""}`}
       >
-        {showFx && !androidLite ? (
+        {showFx ? (
           <>
             <div className="monkey-card__glow" aria-hidden="true" />
             <div className="monkey-card__shadow" aria-hidden="true" />
@@ -784,7 +806,7 @@ export function MonkeyCard({
                     : `${entity.id}-${pathLabel}`
                 }
                 colors={palette}
-                animated={showFx && !androidLite}
+                animated={animateVisualizer}
                 intensity={isParagon ? "paragon" : "standard"}
               />
             ) : (
@@ -816,9 +838,9 @@ export function MonkeyCard({
               src={entity.image}
               alt=""
               draggable={false}
-              loading={bake || !isPreview || useStaticArt ? "eager" : "lazy"}
-              decoding={useStaticArt || bake ? "sync" : "async"}
-              fetchPriority={useStaticArt || bake || !isPreview ? "high" : "auto"}
+              loading={bake || !isPreview || staticArt ? "eager" : "lazy"}
+              decoding={staticArt || bake ? "sync" : "async"}
+              fetchPriority={staticArt || bake || !isPreview ? "high" : "auto"}
               onError={(e) => {
                 if (portraitTries.current >= 2) return;
                 portraitTries.current += 1;
@@ -912,14 +934,14 @@ export function MonkeyCard({
           </div>
         </div>
 
-        {isParagon && !liteFocus ? (
+        {isParagon ? (
           <div
             className={`monkey-card__paragon-aura monkey-card__paragon-aura--s${stage}`}
             aria-hidden
           />
         ) : null}
 
-        {!androidLite ? <div className="monkey-card__edge" aria-hidden="true" /> : null}
+        <div className="monkey-card__edge" aria-hidden="true" />
       </div>
       {paragonAmbient ? (
         <div

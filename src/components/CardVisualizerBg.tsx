@@ -418,7 +418,7 @@ export function CardVisualizerBg({
     const android = isAndroidNative();
     const nativeShell = isNativeShell();
     const maxDpr = android ? 1 : nativeShell ? 1.25 : 2;
-    const drawAnimated = animated && !android;
+    const drawAnimated = animated;
 
     const pulse = (t: number, phase: number, speed: number) =>
       drawAnimated
