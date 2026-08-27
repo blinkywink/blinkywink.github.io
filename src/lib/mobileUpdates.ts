@@ -23,36 +23,45 @@ export type MobileLatestManifest = {
 };
 
 const MANIFEST_URLS = [
-  /* Site first — CORS-friendly. GitHub release assets often fail fetch() in WKWebView. */
-  "https://blinkywink.github.io/public/mobile-latest.json",
-  "https://blinkywink.github.io/mobile-latest.json",
+  /* Raw main updates immediately; GitHub Pages can lag or serve stale JSON. */
   "https://raw.githubusercontent.com/blinkywink/blinkywink.github.io/main/public/mobile-latest.json",
   "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
+  "https://blinkywink.github.io/public/mobile-latest.json",
+  "https://blinkywink.github.io/mobile-latest.json",
 ];
 
 export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest | null> {
-  for (const base of MANIFEST_URLS) {
-    try {
-      const res = await fetch(`${base}?t=${Date.now()}`, { cache: "no-store" });
-      if (!res.ok) continue;
-      const data = (await res.json()) as Partial<MobileLatestManifest>;
-      const version = String(data.version ?? "").trim();
-      const minNativeVersion = String(data.minNativeVersion ?? "").trim();
-      const url = String(data.url ?? "").trim();
-      const checksum = String(data.checksum ?? "").trim();
-      if (!version || !minNativeVersion || !url) continue;
-      return {
-        version,
-        minNativeVersion,
-        url,
-        checksum,
-        message: data.message ? String(data.message) : undefined,
-      };
-    } catch {
-      /* try next */
-    }
-  }
-  return null;
+  const found: MobileLatestManifest[] = [];
+
+  await Promise.all(
+    MANIFEST_URLS.map(async (base) => {
+      try {
+        const res = await fetch(`${base}?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as Partial<MobileLatestManifest>;
+        const version = String(data.version ?? "").trim();
+        const minNativeVersion = String(data.minNativeVersion ?? "").trim();
+        const url = String(data.url ?? "").trim();
+        const checksum = String(data.checksum ?? "").trim();
+        if (!version || !minNativeVersion || !url) return;
+        found.push({
+          version,
+          minNativeVersion,
+          url,
+          checksum,
+          message: data.message ? String(data.message) : undefined,
+        });
+      } catch {
+        /* try next */
+      }
+    }),
+  );
+
+  if (found.length === 0) return null;
+
+  return found.reduce((best, cur) =>
+    isOlderVersion(cur.version, best.version) ? best : cur,
+  );
 }
 
 export function needsNativeRedownload(
