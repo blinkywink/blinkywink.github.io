@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { hashSeed, mulberry32 } from "../lib/cardSeed";
+import { isNativeShell } from "../lib/nativeShell";
 
 type Props = {
   seed: string;
@@ -414,6 +415,9 @@ export function CardVisualizerBg({
 
     const base = darken(palette[0]!, baseDark);
 
+    const nativeShell = isNativeShell();
+    const maxDpr = nativeShell ? 1.25 : 2;
+
     const pulse = (t: number, phase: number, speed: number) =>
       animated
         ? 0.55 + 0.45 * Math.sin(t * speed + phase)
@@ -424,7 +428,7 @@ export function CardVisualizerBg({
       const t = tRaw * 0.4;
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       const w = parent.clientWidth;
       const h = parent.clientHeight;
       if (w < 2 || h < 2) return;
@@ -916,12 +920,27 @@ export function CardVisualizerBg({
     };
 
     let start = performance.now();
-    let visible = true;
+    let inView = true;
+    let pageVisible =
+      typeof document === "undefined" ||
+      document.visibilityState !== "hidden";
+    const native = isNativeShell();
+    /* Native WebViews heat up on 60fps canvas — ~30fps still looks smooth. */
+    const minFrameMs = native && animated ? 32 : 0;
+    let lastFrameAt = 0;
+
+    const isLive = () => inView && pageVisible;
+
     const tick = (now: number) => {
-      if (!visible) {
+      if (!isLive()) {
         rafRef.current = null;
         return;
       }
+      if (minFrameMs > 0 && now - lastFrameAt < minFrameMs) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      lastFrameAt = now;
       const t = (now - start) / 1000;
       draw(animated ? t : 0);
       if (animated) {
@@ -929,10 +948,26 @@ export function CardVisualizerBg({
       }
     };
 
+    const kick = () => {
+      if (!isLive()) return;
+      start = performance.now();
+      lastFrameAt = 0;
+      /* Android often blanks GPU canvas buffers after backgrounding. */
+      try {
+        canvas.width = Math.max(1, canvas.width);
+      } catch {
+        /* ignore */
+      }
+      draw(0);
+      if (animated && rafRef.current == null) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
     draw(0);
 
     const ro = new ResizeObserver(() => {
-      if (!visible) return;
+      if (!isLive()) return;
       draw(animated ? (performance.now() - start) / 1000 : 0);
     });
     if (canvas.parentElement) ro.observe(canvas.parentElement);
@@ -942,13 +977,10 @@ export function CardVisualizerBg({
       io = new IntersectionObserver(
         ([entry]) => {
           const next = Boolean(entry?.isIntersecting);
-          if (next === visible) return;
-          visible = next;
-          if (visible) {
-            start = performance.now();
-            if (rafRef.current == null) {
-              rafRef.current = requestAnimationFrame(tick);
-            }
+          if (next === inView) return;
+          inView = next;
+          if (isLive()) {
+            kick();
           } else if (rafRef.current != null) {
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
@@ -959,6 +991,17 @@ export function CardVisualizerBg({
       io.observe(canvas);
     }
 
+    const onVisibility = () => {
+      pageVisible = document.visibilityState !== "hidden";
+      if (isLive()) {
+        kick();
+      } else if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     if (animated) {
       rafRef.current = requestAnimationFrame(tick);
     }
@@ -966,6 +1009,7 @@ export function CardVisualizerBg({
     return () => {
       ro.disconnect();
       io?.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
   }, [seed, colors, animated, intensity]);

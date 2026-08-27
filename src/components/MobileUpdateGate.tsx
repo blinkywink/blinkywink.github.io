@@ -7,6 +7,7 @@ import {
   needsNativeRedownload,
   needsWebUpdate,
   bundledAppVersion,
+  otaBundleVersion,
   type MobileLatestManifest,
 } from "../lib/mobileUpdates";
 import { ExternalLink } from "./ExternalLink";
@@ -83,7 +84,7 @@ export function MobileUpdateGate() {
 
       try {
         const bundle = await CapacitorUpdater.download({
-          version: manifest.version,
+          version: otaBundleVersion(manifest),
           url: manifest.url,
           ...(manifest.checksum
             ? { checksum: manifest.checksum }

@@ -60,11 +60,28 @@ export function needsNativeRedownload(
   return isOlderVersion(nativeVersion, remote.minNativeVersion);
 }
 
+/**
+ * Capgo bundle id — keeps display `version` (e.g. 1.0.19) while allowing
+ * hotfix OTAs that share the same user-facing version (checksum changes).
+ */
+export function otaBundleVersion(remote: MobileLatestManifest): string {
+  const sum = remote.checksum.replace(/[^a-f0-9]/gi, "").slice(0, 12);
+  return sum ? `${remote.version}+${sum}` : remote.version;
+}
+
+/** True when the installed Capgo bundle is not the latest zip (by checksum). */
 export function needsWebUpdate(
   currentWebVersion: string,
   remote: MobileLatestManifest,
 ): boolean {
-  return isOlderVersion(currentWebVersion, remote.version);
+  const cur = String(currentWebVersion ?? "").trim();
+  const target = otaBundleVersion(remote);
+  if (!cur || cur === "builtin" || cur === "unknown") return true;
+  if (cur === target) return false;
+  // Older display semver, or same display with a different/hotfix checksum.
+  const display = cur.split("+")[0] ?? cur;
+  if (isOlderVersion(display, remote.version)) return true;
+  return cur !== target;
 }
 
 /** Fallback label when Capgo current() isn't available yet. */
