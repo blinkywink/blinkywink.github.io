@@ -75,6 +75,49 @@ export function writeDesktopVersion(version: string) {
     appVersionPath,
     `/** Site / app version shown in UI. Kept in sync by writeDesktopVersion. */\nexport const APP_VERSION = "${version}";\n`,
   );
+
+  writeMobileNativeVersion(version);
+}
+
+/** Keep Capacitor iOS/Android native version strings in sync with package.json. */
+export function writeMobileNativeVersion(version: string) {
+  const [major, minor, patch] = parseSemver(version);
+  const versionCode = major * 10000 + minor * 100 + patch;
+
+  const pbx = path.join(ROOT, "ios", "App", "App.xcodeproj", "project.pbxproj");
+  if (fs.existsSync(pbx)) {
+    let text = fs.readFileSync(pbx, "utf8");
+    text = text.replace(
+      /MARKETING_VERSION = [^;]+;/g,
+      `MARKETING_VERSION = ${version};`,
+    );
+    text = text.replace(
+      /CURRENT_PROJECT_VERSION = [^;]+;/g,
+      `CURRENT_PROJECT_VERSION = ${versionCode};`,
+    );
+    fs.writeFileSync(pbx, text);
+  }
+
+  const gradle = path.join(ROOT, "android", "app", "build.gradle");
+  if (fs.existsSync(gradle)) {
+    let text = fs.readFileSync(gradle, "utf8");
+    text = text.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
+    text = text.replace(
+      /versionName\s+"[^"]+"/,
+      `versionName "${version}"`,
+    );
+    fs.writeFileSync(gradle, text);
+  }
+
+  const widget = path.join(ROOT, "ios", "App", "App", "config.xml");
+  if (fs.existsSync(widget)) {
+    let text = fs.readFileSync(widget, "utf8");
+    text = text.replace(
+      /(<widget[^>]*\sversion=")[^"]+(")/,
+      `$1${version}$2`,
+    );
+    fs.writeFileSync(widget, text);
+  }
 }
 
 export function releaseTag(version: string): string {
