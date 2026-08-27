@@ -23,9 +23,11 @@ export type MobileLatestManifest = {
 };
 
 const MANIFEST_URLS = [
-  "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
+  /* Site first — CORS-friendly. GitHub release assets often fail fetch() in WKWebView. */
   "https://blinkywink.github.io/public/mobile-latest.json",
   "https://blinkywink.github.io/mobile-latest.json",
+  "https://raw.githubusercontent.com/blinkywink/blinkywink.github.io/main/public/mobile-latest.json",
+  "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
 ];
 
 export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest | null> {

@@ -165,9 +165,12 @@ function writeManifest(manifest: {
   message: string;
 }) {
   mkdirSync(OUT_DIR, { recursive: true });
-  writeFileSync(PUBLIC_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+  const body = `${JSON.stringify(manifest, null, 2)}\n`;
+  writeFileSync(PUBLIC_JSON, body);
+  /* GitHub Pages also serves repo-root copies — keep in sync for OTA fetch fallbacks. */
+  writeFileSync(join(ROOT, "mobile-latest.json"), body);
   const stagedJson = join(OUT_DIR, "mobile-latest.json");
-  copyFileSync(PUBLIC_JSON, stagedJson);
+  writeFileSync(stagedJson, body);
   return stagedJson;
 }
 

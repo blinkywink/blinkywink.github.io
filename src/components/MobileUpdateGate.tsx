@@ -93,6 +93,15 @@ export function MobileUpdateGate() {
         setProgress(100);
         await CapacitorUpdater.set({ id: bundle.id });
         /* set() reloads the WebView — may not return */
+      } catch (downloadErr) {
+        /* Some Capgo builds reject checksum / already-have version — retry bare. */
+        console.warn("Mobile update download retry", downloadErr);
+        const bundle = await CapacitorUpdater.download({
+          version: `${otaBundleVersion(manifest)}.retry`,
+          url: manifest.url,
+        });
+        setProgress(100);
+        await CapacitorUpdater.set({ id: bundle.id });
       } finally {
         try {
           await handle.remove();
