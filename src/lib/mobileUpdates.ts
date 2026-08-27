@@ -61,12 +61,19 @@ export function needsNativeRedownload(
 }
 
 /**
- * Capgo bundle id — keeps display `version` (e.g. 1.0.19) while allowing
- * hotfix OTAs that share the same user-facing version (checksum changes).
+ * Capgo bundle id — unique per zip checksum so hotfixes can ship without
+ * changing the user-facing APP_VERSION.
  */
 export function otaBundleVersion(remote: MobileLatestManifest): string {
   const sum = remote.checksum.replace(/[^a-f0-9]/gi, "").slice(0, 12);
-  return sum ? `${remote.version}+${sum}` : remote.version;
+  const base = remote.version.split("+")[0]!.split("-ota.")[0]!;
+  return sum ? `${base}-ota.${sum}` : base;
+}
+
+function channelDisplayVersion(installed: string): string {
+  return (
+    installed.split("+")[0]?.split("-ota.")[0]?.trim() || installed.trim()
+  );
 }
 
 /** True when the installed Capgo bundle is not the latest zip (by checksum). */
@@ -78,9 +85,10 @@ export function needsWebUpdate(
   const target = otaBundleVersion(remote);
   if (!cur || cur === "builtin" || cur === "unknown") return true;
   if (cur === target) return false;
-  // Older display semver, or same display with a different/hotfix checksum.
-  const display = cur.split("+")[0] ?? cur;
+  // Legacy clients / older Capgo ids: pull when channel semver is ahead.
+  const display = channelDisplayVersion(cur);
   if (isOlderVersion(display, remote.version)) return true;
+  // Hotfix: same channel label, different zip (or rolled-back display version).
   return cur !== target;
 }
 

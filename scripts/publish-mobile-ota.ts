@@ -18,7 +18,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { REPO, readDesktopVersion } from "./desktop-version.ts";
+import { bumpSemver, parseSemver, REPO, readDesktopVersion } from "./desktop-version.ts";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
@@ -30,6 +30,43 @@ const skipBuild = process.argv.includes("--skip-build");
 
 const MOBILE_TAG = "mobile";
 const ZIP_URL = `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${ZIP_NAME}`;
+
+function isOlderVersion(current: string, minimum: string): boolean {
+  const a = parseSemver(current);
+  const b = parseSemver(minimum);
+  for (let i = 0; i < 3; i++) {
+    if (a[i]! < b[i]!) return true;
+    if (a[i]! > b[i]!) return false;
+  }
+  return false;
+}
+
+/**
+ * Capgo / legacy clients compare manifest `version` with isOlderVersion.
+ * Keep APP_VERSION (UI) separate — channel must always move forward so
+ * rolled-back display versions can still reach stuck installs (e.g. 1.0.20).
+ */
+function nextChannelVersion(appVersion: string, previousChannel?: string): string {
+  const forced = String(process.env.OTA_CHANNEL_VERSION ?? "").trim();
+  if (/^\d+\.\d+\.\d+$/.test(forced)) return forced;
+
+  const prev = String(previousChannel ?? "")
+    .split("+")[0]!
+    .split("-ota.")[0]!
+    .trim();
+  let base = appVersion;
+  if (/^\d+\.\d+\.\d+$/.test(prev) && !isOlderVersion(prev, appVersion)) {
+    base = prev;
+  }
+  let channel = bumpSemver(base, "patch");
+  // Devices may still be on Capgo id 1.0.20 from a mistaken display bump even
+  // after the release manifest was rolled back to 1.0.19 — channel must clear that.
+  const clearFloor = "1.0.20";
+  while (!isOlderVersion(clearFloor, channel)) {
+    channel = bumpSemver(channel, "patch");
+  }
+  return channel;
+}
 
 function sh(cmd: string, cwd = ROOT) {
   console.log(`$ ${cmd}`);
@@ -134,29 +171,33 @@ function writeManifest(manifest: {
   return stagedJson;
 }
 
-const version = readDesktopVersion();
+const appVersion = readDesktopVersion();
+mkdirSync(OUT_DIR, { recursive: true });
+const fromRelease = fetchReleaseManifest();
 
 // APK/IPA jobs only raise the native floor — never rewrite the web zip
 // (re-uploading the zip races with OTA and can 404 mid-clobber).
 if (raiseFloor && skipBuild) {
-  mkdirSync(OUT_DIR, { recursive: true });
-  const fromRelease = fetchReleaseManifest();
   const fromPublic = existsSync(PUBLIC_JSON)
     ? (JSON.parse(readFileSync(PUBLIC_JSON, "utf8")) as {
         checksum?: string;
         url?: string;
+        version?: string;
       })
     : null;
   const checksum = String(fromRelease?.checksum ?? fromPublic?.checksum ?? "");
   const url = String(fromRelease?.url ?? fromPublic?.url ?? ZIP_URL);
+  const channelVersion = String(
+    fromRelease?.version ?? fromPublic?.version ?? appVersion,
+  ).trim();
   if (!/^[a-f0-9]{64}$/i.test(checksum)) {
     throw new Error(
       "Cannot raise native floor: no checksum in release or public/mobile-latest.json",
     );
   }
   const stagedJson = writeManifest({
-    version,
-    minNativeVersion: version,
+    version: channelVersion,
+    minNativeVersion: appVersion,
     url,
     checksum,
     message: "Sorry, you need to redownload the app to update.",
@@ -171,7 +212,8 @@ if (raiseFloor && skipBuild) {
     "--clobber",
     stagedJson,
   ]);
-  console.log(`\nRaised minNativeVersion → ${version} (zip unchanged)`);
+  console.log(`\nRaised minNativeVersion → ${appVersion} (zip unchanged)`);
+  console.log(`  channel version: ${channelVersion}`);
   console.log(`  checksum: ${checksum}`);
   console.log(`  wrote ${PUBLIC_JSON}`);
   process.exit(0);
@@ -184,16 +226,18 @@ if (!existsSync(join(DIST, "index.html"))) {
   throw new Error("dist/index.html missing — build first");
 }
 
-mkdirSync(OUT_DIR, { recursive: true });
 const zipPath = join(OUT_DIR, ZIP_NAME);
 rmSync(zipPath, { force: true });
 sh(`zip -qr '${zipPath}' .`, DIST);
 
 const checksum = createHash("sha256").update(readFileSync(zipPath)).digest("hex");
-const minNativeVersion = raiseFloor ? version : prevMinNative(version);
+const channelVersion = nextChannelVersion(appVersion, fromRelease?.version);
+const minNativeVersion = raiseFloor
+  ? appVersion
+  : prevMinNative(appVersion);
 
 const stagedJson = writeManifest({
-  version,
+  version: channelVersion,
   minNativeVersion,
   url: ZIP_URL,
   checksum,
@@ -213,7 +257,9 @@ gh([
   stagedJson,
 ]);
 
-console.log(`\nOTA published ${version}`);
+console.log(`\nOTA published`);
+console.log(`  app UI version: ${appVersion}`);
+console.log(`  channel version: ${channelVersion}`);
 console.log(`  zip: ${ZIP_URL}`);
 console.log(`  minNativeVersion: ${minNativeVersion}`);
 console.log(`  checksum: ${checksum}`);
