@@ -17,7 +17,6 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isNativeShell } from "../lib/nativeShell";
 import { categoryShell, categoryTint } from "../lib/cardCategoryTheme";
 import { CardVisualizerBg } from "./CardVisualizerBg";
 
@@ -448,22 +447,6 @@ export function MonkeyCard({
     io.observe(el);
     return () => io.disconnect();
   }, [bake, desktopPreview, isPreview, staticArt, tier]);
-
-  /* After backgrounding, Android WebView often leaves FX stuck/blank — nudge FX. */
-  useEffect(() => {
-    if (!isNativeShell() || staticArt || desktopPreview) return;
-    const onWake = () => {
-      if (document.visibilityState !== "visible") return;
-      setFxOn((on) => {
-        if (!on) return on;
-        /* Remount visualizer by flipping off then on next frame. */
-        queueMicrotask(() => setFxOn(true));
-        return false;
-      });
-    };
-    document.addEventListener("visibilitychange", onWake);
-    return () => document.removeEventListener("visibilitychange", onWake);
-  }, [staticArt, desktopPreview]);
 
   useEffect(() => {
     portraitTries.current = 0;

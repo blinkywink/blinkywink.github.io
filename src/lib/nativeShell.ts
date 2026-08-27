@@ -15,6 +15,11 @@ export async function initNativeShell(): Promise<void> {
   if (!isNativeShell()) return;
   document.documentElement.dataset.native = "1";
   try {
+    document.documentElement.dataset.platform = Capacitor.getPlatform();
+  } catch {
+    /* ignore */
+  }
+  try {
     const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
     await CapacitorUpdater.notifyAppReady();
   } catch {

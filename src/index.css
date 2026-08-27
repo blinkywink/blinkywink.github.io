@@ -1422,31 +1422,102 @@ html[data-native="1"] .monkey-card-scene--preview .monkey-card__portrait {
   filter: none;
 }
 
+/*
+ * Native WebView (esp. Android): content-visibility / clip-path / translateZ /
+ * filter:drop-shadow routinely crop portraits and erase paragon ribbons.
+ */
 html[data-native="1"] .card-lab__grid .monkey-card-scene--preview,
 html[data-native="1"] .pack-opener__summary-grid .monkey-card-scene--preview,
 html[data-native="1"] .market-grid .monkey-card-scene--preview,
 html[data-native="1"] .shop-direct__card .monkey-card-scene--preview {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 160px;
+  content-visibility: visible;
+  contain: none;
 }
 
-/*
- * Native WebView perf: keep card look, cut expensive compositing (blur filters,
- * full-rate glow layers) that heat phones / lag pack opens on Android.
- */
+html[data-native="1"] .monkey-card-scene--preview {
+  clip-path: none;
+  -webkit-clip-path: none;
+}
+
+html[data-native="1"] .monkey-card__portrait,
+html[data-native="1"] .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card__paragon-mark,
+html[data-native="1"] .monkey-card__paragon-badge,
+html[data-native="1"] .monkey-card--paragon-s3 .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--paragon-s4 .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--paragon-s5 .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--paragon-s5 .monkey-card__paragon-badge,
+html[data-native="1"] .monkey-card--preview .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--preview.monkey-card--paragon-s3 .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--preview.monkey-card--paragon-s4 .monkey-card__paragon-ribbon,
+html[data-native="1"] .monkey-card--preview.monkey-card--paragon-s5 .monkey-card__paragon-ribbon {
+  filter: none !important;
+}
+
+html[data-native="1"] .monkey-card__paragon-corner {
+  transform: none !important;
+  z-index: 20;
+}
+
+html[data-native="1"] .monkey-card__paragon-ribbon {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html[data-native="1"] .monkey-card__edge,
+html[data-native="1"] .monkey-card__body {
+  transform: none;
+}
+
 html[data-native="1"] .monkey-card__paragon-smoke {
   filter: none;
   opacity: 0.9;
 }
 
 html[data-native="1"] .monkey-card__paragon-star {
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.55));
+  filter: none;
 }
 
-html[data-native="1"] .monkey-card--paragon-s3 .monkey-card__paragon-ribbon,
-html[data-native="1"] .monkey-card--paragon-s4 .monkey-card__paragon-ribbon,
-html[data-native="1"] .monkey-card--paragon-s5 .monkey-card__paragon-ribbon {
-  filter: drop-shadow(0 3px 5px rgba(20, 0, 40, 0.3));
+html[data-native="1"] .monkey-card__paragon-shine,
+html[data-native="1"] .monkey-card__paragon-degree-sheen {
+  display: none !important;
+}
+
+/* Android Chrome: 3D ring + CSS mask often glitches the whole card layer. */
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings {
+  -webkit-mask-image: none;
+  mask-image: none;
+  inset: -18%;
+  opacity: 0.9;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings-space {
+  inset: 8%;
+  transform-style: flat;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--a,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--b,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--c {
+  animation: none;
+  transform: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring {
+  width: 118%;
+  aspect-ratio: 2.15 / 1;
+  border-width: 2px;
+  animation: paragon-ring-breathe 4.2s ease-in-out infinite;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--b .monkey-card__paragon-ring {
+  width: 102%;
+  top: 42%;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-ring-pivot--c .monkey-card__paragon-ring {
+  width: 132%;
+  top: 58%;
 }
 
 html[data-native="1"] .pack-opener__card-glow {
@@ -1465,7 +1536,6 @@ html[data-native="1"] .monkey-card__shadow {
 }
 
 html[data-native="1"] .monkey-card__visualizer {
-  /* Avoid animated 3d translate while scrolling/opening packs. */
   transform: none;
 }
 
@@ -1481,7 +1551,7 @@ html[data-native="1"] .monkey-card.is-active .monkey-card__visualizer {
 html[data-native="1"] .pack-opener__card.is-glow-t4 .monkey-card-scene,
 html[data-native="1"] .pack-opener__card.is-glow-t5 .monkey-card-scene,
 html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.4));
+  filter: none;
 }
 
 /* Shared utility page title (Market, Board, Profile, Trade) */
