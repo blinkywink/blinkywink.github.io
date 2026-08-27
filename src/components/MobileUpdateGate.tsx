@@ -94,10 +94,10 @@ export function MobileUpdateGate() {
         await CapacitorUpdater.set({ id: bundle.id });
         /* set() reloads the WebView — may not return */
       } catch (downloadErr) {
-        /* Some Capgo builds reject checksum / already-have version — retry bare. */
+        /* Some Capgo builds reject checksum — retry without it, same bundle id. */
         console.warn("Mobile update download retry", downloadErr);
         const bundle = await CapacitorUpdater.download({
-          version: `${otaBundleVersion(manifest)}.retry`,
+          version: otaBundleVersion(manifest),
           url: manifest.url,
         });
         setProgress(100);
