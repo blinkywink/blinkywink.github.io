@@ -53,7 +53,8 @@ jobs:
           git fetch origin main
           git checkout -B main origin/main
           cp "$MANIFEST" public/mobile-latest.json
-          git add public/mobile-latest.json
+          cp "$MANIFEST" mobile-latest.json
+          git add public/mobile-latest.json mobile-latest.json
           if git diff --staged --quiet; then
             echo "No manifest changes"
             exit 0
