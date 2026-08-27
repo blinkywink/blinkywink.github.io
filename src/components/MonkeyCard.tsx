@@ -17,11 +17,14 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isAndroidNative } from "../lib/nativeShell";
+import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
+  onStaticVisualizerSlot,
   releaseAnimatedVisualizer,
+  releaseStaticVisualizer,
   tryHoldAnimatedVisualizer,
+  tryHoldStaticVisualizer,
 } from "../lib/cardVisualizerBudget";
 import { categoryShell, categoryTint } from "../lib/cardCategoryTheme";
 import { CardVisualizerBg } from "./CardVisualizerBg";
@@ -391,7 +394,7 @@ export function MonkeyCard({
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
   const androidNative = isAndroidNative();
-  const androidPreview = androidNative && isPreview && !bake;
+  const nativeShell = isNativeShell();
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -434,19 +437,26 @@ export function MonkeyCard({
   );
   const wantsAnimatedVis =
     showFx && !isPreview && !staticArt && !desktopPreview && usesVisualizer(tier);
+  const wantsStaticVis =
+    nativeShell &&
+    isPreview &&
+    !bake &&
+    !staticArt &&
+    !desktopPreview &&
+    usesVisualizer(tier);
   const [canAnimateVis, setCanAnimateVis] = useState(false);
+  const [canStaticVis, setCanStaticVis] = useState(!wantsStaticVis);
   const [fxOn, setFxOn] = useState(showFx);
   const visualizer =
     usesVisualizer(tier) &&
     !staticArt &&
     !desktopPreview &&
     fxOn &&
-    !androidPreview;
+    (!wantsStaticVis || canStaticVis);
   const animateVisualizer = visualizer && wantsAnimatedVis && canAnimateVis;
   const holo = usesHoloFx(tier) && showFx;
   const paragonAmbient = isParagon && showFx && stage >= 1;
-  /** Blur/filter particles outside the card bounds glitch Android compositing. */
-  const paragonParticles = paragonAmbient && !androidNative;
+  const paragonParticles = paragonAmbient;
 
   useEffect(() => {
     if (!wantsAnimatedVis) {
@@ -463,12 +473,26 @@ export function MonkeyCard({
   }, [wantsAnimatedVis, visId]);
 
   useEffect(() => {
+    if (!wantsStaticVis) {
+      setCanStaticVis(true);
+      return;
+    }
+    const claim = () => setCanStaticVis(tryHoldStaticVisualizer(visId));
+    claim();
+    const off = onStaticVisualizerSlot(claim);
+    return () => {
+      off();
+      releaseStaticVisualizer(visId);
+    };
+  }, [wantsStaticVis, visId]);
+
+  useEffect(() => {
     if (bake) {
       setFxOn(true);
       return;
     }
-    if (desktopPreview || staticArt || !usesVisualizer(tier) || androidPreview) {
-      setFxOn(!staticArt && !desktopPreview && !androidPreview && usesVisualizer(tier));
+    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
+      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -480,13 +504,13 @@ export function MonkeyCard({
     const io = new IntersectionObserver(
       ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
       {
-        rootMargin: androidNative && isPreview ? "24px 0px" : "180px 0px",
+        rootMargin: nativeShell && isPreview ? "32px 0px" : "180px 0px",
         threshold: 0.01,
       },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [androidNative, androidPreview, bake, desktopPreview, isPreview, staticArt, tier]);
+  }, [bake, desktopPreview, isPreview, nativeShell, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;

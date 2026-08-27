@@ -10,7 +10,7 @@ export function isNativeShell(): boolean {
   }
 }
 
-/** Android WebView — heavier GPU/compositing cost; cards use lite mode. */
+/** Android WebView — compositing differs from mobile Chrome; use data-platform CSS sparingly. */
 export function isAndroidNative(): boolean {
   if (typeof document === "undefined") return false;
   return document.documentElement.dataset.platform === "android";
