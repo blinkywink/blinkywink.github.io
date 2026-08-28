@@ -257,6 +257,14 @@ gh([
   REPO,
   "--clobber",
   zipPath,
+]);
+gh([
+  "release",
+  "upload",
+  MOBILE_TAG,
+  "--repo",
+  REPO,
+  "--clobber",
   stagedJson,
 ]);
 
