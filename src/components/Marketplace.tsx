@@ -23,6 +23,7 @@ import {
 } from "../lib/marketplace";
 import { maxPathTier, sortCardSpecs, type MonkeyCardSpec } from "../lib/pathCombos";
 import { suggestedListingRange, formatListingRange } from "../lib/listingValue";
+import { prefersKeyboardAutofocus } from "../lib/focus";
 import {
   MARKET_SHOP_SPEND_REQUIRED,
   shopSpendRemaining,
@@ -666,7 +667,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
                       step={10}
                       value={priceInput}
                       onChange={(e) => setPriceInput(e.target.value)}
-                      autoFocus
+                      autoFocus={prefersKeyboardAutofocus()}
                     />
                   </label>
                   {sellRange ? (

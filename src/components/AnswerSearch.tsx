@@ -113,7 +113,9 @@ export function AnswerSearch({
     setPickedTower(null);
     setQuery("");
     setOpen(false);
-    window.setTimeout(() => inputRef.current?.focus(), 40);
+    if (prefersKeyboardAutofocus()) {
+      window.setTimeout(() => inputRef.current?.focus(), 40);
+    }
   };
 
   const clearPicker = () => {
@@ -121,7 +123,9 @@ export function AnswerSearch({
     setPickedTower(null);
     setQuery("");
     setOpen(false);
-    window.setTimeout(() => inputRef.current?.focus(), 40);
+    if (prefersKeyboardAutofocus()) {
+      window.setTimeout(() => inputRef.current?.focus(), 40);
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

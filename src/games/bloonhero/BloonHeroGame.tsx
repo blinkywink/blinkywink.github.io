@@ -12,6 +12,7 @@ import { CashAmount } from "../../components/CurrencyChip";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { isTypingTarget } from "../../lib/keyboard";
+import { prefersKeyboardAutofocus } from "../../lib/focus";
 import { playBloonPop } from "../../lib/packSounds";
 import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
 import {
@@ -552,7 +553,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 value={state.query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Song or artist…"
-                autoFocus
+                autoFocus={prefersKeyboardAutofocus()}
               />
               <button
                 type="submit"

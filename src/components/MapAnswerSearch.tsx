@@ -88,7 +88,9 @@ export function MapAnswerSearch({
     // Wrong guesses stay on this round - clear so the next try isn't stuck on this map.
     setQuery("");
     setOpen(false);
-    window.setTimeout(() => inputRef.current?.focus(), 40);
+    if (prefersKeyboardAutofocus()) {
+      window.setTimeout(() => inputRef.current?.focus(), 40);
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
