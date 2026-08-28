@@ -14,11 +14,28 @@ import {
   type ShopDirectListing,
 } from "../lib/shopDirect";
 import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
+import { isNativeShell } from "../lib/nativeShell";
 import { isTypingTarget } from "../lib/keyboard";
 import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 
 const POLL_MS = 8_000;
+const nativeShopPreviews = isNativeShell();
+
+function ShopDirectCountdown({ listing }: { listing: ShopDirectListing }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <p className="shop-direct__timer" aria-label="Time until refresh">
+      {formatShopDirectCountdown(listing, now)}
+    </p>
+  );
+}
 
 type FocusedDeal = {
   listing: ShopDirectListing;
@@ -35,7 +52,6 @@ export function ShopDirectShelf() {
   const [buyError, setBuyError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async (force = false) => {
     try {
@@ -62,8 +78,6 @@ export function ShopDirectShelf() {
   useEffect(() => {
     const id = window.setInterval(() => {
       const t = Date.now();
-      setNow(t);
-      // When any listing expires, force a refresh so the server can rotate it.
       if (listings.some((row) => shopDirectExpiresAtMs(row) <= t)) {
         void load(true);
       }
@@ -252,6 +266,7 @@ export function ShopDirectShelf() {
                     pathLevels={card.pathLevels}
                     mode="preview"
                     owned
+                    staticArt={nativeShopPreviews}
                     onSelect={() => openFocus(row)}
                   />
                 ) : (
@@ -268,9 +283,7 @@ export function ShopDirectShelf() {
                     {card ? card.entity.name : row.cardId}
                   </p>
                   <CashAmount amount={row.price} size={18} />
-                  <p className="shop-direct__timer" aria-label="Time until refresh">
-                    {formatShopDirectCountdown(row, now)}
-                  </p>
+                  <ShopDirectCountdown listing={row} />
                 </div>
               </article>
             );

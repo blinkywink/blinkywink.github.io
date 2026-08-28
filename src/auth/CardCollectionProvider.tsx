@@ -212,10 +212,11 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated || isGuest || !profile) return;
     const held = new Set<string>([...ownedIds, ...listedIds]);
+    const owned = new Set<string>(ownedIds);
     void maybeAwardCollectedEveryCardBadge(held, profile.owned_hero_ids);
     void maybeAwardCollectedATowerBadge(held);
     void maybeAwardOwnsAParagonBadge(held);
-    void maybeAwardOwnsAllParagonsBadge(held);
+    void maybeAwardOwnsAllParagonsBadge(owned);
     void maybeAwardOwnsAllHeroesBadge(profile.owned_hero_ids);
   }, [hydrated, isGuest, profile, ownedIds, listedIds]);
 

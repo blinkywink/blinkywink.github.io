@@ -40,7 +40,7 @@ const EMPTY_TRADES: TradeInbox = { incoming: [], outgoing: [], active: [] };
 const EMPTY_OFFERS: MarketOfferInbox = { incoming: [], outgoing: [] };
 const EMPTY_EXCHANGES: ExchangeInbox = { incoming: [], outgoing: [] };
 
-export function TradeInbox() {
+export function TradeInbox({ className = "" }: { className?: string }) {
   const { user, refreshProfile } = useAuth();
   const { refresh: refreshCards } = useCardCollection();
   const navigate = useNavigate();
@@ -185,8 +185,7 @@ export function TradeInbox() {
     exchanges.incoming.length +
     exchanges.outgoing.length +
     sales.length;
-
-  if (badge === 0 && !open) return null;
+  const showPill = badge > 0 || open;
 
   async function onAcceptTrade(item: TradeInboxItem) {
     setBusyId(item.id);
@@ -392,7 +391,10 @@ export function TradeInbox() {
 
 
   return (
-    <div className="trade-inbox" ref={wrapRef}>
+    <div
+      className={`trade-inbox${showPill ? "" : " trade-inbox--idle"} ${className}`.trim()}
+      ref={wrapRef}
+    >
       <button
         type="button"
         className={`trade-inbox__pill${
@@ -404,13 +406,14 @@ export function TradeInbox() {
           0
             ? " is-hot"
             : ""
-        }`}
+        }${showPill ? "" : " is-idle"}`}
         aria-label={`${badge} notification${badge === 1 ? "" : "s"}`}
         aria-haspopup="dialog"
         aria-expanded={open}
+        tabIndex={showPill ? 0 : -1}
         onClick={() => setOpen((v) => !v)}
       >
-        {badge > 9 ? "9+" : badge}
+        {badge > 0 ? (badge > 9 ? "9+" : badge) : null}
       </button>
 
       {open ? (

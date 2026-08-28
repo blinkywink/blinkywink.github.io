@@ -277,7 +277,7 @@ export async function awardOwnsAllParagonsBadge(): Promise<boolean> {
   return Boolean(data);
 }
 
-/** Grant when every tower paragon is owned (or listed). */
+/** Grant when every tower paragon is in the player's inventory (listed copies don't count). */
 export async function maybeAwardOwnsAllParagonsBadge(
   ownedCardIds: ReadonlySet<string>,
 ): Promise<boolean> {

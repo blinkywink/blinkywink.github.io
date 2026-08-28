@@ -852,6 +852,28 @@ p {
   overflow: visible;
 }
 
+@media (min-width: 821px) {
+  .site-header__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .site-header__brand {
+    justify-self: start;
+  }
+
+  .site-nav--desktop {
+    justify-self: center;
+    flex: unset;
+    min-width: 0;
+  }
+
+  .site-header__actions {
+    justify-self: end;
+  }
+}
+
 .site-header__brand {
   display: inline-flex;
   align-self: flex-end;
@@ -1297,6 +1319,34 @@ p {
     right: max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
+  .modern-inbox-overlay {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 0.95rem);
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    z-index: 2195;
+  }
+
+  .modern-inbox-overlay--with-cash {
+    right: max(6.75rem, calc(env(safe-area-inset-right, 0px) + 5.75rem));
+  }
+
+  html[data-mobile-chrome="modern"] .trade-inbox--modern .trade-inbox__panel {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 3.35rem);
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    left: auto;
+    transform: none;
+    width: min(22rem, calc(100vw - 1.5rem));
+    max-height: min(62dvh, 24rem);
+  }
+
+  html[data-mobile-chrome="modern"]
+    .modern-inbox-overlay--with-cash
+    .trade-inbox--modern
+    .trade-inbox__panel {
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
   .shop-cash-overlay .coin-chip {
     gap: 0.45rem;
   }
@@ -1559,6 +1609,70 @@ html[data-native="1"][data-platform="android"] .pack-opener__suspense-plate *,
 html[data-native="1"][data-platform="android"] .pack-opener__god-burst,
 html[data-native="1"][data-platform="android"] .pack-opener__god-burst * {
   animation-duration: 0.85s;
+}
+
+html[data-native="1"] .pack-opener .booster__foil,
+html[data-native="1"] .pack-opener .booster__glare,
+html[data-native="1"] .pack-opener .booster__bulge {
+  display: none;
+}
+
+html[data-native="1"] .pack-opener .booster__model {
+  animation: none !important;
+}
+
+html[data-native="1"] .pack-shelf__item {
+  content-visibility: auto;
+  contain-intrinsic-size: 180px 260px;
+}
+
+html[data-native="1"] .monkey-card-scene--paragon-fx .monkey-card__body,
+html[data-native="1"] .monkey-card-scene--paragon-fx .monkey-card__edge {
+  transform: unset;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--paragon-fx {
+  overflow: visible;
+  isolation: isolate;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--paragon-fx .monkey-card__paragon-rings {
+  mix-blend-mode: normal;
+  opacity: 0.92;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .monkey-card__glare {
+  mix-blend-mode: soft-light;
+}
+
+@media (max-width: 820px) {
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pick-dock,
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .market-sell-price__dock {
+    z-index: 2100;
+    bottom: var(--site-bottom-nav-h, 0px);
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .market-sell-price {
+    padding-bottom: calc(7rem + var(--site-bottom-nav-h, 0px));
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor {
+    z-index: 2100;
+    padding-bottom: var(--site-bottom-nav-h, 0px);
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__panel {
+    max-height: min(calc(92dvh - var(--site-bottom-nav-h, 0px)), 880px);
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__panel:has(.pfp-editor__body--pick) {
+    height: min(calc(92dvh - var(--site-bottom-nav-h, 0px)), 880px);
+  }
+
+  html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__footer {
+    flex: 0 0 auto;
+  }
 }
 
 /* Shared utility page title (Market, Board, Profile, Trade) */
@@ -16646,12 +16760,16 @@ a.market-card__seller:hover {
 
 .trade-inbox {
   position: relative;
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.35rem;
 }
 
 .trade-inbox__pill {
-  min-width: 1.35rem;
+  min-width: 1.75rem;
+  width: 1.75rem;
   height: 1.35rem;
-  padding: 0 0.4rem;
+  padding: 0;
   border-radius: 999px;
   border: 0;
   background: #e85d4c;
@@ -16663,6 +16781,11 @@ a.market-card__seller:hover {
   place-items: center;
   cursor: pointer;
   box-shadow: 0 0 0 2px rgba(8, 8, 10, 0.9);
+}
+
+.trade-inbox__pill.is-idle {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .trade-inbox__pill.is-hot {

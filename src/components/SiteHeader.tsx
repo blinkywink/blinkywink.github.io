@@ -14,6 +14,7 @@ import {
   useMobileView,
 } from "./MobileAppNav";
 import { ShopCashOverlay } from "./ShopCashOverlay";
+import { ModernInboxOverlay } from "./ModernInboxOverlay";
 import { TradeInbox } from "./TradeInbox";
 
 const NAV = [
@@ -76,7 +77,12 @@ export function SiteHeader() {
 
   /* Modern mobile: no website top bar; Shop/Market get a corner cash overlay. */
   if (modernMobile) {
-    return shopCashOverlay ? <ShopCashOverlay /> : null;
+    return (
+      <>
+        {shopCashOverlay ? <ShopCashOverlay /> : null}
+        <ModernInboxOverlay />
+      </>
+    );
   }
 
   return (

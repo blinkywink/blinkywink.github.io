@@ -48,6 +48,7 @@ import {
   hasPlayerChrome,
   playerChromeStyle,
 } from "../lib/profileCosmetics";
+import { isNativeShell } from "../lib/nativeShell";
 
 const SLASH_NEED = 90;
 const SWIPE_NEED = 42;
@@ -308,9 +309,7 @@ export function PackOpenerTest({
   );
   const [godPack, setGodPack] = useState(false);
   const [index, setIndex] = useState(0);
-  const [slash, setSlash] = useState<Pt[]>([]);
   const [clips, setClips] = useState<[string, string] | null>(null);
-  const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [exitDir, setExitDir] = useState({ x: 0, y: -1 });
   const [buyBusy, setBuyBusy] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
@@ -336,7 +335,33 @@ export function PackOpenerTest({
   const paidDupIndicesRef = useRef<Set<number>>(new Set());
   const duplicatesRef = useRef<ReadonlySet<string>>(new Set());
   const packRef = useRef<HTMLDivElement>(null);
+  const slashPathRef = useRef<SVGPathElement>(null);
+  const slashGlowRef = useRef<SVGPathElement>(null);
+  const cardDragElRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
+
+  const applySlashPaths = useCallback((pts: Pt[]) => {
+    const d = slashToSvg(pts);
+    slashPathRef.current?.setAttribute("d", d);
+    slashGlowRef.current?.setAttribute("d", d);
+  }, []);
+
+  const clearSlashPaths = useCallback(() => {
+    slashPathRef.current?.setAttribute("d", "");
+    slashGlowRef.current?.setAttribute("d", "");
+  }, []);
+
+  const applyCardDrag = useCallback((x: number, y: number) => {
+    const el = cardDragElRef.current;
+    if (!el) return;
+    if (x === 0 && y === 0) {
+      el.style.transform = "";
+      el.style.transition = "";
+      return;
+    }
+    el.style.transform = `translate(${x}px, ${y}px) rotate(${x * 0.04 + y * 0.02}deg)`;
+    el.style.transition = "none";
+  }, []);
   /** Space currently down (incl. held through card changes). */
   const spaceHeldRef = useRef(false);
   /** T5 / Paragon: ignore Space until they release and press again. */
@@ -390,10 +415,10 @@ export function PackOpenerTest({
     setGodPack(false);
     setIndex(0);
     indexRef.current = 0;
-    setSlash([]);
     slashRef.current = [];
+    clearSlashPaths();
     setClips(null);
-    setDrag({ x: 0, y: 0 });
+    applyCardDrag(0, 0);
     dragRef.current = { x: 0, y: 0 };
     setExitDir({ x: 0, y: -1 });
     drawing.current = false;
@@ -433,10 +458,10 @@ export function PackOpenerTest({
     setGodPack(false);
     setIndex(0);
     indexRef.current = 0;
-    setSlash([]);
     slashRef.current = [];
+    clearSlashPaths();
     setClips(null);
-    setDrag({ x: 0, y: 0 });
+    applyCardDrag(0, 0);
     dragRef.current = { x: 0, y: 0 };
     setExitDir({ x: 0, y: -1 });
     drawing.current = false;
@@ -662,7 +687,7 @@ export function PackOpenerTest({
     (i: number) => {
       indexRef.current = i;
       setIndex(i);
-      setDrag({ x: 0, y: 0 });
+      applyCardDrag(0, 0);
       dragRef.current = { x: 0, y: 0 };
       awardDupCashForIndex(i);
       const card = pullsRef.current[i];
@@ -882,13 +907,13 @@ export function PackOpenerTest({
     const tick = () => {
       const pts = frames[i]!;
       slashRef.current = pts;
-      setSlash(pts);
+      applySlashPaths(pts);
       i += 1;
       if (i < frames.length) later(tick, 16);
       else completeCut(pts);
     };
     tick();
-  }, [completeCut]);
+  }, [completeCut, applySlashPaths]);
 
   const stopAutoOpen = useCallback(() => {
     autoOpenActiveRef.current = false;
@@ -999,7 +1024,7 @@ export function PackOpenerTest({
       jumpscareUsedRef.current = true;
       jumpscareRef.current = true;
       setJumpscare(true);
-      setDrag({ x: 0, y: 0 });
+      applyCardDrag(0, 0);
       dragRef.current = { x: 0, y: 0 };
       needFreshSpaceRef.current = true;
       readyAtRef.current = performance.now();
@@ -1218,7 +1243,7 @@ export function PackOpenerTest({
     if (!p) return;
     drawing.current = true;
     slashRef.current = [p];
-    setSlash([p]);
+    applySlashPaths([p]);
   };
 
   const onSlashMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1229,7 +1254,7 @@ export function PackOpenerTest({
     if (prev && Math.hypot(p.x - prev.x, p.y - prev.y) < 1.2) return;
     const next = [...slashRef.current, p];
     slashRef.current = next;
-    setSlash(next);
+    applySlashPaths(next);
   };
 
   const onSlashUp = () => {
@@ -1239,7 +1264,7 @@ export function PackOpenerTest({
     if (pathLength(pts) >= SLASH_NEED && slashHitsPack(pts)) completeCut(pts);
     else {
       slashRef.current = [];
-      setSlash([]);
+      clearSlashPaths();
     }
   };
 
@@ -1249,7 +1274,7 @@ export function PackOpenerTest({
     e.currentTarget.setPointerCapture(e.pointerId);
     swipeOrigin.current = { x: e.clientX, y: e.clientY };
     dragRef.current = { x: 0, y: 0 };
-    setDrag({ x: 0, y: 0 });
+    applyCardDrag(0, 0);
   };
 
   const onCardPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1259,13 +1284,13 @@ export function PackOpenerTest({
     const dist = Math.hypot(x, y);
     if (dist < SWIPE_DEADZONE) {
       dragRef.current = { x: 0, y: 0 };
-      setDrag({ x: 0, y: 0 });
+      applyCardDrag(0, 0);
       return;
     }
     const scale = (dist - SWIPE_DEADZONE) / dist;
     const next = { x: x * scale, y: y * scale };
     dragRef.current = next;
-    setDrag(next);
+    applyCardDrag(next.x, next.y);
   };
 
   const onCardPointerUp = () => {
@@ -1278,7 +1303,7 @@ export function PackOpenerTest({
       flingAway({ x: x / len, y: y / len });
     } else {
       dragRef.current = { x: 0, y: 0 };
-      setDrag({ x: 0, y: 0 });
+      applyCardDrag(0, 0);
     }
   };
 
@@ -1317,25 +1342,19 @@ export function PackOpenerTest({
   const showCardFace = phase !== "suspense";
 
   const cardStyle =
-    phase === "ready"
-      ? drag.x !== 0 || drag.y !== 0
-        ? {
-            transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04 + drag.y * 0.02}deg)`,
-            transition: "none",
-          }
-        : undefined
-      : phase === "exit"
-        ? {
-            transform: `translate(${exitDir.x * 820}px, ${exitDir.y * 820}px) rotate(${exitDir.x * 32}deg)`,
-            opacity: 0,
-            transition: "transform 0.15s ease, opacity 0.14s ease",
-          }
-        : undefined;
+    phase === "exit"
+      ? {
+          transform: `translate(${exitDir.x * 820}px, ${exitDir.y * 820}px) rotate(${exitDir.x * 32}deg)`,
+          opacity: 0,
+          transition: "transform 0.15s ease, opacity 0.14s ease",
+        }
+      : undefined;
 
   const halfNudge = (() => {
-    if (!slash.length) return { x: 18, y: -14 };
-    const a = slash[0]!;
-    const b = slash[slash.length - 1]!;
+    const pts = slashRef.current;
+    if (pts.length < 2) return { x: 18, y: -14 };
+    const a = pts[0]!;
+    const b = pts[pts.length - 1]!;
     const nx = -(b.y - a.y);
     const ny = b.x - a.x;
     const len = Math.hypot(nx, ny) || 1;
@@ -1353,6 +1372,8 @@ export function PackOpenerTest({
     autoPackUnlockedFromProfile(profile) &&
     phase !== "shop" &&
     (phase !== "done" || autoOpenActive);
+
+  const nativeLite = isNativeShell();
 
   return createPortal(
     <div
@@ -1468,9 +1489,13 @@ export function PackOpenerTest({
                         </div>
                         <div className="booster__face">
                           <BoosterPackFace pack={pack} />
-                          <div className="booster__foil" />
-                          <div className="booster__glare" />
-                          <div className="booster__bulge" />
+                          {!nativeLite ? (
+                            <>
+                              <div className="booster__foil" />
+                              <div className="booster__glare" />
+                              <div className="booster__bulge" />
+                            </>
+                          ) : null}
                         </div>
                         <div className="booster__crimp booster__crimp--bottom">
                           <span className="booster__crimp-ridges" />
@@ -1487,7 +1512,7 @@ export function PackOpenerTest({
                     aria-hidden
                   >
                     <path
-                      d={slashToSvg(slash)}
+                      ref={slashPathRef}
                       fill="none"
                       stroke="rgba(255,255,255,0.4)"
                       strokeWidth="7"
@@ -1496,7 +1521,7 @@ export function PackOpenerTest({
                       vectorEffect="non-scaling-stroke"
                     />
                     <path
-                      d={slashToSvg(slash)}
+                      ref={slashGlowRef}
                       fill="none"
                       stroke="rgba(255,255,255,0.96)"
                       strokeWidth="2.2"
@@ -1543,6 +1568,7 @@ export function PackOpenerTest({
             {showCard ? (
               <div
                 key={`${current.id}-${index}`}
+                ref={cardDragElRef}
                 className={[
                   "pack-opener__card",
                   `pack-opener__card--${phase}`,

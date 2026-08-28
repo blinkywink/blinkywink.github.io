@@ -179,15 +179,6 @@ export function AccountStatsPage() {
         const next = await fetchAccountStats();
         if (cancelled) return;
         setStats(next);
-        setLive(
-          liveFromOwned(
-            owned,
-            (id) => paragonOf(id)?.degree ?? 1,
-            normalizeOwnedHeroIds(profile?.owned_hero_ids),
-            profile?.coins_earned ?? 0,
-            profile?.shop_spent ?? 0,
-          ),
-        );
         setLoading(false);
         return;
       }
@@ -218,12 +209,29 @@ export function AccountStatsPage() {
     return () => {
       cancelled = true;
     };
+  }, [viewingSelf, remoteUsername]);
+
+  useEffect(() => {
+    if (!viewingSelf || loading) return;
+    setStats(statsFromProfile(profile?.account_stats));
+  }, [viewingSelf, loading, profile?.account_stats]);
+
+  useEffect(() => {
+    if (!viewingSelf || loading) return;
+    setLive(
+      liveFromOwned(
+        owned,
+        (id) => paragonOf(id)?.degree ?? 1,
+        normalizeOwnedHeroIds(profile?.owned_hero_ids),
+        profile?.coins_earned ?? 0,
+        profile?.shop_spent ?? 0,
+      ),
+    );
   }, [
     viewingSelf,
-    remoteUsername,
+    loading,
     owned,
     paragonOf,
-    profile?.account_stats,
     profile?.coins_earned,
     profile?.owned_hero_ids,
     profile?.shop_spent,

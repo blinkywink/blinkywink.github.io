@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import {
@@ -40,24 +40,28 @@ type Props = {
   }) => void;
 };
 
-function useShopClock() {
+function ShopRotationTimer({
+  onDayChange,
+}: {
+  onDayChange: (day: string) => void;
+}) {
   const [remaining, setRemaining] = useState(() => msUntilShopRotation());
-  const [shopDay, setShopDay] = useState(() => dayStamp());
 
   useEffect(() => {
     const tick = () => {
       setRemaining(msUntilShopRotation());
-      setShopDay((prev) => {
-        const next = dayStamp();
-        return prev === next ? prev : next;
-      });
+      onDayChange(dayStamp());
     };
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [onDayChange]);
 
-  return { remaining, shopDay };
+  return (
+    <p className="shop-timer">
+      Refresh in <strong>{formatShopCountdown(remaining)}</strong>
+    </p>
+  );
 }
 
 function useFreeCategoryCounts(userId: string | null | undefined) {
@@ -94,7 +98,10 @@ function useFreeCategoryCounts(userId: string | null | undefined) {
 export function ShopPage({ onPackFinished }: Props) {
   const { session } = useAuth();
   const [activePack, setActivePack] = useState<PackDef | null>(null);
-  const { remaining, shopDay } = useShopClock();
+  const [shopDay, setShopDay] = useState(() => dayStamp());
+  const onShopDayChange = useCallback((day: string) => {
+    setShopDay((prev) => (prev === day ? prev : day));
+  }, []);
   const freeCounts = useFreeCategoryCounts(session?.userId);
   const [remoteTowers, setRemoteTowers] = useState(getRemoteFeaturedTowers);
   useEffect(() => subscribeRemoteFeatured(() => {
@@ -175,9 +182,7 @@ export function ShopPage({ onPackFinished }: Props) {
       <section className="pack-shelf" aria-label="Shop">
         <div className="pack-shelf__head">
           <h3 className="section-label">Featured</h3>
-          <p className="shop-timer">
-            Refresh in <strong>{formatShopCountdown(remaining)}</strong>
-          </p>
+          <ShopRotationTimer onDayChange={onShopDayChange} />
         </div>
         <div className="pack-shelf__row">{featured.map(renderPackButton)}</div>
 
