@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollectionOptional } from "../auth/CardCollectionProvider";
@@ -15,6 +10,11 @@ import {
   type MobileViewId,
 } from "../lib/mobileView";
 import { isNativeShell } from "../lib/nativeShell";
+import {
+  getTradeInboxUiSnapshot,
+  subscribeTradeInboxUi,
+  toggleTradeInboxUiOpen,
+} from "../lib/tradeInboxUi";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { UserAvatar } from "./UserAvatar";
 
@@ -26,6 +26,35 @@ const NAV = [
 ] as const;
 
 const MOBILE_MQ = "(max-width: 820px)";
+
+function useTradeInboxUi() {
+  return useSyncExternalStore(
+    subscribeTradeInboxUi,
+    getTradeInboxUiSnapshot,
+    getTradeInboxUiSnapshot,
+  );
+}
+
+function InboxNavBadge() {
+  const { badge, isHot } = useTradeInboxUi();
+  if (badge <= 0) return null;
+
+  return (
+    <button
+      type="button"
+      className={`mobile-inbox-badge${isHot ? " is-hot" : ""}`}
+      data-inbox-trigger
+      aria-label={`${badge} notification${badge === 1 ? "" : "s"}`}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleTradeInboxUiOpen();
+      }}
+    >
+      {badge > 9 ? "9+" : badge}
+    </button>
+  );
+}
 
 function useIsCompactViewport() {
   const [compact, setCompact] = useState(() =>
@@ -159,6 +188,7 @@ function YouTab() {
     >
       <span className="mobile-app-nav__icon mobile-app-nav__icon--you">
         <YouTabIcon />
+        <InboxNavBadge />
       </span>
       {!signedIn ? (
         <span className="mobile-app-nav__label">You</span>

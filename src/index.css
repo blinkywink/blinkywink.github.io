@@ -1321,30 +1321,104 @@ p {
 
   .modern-inbox-overlay {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 0.95rem);
-    right: max(0.75rem, env(safe-area-inset-right, 0px));
-    z-index: 2195;
+    inset: 0;
+    width: 0;
+    height: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2100;
   }
 
-  .modern-inbox-overlay--with-cash {
-    right: max(6.75rem, calc(env(safe-area-inset-right, 0px) + 5.75rem));
+  .trade-inbox--mobile.trade-inbox--idle {
+    width: 0;
+    height: 0;
+  }
+
+  .trade-inbox-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    border: 0;
+    padding: 0;
+    background: rgba(4, 4, 8, 0.55);
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .trade-inbox__panel--mobile-top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0 0 18px 18px;
+    border-top: 0;
+    padding-top: calc(0.85rem + env(safe-area-inset-top, 0px));
+    max-height: min(58dvh, 26rem);
+    z-index: 2101;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    pointer-events: auto;
+  }
+
+  .trade-inbox__mobile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .trade-inbox__mobile-head .trade-inbox__title {
+    margin: 0;
+  }
+
+  .mobile-app-nav__icon--you {
+    position: relative;
+  }
+
+  .mobile-inbox-badge {
+    position: absolute;
+    top: -0.28rem;
+    right: -0.34rem;
+    min-width: 0.95rem;
+    height: 0.95rem;
+    padding: 0 0.2rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(10, 10, 14, 0.95);
+    background: #e85d4c;
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    pointer-events: auto;
+  }
+
+  .mobile-inbox-badge.is-hot {
+    animation: trade-pill-pulse 1.4s ease-in-out infinite;
   }
 
   html[data-mobile-chrome="modern"] .trade-inbox--modern .trade-inbox__panel {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 3.35rem);
-    right: max(0.75rem, env(safe-area-inset-right, 0px));
-    left: auto;
+    top: 0;
+    left: 0;
+    right: 0;
     transform: none;
-    width: min(22rem, calc(100vw - 1.5rem));
-    max-height: min(62dvh, 24rem);
+    width: 100%;
+    max-width: 100%;
   }
 
   html[data-mobile-chrome="modern"]
     .modern-inbox-overlay--with-cash
     .trade-inbox--modern
     .trade-inbox__panel {
-    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    right: 0;
   }
 
   .shop-cash-overlay .coin-chip {

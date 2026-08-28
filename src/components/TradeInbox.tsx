@@ -33,6 +33,12 @@ import {
   type TradeInboxItem,
 } from "../lib/trades";
 import { listingPath, tradePath } from "../lib/routes";
+import {
+  getTradeInboxUiSnapshot,
+  setTradeInboxUiBadge,
+  setTradeInboxUiOpen,
+  subscribeTradeInboxUi,
+} from "../lib/tradeInboxUi";
 import { CashAmount } from "./CurrencyChip";
 import { ExchangeCompare } from "./ExchangeCompare";
 
@@ -40,11 +46,28 @@ const EMPTY_TRADES: TradeInbox = { incoming: [], outgoing: [], active: [] };
 const EMPTY_OFFERS: MarketOfferInbox = { incoming: [], outgoing: [] };
 const EMPTY_EXCHANGES: ExchangeInbox = { incoming: [], outgoing: [] };
 
-export function TradeInbox({ className = "" }: { className?: string }) {
+export function TradeInbox({
+  className = "",
+  variant = "header",
+}: {
+  className?: string;
+  variant?: "header" | "mobile";
+}) {
   const { user, refreshProfile } = useAuth();
   const { refresh: refreshCards } = useCardCollection();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => getTradeInboxUiSnapshot().open);
+
+  const setOpenSynced = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      setOpen((prev) => {
+        const next = typeof value === "function" ? value(prev) : value;
+        setTradeInboxUiOpen(next);
+        return next;
+      });
+    },
+    [],
+  );
   const [inbox, setInbox] = useState<TradeInbox>(EMPTY_TRADES);
   const [offers, setOffers] = useState<MarketOfferInbox>(EMPTY_OFFERS);
   const [exchanges, setExchanges] = useState<ExchangeInbox>(EMPTY_EXCHANGES);
@@ -99,7 +122,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
           // Seller / exchange partner accepted or declined - pull Cash + cards.
           await Promise.all([refreshCards(), refreshProfile()]);
           setNotice("An offer resolved. Cash and cards were refreshed.");
-          setOpen(true);
+          setOpenSynced(true);
         }
       }
       prevOutgoingIds.current = nextOutgoingIds;
@@ -121,9 +144,9 @@ export function TradeInbox({ className = "" }: { className?: string }) {
       if (!hydrated.current) {
         hydrated.current = true;
         prevIncoming.current = hot;
-        if (nextSales.length > 0) setOpen(true);
+        if (nextSales.length > 0) setOpenSynced(true);
       } else if (hot > prevIncoming.current) {
-        setOpen(true);
+        setOpenSynced(true);
         if (nextSales.length > 0) {
           void Promise.all([refreshCards(), refreshProfile()]);
         }
@@ -132,7 +155,14 @@ export function TradeInbox({ className = "" }: { className?: string }) {
     } catch {
       // Quiet - header shouldn't spam errors while offline
     }
-  }, [user, refreshCards, refreshProfile]);
+  }, [user, refreshCards, refreshProfile, setOpenSynced]);
+
+  useEffect(() => {
+    return subscribeTradeInboxUi(() => {
+      const snap = getTradeInboxUiSnapshot();
+      setOpen((prev) => (prev === snap.open ? prev : snap.open));
+    });
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -143,8 +173,9 @@ export function TradeInbox({ className = "" }: { className?: string }) {
       prevIncoming.current = 0;
       prevOutgoingIds.current = new Set();
       hydrated.current = false;
-      setOpen(false);
+      setOpenSynced(false);
       setNotice(null);
+      setTradeInboxUiBadge(0, false);
       return;
     }
     void refresh();
@@ -161,10 +192,18 @@ export function TradeInbox({ className = "" }: { className?: string }) {
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: MouseEvent | PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target)) return;
+      if (
+        target instanceof Element &&
+        target.closest("[data-inbox-trigger]")
+      ) {
+        return;
+      }
+      setOpenSynced(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setOpenSynced(false);
     };
     window.addEventListener("pointerdown", onPointer);
     window.addEventListener("keydown", onKey);
@@ -172,19 +211,31 @@ export function TradeInbox({ className = "" }: { className?: string }) {
       window.removeEventListener("pointerdown", onPointer);
       window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, setOpenSynced]);
+
+  const badge = user
+    ? inbox.incoming.length +
+      inbox.active.length +
+      inbox.outgoing.length +
+      offers.incoming.length +
+      offers.outgoing.length +
+      exchanges.incoming.length +
+      exchanges.outgoing.length +
+      sales.length
+    : 0;
+  const isHot =
+    inbox.incoming.length +
+      offers.incoming.length +
+      exchanges.incoming.filter((e) => e.status === "pending").length +
+      exchanges.outgoing.filter((e) => e.status === "offered").length +
+      sales.length >
+    0;
+
+  useEffect(() => {
+    setTradeInboxUiBadge(badge, isHot);
+  }, [badge, isHot]);
 
   if (!user) return null;
-
-  const badge =
-    inbox.incoming.length +
-    inbox.active.length +
-    inbox.outgoing.length +
-    offers.incoming.length +
-    offers.outgoing.length +
-    exchanges.incoming.length +
-    exchanges.outgoing.length +
-    sales.length;
   const showPill = badge > 0 || open;
 
   async function onAcceptTrade(item: TradeInboxItem) {
@@ -193,7 +244,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
     try {
       await respondTrade(item.id, true);
       await pingInbox(item.partnerId).catch(() => undefined);
-      setOpen(false);
+      setOpenSynced(false);
       navigate(tradePath(item.id));
       await refresh();
     } catch (err) {
@@ -322,7 +373,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
       setNotice(
         `Accepted offer, Cash received, card sent to ${offer.partnerUsername}.`,
       );
-      setOpen(false);
+      setOpenSynced(false);
       navigate(listingPath(offer.listingId));
       await refresh(true);
     } catch (err) {
@@ -392,33 +443,62 @@ export function TradeInbox({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`trade-inbox${showPill ? "" : " trade-inbox--idle"} ${className}`.trim()}
+      className={[
+        "trade-inbox",
+        showPill && variant === "header" ? "" : "trade-inbox--idle",
+        variant === "mobile" ? "trade-inbox--mobile" : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       ref={wrapRef}
     >
+      {variant === "header" ? (
       <button
         type="button"
         className={`trade-inbox__pill${
-          inbox.incoming.length +
-            offers.incoming.length +
-            exchanges.incoming.filter((e) => e.status === "pending").length +
-            exchanges.outgoing.filter((e) => e.status === "offered").length +
-            sales.length >
-          0
-            ? " is-hot"
-            : ""
+          isHot ? " is-hot" : ""
         }${showPill ? "" : " is-idle"}`}
         aria-label={`${badge} notification${badge === 1 ? "" : "s"}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         tabIndex={showPill ? 0 : -1}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpenSynced((v) => !v)}
       >
         {badge > 0 ? (badge > 9 ? "9+" : badge) : null}
       </button>
+      ) : null}
 
       {open ? (
-        <div className="trade-inbox__panel" role="dialog" aria-label="Inbox">
-          <p className="trade-inbox__title">Inbox</p>
+        <>
+          {variant === "mobile" ? (
+            <button
+              type="button"
+              className="trade-inbox-mobile-backdrop"
+              aria-label="Close inbox"
+              onClick={() => setOpenSynced(false)}
+            />
+          ) : null}
+        <div
+          className={`trade-inbox__panel${variant === "mobile" ? " trade-inbox__panel--mobile-top" : ""}`}
+          role="dialog"
+          aria-label="Inbox"
+        >
+          {variant === "mobile" ? (
+            <div className="trade-inbox__mobile-head">
+              <p className="trade-inbox__title">Inbox</p>
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                aria-label="Close"
+                onClick={() => setOpenSynced(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <p className="trade-inbox__title">Inbox</p>
+          )}
           {error ? <p className="trade-inbox__err">{error}</p> : null}
           {notice ? <p className="trade-inbox__notice">{notice}</p> : null}
 
@@ -501,7 +581,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
                             type="button"
                             className="btn btn--ghost btn--sm"
                             onClick={() => {
-                              setOpen(false);
+                              setOpenSynced(false);
                               navigate(listingPath(item.listingId));
                             }}
                           >
@@ -533,7 +613,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
                           type="button"
                           className="btn btn--secondary btn--sm"
                           onClick={() => {
-                            setOpen(false);
+                            setOpenSynced(false);
                             navigate(listingPath(item.listingId));
                           }}
                         >
@@ -724,7 +804,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
                           type="button"
                           className="btn btn--secondary btn--sm"
                           onClick={() => {
-                            setOpen(false);
+                            setOpenSynced(false);
                             navigate(tradePath(item.id));
                           }}
                         >
@@ -773,6 +853,7 @@ export function TradeInbox({ className = "" }: { className?: string }) {
             </section>
           ) : null}
         </div>
+        </>
       ) : null}
 
       {reviewExchange
