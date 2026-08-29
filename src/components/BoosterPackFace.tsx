@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import {
   type PackDef,
+  categoryPackShelfArt,
   resolveCategoryPackTheme,
   resolveTowerPackTheme,
 } from "../lib/packTheme";
@@ -51,15 +52,14 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
         <div className="pack-face__grid" aria-hidden />
         <div className="pack-face__category-mosaic" aria-hidden>
           {lazyImages ? (
-            <div className="pack-face__category-slot pack-face__category-slot--solo">
-              <img
-                src={staticAssetUrl(theme.images[0] ?? theme.images.at(-1)!)}
-                alt=""
-                draggable={false}
-                decoding="async"
-                loading={imgLoad}
-              />
-            </div>
+            <img
+              className="pack-face__category-composite"
+              src={staticAssetUrl(categoryPackShelfArt(pack.category))}
+              alt=""
+              draggable={false}
+              decoding="async"
+              loading={imgLoad}
+            />
           ) : (
             theme.images.map((src, i) => (
               <div

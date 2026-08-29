@@ -245,6 +245,11 @@ export function resolveCategoryPackTheme(
   };
 }
 
+/** Pre-baked 3-tower mosaic for shop shelf (one request, no layout jank). */
+export function categoryPackShelfArt(category: TowerCategory): string {
+  return `/images/packs/category-${category.toLowerCase()}-mosaic.webp`;
+}
+
 /** Force these towers into the featured row on a given UTC day. */
 const PINNED_DAILY_TOWERS: Record<string, string[]> = {
   "2026-8-11": ["Skywarden"],

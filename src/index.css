@@ -1651,6 +1651,7 @@ html[data-native="1"][data-platform="android"] .pack-shelf__booster {
 }
 
 html[data-native="1"][data-platform="android"] .pack-face__category-slot img,
+html[data-native="1"][data-platform="android"] .pack-face__category-composite,
 html[data-native="1"][data-platform="android"] .pack-face__hero img {
   filter: none;
 }
@@ -9963,6 +9964,16 @@ body.rewards-overlay-open .sweeper-result {
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
 }
 
+.pack-face__category-composite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+}
+
 .pack-face__category-slot--0 {
   transform: translate(-28%, 8%) rotate(-12deg);
   z-index: 1;
@@ -10260,12 +10271,12 @@ body.rewards-overlay-open .sweeper-result {
   }
 
   /*
-   * Two-up grid: scale toward the desktop 150px cap.
+   * Two-up grid — same proportions as desktop (min(22vw, 150px)), not the 40vw bump.
    * Use vw in min() — min(100%, …) breaks calc(height) and collapses packs.
    */
   .pack-shelf__booster {
-    --booster-w: min(40vw, 150px);
-    --booster-h: calc(min(40vw, 150px) * 1.62);
+    --booster-w: min(22vw, 150px);
+    --booster-h: calc(min(22vw, 150px) * 1.62);
     width: var(--booster-w);
     height: var(--booster-h);
   }
