@@ -10268,59 +10268,15 @@ body.rewards-overlay-open .sweeper-result {
     width: 100%;
   }
 
+  /*
+   * Two-up grid: scale toward the desktop 150px cap.
+   * Use vw in min() — min(100%, …) breaks calc(height) and collapses packs.
+   */
   .pack-shelf__booster {
-    /* Percentage inside min() breaks calc(var(--booster-w) * 1.62) → height: 0. */
-    --booster-w: 152px;
-    --booster-h: calc(152px * 1.62);
-    width: min(100%, var(--booster-w));
-    max-width: var(--booster-w);
-  }
-
-  .pack-shelf__booster .booster__art img {
-    object-fit: contain;
-    object-position: center center;
-    height: 100%;
-  }
-
-  .pack-shelf__label {
-    width: min(100%, 152px);
-    max-width: 152px;
-  }
-
-  .pack-shelf__label strong {
-    font-size: 0.82rem;
-    line-height: 1.2;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    text-wrap: balance;
-  }
-
-  .pack-shelf__booster .pack-face__name {
-    white-space: normal;
-    text-wrap: balance;
-    line-height: 1.12;
-  }
-
-  .pack-shelf__booster .pack-face__name.is-sm {
-    font-size: 0.62rem;
-  }
-
-  .pack-shelf__booster .pack-face__name.is-md {
-    font-size: 0.58rem;
-  }
-
-  .pack-shelf__booster .pack-face__name.is-lg {
-    font-size: 0.54rem;
-  }
-
-  .pack-shelf__booster .pack-face__name.is-xl {
-    font-size: 0.5rem;
-  }
-
-  .pack-shelf__booster .pack-face__copy {
-    left: 6%;
-    right: 6%;
-    bottom: 5%;
+    --booster-w: min(40vw, 150px);
+    --booster-h: calc(min(40vw, 150px) * 1.62);
+    width: var(--booster-w);
+    height: var(--booster-h);
   }
 }
 
