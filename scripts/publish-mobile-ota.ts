@@ -61,12 +61,24 @@ function collectOtaRelativeFiles(dir: string, prefix = ""): string[] {
   return out;
 }
 
-/** Code-only bundle — images/music/sounds stay in the builtin APK. */
+const OTA_SKIP_DIRS = new Set(["downloads"]);
+const OTA_SKIP_FILES = new Set([
+  "desktop-latest.json",
+  "desktop-config.json",
+  "mobile-latest.json",
+]);
+
+/** Full web bundle except desktop downloads — static files copy from builtin APK. */
 function listOtaBundleFiles(): string[] {
-  const files = ["index.html"];
-  const assetsDir = join(DIST, "assets");
-  if (existsSync(assetsDir)) {
-    files.push(...collectOtaRelativeFiles(assetsDir, "assets"));
+  const files: string[] = [];
+  for (const name of readdirSync(DIST)) {
+    if (OTA_SKIP_DIRS.has(name) || name === ".DS_Store") continue;
+    const abs = join(DIST, name);
+    if (statSync(abs).isDirectory()) {
+      files.push(...collectOtaRelativeFiles(abs, name));
+    } else if (!OTA_SKIP_FILES.has(name)) {
+      files.push(name);
+    }
   }
   return files.sort();
 }
@@ -83,12 +95,19 @@ function manifestChecksum(entries: OtaManifestEntry[]): string {
   return createHash("sha256").update(body).digest("hex");
 }
 
-function buildOtaManifest(): {
+function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>): {
   entries: OtaManifestEntry[];
   checksum: string;
   stagedFiles: string[];
 } {
   rmSync(join(DIST, "downloads"), { recursive: true, force: true });
+
+  const prevByPath = new Map<string, string>();
+  for (const entry of fromRelease?.manifest ?? []) {
+    if (entry.file_name && entry.file_hash) {
+      prevByPath.set(entry.file_name, entry.file_hash);
+    }
+  }
 
   const relFiles = listOtaBundleFiles();
   const entries: OtaManifestEntry[] = [];
@@ -102,13 +121,17 @@ function buildOtaManifest(): {
     if (!existsSync(abs)) {
       throw new Error(`OTA file missing: ${rel}`);
     }
+    const fileHash = sha256File(abs);
     const assetName = otaAssetName(rel);
     const staged = join(stagingDir, assetName);
-    copyFileSync(abs, staged);
-    stagedFiles.push(staged);
+    /* Only upload release assets whose bytes changed — URLs stay stable by path. */
+    if (prevByPath.get(rel) !== fileHash) {
+      copyFileSync(abs, staged);
+      stagedFiles.push(staged);
+    }
     entries.push({
       file_name: rel,
-      file_hash: sha256File(abs),
+      file_hash: fileHash,
       download_url: otaFileUrl(assetName),
     });
   }
@@ -327,7 +350,7 @@ if (!existsSync(join(DIST, "index.html"))) {
   throw new Error("dist/index.html missing — build first");
 }
 
-const { entries, checksum, stagedFiles } = buildOtaManifest();
+const { entries, checksum, stagedFiles } = buildOtaManifest(fromRelease);
 const channelVersion = nextChannelVersion(appVersion, fromRelease?.version);
 const minNativeVersion = raiseFloor
   ? appVersion
@@ -349,6 +372,7 @@ console.log(`\nOTA published (manifest delta)`);
 console.log(`  app UI version: ${appVersion}`);
 console.log(`  channel version: ${channelVersion}`);
 console.log(`  files: ${entries.length}`);
+console.log(`  uploaded: ${stagedFiles.length}`);
 console.log(`  minNativeVersion: ${minNativeVersion}`);
 console.log(`  checksum: ${checksum}`);
 console.log(`  wrote ${PUBLIC_JSON}`);
