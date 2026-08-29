@@ -4,6 +4,7 @@ import {
   resolveCategoryPackTheme,
   resolveTowerPackTheme,
 } from "../lib/packTheme";
+import { staticAssetUrl } from "../lib/staticAssets";
 
 type Props = {
   pack: PackDef;
@@ -19,7 +20,13 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
     return (
       <div className={`pack-face pack-face--btd6 ${className}`.trim()}>
         <div className="booster__art">
-          <img src={pack.coverArt} alt="" draggable={false} decoding="async" loading={imgLoad} />
+          <img
+            src={staticAssetUrl(pack.coverArt ?? "")}
+            alt=""
+            draggable={false}
+            decoding="async"
+            loading={imgLoad}
+          />
         </div>
       </div>
     );
@@ -44,7 +51,7 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
           {lazyImages ? (
             <div className="pack-face__category-slot pack-face__category-slot--solo">
               <img
-                src={theme.images[0] ?? theme.images.at(-1)!}
+                src={staticAssetUrl(theme.images[0] ?? theme.images.at(-1)!)}
                 alt=""
                 draggable={false}
                 decoding="async"
@@ -57,7 +64,13 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
                 key={`${src}-${i}`}
                 className={`pack-face__category-slot pack-face__category-slot--${i}`}
               >
-                <img src={src} alt="" draggable={false} decoding="async" loading={imgLoad} />
+                <img
+                  src={staticAssetUrl(src)}
+                  alt=""
+                  draggable={false}
+                  decoding="async"
+                  loading={imgLoad}
+                />
               </div>
             ))
           )}
@@ -96,7 +109,13 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
       <div className="pack-face__grid" aria-hidden />
 
       <div className="pack-face__hero">
-        <img src={theme.image} alt="" draggable={false} decoding="async" loading={imgLoad} />
+        <img
+          src={staticAssetUrl(theme.image)}
+          alt=""
+          draggable={false}
+          decoding="async"
+          loading={imgLoad}
+        />
       </div>
 
       <div className="pack-face__copy">

@@ -32,7 +32,7 @@ const skipBuild = process.argv.includes("--skip-build");
 
 const MOBILE_TAG = "mobile";
 /** Static media fallback when Capgo can't copy from the builtin APK. */
-const OTA_SITE_BASE = "https://monkeycards.app";
+const OTA_SITE_BASE = "https://www.monkeycards.app";
 
 function isGithubHostedOtaFile(relativePath: string): boolean {
   return relativePath === "index.html" || relativePath.startsWith("assets/");
