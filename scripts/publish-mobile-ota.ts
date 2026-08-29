@@ -35,10 +35,14 @@ const MOBILE_TAG = "mobile";
 const OTA_SITE_BASE = "https://www.monkeycards.app";
 
 function isGithubHostedOtaFile(relativePath: string): boolean {
-  return relativePath === "index.html" || relativePath.startsWith("assets/");
+  return (
+    relativePath === "index.html" ||
+    relativePath.startsWith("assets/") ||
+    relativePath.startsWith("images/packs/")
+  );
 }
 
-/** OTA ships JS/CSS only — static media loads from monkeycards.app on native. */
+/** OTA manifest: code + shop pack mosaics only — not 1200+ tower images. */
 function isOtaManifestFile(relativePath: string): boolean {
   return isGithubHostedOtaFile(relativePath);
 }
