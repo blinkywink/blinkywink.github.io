@@ -31,6 +31,22 @@ const raiseFloor = process.argv.includes("--raise-native-floor");
 const skipBuild = process.argv.includes("--skip-build");
 
 const MOBILE_TAG = "mobile";
+/** Static media fallback when Capgo can't copy from the builtin APK. */
+const OTA_SITE_BASE = "https://monkeycards.app";
+
+function isGithubHostedOtaFile(relativePath: string): boolean {
+  return relativePath === "index.html" || relativePath.startsWith("assets/");
+}
+
+function otaSiteUrl(relativePath: string): string {
+  return `${OTA_SITE_BASE}/${relativePath.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+function otaDownloadUrl(relativePath: string, assetName: string): string {
+  return isGithubHostedOtaFile(relativePath)
+    ? otaFileUrl(assetName)
+    : otaSiteUrl(relativePath);
+}
 
 type OtaManifestEntry = {
   file_name: string;
@@ -124,15 +140,15 @@ function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>):
     const fileHash = sha256File(abs);
     const assetName = otaAssetName(rel);
     const staged = join(stagingDir, assetName);
-    /* Only upload release assets whose bytes changed — URLs stay stable by path. */
-    if (prevByPath.get(rel) !== fileHash) {
+    /* Only upload JS/CSS to GitHub — static media uses monkeycards.app fallback URLs. */
+    if (isGithubHostedOtaFile(rel) && prevByPath.get(rel) !== fileHash) {
       copyFileSync(abs, staged);
       stagedFiles.push(staged);
     }
     entries.push({
       file_name: rel,
       file_hash: fileHash,
-      download_url: otaFileUrl(assetName),
+      download_url: otaDownloadUrl(rel, assetName),
     });
   }
 
