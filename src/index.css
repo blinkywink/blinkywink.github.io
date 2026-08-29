@@ -10269,9 +10269,11 @@ body.rewards-overlay-open .sweeper-result {
   }
 
   .pack-shelf__booster {
-    --booster-w: min(100%, 152px);
-    width: min(100%, 152px);
-    max-width: 152px;
+    /* Percentage inside min() breaks calc(var(--booster-w) * 1.62) → height: 0. */
+    --booster-w: 152px;
+    --booster-h: calc(152px * 1.62);
+    width: min(100%, var(--booster-w));
+    max-width: var(--booster-w);
   }
 
   .pack-shelf__booster .booster__art img {
