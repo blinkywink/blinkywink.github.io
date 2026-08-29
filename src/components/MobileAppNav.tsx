@@ -15,6 +15,7 @@ import {
   setTradeInboxUiOpen,
   subscribeTradeInboxUi,
 } from "../lib/tradeInboxUi";
+import { profilePath } from "../lib/routes";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { UserAvatar } from "./UserAvatar";
 
@@ -37,6 +38,8 @@ function useTradeInboxUi() {
 
 function InboxNavBadge() {
   const { badge, isHot } = useTradeInboxUi();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   if (badge <= 0) return null;
 
   return (
@@ -49,6 +52,9 @@ function InboxNavBadge() {
         e.preventDefault();
         e.stopPropagation();
         setTradeInboxUiOpen(true);
+        if (pathname !== profilePath()) {
+          navigate(profilePath());
+        }
       }}
     >
       {badge > 9 ? "9+" : badge}

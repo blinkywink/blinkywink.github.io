@@ -1,28 +1,25 @@
-import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import {
-  useIsCompactViewport,
-  useMobileView,
-} from "./MobileAppNav";
-import { showsMobileAppNav } from "../lib/mobileView";
+import { useIsCompactViewport } from "./MobileAppNav";
 import { isNativeShell } from "../lib/nativeShell";
+import { setTradeInboxUiOpen } from "../lib/tradeInboxUi";
 import { TradeInbox } from "./TradeInbox";
 
-/** Mobile inbox strip at the top of the page (not a modal). */
+/** Inbox strip at the top of the profile page (inline, not a global overlay). */
 export function MobileInboxStrip() {
   const { user } = useAuth();
-  const { pathname } = useLocation();
   const compact = useIsCompactViewport();
-  const view = useMobileView();
   const native = isNativeShell();
-  const show =
-    user &&
-    (native || (compact && view === "modern" && showsMobileAppNav(pathname)));
 
-  if (!show) return null;
+  useEffect(() => {
+    return () => setTradeInboxUiOpen(false);
+  }, []);
+
+  if (!user) return null;
+  if (!native && !compact) return null;
 
   return (
-    <div className="mobile-inbox-strip">
+    <div className="mobile-inbox-strip mobile-inbox-strip--profile">
       <TradeInbox variant="mobile" />
     </div>
   );

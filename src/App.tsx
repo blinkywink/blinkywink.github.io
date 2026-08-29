@@ -28,7 +28,6 @@ import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { MobileAppNav, useIsCompactViewport, useMobileView } from "./components/MobileAppNav";
-import { MobileInboxStrip } from "./components/MobileInboxStrip";
 import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
 import { HubPeekExport } from "./components/HubPeekExport";
@@ -726,7 +725,6 @@ function AppShell() {
       <BloonleKeyboardBridge />
       <SiteHeader />
       <div className="site-main">
-        <MobileInboxStrip />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
