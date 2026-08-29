@@ -1650,18 +1650,9 @@ html[data-native="1"][data-platform="android"] .pack-shelf__booster {
   transition: none;
 }
 
-html[data-native="1"][data-platform="android"] .pack-face__category-slot,
-html[data-native="1"][data-platform="android"] .pack-face__hero {
+html[data-native="1"][data-platform="android"] .pack-face__category-slot img,
+html[data-native="1"][data-platform="android"] .pack-face__hero img {
   filter: none;
-}
-
-html[data-native="1"][data-platform="android"] .pack-face__category-slot--solo {
-  position: absolute;
-  inset: 8% 10% 18%;
-  width: auto;
-  height: auto;
-  transform: none;
-  z-index: 2;
 }
 
 html[data-native="1"][data-platform="android"] .pack-shelf__item:hover .pack-shelf__booster,
@@ -9961,7 +9952,6 @@ body.rewards-overlay-open .sweeper-result {
   height: 68%;
   display: grid;
   place-items: center;
-  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
 }
 
 .pack-face__category-slot img {
@@ -9970,6 +9960,7 @@ body.rewards-overlay-open .sweeper-result {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
 }
 
 .pack-face__category-slot--0 {
@@ -10003,7 +9994,6 @@ body.rewards-overlay-open .sweeper-result {
   display: grid;
   place-items: center;
   overflow: visible;
-  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.45));
 }
 
 .pack-face__hero img {
@@ -10016,6 +10006,7 @@ body.rewards-overlay-open .sweeper-result {
   object-position: center center;
   pointer-events: none;
   user-select: none;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.45));
 }
 
 .pack-face__copy {

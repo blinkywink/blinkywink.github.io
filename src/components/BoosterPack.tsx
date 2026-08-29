@@ -48,7 +48,7 @@ export function BoosterPack({
                 <span className="booster__crimp-ridges" />
               </div>
               <div className="booster__face">
-                <BoosterPackFace pack={pack} lazyImages={!effects} />
+                <BoosterPackFace pack={pack} />
                 {effects ? (
                   <>
                     <div className="booster__foil" />
