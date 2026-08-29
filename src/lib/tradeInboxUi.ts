@@ -7,18 +7,22 @@ let open = false;
 let isHot = false;
 const listeners = new Set<Listener>();
 
-function notify() {
-  for (const fn of listeners) fn();
-}
-
 export type TradeInboxUiSnapshot = {
   badge: number;
   open: boolean;
   isHot: boolean;
 };
 
+/** Stable reference for useSyncExternalStore — must not allocate every read. */
+let snapshot: TradeInboxUiSnapshot = { badge, open, isHot };
+
+function publishSnapshot() {
+  snapshot = { badge, open, isHot };
+  for (const fn of listeners) fn();
+}
+
 export function getTradeInboxUiSnapshot(): TradeInboxUiSnapshot {
-  return { badge, open, isHot };
+  return snapshot;
 }
 
 export function subscribeTradeInboxUi(fn: Listener) {
@@ -29,15 +33,16 @@ export function subscribeTradeInboxUi(fn: Listener) {
 }
 
 export function setTradeInboxUiBadge(next: number, hot: boolean) {
+  if (badge === next && isHot === hot) return;
   badge = next;
   isHot = hot;
-  notify();
+  publishSnapshot();
 }
 
 export function setTradeInboxUiOpen(next: boolean) {
   if (open === next) return;
   open = next;
-  notify();
+  publishSnapshot();
 }
 
 export function toggleTradeInboxUiOpen() {
