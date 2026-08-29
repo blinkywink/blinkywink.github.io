@@ -38,6 +38,11 @@ function isGithubHostedOtaFile(relativePath: string): boolean {
   return relativePath === "index.html" || relativePath.startsWith("assets/");
 }
 
+/** OTA ships JS/CSS only — static media loads from monkeycards.app on native. */
+function isOtaManifestFile(relativePath: string): boolean {
+  return isGithubHostedOtaFile(relativePath);
+}
+
 function otaSiteUrl(relativePath: string): string {
   return `${OTA_SITE_BASE}/${relativePath.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -133,6 +138,7 @@ function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>):
   mkdirSync(stagingDir, { recursive: true });
 
   for (const rel of relFiles) {
+    if (!isOtaManifestFile(rel)) continue;
     const abs = join(DIST, rel);
     if (!existsSync(abs)) {
       throw new Error(`OTA file missing: ${rel}`);

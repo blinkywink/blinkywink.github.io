@@ -26,6 +26,35 @@ type GateStatus = "idle" | "updating" | "blocked";
 const RECHECK_MS = 90_000;
 /** Let Capgo settle after reload before we decide another OTA is needed. */
 const BOOT_SETTLE_MS = 2_500;
+const DOWNLOAD_TIMEOUT_MS = 8 * 60_000;
+const DOWNLOAD_STALL_MS = 45_000;
+
+function watchOtaDownload<T>(
+  promise: Promise<T>,
+  onStall: () => void,
+  progressRef: { value: number | null; at: number },
+): Promise<T> {
+  let stallNotified = false;
+  const tick = window.setInterval(() => {
+    if (progressRef.value == null) return;
+    if (Date.now() - progressRef.at < DOWNLOAD_STALL_MS) return;
+    if (!stallNotified) {
+      stallNotified = true;
+      onStall();
+    }
+  }, 5_000);
+
+  const timeout = new Promise<never>((_, reject) => {
+    window.setTimeout(
+      () => reject(new Error("OTA download timed out")),
+      DOWNLOAD_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    window.clearInterval(tick);
+  });
+}
 
 export function MobileUpdateGate() {
   const [status, setStatus] = useState<GateStatus>("idle");
@@ -114,17 +143,25 @@ export function MobileUpdateGate() {
       setMessage("Updating");
       setProgress(null);
 
+      const progressRef = { value: null as number | null, at: Date.now() };
+
       const handle = await CapacitorUpdater.addListener(
         "download",
         (state: { percent?: number }) => {
           if (typeof state.percent === "number") {
-            setProgress(Math.min(100, Math.max(0, state.percent)));
+            const next = Math.min(100, Math.max(0, state.percent));
+            if (progressRef.value !== next) {
+              progressRef.value = next;
+              progressRef.at = Date.now();
+            }
+            setProgress(next);
           }
         },
       );
       const failHandle = await CapacitorUpdater.addListener(
         "downloadFailed",
-        () => {
+        (state: { version?: string }) => {
+          console.warn("Mobile OTA downloadFailed", state);
           setProgress(null);
         },
       );
@@ -147,15 +184,23 @@ export function MobileUpdateGate() {
         };
 
         try {
-          const bundle = await CapacitorUpdater.download(downloadOpts);
+          const bundle = await watchOtaDownload(
+            CapacitorUpdater.download(downloadOpts),
+            () => setMessage("Still downloading… keep the app open on Wi‑Fi"),
+            progressRef,
+          );
           bundleId = bundle.id;
         } catch (downloadErr) {
           if (useManifest) throw downloadErr;
           console.warn("Mobile update download retry", downloadErr);
-          const bundle = await CapacitorUpdater.download({
-            version: bundleVersion,
-            url: manifest.url,
-          });
+          const bundle = await watchOtaDownload(
+            CapacitorUpdater.download({
+              version: bundleVersion,
+              url: manifest.url,
+            }),
+            () => setMessage("Still downloading… keep the app open on Wi‑Fi"),
+            progressRef,
+          );
           bundleId = bundle.id;
         }
 
@@ -228,22 +273,25 @@ export function MobileUpdateGate() {
       <div className="desktop-online-gate__card">
         <h1>{status === "updating" ? "Updating" : "Update required"}</h1>
         {status === "updating" ? (
-          <div
-            className="desktop-online-gate__progress"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress == null ? undefined : Math.round(progress)}
-            aria-label="Downloading update"
-          >
+          <>
+            {message !== "Updating" ? <p>{message}</p> : null}
             <div
-              className="desktop-online-gate__progress-bar"
-              style={{
-                width: progress == null ? "40%" : `${progress}%`,
-                opacity: progress == null ? 0.7 : 1,
-              }}
-            />
-          </div>
+              className="desktop-online-gate__progress"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress == null ? undefined : Math.round(progress)}
+              aria-label="Downloading update"
+            >
+              <div
+                className="desktop-online-gate__progress-bar"
+                style={{
+                  width: progress == null ? "40%" : `${progress}%`,
+                  opacity: progress == null ? 0.7 : 1,
+                }}
+              />
+            </div>
+          </>
         ) : (
           <>
             <p>{message}</p>

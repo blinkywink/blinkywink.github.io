@@ -21,8 +21,8 @@ const config: CapacitorConfig = {
     CapacitorUpdater: {
       autoUpdate: false,
       statsUrl: "",
-      appReadyTimeout: 30000,
-      responseTimeout: 120,
+      appReadyTimeout: 120000,
+      responseTimeout: 300,
       /* Self-hosted OTA — app fetches mobile-latest.json and downloads the zip. */
     },
   },
