@@ -255,11 +255,11 @@ function pruneStaleOtaAssets(keepAssetNames: Set<string>) {
   for (const asset of stale) {
     const result = spawnSync(
       "gh",
-      ["api", "-X", "DELETE", `/repos/${REPO}/releases/assets/${asset.id}`],
-      { stdio: "inherit", env: process.env },
+      ["release", "delete-asset", MOBILE_TAG, asset.name, "--repo", REPO, "--yes"],
+      { stdio: "pipe", encoding: "utf8", env: process.env },
     );
     if (result.status !== 0) {
-      throw new Error(`Failed to delete release asset ${asset.name}`);
+      console.warn(`Could not delete ${asset.name}: ${result.stderr?.trim() || "unknown error"}`);
     }
   }
 }
