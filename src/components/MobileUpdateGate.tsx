@@ -3,6 +3,7 @@ import { isNativeShell, nativeShellReady } from "../lib/nativeShell";
 import {
   clearMobileOtaFailure,
   clearMobileOtaSkip,
+  markMobileOtaApplied,
   recordMobileOtaFailure,
   shouldAutoInstallMobileOta,
   skipMobileOta,
@@ -15,6 +16,7 @@ import {
   needsWebUpdate,
   bundledAppVersion,
   otaBundleVersion,
+  otaChecksumSuffix,
   type MobileLatestManifest,
 } from "../lib/mobileUpdates";
 import { ExternalLink } from "./ExternalLink";
@@ -91,6 +93,7 @@ export function MobileUpdateGate() {
 
       if (!needsWebUpdate(currentWeb, manifest)) {
         clearMobileOtaFailure();
+        markMobileOtaApplied(otaChecksumSuffix(manifest.checksum));
         setStatus("idle");
         return;
       }
@@ -158,6 +161,7 @@ export function MobileUpdateGate() {
 
         setProgress(100);
         await CapacitorUpdater.notifyAppReady();
+        markMobileOtaApplied(otaChecksumSuffix(manifest.checksum));
         await CapacitorUpdater.set({ id: bundleId! });
         clearMobileOtaFailure();
         /* set() reloads the WebView — may not return */

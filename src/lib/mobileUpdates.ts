@@ -2,6 +2,7 @@
 
 import { APP_VERSION } from "./appVersion";
 import { isOlderVersion } from "./desktopDownloads";
+import { getAppliedOtaChecksum } from "./mobileOtaGuard";
 
 export const MOBILE_APK_URL =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.apk";
@@ -150,7 +151,11 @@ export function needsWebUpdate(
   if (isOlderVersion(remoteChannel, curChannel)) return false;
 
   // Capgo on iOS often reports plain channel semver after set(), not the -ota hash id.
-  if (curChannel === remoteChannel && !curSum) return false;
+  if (curChannel === remoteChannel && !curSum) {
+    const applied = getAppliedOtaChecksum();
+    if (applied === remoteSum) return false;
+    return true;
+  }
 
   if (curChannel === remoteChannel && curSum === remoteSum) return false;
 
