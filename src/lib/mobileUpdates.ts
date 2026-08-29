@@ -10,15 +10,23 @@ export const MOBILE_IPA_URL =
 export const MOBILE_RELEASE_PAGE =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest";
 
+export type OtaManifestEntry = {
+  file_name: string;
+  file_hash: string;
+  download_url: string;
+};
+
 export type MobileLatestManifest = {
   /** Latest web bundle version (OTA). */
   version: string;
   /** Minimum native APK/IPA version that can run this web (or any OTA). */
   minNativeVersion: string;
-  /** Zip of `dist/` for the Capgo updater. */
+  /** Legacy full-zip URL (unused when `manifest` is present). */
   url: string;
-  /** sha256 hex of the zip. */
+  /** sha256 hex of the bundle or manifest fingerprint. */
   checksum: string;
+  /** Per-file delta update — only changed JS/CSS is downloaded. */
+  manifest?: OtaManifestEntry[];
   message?: string;
 };
 
@@ -50,7 +58,21 @@ export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest 
         const minNativeVersion = String(data.minNativeVersion ?? "").trim();
         const manifestUrl = String(data.url ?? "").trim();
         const checksum = String(data.checksum ?? "").trim();
-        if (!version || !minNativeVersion || !manifestUrl) return;
+        const manifest = Array.isArray(data.manifest)
+          ? data.manifest
+              .map((entry) => ({
+                file_name: String(entry?.file_name ?? "").trim(),
+                file_hash: String(entry?.file_hash ?? "").trim(),
+                download_url: String(entry?.download_url ?? "").trim(),
+              }))
+              .filter(
+                (entry) =>
+                  entry.file_name && entry.file_hash && entry.download_url,
+              )
+          : undefined;
+        if (!version || !minNativeVersion) return;
+        if (!manifest?.length && !manifestUrl) return;
+        if (!checksum) return;
         found.push({
           rank,
           manifest: {
@@ -58,6 +80,7 @@ export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest 
             minNativeVersion,
             url: manifestUrl,
             checksum,
+            manifest,
             message: data.message ? String(data.message) : undefined,
           },
         });

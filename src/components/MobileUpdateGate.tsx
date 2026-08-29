@@ -114,17 +114,31 @@ export function MobileUpdateGate() {
           }
         },
       );
+      const failHandle = await CapacitorUpdater.addListener(
+        "downloadFailed",
+        () => {
+          setProgress(null);
+        },
+      );
 
       let bundleId: string | null = null;
       try {
+        const useManifest = Boolean(manifest.manifest?.length);
+        const downloadOpts = {
+          version: bundleVersion,
+          url: useManifest ? "" : manifest.url,
+          ...(useManifest
+            ? { manifest: manifest.manifest }
+            : manifest.checksum
+              ? { checksum: manifest.checksum }
+              : {}),
+        };
+
         try {
-          const bundle = await CapacitorUpdater.download({
-            version: bundleVersion,
-            url: manifest.url,
-            ...(manifest.checksum ? { checksum: manifest.checksum } : {}),
-          });
+          const bundle = await CapacitorUpdater.download(downloadOpts);
           bundleId = bundle.id;
         } catch (downloadErr) {
+          if (useManifest) throw downloadErr;
           console.warn("Mobile update download retry", downloadErr);
           const bundle = await CapacitorUpdater.download({
             version: bundleVersion,
@@ -141,6 +155,11 @@ export function MobileUpdateGate() {
       } finally {
         try {
           await handle.remove();
+        } catch {
+          /* ignore */
+        }
+        try {
+          await failHandle.remove();
         } catch {
           /* ignore */
         }

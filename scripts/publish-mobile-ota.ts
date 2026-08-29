@@ -13,8 +13,10 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -23,13 +25,111 @@ import { bumpSemver, parseSemver, REPO, readDesktopVersion } from "./desktop-ver
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
 const OUT_DIR = join(ROOT, "android-artifacts");
-const ZIP_NAME = "MonkeyCards-web.zip";
 const PUBLIC_JSON = join(ROOT, "public", "mobile-latest.json");
+const OTA_ASSET_PREFIX = "ota__";
 const raiseFloor = process.argv.includes("--raise-native-floor");
 const skipBuild = process.argv.includes("--skip-build");
 
 const MOBILE_TAG = "mobile";
-const ZIP_URL = `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${ZIP_NAME}`;
+
+type OtaManifestEntry = {
+  file_name: string;
+  file_hash: string;
+  download_url: string;
+};
+
+function otaAssetName(relativePath: string): string {
+  return OTA_ASSET_PREFIX + relativePath.replace(/\//g, "__");
+}
+
+function otaFileUrl(assetName: string): string {
+  return `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${assetName}`;
+}
+
+function collectOtaRelativeFiles(dir: string, prefix = ""): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    if (name === ".DS_Store") continue;
+    const rel = prefix ? `${prefix}/${name}` : name;
+    const abs = join(dir, name);
+    if (statSync(abs).isDirectory()) {
+      out.push(...collectOtaRelativeFiles(abs, rel));
+    } else {
+      out.push(rel);
+    }
+  }
+  return out;
+}
+
+/** Code-only bundle — images/music/sounds stay in the builtin APK. */
+function listOtaBundleFiles(): string[] {
+  const files = ["index.html"];
+  const assetsDir = join(DIST, "assets");
+  if (existsSync(assetsDir)) {
+    files.push(...collectOtaRelativeFiles(assetsDir, "assets"));
+  }
+  return files.sort();
+}
+
+function sha256File(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+function manifestChecksum(entries: OtaManifestEntry[]): string {
+  const body = entries
+    .map((entry) => `${entry.file_name}\t${entry.file_hash}`)
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(body).digest("hex");
+}
+
+function buildOtaManifest(): {
+  entries: OtaManifestEntry[];
+  checksum: string;
+  stagedFiles: string[];
+} {
+  rmSync(join(DIST, "downloads"), { recursive: true, force: true });
+
+  const relFiles = listOtaBundleFiles();
+  const entries: OtaManifestEntry[] = [];
+  const stagedFiles: string[] = [];
+  const stagingDir = join(OUT_DIR, "ota-files");
+  rmSync(stagingDir, { recursive: true, force: true });
+  mkdirSync(stagingDir, { recursive: true });
+
+  for (const rel of relFiles) {
+    const abs = join(DIST, rel);
+    if (!existsSync(abs)) {
+      throw new Error(`OTA file missing: ${rel}`);
+    }
+    const assetName = otaAssetName(rel);
+    const staged = join(stagingDir, assetName);
+    copyFileSync(abs, staged);
+    stagedFiles.push(staged);
+    entries.push({
+      file_name: rel,
+      file_hash: sha256File(abs),
+      download_url: otaFileUrl(assetName),
+    });
+  }
+
+  return { entries, checksum: manifestChecksum(entries), stagedFiles };
+}
+
+function ghUploadAssets(paths: string[]) {
+  const batchSize = 40;
+  for (let i = 0; i < paths.length; i += batchSize) {
+    gh([
+      "release",
+      "upload",
+      MOBILE_TAG,
+      "--repo",
+      REPO,
+      "--clobber",
+      ...paths.slice(i, i + batchSize),
+    ]);
+  }
+}
 
 function isOlderVersion(current: string, minimum: string): boolean {
   const a = parseSemver(current);
@@ -108,6 +208,7 @@ function fetchReleaseManifest(): {
   url?: string;
   checksum?: string;
   message?: string;
+  manifest?: OtaManifestEntry[];
 } | null {
   const result = spawnSync(
     "gh",
@@ -135,6 +236,7 @@ function fetchReleaseManifest(): {
       url?: string;
       checksum?: string;
       message?: string;
+      manifest?: OtaManifestEntry[];
     };
   } catch {
     return null;
@@ -163,6 +265,7 @@ function writeManifest(manifest: {
   url: string;
   checksum: string;
   message: string;
+  manifest?: OtaManifestEntry[];
 }) {
   mkdirSync(OUT_DIR, { recursive: true });
   const body = `${JSON.stringify(manifest, null, 2)}\n`;
@@ -186,10 +289,12 @@ if (raiseFloor && skipBuild) {
         checksum?: string;
         url?: string;
         version?: string;
+        manifest?: OtaManifestEntry[];
       })
     : null;
   const checksum = String(fromRelease?.checksum ?? fromPublic?.checksum ?? "");
-  const url = String(fromRelease?.url ?? fromPublic?.url ?? ZIP_URL);
+  const url = String(fromRelease?.url ?? fromPublic?.url ?? "");
+  const manifest = fromRelease?.manifest ?? fromPublic?.manifest;
   const channelVersion = String(
     fromRelease?.version ?? fromPublic?.version ?? appVersion,
   ).trim();
@@ -204,18 +309,11 @@ if (raiseFloor && skipBuild) {
     url,
     checksum,
     message: "Sorry, you need to redownload the app to update.",
+    manifest,
   });
   ensureMobileRelease();
-  gh([
-    "release",
-    "upload",
-    MOBILE_TAG,
-    "--repo",
-    REPO,
-    "--clobber",
-    stagedJson,
-  ]);
-  console.log(`\nRaised minNativeVersion → ${appVersion} (zip unchanged)`);
+  ghUploadAssets([stagedJson]);
+  console.log(`\nRaised minNativeVersion → ${appVersion} (OTA bundle unchanged)`);
   console.log(`  channel version: ${channelVersion}`);
   console.log(`  checksum: ${checksum}`);
   console.log(`  wrote ${PUBLIC_JSON}`);
@@ -229,11 +327,7 @@ if (!existsSync(join(DIST, "index.html"))) {
   throw new Error("dist/index.html missing — build first");
 }
 
-const zipPath = join(OUT_DIR, ZIP_NAME);
-rmSync(zipPath, { force: true });
-sh(`zip -qr '${zipPath}' .`, DIST);
-
-const checksum = createHash("sha256").update(readFileSync(zipPath)).digest("hex");
+const { entries, checksum, stagedFiles } = buildOtaManifest();
 const channelVersion = nextChannelVersion(appVersion, fromRelease?.version);
 const minNativeVersion = raiseFloor
   ? appVersion
@@ -242,36 +336,19 @@ const minNativeVersion = raiseFloor
 const stagedJson = writeManifest({
   version: channelVersion,
   minNativeVersion,
-  url: ZIP_URL,
+  url: "",
   checksum,
   message: "Sorry, you need to redownload the app to update.",
+  manifest: entries,
 });
 
 ensureMobileRelease();
+ghUploadAssets([...stagedFiles, stagedJson]);
 
-gh([
-  "release",
-  "upload",
-  MOBILE_TAG,
-  "--repo",
-  REPO,
-  "--clobber",
-  zipPath,
-]);
-gh([
-  "release",
-  "upload",
-  MOBILE_TAG,
-  "--repo",
-  REPO,
-  "--clobber",
-  stagedJson,
-]);
-
-console.log(`\nOTA published`);
+console.log(`\nOTA published (manifest delta)`);
 console.log(`  app UI version: ${appVersion}`);
 console.log(`  channel version: ${channelVersion}`);
-console.log(`  zip: ${ZIP_URL}`);
+console.log(`  files: ${entries.length}`);
 console.log(`  minNativeVersion: ${minNativeVersion}`);
 console.log(`  checksum: ${checksum}`);
 console.log(`  wrote ${PUBLIC_JSON}`);
