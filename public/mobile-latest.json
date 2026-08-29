@@ -1,8 +1,8 @@
 {
-  "version": "1.0.54",
+  "version": "1.0.55",
   "minNativeVersion": "1.0.18",
   "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__index.html",
-  "checksum": "7dde3e51f1121709207245508df8abeebc05275a135b65da9e6de8daea5a9b5e",
+  "checksum": "5a352f88cf6c52d65770af31ce43b54f5b0272d7e0ea864a84222a1bd42ffe67",
   "message": "Sorry, you need to redownload the app to update.",
   "manifest": [
     {
@@ -239,6 +239,26 @@
       "file_name": "assets/zoomed-TJ02FDA_.js",
       "file_hash": "8113adfcb00a77e51350a6a8cd83cb452c536dbece210f0d3bb60e7ef16c4fed",
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__zoomed-TJ02FDA_.js"
+    },
+    {
+      "file_name": "images/packs/category-magic-mosaic.webp",
+      "file_hash": "78104e6d8f389770f918cfdab07bad79aedb3115b4381874f0a25fc16bed22dd",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__images__packs__category-magic-mosaic.webp"
+    },
+    {
+      "file_name": "images/packs/category-military-mosaic.webp",
+      "file_hash": "1deb779f09f9d1436dd950d8123232e15fb3c91183cae63438d2dbd5307d32fc",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__images__packs__category-military-mosaic.webp"
+    },
+    {
+      "file_name": "images/packs/category-primary-mosaic.webp",
+      "file_hash": "3867ce8813861a03ecd9b6dae7aa8e0068554c587b3691f5f8a933cd79e797e0",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__images__packs__category-primary-mosaic.webp"
+    },
+    {
+      "file_name": "images/packs/category-support-mosaic.webp",
+      "file_hash": "a647c997c5837e572a02d3ecac6dad2388b176570c8b2c63b100892a3f4a891e",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__images__packs__category-support-mosaic.webp"
     },
     {
       "file_name": "index.html",
