@@ -1,8 +1,8 @@
 {
-  "version": "1.0.51",
+  "version": "1.0.52",
   "minNativeVersion": "1.0.18",
   "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__index.html",
-  "checksum": "db60d5fe7652a05f09f46283d3cba075d7af4d32abb2a791f21fecbf1d5b9821",
+  "checksum": "b1cea3544aa8e985045313388c76b883d6a65c30d326a16c41ec5c27bae66c5a",
   "message": "Sorry, you need to redownload the app to update.",
   "manifest": [
     {
@@ -31,24 +31,24 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__bloonhero-CakVbdhP.js"
     },
     {
-      "file_name": "assets/bloonle-C7hreP8y.js",
-      "file_hash": "369f96b8c0b834c442e79d0a93d43f5ff36907854c619bfdb2244fe3c73ff39f",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__bloonle-C7hreP8y.js"
+      "file_name": "assets/bloonle-S2AKVFBD.js",
+      "file_hash": "6f11c7a5954cf9358d46124aa80a7197aaf689b663ab34a541cd7c5a20c5c4a3",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__bloonle-S2AKVFBD.js"
     },
     {
-      "file_name": "assets/bloonssweeper-DDQ5OwTV.js",
-      "file_hash": "ce6f8e8441c35aa62d5b32452f020a0c4d4f8f7d55f6fa5f1350f33bacae3618",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__bloonssweeper-DDQ5OwTV.js"
+      "file_name": "assets/bloonssweeper-D7cM5b7q.js",
+      "file_hash": "596448235560b4a439b2771ccde86e32bcbd1ba4a72192f267ee05bac99496d1",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__bloonssweeper-D7cM5b7q.js"
     },
     {
-      "file_name": "assets/blowfree-Dn0rQJHu.js",
-      "file_hash": "1a49bd2cc606b42ef6f51b733e10d9fb414d86b7a38a81e6d4b4060c61ed114d",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__blowfree-Dn0rQJHu.js"
+      "file_name": "assets/blowfree-BcM3pK1M.js",
+      "file_hash": "11d4667ebcc9dd7d444bbde9db6a7a3fd61db0155f5c28925b5a5e56d1dc3e2e",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__blowfree-BcM3pK1M.js"
     },
     {
-      "file_name": "assets/camodetection-DxrjiBKx.js",
-      "file_hash": "a648db69bce1efdca3e468b3d3b31f14e1abf19fa738fd77e5dc7ff41bf51fc9",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__camodetection-DxrjiBKx.js"
+      "file_name": "assets/camodetection-CD_L_LiY.js",
+      "file_hash": "bdf3d09d80c54f1ac55cdc3e5236c3c78534a6b88709eff713a9b6796309aa89",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__camodetection-CD_L_LiY.js"
     },
     {
       "file_name": "assets/core-CVG6UcSd.js",
@@ -76,29 +76,29 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__dist-js-kZc6QmTE.js"
     },
     {
-      "file_name": "assets/esm-CbfQWGTg.js",
-      "file_hash": "b88286155518e4362b3b1af8fed2c6e7bba6d5ad3a27887c423925512779a068",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-CbfQWGTg.js"
+      "file_name": "assets/esm-6J5jofsF.js",
+      "file_hash": "85aaa487b28f88c04d13795fe40ab1cdc6d6d8852e249755b0ec65d79f15bf30",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-6J5jofsF.js"
     },
     {
-      "file_name": "assets/esm-Cp5kqx_Q.js",
-      "file_hash": "f532352d9c06e6c37a9fda9ae8988155d59fc34c35214fa6aff4bd30692a7ef9",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-Cp5kqx_Q.js"
+      "file_name": "assets/esm-Bo-AdHD7.js",
+      "file_hash": "01986a428548565c91683745826eda8d4d37931307a92dddea0b644d9f70923c",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-Bo-AdHD7.js"
     },
     {
-      "file_name": "assets/esm-DVBDuYdP.js",
-      "file_hash": "5602c449c0dfeb84ed99badaa3813f25006403629d26c875b64941c465a378e6",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-DVBDuYdP.js"
+      "file_name": "assets/esm-CgsueG-7.js",
+      "file_hash": "791eb76083f3f2ce71dfae1cbb0fea86e8de02af40b8822022df7a68f113ebdb",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-CgsueG-7.js"
     },
     {
-      "file_name": "assets/esm-DYIwQzpP.js",
-      "file_hash": "1e6c97c1cafb3ce4f6eb1aea7d246d3542238b27876e975f357b433d736c6310",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-DYIwQzpP.js"
+      "file_name": "assets/esm-DNh11siO.js",
+      "file_hash": "0daba29ccfa063d2b50494d419e2692badf42e0d42b0d56134cdb26c3c37e7f9",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-DNh11siO.js"
     },
     {
-      "file_name": "assets/esm-Dwi4XWZi.js",
-      "file_hash": "f3fc7075a8d30ad1dbcd90018ed6f5e77841f3b923d7a20372e6e1a7f9e2c11e",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-Dwi4XWZi.js"
+      "file_name": "assets/esm-DcHO0pfC.js",
+      "file_hash": "85a2276f5c0a1ccb5342251f68501206922050cb590490dca3106bf3b66424d2",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__esm-DcHO0pfC.js"
     },
     {
       "file_name": "assets/fredoka-latin-500-normal-B0JifZgm.woff2",
@@ -131,19 +131,19 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__fredoka-latin-700-normal-C8FeHd3X.woff"
     },
     {
-      "file_name": "assets/geoguessr-Cn4Yp7Mh.js",
-      "file_hash": "9ad3ad8ee8667c300f8579a1faa1b2905c13bed8d4911756cb00a473fe47262f",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__geoguessr-Cn4Yp7Mh.js"
+      "file_name": "assets/geoguessr-DrEK535O.js",
+      "file_hash": "6eb252a53b927b983b6956bf75fc437f4637547d40ee224ddf3fa851e56acda9",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__geoguessr-DrEK535O.js"
     },
     {
-      "file_name": "assets/index-DTsVjkeO.css",
-      "file_hash": "34fe2b02455932e800f8d01ac18c083815df3cd23ffc9881ef0cc92d980672f2",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__index-DTsVjkeO.css"
+      "file_name": "assets/index-CQwVcrKq.js",
+      "file_hash": "8fc236cf18474ec70aa58ff3f6543fc7b05ea24a4d01af90114fa93c48378ec3",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__index-CQwVcrKq.js"
     },
     {
-      "file_name": "assets/index-dNv25Aev.js",
-      "file_hash": "cc27ad3f5bbf3ad17de703682183b432e5b2e88a91a3d3b978977c454cedd172",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__index-dNv25Aev.js"
+      "file_name": "assets/index-yuvSeVrD.css",
+      "file_hash": "90f5590d89b85ddfdfed064ee88ffbdb6cc11a78895f445bf6a2cad75558bb39",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__index-yuvSeVrD.css"
     },
     {
       "file_name": "assets/luckiest-guy-latin-400-normal-dJClyBWO.woff2",
@@ -186,14 +186,14 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__nunito-latin-800-normal-Dz8SOQK_.woff2"
     },
     {
-      "file_name": "assets/orderup-4J_FMenN.js",
-      "file_hash": "a12e6b6b8fde7551a159ede43ba7ce6e2022453f51d88161c1de25660f10f11f",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__orderup-4J_FMenN.js"
+      "file_name": "assets/orderup-Cpa2H5Jx.js",
+      "file_hash": "972f23abb8fe2a8f2656ac4a963f7ebef1fb648b0ba4cc5508b4e5edb8a01c60",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__orderup-Cpa2H5Jx.js"
     },
     {
-      "file_name": "assets/pricecheck-CpUKpNg0.js",
-      "file_hash": "0b0c43e0a79f97d5eaa45aaac6783b2d7f2e43f5d41d818b962616e79663347c",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__pricecheck-CpUKpNg0.js"
+      "file_name": "assets/pricecheck-CHYeXPlQ.js",
+      "file_hash": "886d6bd352a893f605ae4df52b6e655e40ab8d1969da19e1278e34b5b6d3fdf9",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__pricecheck-CHYeXPlQ.js"
     },
     {
       "file_name": "assets/react-vendor-Dd60PVNK.js",
@@ -201,9 +201,9 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__react-vendor-Dd60PVNK.js"
     },
     {
-      "file_name": "assets/ricoshot-DvLgsiUa.js",
-      "file_hash": "935a386dad32e252332d826da9b5113be448ea97415e3380e2ac3018263c793f",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__ricoshot-DvLgsiUa.js"
+      "file_name": "assets/ricoshot-BGLOlMx0.js",
+      "file_hash": "7bf282f1b537760bc49e2a383ca1c19b4cb6ef6029733046eb3a60e755d9b0d4",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__ricoshot-BGLOlMx0.js"
     },
     {
       "file_name": "assets/rolldown-runtime-hePW80VL.js",
@@ -211,39 +211,39 @@
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__rolldown-runtime-hePW80VL.js"
     },
     {
-      "file_name": "assets/roundcheck-BEAVgSNo.js",
-      "file_hash": "8b94706d402887f658bc3af6c2cc3e7503c80856f0ad5f2cefc80e8058d025ed",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__roundcheck-BEAVgSNo.js"
+      "file_name": "assets/roundcheck-B0GgJrWA.js",
+      "file_hash": "48781dd99c2dcb72dbcfdb2ced1d7621a9dcaadb1266821e1730a789862d46cc",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__roundcheck-B0GgJrWA.js"
     },
     {
-      "file_name": "assets/searchEntities-CKHfs25r.js",
-      "file_hash": "2f26d13d951e74be2a6a889a7dc61e7e99974287f105504311074a68f6563a1a",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__searchEntities-CKHfs25r.js"
+      "file_name": "assets/searchEntities-B9plEt3n.js",
+      "file_hash": "97a3608a0238def319757a862bc82e501a228dd232b0638e06b3db6d4cc07271",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__searchEntities-B9plEt3n.js"
     },
     {
-      "file_name": "assets/web-70uQshnu.js",
-      "file_hash": "05229e6e497676d0657d01a87fbf28aab3de69d35870e7aac1268acff1b2931c",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-70uQshnu.js"
+      "file_name": "assets/web-B2trFJKk.js",
+      "file_hash": "baf5e1104aab1a5f9087a69e2ba1b55fc442f401a9e94057e112e7e917ff7fa5",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-B2trFJKk.js"
     },
     {
-      "file_name": "assets/web-BM0eND57.js",
-      "file_hash": "83769fbe506d877175551cc26b615fd55c1f4d7815a5230152c1e13fdfe1aa02",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-BM0eND57.js"
+      "file_name": "assets/web-BN_ORuIn.js",
+      "file_hash": "0b2bbf7a2f3a0cd2b735dfbbd6fa04919bf8342c5c6b007cd0b8ee6ade6c9e38",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-BN_ORuIn.js"
     },
     {
-      "file_name": "assets/web-DQYa40uV.js",
-      "file_hash": "7f47e8990f73a0ee3aa74d65f61fe8adb1e2e92b74306b1b153b1c93c1716cc1",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-DQYa40uV.js"
+      "file_name": "assets/web-DU_kv9SL.js",
+      "file_hash": "3cf1acb9345ac75e1b743808d2195a98a03a07c33555473176e1213d7cb74d2e",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-DU_kv9SL.js"
     },
     {
-      "file_name": "assets/web-h6mOvhmf.js",
-      "file_hash": "88f2e74ab3a3bd455f30da4ed96fef9dd675d57ce21bef7351d1b8995ab38c2e",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-h6mOvhmf.js"
+      "file_name": "assets/web-DY4hXYVG.js",
+      "file_hash": "5583adbf115a37e6107f843f378e0c1c6e57cbcc4f5688eb69229c0ecf3e4995",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__web-DY4hXYVG.js"
     },
     {
-      "file_name": "assets/zoomed-BQ61oHkl.js",
-      "file_hash": "1a2187f3dc70822895097c70d4d97a8e073b55d6ea9a486616e5e53cca8d168c",
-      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__zoomed-BQ61oHkl.js"
+      "file_name": "assets/zoomed-CMOPPh6B.js",
+      "file_hash": "492edd644a32e9691a2e8a8e770518cf65a366f358844ea26a9208ce312e5978",
+      "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__assets__zoomed-CMOPPh6B.js"
     },
     {
       "file_name": "favicon-32.png",
@@ -5962,7 +5962,7 @@
     },
     {
       "file_name": "index.html",
-      "file_hash": "1c34a0f3ab968dcb9327f73d565a0b8ba1b827403386c0a9aacf1913624d1a89",
+      "file_hash": "861606d23270f49eb74c4ccfb25f23f10076ba8dea421d2c3fa77990c85b8531",
       "download_url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__index.html"
     },
     {
