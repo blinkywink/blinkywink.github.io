@@ -16,8 +16,11 @@ export function isAndroidNative(): boolean {
   return document.documentElement.dataset.platform === "android";
 }
 
+/** Resolves once native plugins are configured and Capgo got notifyAppReady. */
+export const nativeShellReady: Promise<void> = initNativeShell();
+
 /** Configure status bar / splash / OTA ready once the WebView is ready. */
-export async function initNativeShell(): Promise<void> {
+async function initNativeShell(): Promise<void> {
   if (!isNativeShell()) return;
   document.documentElement.dataset.native = "1";
   try {
@@ -25,6 +28,7 @@ export async function initNativeShell(): Promise<void> {
   } catch {
     /* ignore */
   }
+  /* Capgo set() waits for this after reload — run before React mounts. */
   try {
     const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
     await CapacitorUpdater.notifyAppReady();

@@ -16,11 +16,10 @@ import "@fontsource/nunito/latin-700.css";
 import "@fontsource/nunito/latin-800.css";
 import "@fontsource/luckiest-guy/latin-400.css";
 import { initSiteTheme } from "./lib/siteTheme";
-import { initNativeShell } from "./lib/nativeShell";
+import { nativeShellReady } from "./lib/nativeShell";
 import "./index.css";
 
 initSiteTheme();
-void initNativeShell();
 
 const root = document.getElementById("root")!;
 
@@ -63,6 +62,8 @@ function renderApp() {
 }
 
 async function boot() {
+  await nativeShellReady;
+
   if (!supabaseConfigured) {
     renderMissingConfig();
     return;

@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { isNativeShell } from "../lib/nativeShell";
 
 const RELOAD_KEY = "bloon-arcade:blank-recover";
 const RELOAD_COOLDOWN_MS = 15_000;
@@ -33,11 +34,23 @@ export function isChunkLoadError(error: unknown): boolean {
  * Soft-recover from a blank/crashed React tree.
  * Reloads once per cooldown; otherwise shows a simple retry card.
  */
+function cacheBustReload(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set("_cb", String(Date.now()));
+  window.location.replace(url.toString());
+}
+
 export function recoverFromBlank(reason: string): boolean {
   if (typeof window === "undefined") return false;
+  /* Native OTA reload loops look like render crashes — don't auto-reload. */
+  if (isNativeShell()) return false;
   if (recentReloadAttempt()) return false;
   console.warn(`[recover] reloading (${reason})`);
   markReloadAttempt();
+  if (reason === "chunk" || reason === "lazy-chunk") {
+    cacheBustReload();
+    return true;
+  }
   window.location.reload();
   return true;
 }
@@ -64,7 +77,12 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   private retry = () => {
+    const err = this.state.error;
     this.setState({ error: null });
+    if (isChunkLoadError(err)) {
+      cacheBustReload();
+      return;
+    }
     window.location.assign(window.location.href);
   };
 

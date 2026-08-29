@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isNativeShell } from "../lib/nativeShell";
+import { isNativeShell, nativeShellReady } from "../lib/nativeShell";
+import {
+  clearMobileOtaFailure,
+  clearMobileOtaSkip,
+  recordMobileOtaFailure,
+  shouldAutoInstallMobileOta,
+  skipMobileOta,
+} from "../lib/mobileOtaGuard";
 import {
   MOBILE_APK_URL,
   MOBILE_IPA_URL,
@@ -15,34 +22,45 @@ import { ExternalLink } from "./ExternalLink";
 type GateStatus = "idle" | "updating" | "blocked";
 
 const RECHECK_MS = 90_000;
+/** Let Capgo settle after reload before we decide another OTA is needed. */
+const BOOT_SETTLE_MS = 2_500;
 
 export function MobileUpdateGate() {
   const [status, setStatus] = useState<GateStatus>("idle");
   const [message, setMessage] = useState("Updating");
   const [progress, setProgress] = useState<number | null>(null);
   const [remote, setRemote] = useState<MobileLatestManifest | null>(null);
+  const [skipVersion, setSkipVersion] = useState<string | null>(null);
   const busyRef = useRef(false);
   const installingRef = useRef(false);
+  const bootedRef = useRef(false);
+  const statusRef = useRef<GateStatus>("idle");
+  statusRef.current = status;
 
-  const run = useCallback(async () => {
+  const run = useCallback(async (manual = false) => {
     if (!isNativeShell() || busyRef.current || installingRef.current) return;
     busyRef.current = true;
 
+    let bundleVersion = "";
+
     try {
+      await nativeShellReady;
+      if (!bootedRef.current) {
+        bootedRef.current = true;
+        await new Promise((r) => window.setTimeout(r, BOOT_SETTLE_MS));
+      }
+
       const [{ CapacitorUpdater }, { App }] = await Promise.all([
         import("@capgo/capacitor-updater"),
         import("@capacitor/app"),
       ]);
 
-      try {
-        await CapacitorUpdater.notifyAppReady();
-      } catch {
-        /* first paint / web stub */
-      }
-
       const manifest = await fetchMobileLatestManifest();
       setRemote(manifest);
       if (!manifest) return;
+
+      bundleVersion = otaBundleVersion(manifest);
+      setSkipVersion(bundleVersion);
 
       const info = await App.getInfo();
       const nativeVersion = String(info.version || bundledAppVersion()).trim();
@@ -65,7 +83,22 @@ export function MobileUpdateGate() {
       }
 
       if (!needsWebUpdate(currentWeb, manifest)) {
+        clearMobileOtaFailure();
+        setStatus("idle");
         return;
+      }
+
+      if (!manual && !shouldAutoInstallMobileOta(bundleVersion)) {
+        setStatus("blocked");
+        setMessage(
+          "Update paused after a failed install. Retry when you have a stable connection, or continue on the current version.",
+        );
+        return;
+      }
+
+      if (manual) {
+        clearMobileOtaSkip();
+        clearMobileOtaFailure();
       }
 
       installingRef.current = true;
@@ -82,26 +115,29 @@ export function MobileUpdateGate() {
         },
       );
 
+      let bundleId: string | null = null;
       try {
-        const bundle = await CapacitorUpdater.download({
-          version: otaBundleVersion(manifest),
-          url: manifest.url,
-          ...(manifest.checksum
-            ? { checksum: manifest.checksum }
-            : {}),
-        });
+        try {
+          const bundle = await CapacitorUpdater.download({
+            version: bundleVersion,
+            url: manifest.url,
+            ...(manifest.checksum ? { checksum: manifest.checksum } : {}),
+          });
+          bundleId = bundle.id;
+        } catch (downloadErr) {
+          console.warn("Mobile update download retry", downloadErr);
+          const bundle = await CapacitorUpdater.download({
+            version: bundleVersion,
+            url: manifest.url,
+          });
+          bundleId = bundle.id;
+        }
+
         setProgress(100);
-        await CapacitorUpdater.set({ id: bundle.id });
+        await CapacitorUpdater.notifyAppReady();
+        await CapacitorUpdater.set({ id: bundleId! });
+        clearMobileOtaFailure();
         /* set() reloads the WebView — may not return */
-      } catch (downloadErr) {
-        /* Some Capgo builds reject checksum — retry without it, same bundle id. */
-        console.warn("Mobile update download retry", downloadErr);
-        const bundle = await CapacitorUpdater.download({
-          version: otaBundleVersion(manifest),
-          url: manifest.url,
-        });
-        setProgress(100);
-        await CapacitorUpdater.set({ id: bundle.id });
       } finally {
         try {
           await handle.remove();
@@ -112,21 +148,37 @@ export function MobileUpdateGate() {
     } catch (err) {
       console.warn("Mobile update failed", err);
       installingRef.current = false;
+      if (bundleVersion) recordMobileOtaFailure(bundleVersion);
       setStatus("blocked");
       setMessage(
-        "Could not finish the update. Redownload the app, or retry when you have a better connection.",
+        "Could not finish the update. Redownload the app, retry when you have a better connection, or continue on the current version.",
       );
     } finally {
       busyRef.current = false;
     }
   }, []);
 
+  const continueWithoutUpdate = useCallback(() => {
+    if (skipVersion) skipMobileOta(skipVersion);
+    installingRef.current = false;
+    setStatus("idle");
+    setProgress(null);
+  }, [skipVersion]);
+
   useEffect(() => {
     if (!isNativeShell()) return;
     void run();
-    const id = window.setInterval(() => void run(), RECHECK_MS);
+    const id = window.setInterval(() => {
+      if (statusRef.current === "blocked") return;
+      void run();
+    }, RECHECK_MS);
     const onWake = () => {
-      if (document.visibilityState === "visible") void run();
+      if (
+        document.visibilityState === "visible" &&
+        statusRef.current !== "blocked"
+      ) {
+        void run();
+      }
     };
     window.addEventListener("focus", onWake);
     document.addEventListener("visibilitychange", onWake);
@@ -170,8 +222,11 @@ export function MobileUpdateGate() {
               <ExternalLink href={MOBILE_IPA_URL} className="btn btn--primary">
                 Download iOS
               </ExternalLink>
-              <button type="button" className="btn" onClick={() => void run()}>
+              <button type="button" className="btn" onClick={() => void run(true)}>
                 Retry
+              </button>
+              <button type="button" className="btn" onClick={continueWithoutUpdate}>
+                Continue without updating
               </button>
             </div>
             {remote?.version ? (
