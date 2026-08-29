@@ -336,7 +336,7 @@ const minNativeVersion = raiseFloor
 const stagedJson = writeManifest({
   version: channelVersion,
   minNativeVersion,
-  url: "",
+  url: entries[0]?.download_url ?? "",
   checksum,
   message: "Sorry, you need to redownload the app to update.",
   manifest: entries,

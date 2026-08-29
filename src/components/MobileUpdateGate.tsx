@@ -30,6 +30,10 @@ export function MobileUpdateGate() {
   const [message, setMessage] = useState("Updating");
   const [progress, setProgress] = useState<number | null>(null);
   const [remote, setRemote] = useState<MobileLatestManifest | null>(null);
+  const [nativeBlock, setNativeBlock] = useState(false);
+  const [nativeVersionLabel, setNativeVersionLabel] = useState<string | null>(
+    null,
+  );
   const [skipVersion, setSkipVersion] = useState<string | null>(null);
   const busyRef = useRef(false);
   const installingRef = useRef(false);
@@ -64,8 +68,10 @@ export function MobileUpdateGate() {
 
       const info = await App.getInfo();
       const nativeVersion = String(info.version || bundledAppVersion()).trim();
+      setNativeVersionLabel(nativeVersion);
 
       if (needsNativeRedownload(nativeVersion, manifest)) {
+        setNativeBlock(true);
         setStatus("blocked");
         setMessage(
           manifest.message ??
@@ -73,6 +79,7 @@ export function MobileUpdateGate() {
         );
         return;
       }
+      setNativeBlock(false);
 
       let currentWeb = bundledAppVersion();
       try {
@@ -89,10 +96,8 @@ export function MobileUpdateGate() {
       }
 
       if (!manual && !shouldAutoInstallMobileOta(bundleVersion)) {
-        setStatus("blocked");
-        setMessage(
-          "Update paused after a failed install. Retry when you have a stable connection, or continue on the current version.",
-        );
+        /* User skipped or we recently failed — play on builtin, don't re-block. */
+        setStatus("idle");
         return;
       }
 
@@ -124,9 +129,13 @@ export function MobileUpdateGate() {
       let bundleId: string | null = null;
       try {
         const useManifest = Boolean(manifest.manifest?.length);
+        /* Capgo requires a non-empty url even for manifest deltas (iOS rejects ""). */
+        const manifestUrl =
+          manifest.manifest?.[0]?.download_url ??
+          "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json";
         const downloadOpts = {
           version: bundleVersion,
-          url: useManifest ? "" : manifest.url,
+          url: useManifest ? manifestUrl : manifest.url,
           ...(useManifest
             ? { manifest: manifest.manifest }
             : manifest.checksum
@@ -244,13 +253,20 @@ export function MobileUpdateGate() {
               <button type="button" className="btn" onClick={() => void run(true)}>
                 Retry
               </button>
-              <button type="button" className="btn" onClick={continueWithoutUpdate}>
-                Continue without updating
-              </button>
+              {!nativeBlock ? (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={continueWithoutUpdate}
+                >
+                  Continue without updating
+                </button>
+              ) : null}
             </div>
             {remote?.version ? (
               <p className="desktop-online-gate__meta">
                 Latest: {remote.version}
+                {nativeVersionLabel ? ` · app ${nativeVersionLabel}` : ""}
                 {remote.minNativeVersion
                   ? ` · needs app ${remote.minNativeVersion}+`
                   : ""}
