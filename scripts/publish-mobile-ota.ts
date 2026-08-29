@@ -217,6 +217,53 @@ function gh(args: string[]) {
   if (result.status !== 0) throw new Error(`gh ${args.join(" ")} failed`);
 }
 
+function ghJson(args: string[]): unknown {
+  const result = spawnSync("gh", args, {
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "inherit"],
+    env: process.env,
+  });
+  if (result.status !== 0) throw new Error(`gh ${args.join(" ")} failed`);
+  return JSON.parse(result.stdout || "null");
+}
+
+const RELEASE_KEEP_ASSETS = new Set([
+  "mobile-latest.json",
+  "MonkeyCards.apk",
+  "MonkeyCards.ipa",
+  "MonkeyCards-web.zip",
+]);
+
+/** GitHub caps releases at 1000 assets — drop stale hashed ota__ JS before upload. */
+function pruneStaleOtaAssets(keepAssetNames: Set<string>) {
+  const data = ghJson([
+    "release",
+    "view",
+    MOBILE_TAG,
+    "--repo",
+    REPO,
+    "--json",
+    "assets",
+  ]) as { assets?: { id: number; name: string }[] };
+  const stale = (data.assets ?? []).filter(
+    (asset) =>
+      asset.name.startsWith(OTA_ASSET_PREFIX) &&
+      !keepAssetNames.has(asset.name),
+  );
+  if (!stale.length) return;
+  console.log(`Pruning ${stale.length} stale OTA release assets…`);
+  for (const asset of stale) {
+    const result = spawnSync(
+      "gh",
+      ["api", "-X", "DELETE", `/repos/${REPO}/releases/assets/${asset.id}`],
+      { stdio: "inherit", env: process.env },
+    );
+    if (result.status !== 0) {
+      throw new Error(`Failed to delete release asset ${asset.name}`);
+    }
+  }
+}
+
 function releaseExists(tag: string): boolean {
   const result = spawnSync(
     "gh",
@@ -375,13 +422,24 @@ const minNativeVersion = raiseFloor
 const stagedJson = writeManifest({
   version: channelVersion,
   minNativeVersion,
-  url: entries[0]?.download_url ?? "",
+  url:
+    entries.find((entry) => entry.file_name === "index.html")?.download_url ??
+    entries[0]?.download_url ??
+    "",
   checksum,
   message: "Sorry, you need to redownload the app to update.",
   manifest: entries,
 });
 
 ensureMobileRelease();
+
+const keepAssetNames = new Set(RELEASE_KEEP_ASSETS);
+for (const entry of entries) {
+  if (isGithubHostedOtaFile(entry.file_name)) {
+    keepAssetNames.add(otaAssetName(entry.file_name));
+  }
+}
+pruneStaleOtaAssets(keepAssetNames);
 ghUploadAssets([...stagedFiles, stagedJson]);
 
 console.log(`\nOTA published (manifest delta)`);

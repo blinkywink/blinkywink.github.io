@@ -1697,8 +1697,8 @@ html[data-native="1"] .pack-opener .booster__model {
 }
 
 html[data-native="1"] .pack-shelf__item {
-  content-visibility: auto;
-  contain-intrinsic-size: 180px 260px;
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
 }
 
 html[data-native="1"] .monkey-card-scene--paragon-fx .monkey-card__body,
@@ -10260,6 +10260,65 @@ body.rewards-overlay-open .sweeper-result {
 @media (max-width: 720px) {
   .pack-shelf__row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .pack-shelf__item {
+    padding-inline: 0.2rem;
+    width: 100%;
+  }
+
+  .pack-shelf__booster {
+    --booster-w: min(100%, 152px);
+    width: min(100%, 152px);
+    max-width: 152px;
+  }
+
+  .pack-shelf__booster .booster__art img {
+    object-fit: contain;
+    object-position: center center;
+    height: 100%;
+  }
+
+  .pack-shelf__label {
+    width: min(100%, 152px);
+    max-width: 152px;
+  }
+
+  .pack-shelf__label strong {
+    font-size: 0.82rem;
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .pack-shelf__booster .pack-face__name {
+    white-space: normal;
+    text-wrap: balance;
+    line-height: 1.12;
+  }
+
+  .pack-shelf__booster .pack-face__name.is-sm {
+    font-size: 0.62rem;
+  }
+
+  .pack-shelf__booster .pack-face__name.is-md {
+    font-size: 0.58rem;
+  }
+
+  .pack-shelf__booster .pack-face__name.is-lg {
+    font-size: 0.54rem;
+  }
+
+  .pack-shelf__booster .pack-face__name.is-xl {
+    font-size: 0.5rem;
+  }
+
+  .pack-shelf__booster .pack-face__copy {
+    left: 6%;
+    right: 6%;
+    bottom: 5%;
   }
 }
 
