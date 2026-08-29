@@ -252,16 +252,11 @@ function pruneStaleOtaAssets(keepAssetNames: Set<string>) {
   );
   if (!stale.length) return;
   console.log(`Pruning ${stale.length} stale OTA release assets…`);
-  for (const asset of stale) {
-    const result = spawnSync(
-      "gh",
-      ["release", "delete-asset", MOBILE_TAG, asset.name, "--repo", REPO, "--yes"],
-      { stdio: "pipe", encoding: "utf8", env: process.env },
-    );
-    if (result.status !== 0) {
-      console.warn(`Could not delete ${asset.name}: ${result.stderr?.trim() || "unknown error"}`);
-    }
-  }
+  const listPath = join(OUT_DIR, "ota-stale-delete.txt");
+  writeFileSync(listPath, stale.map((asset) => asset.name).join("\n"));
+  sh(
+    `xargs -P 16 -I {} gh release delete-asset ${MOBILE_TAG} {} --repo ${REPO} --yes < '${listPath}' || true`,
+  );
 }
 
 function releaseExists(tag: string): boolean {
