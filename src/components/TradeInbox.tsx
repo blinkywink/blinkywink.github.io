@@ -190,7 +190,7 @@ export function TradeInbox({
   }, [user, refresh]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || variant === "mobile") return;
     const onPointer = (e: MouseEvent | PointerEvent) => {
       const target = e.target as Node;
       if (wrapRef.current?.contains(target)) return;
@@ -211,7 +211,7 @@ export function TradeInbox({
       window.removeEventListener("pointerdown", onPointer);
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, setOpenSynced]);
+  }, [open, setOpenSynced, variant]);
 
   const badge = user
     ? inbox.incoming.length +
@@ -236,6 +236,11 @@ export function TradeInbox({
   }, [badge, isHot]);
 
   if (!user) return null;
+
+  if (variant === "mobile" && !open) {
+    return <div ref={wrapRef} className="trade-inbox trade-inbox--mobile" hidden />;
+  }
+
   const showPill = badge > 0 || open;
 
   async function onAcceptTrade(item: TradeInboxItem) {
@@ -470,18 +475,9 @@ export function TradeInbox({
       ) : null}
 
       {open ? (
-        <>
-          {variant === "mobile" ? (
-            <button
-              type="button"
-              className="trade-inbox-mobile-backdrop"
-              aria-label="Close inbox"
-              onClick={() => setOpenSynced(false)}
-            />
-          ) : null}
         <div
           className={`trade-inbox__panel${variant === "mobile" ? " trade-inbox__panel--mobile-top" : ""}`}
-          role="dialog"
+          role={variant === "mobile" ? "region" : "dialog"}
           aria-label="Inbox"
         >
           {variant === "mobile" ? (
@@ -853,7 +849,6 @@ export function TradeInbox({
             </section>
           ) : null}
         </div>
-        </>
       ) : null}
 
       {reviewExchange

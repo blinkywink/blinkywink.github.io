@@ -12,8 +12,8 @@ import {
 import { isNativeShell } from "../lib/nativeShell";
 import {
   getTradeInboxUiSnapshot,
+  setTradeInboxUiOpen,
   subscribeTradeInboxUi,
-  toggleTradeInboxUiOpen,
 } from "../lib/tradeInboxUi";
 import { avatarFromProfile } from "../lib/profileAvatar";
 import { UserAvatar } from "./UserAvatar";
@@ -48,7 +48,7 @@ function InboxNavBadge() {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleTradeInboxUiOpen();
+        setTradeInboxUiOpen(true);
       }}
     >
       {badge > 9 ? "9+" : badge}
