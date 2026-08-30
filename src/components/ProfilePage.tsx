@@ -631,37 +631,26 @@ export function ProfilePage() {
               </div>
             )}
 
-            <footer className="pfp-editor__footer">
-              {editorStep === "crop" ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    disabled={busy}
-                    onClick={() => setEditorStep("pick")}
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--primary"
-                    disabled={busy || !draft.cardId}
-                    onClick={() => void onSet()}
-                  >
-                    {busy ? "Saving…" : "Set picture"}
-                  </button>
-                </>
-              ) : (
+            {editorStep === "crop" ? (
+              <footer className="pfp-editor__footer">
                 <button
                   type="button"
                   className="btn btn--ghost"
                   disabled={busy}
-                  onClick={closeEditor}
+                  onClick={() => setEditorStep("pick")}
                 >
-                  Cancel
+                  Back
                 </button>
-              )}
-            </footer>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy || !draft.cardId}
+                  onClick={() => void onSet()}
+                >
+                  {busy ? "Saving…" : "Set picture"}
+                </button>
+              </footer>
+            ) : null}
           </div>
         </div>,
         document.body,
