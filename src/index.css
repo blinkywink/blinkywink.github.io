@@ -1724,24 +1724,43 @@ html[data-native="1"][data-platform="android"] .monkey-card__glare {
     padding-bottom: calc(7rem + var(--site-bottom-nav-h, 0px));
   }
 
-  /* Typing price: keep Post bar at the bottom — keyboard can cover it. */
-  html[data-mobile-chrome="modern"] .market-sell-price:has(.market-price input:focus) .market-sell-price__dock {
-    bottom: 0;
-    opacity: 0;
+  /* Native app: hide fixed confirmation bars while typing (keyboard covers them). */
+  html[data-native="1"][data-soft-keyboard="1"] .pick-dock,
+  html[data-native="1"][data-soft-keyboard="1"] .market-sell-price__dock {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Mobile site: tuck Post bar while price field is focused (viewport shrinks with keyboard). */
+  html[data-mobile-chrome="modern"]:not([data-native="1"])
+    .market-sell-price:has(.market-price input:focus)
+    .market-sell-price__dock {
+    visibility: hidden;
     pointer-events: none;
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor {
     z-index: 2100;
-    padding-bottom: var(--site-bottom-nav-h, 0px);
+    display: flex;
+    flex-direction: column;
+    place-items: stretch;
+    padding:
+      max(0.45rem, env(safe-area-inset-top, 0px))
+      max(0.55rem, env(safe-area-inset-right, 0px))
+      max(0.55rem, env(safe-area-inset-bottom, 0px))
+      max(0.55rem, env(safe-area-inset-left, 0px));
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__panel {
-    max-height: min(calc(92dvh - var(--site-bottom-nav-h, 0px)), 880px);
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    width: 100%;
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__panel:has(.pfp-editor__body--pick) {
-    height: min(calc(92dvh - var(--site-bottom-nav-h, 0px)), 880px);
+    height: auto;
+    flex: 1 1 auto;
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__footer {
@@ -19352,11 +19371,11 @@ button.card-chip:hover:not(:disabled) {
 
 @media (max-width: 820px) {
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__body.pfp-editor__body--pick .pick-scroll {
-    padding-bottom: calc(5.75rem + var(--site-bottom-nav-h, 0px));
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .pfp-editor__body.pfp-editor__body--pick .pick-dock {
-    bottom: var(--site-bottom-nav-h, 0px);
+    bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
