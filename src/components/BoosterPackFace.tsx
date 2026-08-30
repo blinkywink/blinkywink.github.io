@@ -5,7 +5,6 @@ import {
   resolveCategoryPackTheme,
   resolveTowerPackTheme,
 } from "../lib/packTheme";
-import { staticAssetUrl } from "../lib/staticAssets";
 import { isNativeShell } from "../lib/nativeShell";
 
 type Props = {
@@ -24,7 +23,7 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
       <div className={`pack-face pack-face--btd6 ${className}`.trim()}>
         <div className="booster__art">
           <img
-            src={staticAssetUrl(pack.coverArt ?? "")}
+            src={pack.coverArt ?? ""}
             alt=""
             draggable={false}
             decoding="async"
@@ -54,7 +53,7 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
           {lazyImages ? (
             <img
               className="pack-face__category-composite"
-              src={staticAssetUrl(categoryPackShelfArt(pack.category))}
+              src={categoryPackShelfArt(pack.category)}
               alt=""
               draggable={false}
               decoding="async"
@@ -67,7 +66,7 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
                 className={`pack-face__category-slot pack-face__category-slot--${i}`}
               >
                 <img
-                  src={staticAssetUrl(src)}
+                  src={src}
                   alt=""
                   draggable={false}
                   decoding="async"
@@ -112,7 +111,7 @@ export function BoosterPackFace({ pack, className = "", lazyImages = false }: Pr
 
       <div className="pack-face__hero">
         <img
-          src={staticAssetUrl(theme.image)}
+          src={theme.image}
           alt=""
           draggable={false}
           decoding="async"

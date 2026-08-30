@@ -35,16 +35,7 @@ const MOBILE_TAG = "mobile";
 const OTA_SITE_BASE = "https://www.monkeycards.app";
 
 function isGithubHostedOtaFile(relativePath: string): boolean {
-  return (
-    relativePath === "index.html" ||
-    relativePath.startsWith("assets/") ||
-    relativePath.startsWith("images/packs/")
-  );
-}
-
-/** OTA manifest: code + shop pack mosaics only — not 1200+ tower images. */
-function isOtaManifestFile(relativePath: string): boolean {
-  return isGithubHostedOtaFile(relativePath);
+  return relativePath === "index.html" || relativePath.startsWith("assets/");
 }
 
 function otaSiteUrl(relativePath: string): string {
@@ -142,7 +133,6 @@ function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>):
   mkdirSync(stagingDir, { recursive: true });
 
   for (const rel of relFiles) {
-    if (!isOtaManifestFile(rel)) continue;
     const abs = join(DIST, rel);
     if (!existsSync(abs)) {
       throw new Error(`OTA file missing: ${rel}`);
@@ -150,7 +140,7 @@ function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>):
     const fileHash = sha256File(abs);
     const assetName = otaAssetName(rel);
     const staged = join(stagingDir, assetName);
-    /* Only upload JS/CSS to GitHub — static media uses monkeycards.app fallback URLs. */
+    /* Upload changed code to GitHub; static media reuses the builtin APK when hashes match. */
     if (isGithubHostedOtaFile(rel) && prevByPath.get(rel) !== fileHash) {
       copyFileSync(abs, staged);
       stagedFiles.push(staged);

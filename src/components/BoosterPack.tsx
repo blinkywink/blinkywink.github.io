@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 import { BTD6_PACK_ART, type PackDef } from "../lib/packTheme";
-import { staticAssetUrl } from "../lib/staticAssets";
 import { BoosterPackFace } from "./BoosterPackFace";
 
 type Props = {
@@ -35,7 +34,7 @@ export function BoosterPack({
       style={
         artUrl
           ? ({
-              ["--pack-art" as string]: `url(${staticAssetUrl(artUrl)})`,
+              ["--pack-art" as string]: `url(${artUrl})`,
             } as CSSProperties)
           : undefined
       }

@@ -1,5 +1,4 @@
 import { Capacitor } from "@capacitor/core";
-import { installNativeStaticAssetRewrites } from "./staticAssets";
 
 /** True when running inside Capacitor (iOS/Android native WebView). */
 export function isNativeShell(): boolean {
@@ -23,7 +22,6 @@ export const nativeShellReady: Promise<void> = initNativeShell();
 /** Configure status bar / splash / OTA ready once the WebView is ready. */
 async function initNativeShell(): Promise<void> {
   if (!isNativeShell()) return;
-  installNativeStaticAssetRewrites();
   document.documentElement.dataset.native = "1";
   try {
     document.documentElement.dataset.platform = Capacitor.getPlatform();
