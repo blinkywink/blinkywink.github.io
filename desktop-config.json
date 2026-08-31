@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.19",
-  "version": "1.0.19",
-  "shopDay": "2026-8-26",
+  "minDesktopVersion": "1.0.20",
+  "version": "1.0.20",
+  "shopDay": "2026-8-31",
   "featuredTowers": [
-    "Monkey Ace",
-    "Alchemist",
-    "Skywarden"
+    "Monkey Sub",
+    "Beast Handler",
+    "Heli Pilot"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",
