@@ -1,5 +1,61 @@
 -- Defense in depth for the self-hosted API. Safe to re-run after a restore.
 
+-- No Supabase Auth schema here. Session identity is x-bloon-session.
+create schema if not exists auth;
+grant usage on schema auth to anon, authenticated, authenticator;
+
+create or replace function public.current_account_id()
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid;
+  tok text;
+  headers json;
+begin
+  begin
+    headers := nullif(current_setting('request.headers', true), '')::json;
+  exception when others then
+    headers := null;
+  end;
+
+  if headers is null then
+    return null;
+  end if;
+
+  tok := nullif(headers->>'x-bloon-session', '');
+  if tok is null then
+    return null;
+  end if;
+
+  select s.user_id into uid
+  from public.app_sessions s
+  where s.token = tok and s.expires_at > now();
+
+  return uid;
+end;
+$$;
+
+revoke all on function public.current_account_id() from public;
+grant execute on function public.current_account_id() to anon, authenticated, authenticator;
+
+-- Leftover RPCs still call auth.uid(); point it at the same session helper.
+create or replace function auth.uid()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.current_account_id();
+$$;
+
+revoke all on function auth.uid() from public;
+grant execute on function auth.uid() to anon, authenticated, authenticator;
+
 create table if not exists public.auth_throttle (
   key text primary key,
   window_start timestamptz not null default now(),
