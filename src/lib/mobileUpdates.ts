@@ -1,8 +1,8 @@
 /** Mobile OTA / force-redownload signals (Capacitor sideload shells). */
 
-import { APP_VERSION } from "./appVersion";
 import { isOlderVersion } from "./desktopDownloads";
 import { getAppliedOtaChecksum } from "./mobileOtaGuard";
+import { MOBILE_NATIVE_VERSION } from "./mobileNativeVersion";
 
 export const MOBILE_APK_URL =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.apk";
@@ -93,11 +93,10 @@ export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest 
 
   if (found.length === 0) return null;
 
-  return found.reduce((best, cur) => {
-    if (isOlderVersion(cur.manifest.version, best.manifest.version)) return best;
-    if (isOlderVersion(best.manifest.version, cur.manifest.version)) return cur;
-    return cur.rank > best.rank ? cur : best;
-  }).manifest;
+  /* GitHub release is source of truth — don't let a stale 1.0.61 mirror win. */
+  return found.reduce((best, cur) =>
+    cur.rank > best.rank ? cur : best,
+  ).manifest;
 }
 
 export function needsNativeRedownload(
@@ -132,41 +131,60 @@ function installedChecksumSuffix(installed: string): string | null {
   return match?.[1]?.slice(0, 12) ?? null;
 }
 
+export function isBuiltinWebBundle(currentWebVersion: string): boolean {
+  const cur = String(currentWebVersion ?? "").trim().toLowerCase();
+  return !cur || cur === "builtin" || cur === "unknown";
+}
+
+/** Checksum baked into this IPA/APK at build time (`/ota-checksum.txt`). */
+export async function fetchBakedOtaChecksum(): Promise<string | null> {
+  try {
+    const res = await fetch(`/ota-checksum.txt?t=${Date.now()}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const sum = otaChecksumSuffix(await res.text());
+    return sum || null;
+  } catch {
+    return null;
+  }
+}
+
 /** True when the installed Capgo bundle is not the latest zip (by checksum). */
 export function needsWebUpdate(
   currentWebVersion: string,
   remote: MobileLatestManifest,
+  bakedChecksum?: string | null,
 ): boolean {
   const cur = String(currentWebVersion ?? "").trim();
   const target = otaBundleVersion(remote);
-  if (!cur || cur === "builtin" || cur === "unknown") return true;
+  const remoteSum = otaChecksumSuffix(remote.checksum);
+
+  // Capgo reports a fresh IPA as "builtin". The old OTA channel (1.0.61) was
+  // always ahead of APP_VERSION, so semver forced a full-site copy. Compare
+  // baked checksums only; the gate never auto-OTAs builtin.
+  if (isBuiltinWebBundle(cur)) {
+    const baked = otaChecksumSuffix(String(bakedChecksum ?? ""));
+    return !(baked && remoteSum && baked === remoteSum);
+  }
+
   if (cur === target) return false;
   if (cur === `${target}.retry` || cur.startsWith(`${target}.`)) return false;
 
+  const curSum =
+    installedChecksumSuffix(cur) ?? getAppliedOtaChecksum() ?? null;
+  if (remoteSum && curSum === remoteSum) return false;
+  if (remoteSum && curSum && curSum !== remoteSum) return true;
+
   const curChannel = channelDisplayVersion(cur);
   const remoteChannel = channelDisplayVersion(remote.version);
-  const curSum = installedChecksumSuffix(cur);
-  const remoteSum = otaChecksumSuffix(remote.checksum);
-
   if (isOlderVersion(remoteChannel, curChannel)) return false;
-
-  // Capgo on iOS often reports plain channel semver after set(), not the -ota hash id.
-  if (curChannel === remoteChannel && !curSum) {
-    const applied = getAppliedOtaChecksum();
-    if (applied === remoteSum) return false;
-    return true;
-  }
-
-  if (curChannel === remoteChannel && curSum === remoteSum) return false;
-
   if (isOlderVersion(curChannel, remoteChannel)) return true;
-
-  if (curChannel === remoteChannel && curSum && curSum !== remoteSum) return true;
 
   return cur !== target;
 }
 
 /** Fallback label when Capgo current() isn't available yet. */
 export function bundledAppVersion(): string {
-  return APP_VERSION;
+  return MOBILE_NATIVE_VERSION;
 }

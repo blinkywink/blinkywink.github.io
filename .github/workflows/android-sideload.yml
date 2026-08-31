@@ -31,8 +31,8 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Sync Android version from package.json
-        run: npx tsx -e 'import { writeMobileNativeVersion, readDesktopVersion } from "./scripts/desktop-version.ts"; writeMobileNativeVersion(readDesktopVersion());'
+      - name: Sync Android version from mobile native version
+        run: npx tsx -e 'import { writeMobileNativeVersion, readMobileNativeVersion } from "./scripts/desktop-version.ts"; writeMobileNativeVersion(readMobileNativeVersion());'
 
       - name: Build web + sync Capacitor Android
         run: npm run build && npx cap sync android

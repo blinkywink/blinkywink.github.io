@@ -12,7 +12,9 @@ import { startVisiblePoll } from "../lib/visiblePoll";
 import {
   MOBILE_APK_URL,
   MOBILE_IPA_URL,
+  fetchBakedOtaChecksum,
   fetchMobileLatestManifest,
+  isBuiltinWebBundle,
   needsNativeRedownload,
   needsWebUpdate,
   bundledAppVersion,
@@ -23,6 +25,7 @@ import {
 import { ExternalLink } from "./ExternalLink";
 
 type GateStatus = "idle" | "updating" | "blocked";
+type CapgoUpdater = typeof import("@capgo/capacitor-updater").CapacitorUpdater;
 
 const RECHECK_MS = 90_000;
 /** Let Capgo settle after reload before we decide another OTA is needed. */
@@ -57,6 +60,14 @@ function watchOtaDownload<T>(
   });
 }
 
+async function notifyReady(updater: CapgoUpdater) {
+  try {
+    await updater.notifyAppReady();
+  } catch {
+    /* builtin / already ready */
+  }
+}
+
 export function MobileUpdateGate() {
   const [status, setStatus] = useState<GateStatus>("idle");
   const [message, setMessage] = useState("Updating");
@@ -69,6 +80,7 @@ export function MobileUpdateGate() {
   const [skipVersion, setSkipVersion] = useState<string | null>(null);
   const busyRef = useRef(false);
   const installingRef = useRef(false);
+  const cancelledRef = useRef(false);
   const bootedRef = useRef(false);
   const statusRef = useRef<GateStatus>("idle");
   statusRef.current = status;
@@ -78,6 +90,105 @@ export function MobileUpdateGate() {
     busyRef.current = true;
 
     let bundleVersion = "";
+
+    const downloadAndApply = async (
+      updater: CapgoUpdater,
+      manifest: MobileLatestManifest,
+      blocking: boolean,
+    ) => {
+      cancelledRef.current = false;
+      installingRef.current = true;
+      if (blocking) {
+        setStatus("updating");
+        setMessage("Updating");
+        setProgress(null);
+      }
+
+      const progressRef = { value: null as number | null, at: Date.now() };
+
+      const handle = await updater.addListener(
+        "download",
+        (state: { percent?: number }) => {
+          if (!blocking || typeof state.percent !== "number") return;
+          const next = Math.min(100, Math.max(0, state.percent));
+          if (progressRef.value !== next) {
+            progressRef.value = next;
+            progressRef.at = Date.now();
+          }
+          setProgress(next);
+        },
+      );
+      const failHandle = await updater.addListener(
+        "downloadFailed",
+        (state: { version?: string }) => {
+          console.warn("Mobile OTA downloadFailed", state);
+          if (blocking) setProgress(null);
+        },
+      );
+
+      let bundleId: string | null = null;
+      try {
+        const useManifest = Boolean(manifest.manifest?.length);
+        /* Capgo requires a non-empty url even for manifest deltas (iOS rejects ""). */
+        const manifestUrl =
+          manifest.manifest?.[0]?.download_url ??
+          "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json";
+        const downloadOpts = {
+          version: bundleVersion,
+          url: useManifest ? manifestUrl : manifest.url,
+          ...(useManifest
+            ? { manifest: manifest.manifest }
+            : manifest.checksum
+              ? { checksum: manifest.checksum }
+              : {}),
+        };
+
+        const onStall = blocking
+          ? () => setMessage("Still downloading… keep the app open on Wi‑Fi")
+          : () => {};
+
+        try {
+          const bundle = await watchOtaDownload(
+            updater.download(downloadOpts),
+            onStall,
+            progressRef,
+          );
+          bundleId = bundle.id;
+        } catch (downloadErr) {
+          console.warn("Mobile update download retry", downloadErr);
+          const zipUrl =
+            "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards-web.zip";
+          const bundle = await watchOtaDownload(
+            updater.download({
+              version: bundleVersion,
+              url: zipUrl,
+            }),
+            onStall,
+            progressRef,
+          );
+          bundleId = bundle.id;
+        }
+
+        if (cancelledRef.current) return;
+        if (blocking) setProgress(100);
+        await updater.notifyAppReady();
+        markMobileOtaApplied(otaChecksumSuffix(manifest.checksum));
+        await updater.set({ id: bundleId! });
+        clearMobileOtaFailure();
+        /* set() reloads the WebView — may not return */
+      } finally {
+        try {
+          await handle.remove();
+        } catch {
+          /* ignore */
+        }
+        try {
+          await failHandle.remove();
+        } catch {
+          /* ignore */
+        }
+      }
+    };
 
     try {
       await nativeShellReady;
@@ -93,7 +204,11 @@ export function MobileUpdateGate() {
 
       const manifest = await fetchMobileLatestManifest();
       setRemote(manifest);
-      if (!manifest) return;
+      if (!manifest) {
+        await notifyReady(CapacitorUpdater);
+        setStatus("idle");
+        return;
+      }
 
       bundleVersion = otaBundleVersion(manifest);
       setSkipVersion(bundleVersion);
@@ -121,15 +236,26 @@ export function MobileUpdateGate() {
         /* use bundled */
       }
 
-      if (!needsWebUpdate(currentWeb, manifest)) {
+      const baked = await fetchBakedOtaChecksum();
+      if (!needsWebUpdate(currentWeb, manifest, baked)) {
+        await notifyReady(CapacitorUpdater);
         clearMobileOtaFailure();
         markMobileOtaApplied(otaChecksumSuffix(manifest.checksum));
         setStatus("idle");
         return;
       }
 
+      /* Fresh IPA/APK is Capgo "builtin". Auto-OTA copies the whole site
+         (~1000 files) on device — that freeze is disk copy, not Wi‑Fi.
+         Play the app that was just installed; Retry still OTAs. */
+      if (!manual && isBuiltinWebBundle(currentWeb)) {
+        await notifyReady(CapacitorUpdater);
+        setStatus("idle");
+        return;
+      }
+
       if (!manual && !shouldAutoInstallMobileOta(bundleVersion)) {
-        /* User skipped or we recently failed — play on builtin, don't re-block. */
+        await notifyReady(CapacitorUpdater);
         setStatus("idle");
         return;
       }
@@ -139,94 +265,32 @@ export function MobileUpdateGate() {
         clearMobileOtaFailure();
       }
 
-      installingRef.current = true;
-      setStatus("updating");
-      setMessage("Updating");
-      setProgress(null);
-
-      const progressRef = { value: null as number | null, at: Date.now() };
-
-      const handle = await CapacitorUpdater.addListener(
-        "download",
-        (state: { percent?: number }) => {
-          if (typeof state.percent === "number") {
-            const next = Math.min(100, Math.max(0, state.percent));
-            if (progressRef.value !== next) {
-              progressRef.value = next;
-              progressRef.at = Date.now();
-            }
-            setProgress(next);
-          }
-        },
-      );
-      const failHandle = await CapacitorUpdater.addListener(
-        "downloadFailed",
-        (state: { version?: string }) => {
-          console.warn("Mobile OTA downloadFailed", state);
-          setProgress(null);
-        },
-      );
-
-      let bundleId: string | null = null;
-      try {
-        const useManifest = Boolean(manifest.manifest?.length);
-        /* Capgo requires a non-empty url even for manifest deltas (iOS rejects ""). */
-        const manifestUrl =
-          manifest.manifest?.[0]?.download_url ??
-          "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json";
-        const downloadOpts = {
-          version: bundleVersion,
-          url: useManifest ? manifestUrl : manifest.url,
-          ...(useManifest
-            ? { manifest: manifest.manifest }
-            : manifest.checksum
-              ? { checksum: manifest.checksum }
-              : {}),
-        };
-
-        try {
-          const bundle = await watchOtaDownload(
-            CapacitorUpdater.download(downloadOpts),
-            () => setMessage("Still downloading… keep the app open on Wi‑Fi"),
-            progressRef,
-          );
-          bundleId = bundle.id;
-        } catch (downloadErr) {
-          console.warn("Mobile update download retry", downloadErr);
-          const zipUrl =
-            "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards-web.zip";
-          const bundle = await watchOtaDownload(
-            CapacitorUpdater.download({
-              version: bundleVersion,
-              url: zipUrl,
-            }),
-            () => setMessage("Still downloading… keep the app open on Wi‑Fi"),
-            progressRef,
-          );
-          bundleId = bundle.id;
-        }
-
-        setProgress(100);
-        await CapacitorUpdater.notifyAppReady();
-        markMobileOtaApplied(otaChecksumSuffix(manifest.checksum));
-        await CapacitorUpdater.set({ id: bundleId! });
-        clearMobileOtaFailure();
-        /* set() reloads the WebView — may not return */
-      } finally {
-        try {
-          await handle.remove();
-        } catch {
-          /* ignore */
-        }
-        try {
-          await failHandle.remove();
-        } catch {
-          /* ignore */
-        }
+      if (!manual) {
+        /* Already on a Capgo bundle: download in the background, no overlay. */
+        await notifyReady(CapacitorUpdater);
+        installingRef.current = true;
+        setStatus("idle");
+        busyRef.current = false;
+        void downloadAndApply(CapacitorUpdater, manifest, false)
+          .catch((err) => {
+            console.warn("Background mobile OTA failed", err);
+            if (bundleVersion) recordMobileOtaFailure(bundleVersion);
+          })
+          .finally(() => {
+            installingRef.current = false;
+          });
+        return;
       }
+
+      await downloadAndApply(CapacitorUpdater, manifest, true);
     } catch (err) {
       console.warn("Mobile update failed", err);
       installingRef.current = false;
+      if (!manual) {
+        if (bundleVersion) recordMobileOtaFailure(bundleVersion);
+        setStatus("idle");
+        return;
+      }
       if (bundleVersion) recordMobileOtaFailure(bundleVersion);
       setStatus("blocked");
       setMessage(
@@ -238,6 +302,7 @@ export function MobileUpdateGate() {
   }, []);
 
   const continueWithoutUpdate = useCallback(() => {
+    cancelledRef.current = true;
     if (skipVersion) skipMobileOta(skipVersion);
     installingRef.current = false;
     setStatus("idle");
@@ -283,6 +348,15 @@ export function MobileUpdateGate() {
                   opacity: progress == null ? 0.7 : 1,
                 }}
               />
+            </div>
+            <div className="desktop-online-gate__actions">
+              <button
+                type="button"
+                className="btn"
+                onClick={continueWithoutUpdate}
+              >
+                Continue without updating
+              </button>
             </div>
           </>
         ) : (

@@ -24,19 +24,29 @@ const DEFAULT_CONFIG: DesktopRemoteConfig = {
   downloadWindows: DESKTOP_WINDOWS_SETUP,
 };
 
-export function parseSemver(version: string): [number, number, number] {
-  const cleaned = version.trim().replace(/^v/i, "").split("-")[0] ?? "0.0.0";
+/** Desktop is x.y.z; mobile native is x.y.z.w. Missing parts compare as 0. */
+export function parseVersionParts(version: string): number[] {
+  const cleaned = version.trim().replace(/^v/i, "").split(/[-+]/)[0] ?? "0.0.0";
   const parts = cleaned.split(".").map((n) => Number.parseInt(n, 10) || 0);
+  while (parts.length < 3) parts.push(0);
+  return parts;
+}
+
+export function parseSemver(version: string): [number, number, number] {
+  const parts = parseVersionParts(version);
   return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
 }
 
 /** True when `current` is strictly older than `minimum`. */
 export function isOlderVersion(current: string, minimum: string): boolean {
-  const a = parseSemver(current);
-  const b = parseSemver(minimum);
-  for (let i = 0; i < 3; i++) {
-    if (a[i]! < b[i]!) return true;
-    if (a[i]! > b[i]!) return false;
+  const a = parseVersionParts(current);
+  const b = parseVersionParts(minimum);
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av < bv) return true;
+    if (av > bv) return false;
   }
   return false;
 }

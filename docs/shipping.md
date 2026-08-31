@@ -52,12 +52,24 @@ npm run mobile:sync && npm run mobile:ipa
 
 Prefer `npm run ship` so version bump + publish stay consistent.
 
+## Versions
+
+- **Website + desktop:** `1.0.x` (`APP_VERSION` / `package.json` / Tauri). Desktop auto-update uses that.
+- **Mobile IPA/APK:** `1.0.x.y` (`MOBILE_NATIVE_VERSION`). Last two numbers are mobile-only. Bump those when shipping a new IPA/APK — do not change desktop to match.
+- **Mobile web OTA:** same `1.0.x.y` label as the current native line. Capgo decides “newer” by **checksum**, not by inventing 1.0.61. A fresh install (`builtin`) does **not** auto-OTA.
+
+```bash
+npm run ship -- ios          # new IPA (raises minNativeVersion to 1.0.x.y)
+npm run ship -- apk          # new APK
+npm run ship -- ota          # web-only; does not bump native
+```
+
 ## Mobile OTA (no App Store)
 
-Sideloaded APK/IPA can pull **web** updates automatically (same “Updating” screen as desktop).
+Sideloaded APK/IPA can pull **web** updates in the background after the first install.
 
-- On launch, the app checks `mobile-latest.json` and downloads `MonkeyCards-web.zip` when newer.
-- Most game/UI changes ship via OTA when `main` updates (workflow **Mobile OTA web bundle**).
+- Fresh IPA/APK plays immediately. It does not copy the whole site into a new Capgo bundle.
+- Later launches on an already-OTA’d install check `mobile-latest.json` and download only changed JS/CSS.
 - If the native shell is too old (`minNativeVersion`), play is blocked with:  
   **Sorry, you need to redownload the app to update.**  
   (links to the latest APK/IPA)

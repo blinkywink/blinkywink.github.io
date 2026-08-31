@@ -23,8 +23,8 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Sync iOS version from package.json
-        run: npx tsx -e 'import { writeMobileNativeVersion, readDesktopVersion } from "./scripts/desktop-version.ts"; writeMobileNativeVersion(readDesktopVersion());'
+      - name: Sync iOS version from mobile native version
+        run: npx tsx -e 'import { writeMobileNativeVersion, readMobileNativeVersion } from "./scripts/desktop-version.ts"; writeMobileNativeVersion(readMobileNativeVersion());'
 
       - name: Build web + sync Capacitor iOS
         run: npm run mobile:sync

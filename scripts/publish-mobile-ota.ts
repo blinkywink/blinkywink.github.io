@@ -7,20 +7,22 @@
  *
  * --raise-native-floor: set minNativeVersion to this app version (new APK/IPA).
  */
-import { createHash } from "node:crypto";
 import { execSync, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { bumpSemver, parseSemver, REPO, readDesktopVersion } from "./desktop-version.ts";
+import { REPO, readDesktopVersion, readMobileNativeVersion } from "./desktop-version.ts";
+import {
+  listOtaBundleFiles,
+  manifestChecksum,
+  sha256File,
+} from "./ota-bundle.ts";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
@@ -63,55 +65,6 @@ function otaFileUrl(assetName: string): string {
   return `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${assetName}`;
 }
 
-function collectOtaRelativeFiles(dir: string, prefix = ""): string[] {
-  const out: string[] = [];
-  for (const name of readdirSync(dir)) {
-    if (name === ".DS_Store") continue;
-    const rel = prefix ? `${prefix}/${name}` : name;
-    const abs = join(dir, name);
-    if (statSync(abs).isDirectory()) {
-      out.push(...collectOtaRelativeFiles(abs, rel));
-    } else {
-      out.push(rel);
-    }
-  }
-  return out;
-}
-
-const OTA_SKIP_DIRS = new Set(["downloads"]);
-const OTA_SKIP_FILES = new Set([
-  "desktop-latest.json",
-  "desktop-config.json",
-  "mobile-latest.json",
-]);
-
-/** Full web bundle except desktop downloads — static files copy from builtin APK. */
-function listOtaBundleFiles(): string[] {
-  const files: string[] = [];
-  for (const name of readdirSync(DIST)) {
-    if (OTA_SKIP_DIRS.has(name) || name === ".DS_Store") continue;
-    const abs = join(DIST, name);
-    if (statSync(abs).isDirectory()) {
-      files.push(...collectOtaRelativeFiles(abs, name));
-    } else if (!OTA_SKIP_FILES.has(name)) {
-      files.push(name);
-    }
-  }
-  return files.sort();
-}
-
-function sha256File(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
-}
-
-function manifestChecksum(entries: OtaManifestEntry[]): string {
-  const body = entries
-    .map((entry) => `${entry.file_name}\t${entry.file_hash}`)
-    .sort()
-    .join("\n");
-  return createHash("sha256").update(body).digest("hex");
-}
-
 function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>): {
   entries: OtaManifestEntry[];
   checksum: string;
@@ -126,7 +79,7 @@ function buildOtaManifest(fromRelease: ReturnType<typeof fetchReleaseManifest>):
     }
   }
 
-  const relFiles = listOtaBundleFiles();
+  const relFiles = listOtaBundleFiles(DIST);
   const entries: OtaManifestEntry[] = [];
   const stagedFiles: string[] = [];
   const stagingDir = join(OUT_DIR, "ota-files");
@@ -171,41 +124,12 @@ function ghUploadAssets(paths: string[]) {
   }
 }
 
-function isOlderVersion(current: string, minimum: string): boolean {
-  const a = parseSemver(current);
-  const b = parseSemver(minimum);
-  for (let i = 0; i < 3; i++) {
-    if (a[i]! < b[i]!) return true;
-    if (a[i]! > b[i]!) return false;
-  }
-  return false;
-}
-
-/**
- * Capgo / legacy clients compare manifest `version` with isOlderVersion.
- * Keep APP_VERSION (UI) separate — channel must always move forward so
- * rolled-back display versions can still reach stuck installs (e.g. 1.0.20).
- */
-function nextChannelVersion(appVersion: string, previousChannel?: string): string {
+function nextChannelVersion(nativeVersion: string, _previousChannel?: string): string {
   const forced = String(process.env.OTA_CHANNEL_VERSION ?? "").trim();
-  if (/^\d+\.\d+\.\d+$/.test(forced)) return forced;
-
-  const prev = String(previousChannel ?? "")
-    .split("+")[0]!
-    .split("-ota.")[0]!
-    .trim();
-  let base = appVersion;
-  if (/^\d+\.\d+\.\d+$/.test(prev) && !isOlderVersion(prev, appVersion)) {
-    base = prev;
-  }
-  let channel = bumpSemver(base, "patch");
-  // Devices may still be on Capgo id 1.0.20 from a mistaken display bump even
-  // after the release manifest was rolled back to 1.0.19 — channel must clear that.
-  const clearFloor = "1.0.20";
-  while (!isOlderVersion(clearFloor, channel)) {
-    channel = bumpSemver(channel, "patch");
-  }
-  return channel;
+  if (/^\d+\.\d+\.\d+(\.\d+)?$/.test(forced)) return forced;
+  /* OTA label follows the IPA/APK native line (1.0.x.y). Checksum, not
+     a fake 1.0.61 channel, decides whether Capgo actually downloads. */
+  return nativeVersion;
 }
 
 function sh(cmd: string, cwd = ROOT) {
@@ -276,7 +200,7 @@ function prevMinNative(version: string): string {
         minNativeVersion?: string;
       };
       const m = String(prev.minNativeVersion ?? "").trim();
-      if (/^\d+\.\d+\.\d+$/.test(m)) return m;
+      if (/^\d+\.\d+\.\d+(\.\d+)?$/.test(m)) return m;
     } catch {
       /* fall through */
     }
@@ -360,6 +284,7 @@ function writeManifest(manifest: {
 }
 
 const appVersion = readDesktopVersion();
+const nativeVersion = readMobileNativeVersion();
 mkdirSync(OUT_DIR, { recursive: true });
 const fromRelease = fetchReleaseManifest();
 
@@ -378,7 +303,7 @@ if (raiseFloor && skipBuild) {
   const url = String(fromRelease?.url ?? fromPublic?.url ?? "");
   const manifest = fromRelease?.manifest ?? fromPublic?.manifest;
   const channelVersion = String(
-    fromRelease?.version ?? fromPublic?.version ?? appVersion,
+    fromRelease?.version ?? fromPublic?.version ?? nativeVersion,
   ).trim();
   if (!/^[a-f0-9]{64}$/i.test(checksum)) {
     throw new Error(
@@ -387,7 +312,7 @@ if (raiseFloor && skipBuild) {
   }
   const stagedJson = writeManifest({
     version: channelVersion,
-    minNativeVersion: appVersion,
+    minNativeVersion: nativeVersion,
     url,
     checksum,
     message: "Sorry, you need to redownload the app to update.",
@@ -395,7 +320,7 @@ if (raiseFloor && skipBuild) {
   });
   ensureMobileRelease();
   ghUploadAssets([stagedJson]);
-  console.log(`\nRaised minNativeVersion → ${appVersion} (OTA bundle unchanged)`);
+  console.log(`\nRaised minNativeVersion → ${nativeVersion} (OTA bundle unchanged)`);
   console.log(`  channel version: ${channelVersion}`);
   console.log(`  checksum: ${checksum}`);
   console.log(`  wrote ${PUBLIC_JSON}`);
@@ -410,10 +335,10 @@ if (!existsSync(join(DIST, "index.html"))) {
 }
 
 const { entries, checksum, stagedFiles } = buildOtaManifest(fromRelease);
-const channelVersion = nextChannelVersion(appVersion, fromRelease?.version);
+const channelVersion = nextChannelVersion(nativeVersion, fromRelease?.version);
 const minNativeVersion = raiseFloor
-  ? appVersion
-  : prevMinNative(appVersion);
+  ? nativeVersion
+  : prevMinNative(nativeVersion);
 
 const stagedJson = writeManifest({
   version: channelVersion,
@@ -439,7 +364,8 @@ pruneStaleOtaAssets(keepAssetNames);
 ghUploadAssets([...stagedFiles, stagedJson]);
 
 console.log(`\nOTA published (manifest delta)`);
-console.log(`  app UI version: ${appVersion}`);
+console.log(`  desktop/web version: ${appVersion}`);
+console.log(`  mobile native: ${nativeVersion}`);
 console.log(`  channel version: ${channelVersion}`);
 console.log(`  files: ${entries.length}`);
 console.log(`  uploaded: ${stagedFiles.length}`);

@@ -14,7 +14,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { readDesktopVersion } from "./desktop-version.ts";
+import { readMobileNativeVersion } from "./desktop-version.ts";
 
 const root = process.cwd();
 const android = join(root, "android");
@@ -52,7 +52,7 @@ function main() {
     throw new Error("android/ missing — run: npx cap add android");
   }
 
-  const version = readDesktopVersion();
+  const version = readMobileNativeVersion();
   mkdirSync(outDir, { recursive: true });
 
   const gradle = join(android, "app", "build.gradle");

@@ -23,6 +23,8 @@ import {
 import { cardSpecById } from "../lib/cardCatalog";
 import { formatPathLevels } from "../lib/pathCombos";
 import { APP_VERSION } from "../lib/appVersion";
+import { MOBILE_NATIVE_VERSION } from "../lib/mobileNativeVersion";
+import { isNativeShell } from "../lib/nativeShell";
 import { setProfileAvatar, avatarFromProfile } from "../lib/profileAvatar";
 import {
   prefetchCardFaceImage,
@@ -487,7 +489,7 @@ export function ProfilePage() {
         </main>
         <footer className="profile-page__footer">
           <p>
-            v. {APP_VERSION}
+            v. {isNativeShell() ? MOBILE_NATIVE_VERSION : APP_VERSION}
             <span aria-hidden> · </span>
             thanks for playing!
           </p>
@@ -1220,7 +1222,7 @@ export function ProfilePage() {
       </main>
       <footer className="profile-page__footer">
         <p>
-          v. {APP_VERSION}
+          v. {isNativeShell() ? MOBILE_NATIVE_VERSION : APP_VERSION}
           <span aria-hidden> · </span>
           thanks for playing!
         </p>
