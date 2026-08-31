@@ -2,7 +2,7 @@
   "version": "1.0.20.1",
   "minNativeVersion": "1.0.18",
   "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/ota__index.html",
-  "checksum": "88e65a7aed48e92106d40118420ba1b9c5be7d04db9c00c215583366492505bc",
+  "checksum": "9e7af7738dd3740b94150a792eb89dddf1995515f7a25069219f49f980cdb04a",
   "message": "Sorry, you need to redownload the app to update.",
   "manifest": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "file_name": "_redirects",
-      "file_hash": "09c3e9f58e4c66f748e2862d47342e5703717cb252d07913fcb4fc194476fc77",
+      "file_hash": "8898c415cff37b5d3648d4b04569b6dedeb7a6332502baaf49210486bd2b2150",
       "download_url": "https://monkeycards.pages.dev/_redirects"
     },
     {
