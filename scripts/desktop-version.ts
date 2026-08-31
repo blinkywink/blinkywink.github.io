@@ -132,6 +132,12 @@ export function writeMobileNativeVersion(version: string) {
     throw new Error(`Mobile version must be x.y.z.w, got ${version}`);
   }
 
+  const prev = fs.existsSync(MOBILE_VERSION_FILE)
+    ? fs.readFileSync(MOBILE_VERSION_FILE, "utf8")
+    : "";
+  const minMatch = prev.match(/MIN_NATIVE_VERSION = "([^"]+)"/);
+  const minNative = minMatch?.[1] ?? "1.0.20.2";
+
   fs.writeFileSync(
     MOBILE_VERSION_FILE,
     `/** IPA/APK native version. Independent of desktop/website APP_VERSION.
@@ -142,6 +148,9 @@ export function writeMobileNativeVersion(version: string) {
     Web OTA does not change this string; Capgo uses checksums instead.
 */
 export const MOBILE_NATIVE_VERSION = "${version}";
+
+/** Oldest IPA/APK allowed to run. Bump only when the native shell must change. */
+export const MIN_NATIVE_VERSION = "${minNative}";
 `,
   );
 

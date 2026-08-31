@@ -13,6 +13,9 @@ on:
       - "vite.config.ts"
       - "capacitor.config.ts"
       - "scripts/publish-mobile-ota.ts"
+      - "scripts/ota-bundle.ts"
+      - "scripts/write-slim-ota-zip.py"
+      - "scripts/write-baked-ota-checksum.ts"
       - ".github/workflows/mobile-ota.yml"
 
 concurrency:

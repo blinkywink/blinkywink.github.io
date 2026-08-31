@@ -5,4 +5,7 @@
     - last two numbers are mobile-only
     Web OTA does not change this string; Capgo uses checksums instead.
 */
-export const MOBILE_NATIVE_VERSION = "1.0.20.2";
+export const MOBILE_NATIVE_VERSION = "1.0.20.3";
+
+/** Oldest IPA/APK allowed to run. Bump only when the native shell must change. */
+export const MIN_NATIVE_VERSION = "1.0.20.2";

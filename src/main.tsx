@@ -17,8 +17,10 @@ import "@fontsource/nunito/latin-800.css";
 import "@fontsource/luckiest-guy/latin-400.css";
 import { initSiteTheme } from "./lib/siteTheme";
 import { nativeShellReady } from "./lib/nativeShell";
+import { installNativeMediaCdn } from "./lib/nativeMediaCdn";
 import "./index.css";
 
+installNativeMediaCdn();
 initSiteTheme();
 
 const root = document.getElementById("root")!;
