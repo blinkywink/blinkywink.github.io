@@ -104,18 +104,23 @@ end;
 $$;
 
 -- Pack shop (p_shop := true). Game continue costs use p_shop := false.
+-- One function only: a leftover spend_coins(integer) overload makes PostgREST
+-- return PGRST203 ("Could not choose the best candidate") on shop spends.
+drop function if exists public.spend_coins(integer);
+drop function if exists public.spend_coins(integer, boolean);
+
 create or replace function public.spend_coins(
   p_amount integer,
   p_shop boolean default false
 )
-returns integer
+returns bigint
 language plpgsql
 security definer
 set search_path = public, extensions
 as $$
 declare
   uid uuid := public.current_account_id();
-  new_balance integer;
+  new_balance bigint;
 begin
   if uid is null then
     uid := auth.uid();
@@ -167,7 +172,7 @@ as $$
 declare
   uid uuid := public.current_account_id();
   listing public.shop_direct_slots%rowtype;
-  new_balance integer;
+  new_balance bigint;
   excluded text[];
   pick record;
 begin
@@ -566,7 +571,7 @@ declare
   owned text[];
   levels jsonb;
   clears jsonb;
-  new_balance integer;
+  new_balance bigint;
   cur_level integer;
   next_level integer;
   price integer;
@@ -667,7 +672,6 @@ revoke all on function public._bump_shop_spent(uuid, integer) from public;
 revoke all on function public.buy_listing(uuid) from public;
 revoke all on function public.make_listing_offer(uuid, integer) from public;
 revoke all on function public.list_card_for_sale(text, integer) from public;
-revoke all on function public.spend_coins(integer) from public;
 revoke all on function public.spend_coins(integer, boolean) from public;
 revoke all on function public.buy_shop_direct_card(integer, bigint) from public;
 revoke all on function public.buy_hero(text) from public;
@@ -675,7 +679,6 @@ revoke all on function public.buy_hero(text) from public;
 grant execute on function public.buy_listing(uuid) to anon, authenticated;
 grant execute on function public.make_listing_offer(uuid, integer) to anon, authenticated;
 grant execute on function public.list_card_for_sale(text, integer) to anon, authenticated;
-grant execute on function public.spend_coins(integer) to anon, authenticated;
 grant execute on function public.spend_coins(integer, boolean) to anon, authenticated;
 grant execute on function public.buy_shop_direct_card(integer, bigint) to anon, authenticated;
 grant execute on function public.buy_hero(text) to anon, authenticated;

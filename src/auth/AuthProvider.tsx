@@ -148,6 +148,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   if (!data) return null;
   const profile: Profile = {
     ...data,
+    coins: Math.max(0, Math.floor(Number(data.coins) || 0)),
+    coins_earned: Math.max(0, Math.floor(Number(data.coins_earned) || 0)),
+    shop_spent: Math.max(0, Math.floor(Number(data.shop_spent) || 0)),
     last_daily_claim: data.last_daily_claim
       ? String(data.last_daily_claim).slice(0, 10)
       : null,

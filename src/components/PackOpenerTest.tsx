@@ -38,7 +38,7 @@ import {
 import { isTypingTarget } from "../lib/keyboard";
 import { playBuy, playCardFocus, playCardWhoosh, playJumpscare, playPackParagon, playPackRare, playPackSlice, playPackT4, preloadJumpscareSound, preloadPackSounds } from "../lib/packSounds";
 import { preloadImages } from "../lib/preloadImages";
-import { spendCoins } from "../lib/spendCoins";
+import { spendCoins, takeLastSpendError } from "../lib/spendCoins";
 import { BoosterPackFace } from "./BoosterPackFace";
 import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
@@ -639,7 +639,7 @@ export function PackOpenerTest({
     buyLockRef.current = false;
     setBuyBusy(false);
     if (balance == null) {
-      setBuyError("Purchase failed, try again.");
+      setBuyError(takeLastSpendError() ?? "Purchase failed, try again.");
       return;
     }
     lastOpenWasFreeRef.current = false;
@@ -984,7 +984,7 @@ export function PackOpenerTest({
       setBuyBusy(false);
       stopAutoOpen();
       reset();
-      setBuyError("Purchase failed, try again.");
+      setBuyError(takeLastSpendError() ?? "Purchase failed, try again.");
       return;
     }
     lastOpenWasFreeRef.current = false;
