@@ -1,7 +1,5 @@
-# Installer files are large — a Pages Function at /downloads/:file 302s to
-# GitHub's blob CDN so the browser never lands on github.com (Sign in).
-# Fallback if Functions are down:
-/downloads/*  https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/:splat  302
-
 # SPA fallback (Cloudflare Pages serves real files first).
+# Installers: functions/downloads/[file].ts 302s to GitHub's blob CDN
+# (do not add a /downloads redirect here — it would run first and send
+# people to github.com Sign in).
 /*    /index.html   200
