@@ -12,7 +12,7 @@ api.blinkywink.co {
 		max_size 512KB
 	}
 
-	@allowedOrigin expression `{http.request.header.Origin} == "https://monkeycards.app" || {http.request.header.Origin} == "https://www.monkeycards.app" || {http.request.header.Origin} == "https://tauri.localhost" || {http.request.header.Origin} == "http://tauri.localhost" || {http.request.header.Origin} == "tauri://localhost" || {http.request.header.Origin} == "capacitor://localhost" || {http.request.header.Origin} == "https://localhost" || {http.request.header.Origin} == "http://localhost"`
+	@allowedOrigin header_regexp Origin ^https://(www\.)?monkeycards\.app$|^https://([a-z0-9-]+\.)?monkeycards\.pages\.dev$|^https://tauri\.localhost$|^http://tauri\.localhost$|^tauri://localhost$|^capacitor://localhost$|^https://localhost$|^http://localhost(:\d+)?$
 
 	handle /auth/v1/health {
 		header Access-Control-Allow-Origin *
@@ -24,7 +24,7 @@ api.blinkywink.co {
 	handle @preflight {
 		header @allowedOrigin Access-Control-Allow-Origin {http.request.header.Origin}
 		header Access-Control-Allow-Methods "GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD"
-		header Access-Control-Allow-Headers "*"
+		header Access-Control-Allow-Headers "Authorization, Apikey, Content-Type, Accept, Accept-Profile, Content-Profile, Prefer, Range, X-Client-Info, X-Supabase-Api-Version, X-Bloon-Session"
 		header Access-Control-Max-Age "86400"
 		header Vary Origin
 		respond 204

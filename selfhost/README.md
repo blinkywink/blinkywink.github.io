@@ -4,7 +4,8 @@ Postgres + PostgREST on this box. Existing homelab Caddy already serves
 `*.blinkywink.co`, so the public URL is **https://api.blinkywink.co**.
 Website images stay on Vercel until we switch Pages.
 
-Do not replay `supabase/*.sql`. Restore a live dump.
+Do not replay `supabase/*.sql`. Restore a live dump, then apply
+`postgres/harden.sql` and `postgres/trade_limits.sql`.
 
 ```bash
 cd ~/monkeycards-api

@@ -1,6 +1,33 @@
-import { getAccessToken, supabase } from "./supabase";
+import { getAccessToken, supabase, supabaseRealtime } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
+
+type RpcErr = {
+  message?: string;
+  details?: string;
+  hint?: string;
+};
+
+function throwTradeError(error: RpcErr): never {
+  const raw = [error.message, error.details, error.hint]
+    .filter((s): s is string => Boolean(s && s.trim()))
+    .join(" ");
+  throw new Error(friendlyTradeError(raw));
+}
+
+function friendlyTradeError(raw: string): string {
+  if (/rooms are full/i.test(raw)) {
+    return "All 40 trade rooms are in use right now. Wait a minute, then try sending the request again.";
+  }
+  if (/no longer pending/i.test(raw)) {
+    return "That invite expired. Unused trade requests close after 3 minutes.";
+  }
+  if (/is not active/i.test(raw)) {
+    return "This trade is no longer open. Rooms close after 10 minutes if the trade doesn't finish.";
+  }
+  const cleaned = raw.replace(/^PGRST\d+:\s*/i, "").trim();
+  return cleaned || "Trade failed.";
+}
 
 export type TradeInboxItem = {
   id: string;
@@ -82,7 +109,7 @@ export async function requestTrade(username: string): Promise<string> {
   const { data, error } = await supabase.rpc("request_trade", {
     p_username: username.trim(),
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
   return String(data);
 }
@@ -96,7 +123,7 @@ export async function respondTrade(
     p_trade_id: tradeId,
     p_accept: accept,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
   return data === "active" ? "active" : "declined";
 }
@@ -106,7 +133,7 @@ export async function cancelTrade(tradeId: string): Promise<void> {
   const { error } = await supabase.rpc("cancel_trade", {
     p_trade_id: tradeId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
 }
 
@@ -119,7 +146,7 @@ export async function fetchTradeInbox(
     CacheTtl.inbox,
     async () => {
       const { data, error } = await supabase.rpc("get_trade_inbox");
-      if (error) throw new Error(error.message);
+      if (error) throwTradeError(error);
       const raw = (data ?? {}) as Record<string, unknown>;
       return {
         incoming: asInboxItems(raw.incoming),
@@ -136,7 +163,7 @@ export async function fetchTrade(tradeId: string): Promise<TradeState> {
   const { data, error } = await supabase.rpc("get_trade", {
     p_trade_id: tradeId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
   return asTradeState(data);
 }
 
@@ -150,7 +177,7 @@ export async function setTradeOffer(
     p_card_ids: cardIds,
     p_cash: 0,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
 }
 
 export async function setTradeReady(
@@ -162,7 +189,7 @@ export async function setTradeReady(
     p_trade_id: tradeId,
     p_ready: ready,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwTradeError(error);
   const next = asTradeState(data);
   cacheInvalidate("trade:inbox");
   return next;
@@ -180,6 +207,7 @@ function findChannel(topicSuffix: string) {
 }
 
 async function broadcastPing(channelName: string): Promise<void> {
+  if (!supabaseRealtime) return;
   const existing = findChannel(channelName);
   if (existing) {
     await existing.send({
@@ -218,11 +246,12 @@ async function broadcastPing(channelName: string): Promise<void> {
   });
 }
 
-/** Live poke - Realtime broadcast (no Supabase Auth required). */
+/** Live poke - Realtime broadcast (no-op on the home API). */
 export function subscribeInboxChannel(
   userId: string,
   onPing: () => void,
 ): () => void {
+  if (!supabaseRealtime) return () => undefined;
   const channel = supabase.channel(`inbox:${userId}`);
   channel.on("broadcast", { event: "ping" }, () => onPing()).subscribe();
   return () => {
@@ -238,6 +267,7 @@ export function subscribeTradeChannel(
   tradeId: string,
   onPing: () => void,
 ): () => void {
+  if (!supabaseRealtime) return () => undefined;
   const channel = supabase.channel(`trade:${tradeId}`);
   channel.on("broadcast", { event: "ping" }, () => onPing()).subscribe();
   return () => {

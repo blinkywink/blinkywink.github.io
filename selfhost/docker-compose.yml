@@ -35,6 +35,8 @@ services:
       PGRST_DB_PRE_REQUEST: public.pgrst_pre_request
       PGRST_OPENAPI_MODE: disabled
       PGRST_MAX_ROWS: 1000
+      PGRST_DB_POOL: "20"
+      PGRST_DB_POOL_ACQUISITION_TIMEOUT: "10"
     ports:
       - "127.0.0.1:3001:3000"
 

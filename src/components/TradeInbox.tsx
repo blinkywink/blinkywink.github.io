@@ -39,8 +39,12 @@ import {
   setTradeInboxUiOpen,
   subscribeTradeInboxUi,
 } from "../lib/tradeInboxUi";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import { CashAmount } from "./CurrencyChip";
 import { ExchangeCompare } from "./ExchangeCompare";
+
+const INBOX_IDLE_MS = 15_000;
+const INBOX_OPEN_MS = 4_000;
 
 const EMPTY_TRADES: TradeInbox = { incoming: [], outgoing: [], active: [] };
 const EMPTY_OFFERS: MarketOfferInbox = { incoming: [], outgoing: [] };
@@ -178,16 +182,19 @@ export function TradeInbox({
       setTradeInboxUiBadge(0, false);
       return;
     }
-    void refresh();
-    const poll = window.setInterval(() => void refresh(), 2500);
+    void refresh(open);
+    const stopPoll = startVisiblePoll(
+      () => void refresh(),
+      open ? INBOX_OPEN_MS : INBOX_IDLE_MS,
+    );
     const unsub = subscribeInboxChannel(user.id, () => {
       void refresh(true);
     });
     return () => {
-      window.clearInterval(poll);
+      stopPoll();
       unsub();
     };
-  }, [user, refresh]);
+  }, [user, refresh, open]);
 
   useEffect(() => {
     if (!open || variant === "mobile") return;

@@ -10,6 +10,7 @@ import {
   type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import { ExternalLink } from "./ExternalLink";
 
 type GateStatus = "idle" | "updating" | "blocked";
@@ -110,17 +111,7 @@ export function DesktopUpdateGate() {
   useEffect(() => {
     if (!isDesktopShell()) return;
     void run();
-    const id = window.setInterval(() => void run(), RECHECK_MS);
-    const onWake = () => {
-      if (document.visibilityState === "visible") void run();
-    };
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", onWake);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onWake);
-      document.removeEventListener("visibilitychange", onWake);
-    };
+    return startVisiblePoll(() => void run(), RECHECK_MS);
   }, [run]);
 
   if (!isDesktopShell() || status === "idle") return null;

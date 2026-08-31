@@ -7,6 +7,7 @@ import {
   type LeaderboardEntry,
 } from "../lib/leaderboardRanks";
 import { cacheGetStale } from "../lib/cache";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import { searchProfilesByUsername } from "../lib/profiles";
 import {
   hasPlayerChrome,
@@ -119,18 +120,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
   }, [load, applyPage]);
 
   useEffect(() => {
-    const tick = () => void load(false);
-    const id = window.setInterval(tick, 45_000);
-    const onWake = () => {
-      if (document.visibilityState === "visible") tick();
-    };
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", onWake);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onWake);
-      document.removeEventListener("visibilitychange", onWake);
-    };
+    return startVisiblePoll(() => void load(false), 45_000);
   }, [load]);
 
   const trimmed = query.trim();

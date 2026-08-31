@@ -31,6 +31,16 @@ export const supabaseConfigured = Boolean(url && publishableKey);
 export const supabaseUrl = url ?? null;
 export const supabasePublishableKey = publishableKey ?? null;
 
+/** Hosted Supabase Realtime only. PostgREST on the N100 has no websocket hub. */
+export const supabaseRealtime = (() => {
+  if (!url) return false;
+  try {
+    return /\.supabase\.co$/i.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+})();
+
 /** Opaque session token → sent as x-bloon-session (not a JWT). */
 let sessionToken: string | null = loadAppSession()?.accessToken ?? null;
 

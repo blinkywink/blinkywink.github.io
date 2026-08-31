@@ -17,6 +17,7 @@ import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { isNativeShell } from "../lib/nativeShell";
 import { isTypingTarget } from "../lib/keyboard";
 import { CashAmount } from "./CurrencyChip";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import { MonkeyCard } from "./MonkeyCard";
 
 const POLL_MS = 8_000;
@@ -66,17 +67,12 @@ export function ShopDirectShelf() {
 
   useEffect(() => {
     void load(true);
-    const id = window.setInterval(() => void load(true), POLL_MS);
-    const onFocus = () => void load(true);
-    window.addEventListener("focus", onFocus);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onFocus);
-    };
+    return startVisiblePoll(() => void load(true), POLL_MS);
   }, [load]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
       const t = Date.now();
       if (listings.some((row) => shopDirectExpiresAtMs(row) <= t)) {
         void load(true);

@@ -17,6 +17,7 @@ import {
 } from "../lib/hubPeeks";
 import { suggestedListingRange } from "../lib/listingValue";
 import { fetchTopLeaderboard } from "../lib/leaderboardRanks";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import {
   aboutPath,
   collectionPath,
@@ -157,17 +158,10 @@ export function HomeHub() {
       }
     };
     void load();
-    const id = window.setInterval(() => void load(false), 45_000);
-    const onWake = () => {
-      if (document.visibilityState === "visible") void load(false);
-    };
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", onWake);
+    const stopPoll = startVisiblePoll(() => void load(false), 45_000);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
-      window.removeEventListener("focus", onWake);
-      document.removeEventListener("visibilitychange", onWake);
+      stopPoll();
     };
   }, [boardPreviewLimit]);
 

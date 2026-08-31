@@ -8,6 +8,7 @@ import {
   shouldAutoInstallMobileOta,
   skipMobileOta,
 } from "../lib/mobileOtaGuard";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import {
   MOBILE_APK_URL,
   MOBILE_IPA_URL,
@@ -245,25 +246,10 @@ export function MobileUpdateGate() {
   useEffect(() => {
     if (!isNativeShell()) return;
     void run();
-    const id = window.setInterval(() => {
+    return startVisiblePoll(() => {
       if (statusRef.current === "blocked") return;
       void run();
     }, RECHECK_MS);
-    const onWake = () => {
-      if (
-        document.visibilityState === "visible" &&
-        statusRef.current !== "blocked"
-      ) {
-        void run();
-      }
-    };
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", onWake);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onWake);
-      document.removeEventListener("visibilitychange", onWake);
-    };
   }, [run]);
 
   if (!isNativeShell() || status === "idle") return null;

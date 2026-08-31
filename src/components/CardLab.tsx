@@ -120,6 +120,7 @@ export function CardLab({
   const { user, isGuest, profile } = useAuth();
   const [tradeBusy, setTradeBusy] = useState(false);
   const [tradeMsg, setTradeMsg] = useState<string | null>(null);
+  const [tradeMsgError, setTradeMsgError] = useState(false);
   const [exchangeOpen, setExchangeOpen] = useState(false);
   /** After pick - review You vs Them before sending. */
   const [exchangeCardId, setExchangeCardId] = useState<string | null>(null);
@@ -275,11 +276,13 @@ export function CardLab({
     if (!viewer || tradeBusy) return;
     setTradeBusy(true);
     setTradeMsg(null);
+    setTradeMsgError(false);
     try {
       await requestTrade(viewer.username);
       await pingInbox(viewer.userId).catch(() => undefined);
       setTradeMsg(`Trade request sent to ${viewer.username}.`);
     } catch (err) {
+      setTradeMsgError(true);
       setTradeMsg(err instanceof Error ? err.message : "Could not send request.");
     }
     setTradeBusy(false);
@@ -301,12 +304,14 @@ export function CardLab({
     if (!needsVisualSeed(exchangeCardId)) return;
     setTradeBusy(true);
     setTradeMsg(null);
+    setTradeMsgError(false);
     try {
       await requestExchange(viewer.username, exchangeCardId);
       await pingInbox(viewer.userId).catch(() => undefined);
       closeExchange();
       setTradeMsg(`Exchange request sent to ${viewer.username}.`);
     } catch (err) {
+      setTradeMsgError(true);
       setTradeMsg(err instanceof Error ? err.message : "Could not send exchange.");
     }
     setTradeBusy(false);
@@ -683,6 +688,7 @@ export function CardLab({
                   disabled={tradeBusy}
                   onClick={() => {
                     setTradeMsg(null);
+                    setTradeMsgError(false);
                     setExchangeCardId(null);
                     setExchangeOpen(true);
                   }}
@@ -690,7 +696,12 @@ export function CardLab({
                   Request exchange
                 </button>
                 {tradeMsg ? (
-                  <p className="card-lab__trade-msg">{tradeMsg}</p>
+                  <p
+                    className={`card-lab__trade-msg${tradeMsgError ? " is-error" : ""}`}
+                    role={tradeMsgError ? "alert" : "status"}
+                  >
+                    {tradeMsg}
+                  </p>
                 ) : null}
               </div>
             ) : null}

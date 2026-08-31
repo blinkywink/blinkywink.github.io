@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { loadAppSession } from "../auth/session";
+import { startVisiblePoll } from "../lib/visiblePoll";
 
 const SYNC_MS = 45_000;
 const SYNC_COOLDOWN_MS = 12_000;
@@ -32,17 +33,7 @@ export function LivePlayerSync() {
   }, [isGuest, refresh, refreshProfile, session, signOut]);
 
   useEffect(() => {
-    const id = window.setInterval(() => void sync(), SYNC_MS);
-    const onWake = () => {
-      if (document.visibilityState === "visible") void sync();
-    };
-    window.addEventListener("focus", onWake);
-    document.addEventListener("visibilitychange", onWake);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onWake);
-      document.removeEventListener("visibilitychange", onWake);
-    };
+    return startVisiblePoll(() => void sync(), SYNC_MS);
   }, [sync]);
 
   return null;

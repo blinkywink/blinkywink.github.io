@@ -17064,8 +17064,14 @@ a.market-card__seller:hover {
 
 .card-lab__trade-msg {
   margin: 0;
-  font-size: 0.88rem;
-  color: rgba(240, 240, 244, 0.7);
+  flex: 1 1 100%;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(240, 240, 244, 0.78);
+}
+
+.card-lab__trade-msg.is-error {
+  color: #ffb4a8;
 }
 
 .card-lab__exchange {

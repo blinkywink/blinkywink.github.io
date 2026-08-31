@@ -18,6 +18,7 @@ import {
   type TradeState,
 } from "../lib/trades";
 import { collectionPath, marketplacePath } from "../lib/routes";
+import { startVisiblePoll } from "../lib/visiblePoll";
 import { PageHeader } from "./PageHeader";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
@@ -114,12 +115,12 @@ export function TradeRoom() {
   useEffect(() => {
     if (!tradeId || !user) return;
     if (trade?.status === "completed" || trade?.status === "cancelled") return;
-    const poll = window.setInterval(() => void load(), 1500);
+    const stopPoll = startVisiblePoll(() => void load(), 2_000);
     const unsub = subscribeTradeChannel(tradeId, () => {
       void load();
     });
     return () => {
-      window.clearInterval(poll);
+      stopPoll();
       unsub();
     };
   }, [tradeId, user, load, trade?.status]);
@@ -431,7 +432,9 @@ export function TradeRoom() {
             ? "Trade completed. These are the cards that swapped."
             : active
               ? "Pick cards below, then Ready when the offers look good."
-              : `This trade is ${trade.status}.`
+              : trade.status === "cancelled"
+                ? "This trade ended. Unused invites close after 3 minutes, and rooms close after 10 minutes if the trade doesn't finish."
+                : `This trade is ${trade.status}.`
         }
       />
       <main className="trade-main">

@@ -1,0 +1,5 @@
+# Cloudflare Pages (free). Vite writes to dist/; public/_headers and
+# public/_redirects are copied there and applied by Pages.
+name = "monkeycards"
+compatibility_date = "2026-08-31"
+pages_build_output_dir = "dist"
