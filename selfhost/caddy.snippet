@@ -24,7 +24,7 @@ api.blinkywink.co {
 	handle @preflight {
 		header @allowedOrigin Access-Control-Allow-Origin {http.request.header.Origin}
 		header Access-Control-Allow-Methods "GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD"
-		header Access-Control-Allow-Headers "Authorization, Content-Type, apikey, x-bloon-session, Prefer, Range, Accept, Profile, Content-Profile"
+		header Access-Control-Allow-Headers "*"
 		header Access-Control-Max-Age "86400"
 		header Vary Origin
 		respond 204
@@ -35,7 +35,11 @@ api.blinkywink.co {
 		header @allowedOrigin Access-Control-Allow-Origin {http.request.header.Origin}
 		header Access-Control-Expose-Headers "Content-Range, Range-Unit, Preference-Applied"
 		header Vary Origin
-		reverse_proxy 127.0.0.1:3001
+		reverse_proxy 127.0.0.1:3001 {
+			header_down -Access-Control-Allow-Origin
+			header_down -Access-Control-Allow-Methods
+			header_down -Access-Control-Allow-Headers
+		}
 	}
 
 	handle {
