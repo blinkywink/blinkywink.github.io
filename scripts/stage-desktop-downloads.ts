@@ -76,6 +76,4 @@ else console.warn("Skip Mac - no .dmg found");
 if (win) copy(win, "blinkywink-windows-setup.exe");
 else console.warn("Skip Windows - no NSIS .exe found");
 
-console.log("\nSite download URLs:");
-console.log("  /downloads/blinkywink-mac.dmg");
-console.log("  /downloads/blinkywink-windows-setup.exe");
+console.log("\nPublish with desktop:publish — site buttons use GitHub Releases, not /downloads.");

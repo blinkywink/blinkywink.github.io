@@ -1,0 +1,5 @@
+# Installers stay on GitHub Releases so the web host never streams 176MB files.
+/downloads/*  https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/:splat  302
+
+# SPA fallback (Cloudflare Pages serves real files first).
+/*    /index.html   200

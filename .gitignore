@@ -55,3 +55,7 @@ npm-debug.log*
 *.sw?
 .vercel
 .verify-upd/
+
+# Home-server secrets and DB dumps — never commit
+selfhost/.env
+selfhost/data/

@@ -10,7 +10,8 @@ export function isDesktopShell(): boolean {
 }
 
 /**
- * Desktop must reach Supabase before play (no offline / local-only mode).
+ * Desktop must reach the game API before play (no offline / local-only mode).
+ * Tries Supabase GoTrue, then PostgREST, so home-hosted API works too.
  * Returns true, or an error message string.
  */
 export async function assertOnlineBackend(
@@ -23,23 +24,32 @@ export async function assertOnlineBackend(
     return "Missing server config.";
   }
 
-  try {
-    const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(`${supabaseUrl}/auth/v1/health`, {
-      method: "GET",
-      signal: ctrl.signal,
-      headers: {
-        apikey: supabasePublishableKey,
-        Authorization: `Bearer ${supabasePublishableKey}`,
-      },
-    });
-    window.clearTimeout(timer);
-    if (!res.ok) return "Game servers are unreachable right now.";
-    return true;
-  } catch {
-    return "Could not reach the game servers. Check your internet and try again.";
+  const base = supabaseUrl.replace(/\/+$/, "");
+  const headers = {
+    apikey: supabasePublishableKey,
+    Authorization: `Bearer ${supabasePublishableKey}`,
+  };
+  // Supabase GoTrue first; PostgREST /rest/v1/ for the home API.
+  const paths = ["/auth/v1/health", "/rest/v1/"];
+  const perTry = Math.max(1500, Math.floor(timeoutMs / paths.length));
+
+  for (const path of paths) {
+    try {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), perTry);
+      const res = await fetch(`${base}${path}`, {
+        method: "GET",
+        signal: ctrl.signal,
+        headers,
+      });
+      window.clearTimeout(timer);
+      if (res.status < 500) return true;
+    } catch {
+      /* try the next path */
+    }
   }
+
+  return "Could not reach the game servers. Check your internet and try again.";
 }
 
 export function offlineGateHtml(message: string): string {

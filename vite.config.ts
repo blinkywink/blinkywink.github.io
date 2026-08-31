@@ -1,9 +1,21 @@
-import { defineConfig } from "vite";
+import { rmSync } from "node:fs";
+import path from "node:path";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+
+/** Installers belong on GitHub Releases — never ship them with the website. */
+function stripDistDownloads(): Plugin {
+  return {
+    name: "strip-dist-downloads",
+    closeBundle() {
+      rmSync(path.resolve("dist/downloads"), { recursive: true, force: true });
+    },
+  };
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), stripDistDownloads()],
   build: {
     rollupOptions: {
       output: {
