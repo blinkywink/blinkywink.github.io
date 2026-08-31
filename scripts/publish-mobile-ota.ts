@@ -31,8 +31,9 @@ const raiseFloor = process.argv.includes("--raise-native-floor");
 const skipBuild = process.argv.includes("--skip-build");
 
 const MOBILE_TAG = "mobile";
-/** Static media fallback when Capgo can't copy from the builtin APK. */
-const OTA_SITE_BASE = "https://www.monkeycards.app";
+/** Static media fallback when Capgo can't copy from the builtin APK.
+ *  Use Pages, not www — custom domain can still be on a dead Vercel origin. */
+const OTA_SITE_BASE = "https://monkeycards.pages.dev";
 
 function isGithubHostedOtaFile(relativePath: string): boolean {
   return relativePath === "index.html" || relativePath.startsWith("assets/");

@@ -192,12 +192,13 @@ export function MobileUpdateGate() {
           );
           bundleId = bundle.id;
         } catch (downloadErr) {
-          if (useManifest) throw downloadErr;
           console.warn("Mobile update download retry", downloadErr);
+          const zipUrl =
+            "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards-web.zip";
           const bundle = await watchOtaDownload(
             CapacitorUpdater.download({
               version: bundleVersion,
-              url: manifest.url,
+              url: zipUrl,
             }),
             () => setMessage("Still downloading… keep the app open on Wi‑Fi"),
             progressRef,
@@ -257,7 +258,13 @@ export function MobileUpdateGate() {
   return (
     <div className="desktop-online-gate" role="alertdialog" aria-modal="true">
       <div className="desktop-online-gate__card">
-        <h1>{status === "updating" ? "Updating" : "Update required"}</h1>
+        <h1>
+          {status === "updating"
+            ? "Updating"
+            : nativeBlock
+              ? "Update required"
+              : "Couldn't update"}
+        </h1>
         {status === "updating" ? (
           <>
             {message !== "Updating" ? <p>{message}</p> : null}
