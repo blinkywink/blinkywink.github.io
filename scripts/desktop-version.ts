@@ -145,7 +145,8 @@ export function writeMobileNativeVersion(version: string) {
     Format: 1.0.{native}.{build}
     - 1.0 stays the product line
     - last two numbers are mobile-only
-    Web OTA does not change this string; Capgo uses checksums instead.
+    Web OTA bumps this so Capgo and the Profile footer show a new build.
+    Do not bump MIN_NATIVE_VERSION unless the native shell itself must change.
 */
 export const MOBILE_NATIVE_VERSION = "${version}";
 

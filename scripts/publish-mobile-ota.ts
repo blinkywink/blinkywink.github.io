@@ -17,10 +17,8 @@ const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
 const OUT_DIR = join(ROOT, "android-artifacts");
 const PUBLIC_JSON = join(ROOT, "public", "mobile-latest.json");
-const ZIP_NAME = "MonkeyCards-web.zip";
 const skipBuild = process.argv.includes("--skip-build");
 const MOBILE_TAG = "mobile";
-const ZIP_URL = `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${ZIP_NAME}`;
 
 function sh(cmd: string, cwd = ROOT) {
   console.log(`$ ${cmd}`);
@@ -101,6 +99,8 @@ function writeManifest(body: Record<string, string>) {
 
 const appVersion = readDesktopVersion();
 const nativeVersion = readMobileNativeVersion();
+const zipName = `MonkeyCards-web-${nativeVersion}.zip`;
+const zipUrl = `https://github.com/${REPO}/releases/download/${MOBILE_TAG}/${zipName}`;
 mkdirSync(OUT_DIR, { recursive: true });
 
 if (!skipBuild) {
@@ -110,13 +110,13 @@ if (!existsSync(join(DIST, "index.html"))) {
   throw new Error("dist/index.html missing — build first");
 }
 
-const zipPath = join(OUT_DIR, ZIP_NAME);
+const zipPath = join(OUT_DIR, zipName);
 const checksum = writeSlimOtaZip(DIST, zipPath);
 
 const stagedJson = writeManifest({
   version: nativeVersion,
   minNativeVersion: MIN_NATIVE_VERSION,
-  url: ZIP_URL,
+  url: zipUrl,
   checksum,
   message: "Redownload the app to keep playing.",
 });
@@ -138,5 +138,5 @@ console.log(`\nOTA published (single zip)`);
 console.log(`  desktop/web version: ${appVersion}`);
 console.log(`  mobile native: ${nativeVersion}`);
 console.log(`  minNativeVersion: ${MIN_NATIVE_VERSION}`);
-console.log(`  zip: ${ZIP_URL}`);
+console.log(`  zip: ${zipUrl}`);
 console.log(`  checksum: ${checksum}`);

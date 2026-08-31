@@ -44,7 +44,7 @@ export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest 
       const zipUrl = String(data.url ?? "").trim();
       const checksum = String(data.checksum ?? "").trim().toLowerCase();
       if (!version || !zipUrl || !/^[a-f0-9]{64}$/.test(checksum)) continue;
-      if (!zipUrl.includes("MonkeyCards-web.zip") && !zipUrl.endsWith(".zip")) {
+      if (!/MonkeyCards-web/i.test(zipUrl) && !zipUrl.endsWith(".zip")) {
         continue;
       }
       return {
