@@ -2,6 +2,7 @@
 
 const FAIL_KEY = "bloon-arcade:ota-fail";
 const SKIP_KEY = "bloon-arcade:ota-skip";
+const SKIP_NATIVE_KEY = "bloon-arcade:ota-skip-native";
 const APPLIED_CHECKSUM_KEY = "bloon-arcade:ota-applied-checksum";
 const AUTO_FAIL_COOLDOWN_MS = 30 * 60_000;
 
@@ -39,9 +40,27 @@ export function skipMobileOta(version: string) {
   }
 }
 
+/** Play anyway when the native-floor overlay is a false alarm. */
+export function skipNativeRedownload() {
+  try {
+    sessionStorage.setItem(SKIP_NATIVE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function nativeRedownloadSkipped(): boolean {
+  try {
+    return sessionStorage.getItem(SKIP_NATIVE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function clearMobileOtaSkip() {
   try {
     sessionStorage.removeItem(SKIP_KEY);
+    sessionStorage.removeItem(SKIP_NATIVE_KEY);
   } catch {
     /* ignore */
   }

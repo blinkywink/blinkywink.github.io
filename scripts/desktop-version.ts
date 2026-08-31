@@ -152,7 +152,7 @@ export const MOBILE_NATIVE_VERSION = "${version}";
     let text = fs.readFileSync(pbx, "utf8");
     text = text.replace(
       /MARKETING_VERSION = [^;]+;/g,
-      `MARKETING_VERSION = ${version};`,
+      `MARKETING_VERSION = "${version}";`,
     );
     text = text.replace(
       /CURRENT_PROJECT_VERSION = [^;]+;/g,

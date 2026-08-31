@@ -4,9 +4,11 @@ import {
   clearMobileOtaFailure,
   clearMobileOtaSkip,
   markMobileOtaApplied,
+  nativeRedownloadSkipped,
   recordMobileOtaFailure,
   shouldAutoInstallMobileOta,
   skipMobileOta,
+  skipNativeRedownload,
 } from "../lib/mobileOtaGuard";
 import { startVisiblePoll } from "../lib/visiblePoll";
 import {
@@ -70,7 +72,7 @@ async function notifyReady(updater: CapgoUpdater) {
 
 export function MobileUpdateGate() {
   const [status, setStatus] = useState<GateStatus>("idle");
-  const [message, setMessage] = useState("Updating");
+  const [message, setMessage] = useState("");
   const [progress, setProgress] = useState<number | null>(null);
   const [remote, setRemote] = useState<MobileLatestManifest | null>(null);
   const [nativeBlock, setNativeBlock] = useState(false);
@@ -217,13 +219,16 @@ export function MobileUpdateGate() {
       const nativeVersion = String(info.version || bundledAppVersion()).trim();
       setNativeVersionLabel(nativeVersion);
 
-      if (needsNativeRedownload(nativeVersion, manifest)) {
-        setNativeBlock(true);
-        setStatus("blocked");
+      if (
+        needsNativeRedownload(nativeVersion, manifest) &&
+        !nativeRedownloadSkipped()
+      ) {
         setMessage(
           manifest.message ??
             "Sorry, you need to redownload the app to update.",
         );
+        setNativeBlock(true);
+        setStatus("blocked");
         return;
       }
       setNativeBlock(false);
@@ -304,7 +309,9 @@ export function MobileUpdateGate() {
   const continueWithoutUpdate = useCallback(() => {
     cancelledRef.current = true;
     if (skipVersion) skipMobileOta(skipVersion);
+    skipNativeRedownload();
     installingRef.current = false;
+    setNativeBlock(false);
     setStatus("idle");
     setProgress(null);
   }, [skipVersion]);
@@ -372,15 +379,13 @@ export function MobileUpdateGate() {
               <button type="button" className="btn" onClick={() => void run(true)}>
                 Retry
               </button>
-              {!nativeBlock ? (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={continueWithoutUpdate}
-                >
-                  Continue without updating
-                </button>
-              ) : null}
+              <button
+                type="button"
+                className="btn"
+                onClick={continueWithoutUpdate}
+              >
+                Continue without updating
+              </button>
             </div>
             {remote?.version ? (
               <p className="desktop-online-gate__meta">

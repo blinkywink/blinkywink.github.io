@@ -1,6 +1,6 @@
 /** Mobile OTA / force-redownload signals (Capacitor sideload shells). */
 
-import { isOlderVersion } from "./desktopDownloads";
+import { isOlderVersion, parseVersionParts } from "./desktopDownloads";
 import { getAppliedOtaChecksum } from "./mobileOtaGuard";
 import { MOBILE_NATIVE_VERSION } from "./mobileNativeVersion";
 
@@ -94,16 +94,40 @@ export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest 
 
   if (found.length === 0) return null;
 
-  /* GitHub release is source of truth — don't let a stale 1.0.61 mirror win. */
-  return found.reduce((best, cur) =>
-    cur.rank > best.rank ? cur : best,
-  ).manifest;
+  /* GitHub release wins for the zip/checksum so a stale 1.0.61 Pages
+     mirror cannot take over. Among copies of THAT checksum, keep the
+     lowest native floor — IPA jobs used to stamp 1.0.20.2 on GitHub
+     while git still said 1.0.18, and the app then blocked 1.0.20.1. */
+  const best = found.reduce((a, b) => (a.rank >= b.rank ? a : b));
+  const same = found.filter((f) => f.manifest.checksum === best.manifest.checksum);
+  let minNativeVersion = best.manifest.minNativeVersion;
+  for (const f of same) {
+    if (isOlderVersion(f.manifest.minNativeVersion, minNativeVersion)) {
+      minNativeVersion = f.manifest.minNativeVersion;
+    }
+  }
+  return { ...best.manifest, minNativeVersion };
 }
 
 export function needsNativeRedownload(
   nativeVersion: string,
   remote: MobileLatestManifest,
 ): boolean {
+  const currentParts = parseVersionParts(nativeVersion);
+  const minParts = parseVersionParts(remote.minNativeVersion);
+  const currentLen = nativeVersion.trim().split(".").filter(Boolean).length;
+  const minLen = remote.minNativeVersion.trim().split(".").filter(Boolean).length;
+  /* iOS sometimes reports 1.0.20 for a 1.0.20.x binary. Missing 4th
+     component is not "older" when the 1.0.20 prefix already matches. */
+  if (
+    currentLen === 3 &&
+    minLen >= 4 &&
+    currentParts[0] === minParts[0] &&
+    currentParts[1] === minParts[1] &&
+    currentParts[2] === minParts[2]
+  ) {
+    return false;
+  }
   return isOlderVersion(nativeVersion, remote.minNativeVersion);
 }
 
