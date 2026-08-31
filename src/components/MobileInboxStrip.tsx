@@ -1,26 +1,32 @@
-import { useEffect } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { useIsCompactViewport } from "./MobileAppNav";
+import { useIsCompactViewport, useMobileView } from "./MobileAppNav";
 import { isNativeShell } from "../lib/nativeShell";
-import { setTradeInboxUiOpen } from "../lib/tradeInboxUi";
+import { setTradeInboxSlot } from "../lib/tradeInboxUi";
 import { TradeInbox } from "./TradeInbox";
 
-/** Inbox strip at the top of the profile page (inline, not a global overlay). */
-export function MobileInboxStrip() {
-  const { user } = useAuth();
+function useModernMobileChrome() {
   const compact = useIsCompactViewport();
-  const native = isNativeShell();
+  const mobileView = useMobileView();
+  return isNativeShell() || (compact && mobileView === "modern");
+}
 
-  useEffect(() => {
-    return () => setTradeInboxUiOpen(false);
-  }, []);
+/** Keep inbox polling on every tab so the You-tab badge stays live. */
+export function MobileInboxHost() {
+  const { user } = useAuth();
+  const modernMobile = useModernMobileChrome();
+  if (!user || !modernMobile) return null;
+  return <TradeInbox variant="mobile" />;
+}
 
-  if (!user) return null;
-  if (!native && !compact) return null;
-
+/** Inline slot at the top of Profile — the host portals the panel here. */
+export function MobileInboxSlot() {
+  const { user } = useAuth();
+  const modernMobile = useModernMobileChrome();
+  if (!user || !modernMobile) return null;
   return (
-    <div className="mobile-inbox-strip mobile-inbox-strip--profile">
-      <TradeInbox variant="mobile" />
-    </div>
+    <div
+      className="mobile-inbox-strip mobile-inbox-strip--profile"
+      ref={(el) => setTradeInboxSlot(el)}
+    />
   );
 }

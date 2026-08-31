@@ -48,3 +48,24 @@ export function setTradeInboxUiOpen(next: boolean) {
 export function toggleTradeInboxUiOpen() {
   setTradeInboxUiOpen(!open);
 }
+
+/** Profile-page mount point for the mobile inbox panel. */
+let inboxSlot: HTMLElement | null = null;
+const slotListeners = new Set<Listener>();
+
+export function getTradeInboxSlot(): HTMLElement | null {
+  return inboxSlot;
+}
+
+export function setTradeInboxSlot(el: HTMLElement | null) {
+  if (inboxSlot === el) return;
+  inboxSlot = el;
+  for (const fn of slotListeners) fn();
+}
+
+export function subscribeTradeInboxSlot(fn: Listener) {
+  slotListeners.add(fn);
+  return () => {
+    slotListeners.delete(fn);
+  };
+}

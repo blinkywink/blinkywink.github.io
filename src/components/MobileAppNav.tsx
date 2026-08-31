@@ -182,6 +182,7 @@ function YouTabIcon() {
 
 function YouTab() {
   const { user, profile } = useAuth();
+  const { badge } = useTradeInboxUi();
   const signedIn = Boolean(user && profile);
 
   return (
@@ -191,6 +192,9 @@ function YouTab() {
       className={({ isActive }) =>
         `mobile-app-nav__link${signedIn ? " mobile-app-nav__link--you-pfp" : ""}${isActive ? " is-active" : ""}`
       }
+      onClick={() => {
+        if (badge > 0) setTradeInboxUiOpen(true);
+      }}
     >
       <span className="mobile-app-nav__icon mobile-app-nav__icon--you">
         <YouTabIcon />

@@ -11,7 +11,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { useIsCompactViewport } from "./MobileAppNav";
-import { MobileInboxStrip } from "./MobileInboxStrip";
+import { MobileInboxSlot } from "./MobileInboxStrip";
 import { ProfileAuthPanel } from "./ProfileAuthPanel";
 import {
   clamp01,
@@ -724,7 +724,7 @@ export function ProfilePage() {
   return (
     <div className="profile-page">
       <main className="profile-main">
-        <MobileInboxStrip />
+        <MobileInboxSlot />
         {status ? (
           <p className="profile-banner profile-banner--ok">{status}</p>
         ) : null}

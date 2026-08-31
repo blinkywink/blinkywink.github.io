@@ -1333,6 +1333,11 @@ p {
     margin: 0 0 0.75rem;
   }
 
+  .mobile-inbox-strip--profile:empty {
+    display: none;
+    margin: 0;
+  }
+
   .trade-inbox--mobile {
     width: 100%;
   }

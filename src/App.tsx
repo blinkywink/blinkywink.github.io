@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense, type ReactNode } from "react";
 import {
   Navigate,
   Route,
@@ -28,6 +28,7 @@ import { ProfilePage } from "./components/ProfilePage";
 import { ShopPage } from "./components/ShopPage";
 import { SiteHeader } from "./components/SiteHeader";
 import { MobileAppNav, useIsCompactViewport, useMobileView } from "./components/MobileAppNav";
+import { MobileInboxHost } from "./components/MobileInboxStrip";
 import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
 import { HubPeekExport } from "./components/HubPeekExport";
@@ -891,6 +892,7 @@ function AppShell() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <MobileInboxHost />
       <MobileAppNav />
 
       {bonusToast ? (
@@ -927,10 +929,25 @@ function AppShell() {
   );
 }
 
+function resetWindowAndMainScroll() {
+  const main = document.querySelector(".site-main");
+  if (main instanceof HTMLElement) main.scrollTop = 0;
+  const scrolling = document.scrollingElement;
+  if (scrolling instanceof HTMLElement) scrolling.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  useLayoutEffect(() => {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+    resetWindowAndMainScroll();
+    const frame = window.requestAnimationFrame(resetWindowAndMainScroll);
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
   return null;
 }

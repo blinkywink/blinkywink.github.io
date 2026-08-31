@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
 import { cardSpecById } from "../lib/cardCatalog";
@@ -32,11 +32,13 @@ import {
   type TradeInbox,
   type TradeInboxItem,
 } from "../lib/trades";
-import { listingPath, tradePath } from "../lib/routes";
+import { listingPath, profilePath, tradePath } from "../lib/routes";
 import {
+  getTradeInboxSlot,
   getTradeInboxUiSnapshot,
   setTradeInboxUiBadge,
   setTradeInboxUiOpen,
+  subscribeTradeInboxSlot,
   subscribeTradeInboxUi,
 } from "../lib/tradeInboxUi";
 import { startVisiblePoll } from "../lib/visiblePoll";
@@ -60,6 +62,14 @@ export function TradeInbox({
   const { user, refreshProfile } = useAuth();
   const { refresh: refreshCards } = useCardCollection();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+  const dismissedOnProfileRef = useRef(false);
+  const [inboxReady, setInboxReady] = useState(false);
+  const [inboxSlot, setInboxSlot] = useState<HTMLElement | null>(() =>
+    getTradeInboxSlot(),
+  );
   const [open, setOpen] = useState(() => getTradeInboxUiSnapshot().open);
 
   const setOpenSynced = useCallback(
@@ -137,6 +147,16 @@ export function TradeInbox({
       setSales(nextSales);
       setError(null);
 
+      const nextBadge =
+        nextTrades.incoming.length +
+        nextTrades.active.length +
+        nextTrades.outgoing.length +
+        nextOffers.incoming.length +
+        nextOffers.outgoing.length +
+        nextExchanges.incoming.length +
+        nextExchanges.outgoing.length +
+        nextSales.length;
+
       const hot =
         nextTrades.incoming.length +
         nextTrades.active.length +
@@ -148,18 +168,31 @@ export function TradeInbox({
       if (!hydrated.current) {
         hydrated.current = true;
         prevIncoming.current = hot;
-        if (nextSales.length > 0) setOpenSynced(true);
+        setInboxReady(true);
+        if (variant === "mobile") {
+          if (nextBadge > 0) setOpenSynced(true);
+        } else if (nextSales.length > 0) {
+          setOpenSynced(true);
+        }
       } else if (hot > prevIncoming.current) {
+        dismissedOnProfileRef.current = false;
         setOpenSynced(true);
         if (nextSales.length > 0) {
           void Promise.all([refreshCards(), refreshProfile()]);
         }
+      } else if (
+        variant === "mobile" &&
+        pathnameRef.current === profilePath() &&
+        !dismissedOnProfileRef.current &&
+        nextBadge > 0
+      ) {
+        setOpenSynced(true);
       }
       prevIncoming.current = hot;
     } catch {
       // Quiet - header shouldn't spam errors while offline
     }
-  }, [user, refreshCards, refreshProfile, setOpenSynced]);
+  }, [user, refreshCards, refreshProfile, setOpenSynced, variant]);
 
   useEffect(() => {
     return subscribeTradeInboxUi(() => {
@@ -167,6 +200,26 @@ export function TradeInbox({
       setOpen((prev) => (prev === snap.open ? prev : snap.open));
     });
   }, []);
+
+  useLayoutEffect(() => {
+    setInboxSlot(getTradeInboxSlot());
+    return subscribeTradeInboxSlot(() => setInboxSlot(getTradeInboxSlot()));
+  }, []);
+
+  useLayoutEffect(() => {
+    if (variant !== "mobile") return;
+    if (pathname !== profilePath()) {
+      dismissedOnProfileRef.current = false;
+      return;
+    }
+    if (dismissedOnProfileRef.current) return;
+    if (getTradeInboxUiSnapshot().badge > 0) setOpenSynced(true);
+  }, [pathname, variant, setOpenSynced]);
+
+  const closeMobileInbox = useCallback(() => {
+    dismissedOnProfileRef.current = true;
+    setOpenSynced(false);
+  }, [setOpenSynced]);
 
   useEffect(() => {
     if (!user) {
@@ -177,6 +230,7 @@ export function TradeInbox({
       prevIncoming.current = 0;
       prevOutgoingIds.current = new Set();
       hydrated.current = false;
+      setInboxReady(false);
       setOpenSynced(false);
       setNotice(null);
       setTradeInboxUiBadge(0, false);
@@ -239,16 +293,21 @@ export function TradeInbox({
     0;
 
   useEffect(() => {
+    if (!user) {
+      setTradeInboxUiBadge(0, false);
+      return;
+    }
+    if (!inboxReady) return;
     setTradeInboxUiBadge(badge, isHot);
-  }, [badge, isHot]);
+  }, [badge, isHot, user, inboxReady]);
 
   if (!user) return null;
 
-  if (variant === "mobile" && !open) {
-    return <div ref={wrapRef} className="trade-inbox trade-inbox--mobile" hidden />;
-  }
-
   const showPill = badge > 0 || open;
+  const onProfile = pathname === profilePath();
+  if (variant === "mobile" && (!open || !onProfile || !inboxSlot)) {
+    return null;
+  }
 
   async function onAcceptTrade(item: TradeInboxItem) {
     setBusyId(item.id);
@@ -453,7 +512,7 @@ export function TradeInbox({
   }
 
 
-  return (
+  const tree = (
     <div
       className={[
         "trade-inbox",
@@ -494,7 +553,7 @@ export function TradeInbox({
                 type="button"
                 className="btn btn--ghost btn--sm"
                 aria-label="Close"
-                onClick={() => setOpenSynced(false)}
+                onClick={closeMobileInbox}
               >
                 ✕
               </button>
@@ -1007,4 +1066,8 @@ export function TradeInbox({
         : null}
     </div>
   );
+  if (variant === "mobile" && inboxSlot) {
+    return createPortal(tree, inboxSlot);
+  }
+  return tree;
 }
