@@ -1,4 +1,6 @@
-# Installers stay on GitHub Releases so the web host never streams 176MB files.
+# Installer files are large — a Pages Function at /downloads/:file 302s to
+# GitHub's blob CDN so the browser never lands on github.com (Sign in).
+# Fallback if Functions are down:
 /downloads/*  https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/:splat  302
 
 # SPA fallback (Cloudflare Pages serves real files first).

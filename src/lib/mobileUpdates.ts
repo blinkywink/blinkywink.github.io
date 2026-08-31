@@ -4,10 +4,11 @@ import { isOlderVersion } from "./desktopDownloads";
 import { getAppliedOtaChecksum } from "./mobileOtaGuard";
 import { MOBILE_NATIVE_VERSION } from "./mobileNativeVersion";
 
-export const MOBILE_APK_URL =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.apk";
-export const MOBILE_IPA_URL =
-  "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/MonkeyCards.ipa";
+/** Public installer links — proxied off github.com so players aren't asked to sign in. */
+export const INSTALLER_DOWNLOAD_BASE = "https://monkeycards.pages.dev/downloads";
+
+export const MOBILE_APK_URL = `${INSTALLER_DOWNLOAD_BASE}/MonkeyCards.apk`;
+export const MOBILE_IPA_URL = `${INSTALLER_DOWNLOAD_BASE}/MonkeyCards.ipa`;
 export const MOBILE_RELEASE_PAGE =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest";
 

@@ -8,6 +8,6 @@
     "Heli Pilot"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
-  "downloadMac": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-mac.dmg",
-  "downloadWindows": "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download/blinkywink-windows-setup.exe"
+  "downloadMac": "https://monkeycards.pages.dev/downloads/blinkywink-mac.dmg",
+  "downloadWindows": "https://monkeycards.pages.dev/downloads/blinkywink-windows-setup.exe"
 }
