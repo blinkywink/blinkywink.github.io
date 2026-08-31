@@ -1,13 +1,47 @@
-/** Native OTA zips omit art/music; load them from Pages. */
+/** Native OTA zips omit art/music. Load those folders from the IPA/APK bundle. */
 
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 const CDN = "https://monkeycards.pages.dev";
 const MEDIA = /^\/(images|sounds|music)\//;
 
-export function nativeMediaUrl(url: string): string {
+type BuiltinMediaPlugin = {
+  getMediaBase(): Promise<{ base: string }>;
+};
+
+const BuiltinMedia = registerPlugin<BuiltinMediaPlugin>("BuiltinMedia");
+
+/** WebView-accessible origin for bundled `public/` (no trailing slash). Empty = use site-relative paths. */
+let mediaRoot = "";
+
+function toWebSrc(base: string): string {
+  const raw = String(base ?? "").trim();
+  if (!raw) return "";
+  const fileUrl = raw.startsWith("file:")
+    ? raw
+    : raw.startsWith("/")
+      ? `file://${raw}`
+      : raw;
+  const converted = Capacitor.convertFileSrc(fileUrl).replace(/\/+$/, "");
+  return converted;
+}
+
+function mediaPath(url: string): { path: string; qs: string } | null {
   const raw = String(url ?? "");
-  if (!raw || /^(https?:|data:|blob:|capacitor:)/i.test(raw)) return raw;
+  if (!raw) return null;
+  if (/^(data:|blob:)/i.test(raw)) return null;
+  if (raw.startsWith(CDN)) {
+    try {
+      const u = new URL(raw);
+      if (!MEDIA.test(u.pathname)) return null;
+      return { path: u.pathname, qs: u.search };
+    } catch {
+      return null;
+    }
+  }
+  if (/^(https?:|capacitor:)/i.test(raw) && !raw.startsWith("http://localhost") && !raw.startsWith("https://localhost")) {
+    return null;
+  }
   let pathname = raw;
   let qs = "";
   try {
@@ -21,10 +55,48 @@ export function nativeMediaUrl(url: string): string {
       qs = u.search;
     }
   } catch {
-    return raw;
+    return null;
   }
-  if (!MEDIA.test(pathname)) return raw;
-  return `${CDN}${pathname}${qs}`;
+  if (!MEDIA.test(pathname)) return null;
+  return { path: pathname, qs };
+}
+
+export function nativeMediaUrl(url: string): string {
+  const parsed = mediaPath(url);
+  if (!parsed) return url;
+  if (!mediaRoot) return `${parsed.path}${parsed.qs}`;
+  return `${mediaRoot}${parsed.path}${parsed.qs}`;
+}
+
+function applyCssMediaRoot(root: string) {
+  if (typeof document === "undefined" || !root) return;
+  const meadow = `url("${root}/images/bananas/monkey-meadow-bg.webp")`;
+  const degree = `url("${root}/images/ui/paragon-degree.webp")`;
+  document.documentElement.style.setProperty("--native-media-meadow", meadow);
+  document.documentElement.style.setProperty("--native-media-paragon-degree", degree);
+}
+
+async function resolveMediaRoot(): Promise<string> {
+  try {
+    const { base } = await BuiltinMedia.getMediaBase();
+    const converted = toWebSrc(base);
+    if (converted) return converted;
+  } catch {
+    /* plugin ships in the next IPA */
+  }
+  if (Capacitor.getPlatform() === "android") {
+    const converted = toWebSrc("file:///android_asset/public");
+    if (converted) return converted;
+  }
+  try {
+    const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
+    const cur = await CapacitorUpdater.current();
+    const id = String(cur?.bundle?.id || "builtin").toLowerCase();
+    if (id === "builtin") return "";
+  } catch {
+    /* capgo missing */
+  }
+  return CDN;
 }
 
 function patchSrc(ctor: { prototype: HTMLElement }) {
@@ -45,13 +117,16 @@ function patchSrc(ctor: { prototype: HTMLElement }) {
 }
 
 /** Call before any image/audio work in the native WebView. */
-export function installNativeMediaCdn() {
+export async function installNativeMediaCdn() {
   if (typeof window === "undefined") return;
   try {
     if (!Capacitor.isNativePlatform()) return;
   } catch {
     return;
   }
+
+  mediaRoot = await resolveMediaRoot();
+  applyCssMediaRoot(mediaRoot);
 
   patchSrc(HTMLImageElement);
   patchSrc(HTMLAudioElement);

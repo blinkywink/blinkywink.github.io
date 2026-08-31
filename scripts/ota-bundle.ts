@@ -1,6 +1,6 @@
 /**
- * Slim Capgo zip (index.html + assets) so OTA is one ~2MB download.
- * Art and music load from monkeycards.pages.dev.
+ * Slim Capgo zip (index.html + assets) so OTA is one small JS/CSS download.
+ * Art and music stay in the IPA/APK and load from disk.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";

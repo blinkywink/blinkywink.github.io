@@ -939,15 +939,40 @@ function resetWindowAndMainScroll() {
   window.scrollTo(0, 0);
 }
 
+/** iOS keeps flicking `.site-main` after a tab change unless overflow is locked for a frame. */
+function lockScrollers(locked: boolean) {
+  const nodes: HTMLElement[] = [];
+  const main = document.querySelector(".site-main");
+  if (main instanceof HTMLElement) nodes.push(main);
+  document.documentElement.classList.toggle("is-route-scroll-lock", locked);
+  document.body.classList.toggle("is-route-scroll-lock", locked);
+  for (const el of nodes) {
+    if (locked) {
+      el.classList.add("is-route-scroll-lock");
+      el.scrollTop = 0;
+    } else {
+      el.scrollTop = 0;
+      el.classList.remove("is-route-scroll-lock");
+    }
+  }
+  resetWindowAndMainScroll();
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }
-    resetWindowAndMainScroll();
-    const frame = window.requestAnimationFrame(resetWindowAndMainScroll);
-    return () => window.cancelAnimationFrame(frame);
+    lockScrollers(true);
+    const frame = window.requestAnimationFrame(() => {
+      resetWindowAndMainScroll();
+      lockScrollers(false);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      lockScrollers(false);
+    };
   }, [pathname]);
   return null;
 }

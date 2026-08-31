@@ -20,7 +20,6 @@ import { nativeShellReady } from "./lib/nativeShell";
 import { installNativeMediaCdn } from "./lib/nativeMediaCdn";
 import "./index.css";
 
-installNativeMediaCdn();
 initSiteTheme();
 
 const root = document.getElementById("root")!;
@@ -65,6 +64,7 @@ function renderApp() {
 
 async function boot() {
   await nativeShellReady;
+  await installNativeMediaCdn();
 
   if (!supabaseConfigured) {
     renderMissingConfig();

@@ -1209,6 +1209,13 @@ p {
   box-sizing: border-box;
 }
 
+html.is-route-scroll-lock,
+html.is-route-scroll-lock body,
+.site-main.is-route-scroll-lock {
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* Modern mobile: app-style bottom tabs; header only for Shop cash. */
 @media (max-width: 820px) {
   html[data-mobile-chrome="modern"] {
@@ -4037,7 +4044,7 @@ body:has(.roundcheck-page) {
   height: 136%;
   z-index: 0;
   pointer-events: none;
-  background-image: url("/images/bananas/monkey-meadow-bg.webp");
+  background-image: var(--native-media-meadow, url("/images/bananas/monkey-meadow-bg.webp"));
   background-size: 3600px auto;
   background-repeat: repeat;
   background-position: 0 0;
@@ -4592,7 +4599,7 @@ body:has(.roundcheck-page) {
   position: relative;
   overflow: hidden;
   background:
-    url("/images/bananas/monkey-meadow-bg.webp") center / 220% auto no-repeat,
+    var(--native-media-meadow, url("/images/bananas/monkey-meadow-bg.webp")) center / 220% auto no-repeat,
     #3a7a3a;
 }
 
@@ -8752,8 +8759,8 @@ body.rewards-overlay-open .sweeper-result {
   inset: 0;
   pointer-events: none;
   mix-blend-mode: soft-light;
-  -webkit-mask-image: url("/images/ui/paragon-degree.webp");
-  mask-image: url("/images/ui/paragon-degree.webp");
+  -webkit-mask-image: var(--native-media-paragon-degree, url("/images/ui/paragon-degree.webp"));
+  mask-image: var(--native-media-paragon-degree, url("/images/ui/paragon-degree.webp"));
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -14673,7 +14680,7 @@ body.rewards-overlay-open .sweeper-result {
   height: 136%;
   pointer-events: none;
   z-index: 0;
-  background-image: url("/images/bananas/monkey-meadow-bg.webp");
+  background-image: var(--native-media-meadow, url("/images/bananas/monkey-meadow-bg.webp"));
   /* Heavy zoom + blur so path edges/tile seams melt into grass texture */
   background-size: 3600px auto;
   background-repeat: repeat;

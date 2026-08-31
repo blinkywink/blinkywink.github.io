@@ -4,7 +4,7 @@
  *   npx tsx scripts/publish-mobile-ota.ts
  *   npx tsx scripts/publish-mobile-ota.ts --skip-build
  *
- * One ~2MB zip (JS/CSS). Art/music stay on Pages. Native floor is pinned.
+ * One small JS/CSS zip. Art/music stay in the IPA/APK and load from disk.
  */
 import { execSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
