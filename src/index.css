@@ -2564,6 +2564,21 @@ body:has(.roundcheck-page) {
   color: #a8a8b4;
 }
 
+.ios-sideload__code {
+  margin: 0 0 1.15rem;
+  padding: 0.65rem 0.75rem;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #0c0c10;
+  border: 1px solid #2a2a34;
+  color: #e8e8ee;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .ios-sideload__actions {
   display: flex;
   flex-direction: column;

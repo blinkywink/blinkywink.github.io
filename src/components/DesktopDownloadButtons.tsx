@@ -79,7 +79,68 @@ function IosSideloadDialog({
   );
 }
 
-/** Windows, Mac, Android APK, iOS (sideload notice). All from GitHub Releases. */
+function MacOpenDialog({
+  open,
+  onClose,
+  macHref,
+}: {
+  open: boolean;
+  onClose: () => void;
+  macHref: string;
+}) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="ios-sideload" role="presentation">
+      <button
+        type="button"
+        className="ios-sideload__backdrop"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div
+        className="ios-sideload__card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <button
+          type="button"
+          className="ios-sideload__close"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          ×
+        </button>
+        <h2 id={titleId}>Mac install</h2>
+        <p className="ios-sideload__blurb">
+          After you drag it to Applications, macOS may say it’s damaged. That is
+          Gatekeeper, not a broken file. Right-click the app → Open → Open.
+          Or paste this in Terminal:
+        </p>
+        <pre className="ios-sideload__code">{`xattr -cr "/Applications/Monkey Cards.app"`}</pre>
+        <div className="ios-sideload__actions">
+          <ExternalLink href={macHref} className="btn btn--primary">
+            Download Mac
+          </ExternalLink>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function DesktopDownloadButtons({
   className = "",
   macHref = DESKTOP_MAC_DMG,
@@ -88,6 +149,7 @@ export function DesktopDownloadButtons({
   iosHref = MOBILE_IPA_URL,
 }: Props) {
   const [iosOpen, setIosOpen] = useState(false);
+  const [macOpen, setMacOpen] = useState(false);
 
   return (
     <>
@@ -101,12 +163,16 @@ export function DesktopDownloadButtons({
           </svg>
           Windows
         </ExternalLink>
-        <ExternalLink href={macHref} className="home-hub__download-btn">
+        <button
+          type="button"
+          className="home-hub__download-btn"
+          onClick={() => setMacOpen(true)}
+        >
           <svg viewBox="0 0 24 24" aria-hidden focusable="false">
             <path d="M16.13 12.87c-.02-2.17 1.77-3.21 1.85-3.26-1.01-1.47-2.58-1.67-3.13-1.7-1.33-.14-2.6.78-3.28.78-.68 0-1.73-.76-2.85-.74-1.47.02-2.82.85-3.58 2.16-1.53 2.65-.39 6.57 1.1 8.72.73 1.05 1.6 2.23 2.74 2.19 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.7.71 2.85.69 1.18-.02 1.93-1.07 2.65-2.12.83-1.21 1.17-2.38 1.19-2.44-.03-.01-2.28-.87-2.3-3.45zm-2.17-6.3c.61-.74 1.02-1.77.91-2.8-.88.04-1.94.59-2.57 1.33-.56.65-1.05 1.69-.92 2.69.97.08 1.96-.49 2.58-1.22z" />
           </svg>
           Mac
-        </ExternalLink>
+        </button>
         <ExternalLink href={androidHref} className="home-hub__download-btn">
           <svg viewBox="0 0 24 24" aria-hidden focusable="false">
             <path
@@ -127,6 +193,11 @@ export function DesktopDownloadButtons({
           iOS
         </button>
       </div>
+      <MacOpenDialog
+        open={macOpen}
+        onClose={() => setMacOpen(false)}
+        macHref={macHref}
+      />
       <IosSideloadDialog
         open={iosOpen}
         onClose={() => setIosOpen(false)}
