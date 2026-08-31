@@ -40,5 +40,15 @@ services:
     ports:
       - "127.0.0.1:3001:3000"
 
+  downloads:
+    image: node:22-alpine
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./download-proxy.mjs:/app/download-proxy.mjs:ro
+    command: ["node", "download-proxy.mjs"]
+    ports:
+      - "127.0.0.1:3011:3011"
+
 volumes:
   pgdata:

@@ -5,7 +5,7 @@ import { getAppliedOtaChecksum } from "./mobileOtaGuard";
 import { MOBILE_NATIVE_VERSION } from "./mobileNativeVersion";
 
 /** Public installer links — proxied off github.com so players aren't asked to sign in. */
-export const INSTALLER_DOWNLOAD_BASE = "https://monkeycards.pages.dev/downloads";
+export const INSTALLER_DOWNLOAD_BASE = "https://api.blinkywink.co/downloads";
 
 export const MOBILE_APK_URL = `${INSTALLER_DOWNLOAD_BASE}/MonkeyCards.apk`;
 export const MOBILE_IPA_URL = `${INSTALLER_DOWNLOAD_BASE}/MonkeyCards.ipa`;
