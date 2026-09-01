@@ -76,26 +76,38 @@ function applyCssMediaRoot(root: string) {
   document.documentElement.style.setProperty("--native-media-paragon-degree", degree);
 }
 
-async function resolveMediaRoot(): Promise<string> {
-  try {
-    const { base } = await BuiltinMedia.getMediaBase();
-    const converted = toWebSrc(base);
-    if (converted) return converted;
-  } catch {
-    /* plugin ships in the next IPA */
-  }
-  if (Capacitor.getPlatform() === "android") {
-    const converted = toWebSrc("file:///android_asset/public");
-    if (converted) return converted;
-  }
+async function isCapgoOtaBundle(): Promise<boolean> {
   try {
     const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
     const cur = await CapacitorUpdater.current();
     const id = String(cur?.bundle?.id || "builtin").toLowerCase();
-    if (id === "builtin") return "";
+    return Boolean(id) && id !== "builtin" && id !== "unknown";
   } catch {
-    /* capgo missing */
+    return false;
   }
+}
+
+async function resolveMediaRoot(): Promise<string> {
+  const ota = await isCapgoOtaBundle();
+  if (!ota) {
+    // Builtin WebView already serves IPA/APK public/ at site-relative /images.
+    return "";
+  }
+
+  // Capgo's OTA origin has no art. Android android_asset via convertFileSrc
+  // becomes /_capacitor_file_/android_asset/... which that WebView cannot read.
+  if (Capacitor.getPlatform() === "ios") {
+    try {
+      const { base } = await BuiltinMedia.getMediaBase();
+      const converted = toWebSrc(base);
+      if (converted && !converted.includes("/_capacitor_file_/android_asset")) {
+        return converted;
+      }
+    } catch {
+      /* fall through to Pages */
+    }
+  }
+
   return CDN;
 }
 
