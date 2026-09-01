@@ -62,5 +62,5 @@ jobs:
             echo "No manifest changes"
             exit 0
           fi
-          git commit -m "chore: sync mobile-latest OTA manifest [skip ci]"
+          git commit -m "chore: sync mobile-latest OTA manifest"
           git push origin HEAD:main

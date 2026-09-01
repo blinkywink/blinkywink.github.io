@@ -23,43 +23,55 @@ export type MobileLatestManifest = {
 };
 
 const MANIFEST_SOURCES = [
+  "https://raw.githubusercontent.com/blinkywink/blinkywink.github.io/main/public/mobile-latest.json",
+  "https://blinkywink.github.io/mobile-latest.json",
   "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/mobile-latest.json",
   "https://monkeycards.pages.dev/mobile-latest.json",
-  "https://raw.githubusercontent.com/blinkywink/blinkywink.github.io/main/public/mobile-latest.json",
 ];
 
+function parseManifest(data: {
+  version?: string;
+  minNativeVersion?: string;
+  url?: string;
+  checksum?: string;
+  message?: string;
+}): MobileLatestManifest | null {
+  const version = String(data.version ?? "").trim();
+  const zipUrl = String(data.url ?? "").trim();
+  const checksum = String(data.checksum ?? "").trim().toLowerCase();
+  if (!version || !zipUrl || !/^[a-f0-9]{64}$/.test(checksum)) return null;
+  if (!/MonkeyCards-web/i.test(zipUrl) && !zipUrl.endsWith(".zip")) return null;
+  return {
+    version,
+    minNativeVersion:
+      String(data.minNativeVersion ?? "").trim() || MIN_NATIVE_VERSION,
+    url: zipUrl,
+    checksum,
+    message: data.message ? String(data.message) : undefined,
+  };
+}
+
 export async function fetchMobileLatestManifest(): Promise<MobileLatestManifest | null> {
-  for (const url of MANIFEST_SOURCES) {
-    try {
-      const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
-      if (!res.ok) continue;
-      const data = (await res.json()) as {
-        version?: string;
-        minNativeVersion?: string;
-        url?: string;
-        checksum?: string;
-        message?: string;
-      };
-      const version = String(data.version ?? "").trim();
-      const zipUrl = String(data.url ?? "").trim();
-      const checksum = String(data.checksum ?? "").trim().toLowerCase();
-      if (!version || !zipUrl || !/^[a-f0-9]{64}$/.test(checksum)) continue;
-      if (!/MonkeyCards-web/i.test(zipUrl) && !zipUrl.endsWith(".zip")) {
-        continue;
-      }
-      return {
-        version,
-        minNativeVersion:
-          String(data.minNativeVersion ?? "").trim() || MIN_NATIVE_VERSION,
-        url: zipUrl,
-        checksum,
-        message: data.message ? String(data.message) : undefined,
-      };
-    } catch {
-      /* try next */
-    }
-  }
-  return null;
+  const found = (
+    await Promise.all(
+      MANIFEST_SOURCES.map(async (url) => {
+        try {
+          const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
+          if (!res.ok) return null;
+          return parseManifest((await res.json()) as Parameters<typeof parseManifest>[0]);
+        } catch {
+          return null;
+        }
+      }),
+    )
+  ).filter((row): row is MobileLatestManifest => row != null);
+
+  if (!found.length) return null;
+  found.sort((a, b) => {
+    if (a.version === b.version) return 0;
+    return isOlderVersion(a.version, b.version) ? 1 : -1;
+  });
+  return found[0] ?? null;
 }
 
 export function needsNativeRedownload(

@@ -1,4 +1,8 @@
 # Cloudflare Pages cache rules. Existing files are served before SPA fallback.
+/mobile-latest.json
+  Cache-Control: no-cache, no-store, must-revalidate
+  Access-Control-Allow-Origin: *
+
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
