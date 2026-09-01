@@ -17,7 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
+import { isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
   onStaticVisualizerSlot,
@@ -393,7 +393,6 @@ export function MonkeyCard({
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
-  const androidNative = isAndroidNative();
   const nativeShell = isNativeShell();
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -748,7 +747,7 @@ export function MonkeyCard({
           }
         },
       }
-    : locked || (androidNative && !isPreview)
+    : locked
       ? {}
       : {
           onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {

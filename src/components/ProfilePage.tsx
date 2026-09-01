@@ -585,33 +585,7 @@ export function ProfilePage() {
                       </div>
                     ) : null}
 
-                    <div className="pfp-editor__previews">
-                      <p>How it looks</p>
-                      <div className="pfp-editor__preview-row">
-                        <div>
-                          <UserAvatar crop={draft} face={draftFace} size={72} />
-                          <span>Header</span>
-                        </div>
-                        <div>
-                          <UserAvatar crop={draft} face={draftFace} size={56} />
-                          <span>Board</span>
-                        </div>
-                        <div>
-                          <UserAvatar crop={draft} face={draftFace} size={40} />
-                          <span>Small</span>
-                        </div>
-                      </div>
-                    </div>
-
                     <div className="pfp-editor__side-actions">
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm"
-                        disabled={busy}
-                        onClick={() => setEditorStep("pick")}
-                      >
-                        Different card
-                      </button>
                       <button
                         type="button"
                         className="btn btn--ghost btn--sm"
@@ -641,7 +615,7 @@ export function ProfilePage() {
                   disabled={busy}
                   onClick={() => setEditorStep("pick")}
                 >
-                  Back
+                  Choose card
                 </button>
                 <button
                   type="button"
