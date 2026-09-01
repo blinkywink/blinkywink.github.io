@@ -1,7 +1,7 @@
 {
-  "version": "1.0.20.8",
-  "minNativeVersion": "1.0.20.2",
-  "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards-web-1.0.20.8.zip",
-  "checksum": "11c1f7b23b214c9c18f3061a5a84e6977f4de6975f70ca860fdd3014711409cf",
+  "version": "1.0.20.9",
+  "minNativeVersion": "1.0.20.9",
+  "url": "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile/MonkeyCards-web-1.0.20.9.zip",
+  "checksum": "398cd4b660e1002a3261c9df391b42156a12cef548a2d66796a17e3af3df5822",
   "message": "Redownload the app to keep playing."
 }
