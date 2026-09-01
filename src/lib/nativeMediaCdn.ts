@@ -88,27 +88,21 @@ async function isCapgoOtaBundle(): Promise<boolean> {
 }
 
 async function resolveMediaRoot(): Promise<string> {
+  // Android APK intercepts /images|/sounds|/music from disk even after Capgo
+  // swaps the web dir. Keep site-relative URLs so that handler can see them.
+  if (Capacitor.getPlatform() === "android") return "";
+
   const ota = await isCapgoOtaBundle();
-  if (!ota) {
-    // Builtin WebView already serves IPA/APK public/ at site-relative /images.
-    return "";
-  }
+  if (!ota) return "";
 
-  // Capgo's OTA origin has no art. Android android_asset via convertFileSrc
-  // becomes /_capacitor_file_/android_asset/... which that WebView cannot read.
-  if (Capacitor.getPlatform() === "ios") {
-    try {
-      const { base } = await BuiltinMedia.getMediaBase();
-      const converted = toWebSrc(base);
-      if (converted && !converted.includes("/_capacitor_file_/android_asset")) {
-        return converted;
-      }
-    } catch {
-      /* fall through to Pages */
-    }
+  try {
+    const { base } = await BuiltinMedia.getMediaBase();
+    const converted = toWebSrc(base);
+    if (converted) return converted;
+  } catch {
+    /* plugin ships in the IPA */
   }
-
-  return CDN;
+  return "";
 }
 
 function patchSrc(ctor: { prototype: HTMLElement }) {
