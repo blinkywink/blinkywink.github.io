@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.20",
-  "version": "1.0.20",
-  "shopDay": "2026-8-31",
+  "minDesktopVersion": "1.0.21",
+  "version": "1.0.21",
+  "shopDay": "2026-9-2",
   "featuredTowers": [
-    "Monkey Sub",
-    "Beast Handler",
-    "Heli Pilot"
+    "Mermonkey",
+    "Banana Farm",
+    "Tack Shooter"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://api.blinkywink.co/downloads/blinkywink-mac.dmg",
