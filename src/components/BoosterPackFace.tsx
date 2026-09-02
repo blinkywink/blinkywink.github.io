@@ -5,7 +5,6 @@ import {
   resolveCategoryPackTheme,
   resolveTowerPackTheme,
 } from "../lib/packTheme";
-import { isNativeShell } from "../lib/nativeShell";
 
 type Props = {
   pack: PackDef;
@@ -16,8 +15,8 @@ type Props = {
 
 /** Printed face only - sits inside `.booster__face`. */
 export function BoosterPackFace({ pack, className = "", lazyImages = false }: Props) {
-  /* Native WebViews often never fire lazy load for in-grid pack art. */
-  const imgLoad = isNativeShell() || !lazyImages ? "eager" : "lazy";
+  /* Shelf uses lazyImages — defer decode until near viewport (Chromium WebView). */
+  const imgLoad = lazyImages ? "lazy" : "eager";
   if (pack.kind === "btd6") {
     return (
       <div className={`pack-face pack-face--btd6 ${className}`.trim()}>

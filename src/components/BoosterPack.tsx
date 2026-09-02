@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode, Ref } from "react";
+import { memo, type CSSProperties, type ReactNode, type Ref } from "react";
 import { BTD6_PACK_ART, type PackDef } from "../lib/packTheme";
 import { BoosterPackFace } from "./BoosterPackFace";
 
@@ -16,7 +16,7 @@ type Props = {
  * Shared foil pack shell (crimps + face).
  * Face art comes from BoosterPackFace (BTD6 cover or tower template).
  */
-export function BoosterPack({
+export const BoosterPack = memo(function BoosterPack({
   pack,
   open = false,
   effects = true,
@@ -65,4 +65,4 @@ export function BoosterPack({
       </div>
     </div>
   );
-}
+});

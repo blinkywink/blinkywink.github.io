@@ -1656,10 +1656,30 @@ html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
 }
 
 /* Android perf — shop scroll + pack open (keep card reflections / paragon FX). */
+html[data-native="1"][data-platform="android"] .pack-shelf__item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+  contain: layout style paint;
+}
+
 html[data-native="1"][data-platform="android"] .pack-shelf__booster {
   filter: none;
   box-shadow: 0 14px 16px rgba(0, 0, 0, 0.35);
   transition: none;
+  perspective: none;
+  contain: layout style paint;
+}
+
+html[data-native="1"][data-platform="android"] .pack-shelf__booster .booster {
+  filter: none;
+}
+
+html[data-native="1"][data-platform="android"] .pack-shelf__booster .booster__pack {
+  transform-style: flat;
+}
+
+html[data-native="1"][data-platform="android"] .pack-shelf__booster .booster__crimp-ridges {
+  mix-blend-mode: normal;
 }
 
 html[data-native="1"][data-platform="android"] .pack-face__category-slot img,
@@ -1700,7 +1720,7 @@ html[data-native="1"] .pack-opener .booster__model {
   animation: none !important;
 }
 
-html[data-native="1"] .pack-shelf__item {
+html[data-native="1"]:not([data-platform="android"]) .pack-shelf__item {
   content-visibility: visible;
   contain-intrinsic-size: auto;
 }
