@@ -17,7 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isNativeShell } from "../lib/nativeShell";
+import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
   onStaticVisualizerSlot,
@@ -409,6 +409,8 @@ export function MonkeyCard({
   const [active, setActive] = useState(false);
 
   const isParagon = entity.type === "paragon";
+  /** Android WebView: paragon tilt breaks compositing — keep card static in focus. */
+  const disableParagonTilt = isAndroidNative() && isParagon && !isPreview;
   const collection = useCardCollectionOptional();
   const ownedDegree = isParagon
     ? collection?.paragonOf(paragonCardId(entity.tower))?.degree
@@ -747,8 +749,20 @@ export function MonkeyCard({
           }
         },
       }
-    : locked
-      ? {}
+    : locked || disableParagonTilt
+      ? onSelect && !locked
+        ? {
+            role: "button" as const,
+            tabIndex: 0,
+            onClick: () => onSelect(),
+            onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            },
+          }
+        : {}
       : {
           onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
             if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -798,6 +812,7 @@ export function MonkeyCard({
         isParagon && paragonAmbient
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
+        disableParagonTilt ? "monkey-card-scene--no-tilt" : "",
       ]
         .filter(Boolean)
         .join(" ")}
