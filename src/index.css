@@ -1417,6 +1417,16 @@ html.is-route-scroll-lock body,
     animation: trade-pill-pulse 1.4s ease-in-out infinite;
   }
 
+  @keyframes trade-pill-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.08);
+    }
+  }
+
   html[data-mobile-chrome="modern"] .trade-inbox--modern .trade-inbox__panel {
     position: fixed;
     top: 0;
@@ -17181,20 +17191,6 @@ a.market-card__seller:hover {
   place-items: center;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
   pointer-events: none;
-}
-
-.trade-inbox__badge.is-hot {
-  animation: trade-pill-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes trade-pill-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.08);
-  }
 }
 
 .trade-inbox__trigger:hover,
