@@ -17,7 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isNativeShell } from "../lib/nativeShell";
+import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
   onStaticVisualizerSlot,
@@ -394,6 +394,7 @@ export function MonkeyCard({
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
   const nativeShell = isNativeShell();
+  const trackPointer = !isPreview && !(nativeShell && isAndroidNative());
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -749,30 +750,44 @@ export function MonkeyCard({
       }
     : locked
       ? {}
-      : {
-          onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {
-            setActive(true);
-            queuePoint(e.clientX, e.clientY);
-          },
-          onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
-            queuePoint(e.clientX, e.clientY);
-          },
-          onPointerLeave: reset,
-          onPointerCancel: reset,
-          ...(onSelect
-            ? {
-                role: "button" as const,
-                tabIndex: 0,
-                onClick: () => onSelect(),
-                onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect();
-                  }
-                },
-              }
-            : {}),
-        };
+      : trackPointer
+        ? {
+            onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {
+              setActive(true);
+              queuePoint(e.clientX, e.clientY);
+            },
+            onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+              queuePoint(e.clientX, e.clientY);
+            },
+            onPointerLeave: reset,
+            onPointerCancel: reset,
+            ...(onSelect
+              ? {
+                  role: "button" as const,
+                  tabIndex: 0,
+                  onClick: () => onSelect(),
+                  onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect();
+                    }
+                  },
+                }
+              : {}),
+          }
+        : onSelect
+          ? {
+              role: "button" as const,
+              tabIndex: 0,
+              onClick: () => onSelect(),
+              onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelect();
+                }
+              },
+            }
+          : {};
 
   const tierClass = isParagon
     ? `monkey-card--paragon monkey-card--paragon-s${stage}`

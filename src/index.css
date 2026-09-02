@@ -1762,15 +1762,50 @@ html[data-native="1"][data-platform="android"] .monkey-card__shadow {
   filter: none;
 }
 
-html[data-native="1"][data-platform="android"] .monkey-card:not(.monkey-card--preview) .monkey-card__glow {
-  inset: -16%;
-  opacity: calc(var(--opacity) * 0.95);
+/*
+ * Android focus viewer: pointer-tracked holo blends repaint blocky and tint
+ * portraits/text. Keep a static halo; drop live foil/glare/edge sheen.
+ */
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__glare,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__spark,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__sheen,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__edge,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-shine,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-degree-sheen {
+  display: none;
+}
+
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__glow {
+  inset: -14%;
+  opacity: 0.42;
   background: radial-gradient(
-    circle at var(--px) var(--py),
-    rgba(180, 230, 255, 0.55),
-    rgba(255, 220, 120, 0.22) 40%,
-    transparent 68%
+    circle at 50% 42%,
+    rgba(180, 230, 255, 0.32),
+    rgba(255, 220, 120, 0.1) 44%,
+    transparent 64%
   );
+}
+
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__portrait,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__head--overlay,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__rail,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__map,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__color-field {
+  transform: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__visualizer,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__visualizer {
+  transform: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__bleed {
+  isolation: isolate;
+}
+
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active {
+  will-change: auto;
 }
 
 @media (max-width: 820px) {
