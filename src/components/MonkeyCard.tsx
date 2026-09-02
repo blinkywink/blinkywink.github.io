@@ -17,7 +17,7 @@ import {
   paragonStage,
 } from "../lib/paragonProgress";
 import { isDesktopShell } from "../lib/desktopOnline";
-import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
+import { isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
   onStaticVisualizerSlot,
@@ -430,18 +430,12 @@ export function MonkeyCard({
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
   const desktopPreview = isPreview && isDesktopShell() && !bake;
-  const androidFocusTilt = isAndroidNative() && !isPreview;
   const visId = useMemo(
     () => `${catalogId}:${resolvedSeed ?? "default"}`,
     [catalogId, resolvedSeed],
   );
   const wantsAnimatedVis =
-    showFx &&
-    !isPreview &&
-    !staticArt &&
-    !desktopPreview &&
-    usesVisualizer(tier) &&
-    !(isAndroidNative() && isParagon);
+    showFx && !isPreview && !staticArt && !desktopPreview && usesVisualizer(tier);
   const wantsStaticVis =
     nativeShell &&
     isPreview &&
@@ -642,40 +636,27 @@ export function MonkeyCard({
     towerTint,
   ]);
 
-  const applyPoint = useCallback(
-    (clientX: number, clientY: number) => {
-      const scene = sceneRef.current;
-      const card = cardRef.current;
-      if (!scene || !card) return;
+  const applyPoint = useCallback((clientX: number, clientY: number) => {
+    const scene = sceneRef.current;
+    const card = cardRef.current;
+    if (!scene || !card) return;
 
-      const rect = scene.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
+    const rect = scene.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
 
-      const px = clamp01((clientX - rect.left) / rect.width);
-      const py = clamp01((clientY - rect.top) / rect.height);
-      const softX = 0.5 + (px - 0.5) * 0.92;
-      const softY = 0.5 + (py - 0.5) * 0.92;
+    const px = clamp01((clientX - rect.left) / rect.width);
+    const py = clamp01((clientY - rect.top) / rect.height);
+    const softX = 0.5 + (px - 0.5) * 0.92;
+    const softY = 0.5 + (py - 0.5) * 0.92;
 
-      if (androidFocusTilt) {
-        /* WebView: 3D rotateX/Y + moving holo vars = quarter-tile clipping. */
-        card.style.setProperty("--rx", "0deg");
-        card.style.setProperty("--ry", `${((softX - 0.5) * 10).toFixed(2)}deg`);
-        card.style.setProperty("--tx", `${((softX - 0.5) * 10).toFixed(2)}px`);
-        card.style.setProperty("--ty", `${((softY - 0.5) * 8).toFixed(2)}px`);
-        card.style.setProperty("--opacity", "0.58");
-        return;
-      }
-
-      card.style.setProperty("--rx", `${((0.5 - softY) * 18).toFixed(2)}deg`);
-      card.style.setProperty("--ry", `${((softX - 0.5) * 24).toFixed(2)}deg`);
-      card.style.setProperty("--px", `${(softX * 100).toFixed(1)}%`);
-      card.style.setProperty("--py", `${(softY * 100).toFixed(1)}%`);
-      card.style.setProperty("--tx", `${((softX - 0.5) * 12).toFixed(2)}px`);
-      card.style.setProperty("--ty", `${((softY - 0.5) * 9).toFixed(2)}px`);
-      card.style.setProperty("--opacity", "0.85");
-    },
-    [androidFocusTilt],
-  );
+    card.style.setProperty("--rx", `${((0.5 - softY) * 18).toFixed(2)}deg`);
+    card.style.setProperty("--ry", `${((softX - 0.5) * 24).toFixed(2)}deg`);
+    card.style.setProperty("--px", `${(softX * 100).toFixed(1)}%`);
+    card.style.setProperty("--py", `${(softY * 100).toFixed(1)}%`);
+    card.style.setProperty("--tx", `${((softX - 0.5) * 12).toFixed(2)}px`);
+    card.style.setProperty("--ty", `${((softY - 0.5) * 9).toFixed(2)}px`);
+    card.style.setProperty("--opacity", "0.85");
+  }, []);
 
   const queuePoint = useCallback(
     (clientX: number, clientY: number) => {
@@ -863,7 +844,7 @@ export function MonkeyCard({
                     : `${entity.id}-${pathLabel}`
                 }
                 colors={palette}
-                animated={animateVisualizer && !(androidFocusTilt && active)}
+                animated={animateVisualizer}
                 intensity={isParagon ? "paragon" : "standard"}
               />
             ) : (

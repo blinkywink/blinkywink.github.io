@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { hashSeed, mulberry32 } from "../lib/cardSeed";
-import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 
 type Props = {
   seed: string;
@@ -415,9 +414,7 @@ export function CardVisualizerBg({
 
     const base = darken(palette[0]!, baseDark);
 
-    const android = isAndroidNative();
-    const nativeShell = isNativeShell();
-    const maxDpr = android ? 1 : nativeShell ? 1.25 : 2;
+    const maxDpr = Math.min(window.devicePixelRatio || 1, 2);
     const drawAnimated = animated;
 
     const pulse = (t: number, phase: number, speed: number) =>
@@ -926,8 +923,8 @@ export function CardVisualizerBg({
     let pageVisible =
       typeof document === "undefined" ||
       document.visibilityState !== "hidden";
-    /* Native WebViews heat up on 60fps canvas — ~30fps still looks smooth. */
-    const minFrameMs = nativeShell && drawAnimated ? 32 : 0;
+    /* Match mobile site frame rate in the app WebView. */
+    const minFrameMs = 0;
     let lastFrameAt = 0;
 
     const isLive = () => inView && pageVisible;

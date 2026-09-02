@@ -11,7 +11,7 @@ export function isNativeShell(): boolean {
   }
 }
 
-/** Android WebView — compositing differs from mobile Chrome; use data-platform CSS sparingly. */
+/** Android WebView — prefer the same card CSS as mobile web; use data-platform only for shell/perf. */
 export function isAndroidNative(): boolean {
   if (typeof document === "undefined") return false;
   return document.documentElement.dataset.platform === "android";

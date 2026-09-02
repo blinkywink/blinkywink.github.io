@@ -23,9 +23,11 @@ public class MainActivity extends BridgeActivity {
 
     private void installMediaClient() {
         if (getBridge() == null || getBridge().getWebView() == null) return;
-        getBridge()
-            .getWebView()
-            .setWebViewClient(
+        WebView webView = getBridge().getWebView();
+        /* Same Chromium stack as mobile Chrome — keep GPU compositing enabled for card 3D/FX. */
+        webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null);
+        webView.getSettings().setOffscreenPreRaster(true);
+        webView.setWebViewClient(
                 new BridgeWebViewClient(getBridge()) {
                     @Override
                     public WebResourceResponse shouldInterceptRequest(
