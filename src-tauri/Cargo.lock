@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "bloon-arcade"
-version = "1.0.20"
+version = "1.0.21"
 dependencies = [
  "log",
  "serde",
