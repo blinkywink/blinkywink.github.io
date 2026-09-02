@@ -1849,6 +1849,64 @@ html[data-native="1"][data-platform="android"] .monkey-card__shadow {
   filter: none !important;
 }
 
+/*
+ * Android focus tilt: 2D only + freeze orbit/holo while touching. rotateX/Y on a
+ * flat WebView stack repaints children as quarter tiles; moving --px/--py every
+ * frame makes glow/holo seizure with paragon orbit animations.
+ */
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card {
+  transform: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active {
+  will-change: auto;
+  transform: translate(
+      calc(var(--tx, 0px) * 0.65),
+      calc(var(--ty, 0px) * 0.65)
+    )
+    rotate(calc(var(--ry, 0deg) * 0.28));
+  transition: transform 0.08s linear;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-ring,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-ring-pivot,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-smoke,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-star,
+html[data-native="1"][data-platform="android"] .card-focus:has(.monkey-card.is-active) .monkey-card__paragon-ring,
+html[data-native="1"][data-platform="android"] .card-focus:has(.monkey-card.is-active) .monkey-card__paragon-ring-pivot,
+html[data-native="1"][data-platform="android"] .card-focus:has(.monkey-card.is-active) .monkey-card__paragon-smoke,
+html[data-native="1"][data-platform="android"] .card-focus:has(.monkey-card.is-active) .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .card-focus:has(.monkey-card.is-active) .monkey-card__paragon-star {
+  animation-play-state: paused;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__glow {
+  opacity: 0.38;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active .monkey-card__glare,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active .monkey-card__sheen,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active .monkey-card__spark,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__glare,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__sheen,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__spark {
+  opacity: 0.42;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card--paragon-s4 .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card--paragon-s5 .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card--paragon-s4 .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card--paragon-s5 .monkey-card__paragon-aura {
+  animation: none;
+  opacity: 0.9;
+}
+
 /* Focus: clip card face only; scene uses mobile-web aspect-ratio layout. */
 html[data-native="1"] .monkey-card-scene--focus .monkey-card__body,
 html[data-native="1"] .card-focus .monkey-card__body {
