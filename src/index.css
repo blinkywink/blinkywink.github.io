@@ -1683,12 +1683,6 @@ html[data-native="1"] .monkey-card-scene--preview .monkey-card__visualizer {
   transform: none;
 }
 
-html[data-native="1"] .pack-opener__card.is-glow-t4 .monkey-card-scene,
-html[data-native="1"] .pack-opener__card.is-glow-t5 .monkey-card-scene,
-html[data-native="1"] .pack-opener__card.is-glow-paragon .monkey-card-scene {
-  filter: none;
-}
-
 /* Android perf — shop scroll + pack open (keep card reflections / paragon FX). */
 html[data-native="1"][data-platform="android"] .pack-shelf__item {
   content-visibility: auto;
@@ -1802,133 +1796,43 @@ html[data-native="1"][data-platform="android"] .shop-direct__card .monkey-card__
 }
 
 /*
- * Android WebView focus: restore blur + 3D stack (mobile web path). Flattening
- * was what made the white holo sweep repaint in blocky tiles.
+ * Android focus / fullscreen: match mobile Chrome compositing. Per-layer
+ * translateZ + backface-visibility:hidden made portrait survive but erased
+ * title rail, ribbon, and clipped paragon glow in WebView.
  */
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__glow {
-  filter: blur(20px);
-  transform: translateZ(-40px);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene {
+  overflow: visible;
 }
 
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__shadow {
-  filter: blur(20px);
-  transform: translateZ(-50px) scale(0.92);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__foil {
-  mix-blend-mode: color-dodge;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(2px);
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__glare,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__spark,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__sheen {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(2px);
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__edge {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(40px);
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__foil,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__glare,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__spark,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__sheen,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card.is-active .monkey-card__edge {
-  will-change: background-position;
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__portrait {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translate3d(calc(var(--tx) * 0.55), calc(var(--ty) * 0.4), 4px)
-    scale(1.02);
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__head--overlay,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__rail {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translate3d(calc(var(--tx) * 0.35), calc(var(--ty) * 0.25), 6px);
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-shine-sweep,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-shine-glint {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__body,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card__body {
-  transform: translateZ(1px);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  overflow: visible;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__bleed,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__bleed {
+  overflow: visible;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__portrait,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__head--overlay,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__rail,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__paragon-corner,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__portrait,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__head--overlay,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__rail,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-corner {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+  transform: none;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__foil,
 html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__glare {
   mix-blend-mode: soft-light;
-}
-
-html[data-native="1"] .card-focus .monkey-card__portrait,
-html[data-native="1"] .card-focus .monkey-card__paragon-mark {
-  filter: revert;
-}
-
-html[data-native="1"] .card-focus .monkey-card--paragon-s3 .monkey-card__paragon-ribbon,
-html[data-native="1"] .card-focus .monkey-card--paragon-s4 .monkey-card__paragon-ribbon,
-html[data-native="1"] .card-focus .monkey-card--paragon-s5 .monkey-card__paragon-ribbon,
-html[data-native="1"] .card-focus .monkey-card--paragon-s5 .monkey-card__paragon-badge {
-  filter: revert;
-}
-
-html[data-native="1"] .card-focus .monkey-card__paragon-corner {
-  transform: translateZ(48px);
-}
-
-html[data-native="1"] .card-focus .monkey-card__paragon-smoke {
-  filter: blur(13px);
-  opacity: 1;
-}
-
-html[data-native="1"] .card-focus .monkey-card__paragon-star {
-  filter: revert;
-}
-
-html[data-native="1"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__body {
-  transform: translateZ(1px);
-}
-
-html[data-native="1"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__edge {
-  transform: translateZ(40px);
-}
-
-/* Android focus: promote paragon orbit layers (grid thumb flattening must not apply here). */
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx {
-  transform-style: preserve-3d;
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-rings {
-  transform: translate3d(0, 0, -10px);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-ring-pivot,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-smoke,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-star,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-aura {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 /* Pause orbiting paragon particles while dragging — same look, less GPU churn. */
