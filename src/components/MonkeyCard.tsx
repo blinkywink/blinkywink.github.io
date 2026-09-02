@@ -399,6 +399,7 @@ export function MonkeyCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLImageElement>(null);
   const portraitTries = useRef(0);
+  const paragonMarkTries = useRef(0);
   const rafRef = useRef<number | null>(null);
   const tapGesture = useRef<{
     x: number;
@@ -966,6 +967,14 @@ export function MonkeyCard({
                     src={PARAGON_DEGREE_ICON}
                     alt=""
                     draggable={false}
+                    onError={(e) => {
+                      if (paragonMarkTries.current >= 2) return;
+                      paragonMarkTries.current += 1;
+                      const el = e.currentTarget;
+                      const src = PARAGON_DEGREE_ICON;
+                      el.src = "";
+                      el.src = src;
+                    }}
                   />
                   <span className="monkey-card__paragon-degree">
                     {paragonDegree}
