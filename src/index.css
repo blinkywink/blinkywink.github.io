@@ -1604,11 +1604,6 @@ html[data-native="1"] .shop-direct__card .monkey-card-scene--preview {
   contain: none;
 }
 
-html[data-native="1"] .monkey-card-scene--preview {
-  clip-path: none;
-  -webkit-clip-path: none;
-}
-
 html[data-native="1"] .monkey-card-scene--preview .monkey-card__portrait,
 html[data-native="1"] .monkey-card-scene--preview .monkey-card__paragon-ribbon,
 html[data-native="1"] .monkey-card-scene--preview .monkey-card__paragon-mark,
@@ -1796,38 +1791,12 @@ html[data-native="1"][data-platform="android"] .shop-direct__card .monkey-card__
 }
 
 /*
- * Android focus / fullscreen: match mobile Chrome compositing. Per-layer
- * translateZ + backface-visibility:hidden made portrait survive but erased
- * title rail, ribbon, and clipped paragon glow in WebView.
+ * Focus / fullscreen on native: only fix layout + keep scene overflow for
+ * paragon orbit FX. Do not override inner transforms — mobile browser path.
  */
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene {
-  overflow: visible;
-}
-
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__body,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__body {
-  overflow: visible;
-  backface-visibility: visible;
-  -webkit-backface-visibility: visible;
-}
-
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__bleed,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__bleed {
-  overflow: visible;
-}
-
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__portrait,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__head--overlay,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__rail,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__paragon-corner,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__portrait,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__head--overlay,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__rail,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__paragon-corner {
-  backface-visibility: visible;
-  -webkit-backface-visibility: visible;
-  transform: none;
+html[data-native="1"] .monkey-card-scene--focus .monkey-card__body,
+html[data-native="1"] .card-focus .monkey-card__body {
+  overflow: hidden;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__foil,
@@ -1836,6 +1805,11 @@ html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monk
 }
 
 /* Pause orbiting paragon particles while dragging — same look, less GPU churn. */
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-ring,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-ring-pivot,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-smoke,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-aura,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus:has(.monkey-card.is-active) .monkey-card__paragon-star,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx:has(.monkey-card.is-active) .monkey-card__paragon-ring,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx:has(.monkey-card.is-active) .monkey-card__paragon-ring-pivot,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx:has(.monkey-card.is-active) .monkey-card__paragon-smoke,
