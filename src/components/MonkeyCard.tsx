@@ -750,12 +750,20 @@ export function MonkeyCard({
     : locked
       ? {}
       : {
+          onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            setActive(true);
+            queuePoint(e.clientX, e.clientY);
+          },
           onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => {
             setActive(true);
             queuePoint(e.clientX, e.clientY);
           },
           onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
             queuePoint(e.clientX, e.clientY);
+          },
+          onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+            if (e.pointerType !== "mouse") reset();
           },
           onPointerLeave: reset,
           onPointerCancel: reset,
