@@ -52,6 +52,25 @@ const EMPTY_TRADES: TradeInbox = { incoming: [], outgoing: [], active: [] };
 const EMPTY_OFFERS: MarketOfferInbox = { incoming: [], outgoing: [] };
 const EMPTY_EXCHANGES: ExchangeInbox = { incoming: [], outgoing: [] };
 
+function InboxIcon() {
+  return (
+    <svg
+      className="trade-inbox__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M4 6.5h16v11a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 17.5V6.5Z" />
+      <path d="m4 6.5 8 5.25L20 6.5" />
+    </svg>
+  );
+}
+
 export function TradeInbox({
   className = "",
   variant = "header",
@@ -303,7 +322,6 @@ export function TradeInbox({
 
   if (!user) return null;
 
-  const showPill = badge > 0 || open;
   const onProfile = pathname === profilePath();
   if (variant === "mobile" && (!open || !onProfile || !inboxSlot)) {
     return null;
@@ -516,7 +534,6 @@ export function TradeInbox({
     <div
       className={[
         "trade-inbox",
-        showPill && variant === "header" ? "" : "trade-inbox--idle",
         variant === "mobile" ? "trade-inbox--mobile" : "",
         className,
       ]
@@ -527,16 +544,25 @@ export function TradeInbox({
       {variant === "header" ? (
       <button
         type="button"
-        className={`trade-inbox__pill${
-          isHot ? " is-hot" : ""
-        }${showPill ? "" : " is-idle"}`}
-        aria-label={`${badge} notification${badge === 1 ? "" : "s"}`}
+        className={`trade-inbox__trigger${open ? " is-open" : ""}`}
+        aria-label={
+          badge > 0
+            ? `${badge} notification${badge === 1 ? "" : "s"}`
+            : "Inbox"
+        }
         aria-haspopup="dialog"
         aria-expanded={open}
-        tabIndex={showPill ? 0 : -1}
         onClick={() => setOpenSynced((v) => !v)}
       >
-        {badge > 0 ? (badge > 9 ? "9+" : badge) : null}
+        <InboxIcon />
+        {badge > 0 ? (
+          <span
+            className={`trade-inbox__badge${isHot ? " is-hot" : ""}`}
+            aria-hidden
+          >
+            {badge > 9 ? "9+" : badge}
+          </span>
+        ) : null}
       </button>
       ) : null}
 
