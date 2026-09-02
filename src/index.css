@@ -1680,7 +1680,6 @@ html[data-native="1"][data-platform="android"] .monkey-card-scene--preview.monke
 html[data-native="1"][data-platform="android"] .monkey-card-scene--focus.monkey-card-scene--paragon-fx,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx {
   overflow: visible;
-  isolation: isolate;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--preview.monkey-card-scene--paragon-fx .monkey-card__paragon-rings,
@@ -1786,8 +1785,6 @@ html[data-native="1"]:not([data-platform="android"]) .pack-shelf__item {
 }
 
 /* Grid / opener thumbs — skip expensive blur off-screen (never fullscreen focus). */
-html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__shadow,
 html[data-native="1"][data-platform="android"] .card-lab__grid .monkey-card__glow,
 html[data-native="1"][data-platform="android"] .card-lab__grid .monkey-card__shadow,
 html[data-native="1"][data-platform="android"] .market-grid .monkey-card__glow,
@@ -1800,21 +1797,62 @@ html[data-native="1"][data-platform="android"] .shop-direct__card .monkey-card__
   filter: none;
 }
 
+/*
+ * Android WebView: ONE flat compositing stack. Partial flatten (some filter/translateZ
+ * removed, preserve-3d + portrait translate3d kept) causes quarter-tile clipping and
+ * vanishing filtered icons — mobile Chrome never hits data-native and keeps the full stack.
+ */
+html[data-native="1"][data-platform="android"] .monkey-card-scene {
+  perspective: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview,
+html[data-native="1"][data-platform="android"] .pack-opener__summary-grid .monkey-card-scene--preview {
+  clip-path: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card {
+  transform-style: flat;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-rings {
+  transform: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__portrait,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__portrait,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card__portrait {
+  transform: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card--paragon .monkey-card__rail-icons,
+html[data-native="1"][data-platform="android"] .monkey-card--paragon .monkey-card__upgrade-icon {
+  transform: none !important;
+  filter: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__bleed,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-badge {
+  isolation: auto;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-shine-sweep,
+html[data-native="1"][data-platform="android"] .monkey-card__paragon-shine-glint {
+  -webkit-mask-image: none;
+  mask-image: none;
+  mix-blend-mode: normal;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .monkey-card__shadow {
+  transform: none !important;
+  filter: none !important;
+}
+
 /* Focus: clip card face only; scene uses mobile-web aspect-ratio layout. */
 html[data-native="1"] .monkey-card-scene--focus .monkey-card__body,
 html[data-native="1"] .card-focus .monkey-card__body {
   overflow: hidden;
-}
-
-/*
- * Android focus glow: flatten translateZ layers but keep blur — WebView renders
- * blocky squares when filter:blur stacks with preserve-3d / translateZ.
- */
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__shadow,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card__shadow {
-  transform: none;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__foil,

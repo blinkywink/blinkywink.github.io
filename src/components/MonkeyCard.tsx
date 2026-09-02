@@ -915,7 +915,7 @@ export function MonkeyCard({
                       alt=""
                       draggable={false}
                       onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                        e.currentTarget.style.opacity = "0.35";
                       }}
                     />
                   ))
