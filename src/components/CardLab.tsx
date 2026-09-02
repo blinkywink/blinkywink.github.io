@@ -279,7 +279,10 @@ export function CardLab({
     setTradeMsgError(false);
     try {
       await requestTrade(viewer.username);
-      await pingInbox(viewer.userId).catch(() => undefined);
+      await Promise.all([
+        user ? pingInbox(user.id).catch(() => undefined) : undefined,
+        pingInbox(viewer.userId).catch(() => undefined),
+      ]);
       setTradeMsg(`Trade request sent to ${viewer.username}.`);
     } catch (err) {
       setTradeMsgError(true);

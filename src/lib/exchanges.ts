@@ -1,6 +1,12 @@
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
+import { requestTradeInboxRefresh } from "./tradeInboxUi";
+
+function bumpTradeInbox() {
+  cacheInvalidate("trade:inbox");
+  requestTradeInboxRefresh();
+}
 
 export type ExchangeInboxItem = {
   id: string;
@@ -62,7 +68,7 @@ export async function requestExchange(
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("exchange:inbox");
-  cacheInvalidate("trade:inbox");
+  bumpTradeInbox();
   return String(data);
 }
 
@@ -79,7 +85,7 @@ export async function respondExchange(
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("exchange:inbox");
-  cacheInvalidate("trade:inbox");
+  bumpTradeInbox();
   return data === "offered" ? "offered" : "declined";
 }
 
@@ -94,7 +100,7 @@ export async function confirmExchange(
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("exchange:inbox");
-  cacheInvalidate("trade:inbox");
+  bumpTradeInbox();
   cacheInvalidate("player-card-copies:");
   cacheInvalidate("player-cards:");
   return data === "completed" ? "completed" : "declined";
@@ -107,7 +113,7 @@ export async function cancelExchange(exchangeId: string): Promise<void> {
   });
   if (error) throw new Error(error.message);
   cacheInvalidate("exchange:inbox");
-  cacheInvalidate("trade:inbox");
+  bumpTradeInbox();
 }
 
 export async function fetchExchangeInbox(

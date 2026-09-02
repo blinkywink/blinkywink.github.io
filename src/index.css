@@ -1546,6 +1546,29 @@ html.is-route-scroll-lock body,
     -webkit-backdrop-filter: none;
     background: rgba(10, 10, 14, 0.98);
   }
+
+  /* Sheets / card focus sit above the tab bar — hide nav so actions stay tappable. */
+  html[data-mobile-nav="1"]:has(
+      .exchange-review,
+      .card-lab__exchange,
+      .card-focus
+    )
+    .mobile-app-nav {
+    display: none;
+  }
+
+  html[data-native="1"]:has(
+      .exchange-review,
+      .card-lab__exchange,
+      .card-focus
+    )
+    .mobile-app-nav {
+    display: none;
+  }
+
+  html[data-mobile-nav="1"] .card-focus {
+    z-index: 2100;
+  }
 }
 
 html[data-native="1"] [data-site-theme="rgb"] #root::before,
@@ -1641,22 +1664,13 @@ html[data-native="1"] .pack-opener__suspense-flare {
   filter: none;
 }
 
-html[data-native="1"] .monkey-card__glow,
-html[data-native="1"] .monkey-card__shadow {
+html[data-native="1"] .monkey-card-scene--preview .monkey-card__glow,
+html[data-native="1"] .monkey-card-scene--preview .monkey-card__shadow {
   will-change: auto;
 }
 
-html[data-native="1"] .monkey-card__visualizer {
+html[data-native="1"] .monkey-card-scene--preview .monkey-card__visualizer {
   transform: none;
-}
-
-html[data-native="1"] .monkey-card.is-active .monkey-card__visualizer {
-  transform: translate3d(
-      calc(var(--tx, 0) * -0.18),
-      calc(var(--ty, 0) * -0.18),
-      0
-    )
-    scale(1.01);
 }
 
 html[data-native="1"] .pack-opener__card.is-glow-t4 .monkey-card-scene,
@@ -1762,9 +1776,17 @@ html[data-native="1"][data-platform="android"] .card-focus .hero-card {
   transform-style: preserve-3d;
 }
 
-/* Grid / opener thumbs — skip expensive blur off-screen. */
-html[data-native="1"][data-platform="android"] .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .monkey-card__shadow {
+/* Grid / opener thumbs — skip expensive blur off-screen (never fullscreen focus). */
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__shadow,
+html[data-native="1"][data-platform="android"] .card-lab__grid .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .card-lab__grid .monkey-card__shadow,
+html[data-native="1"][data-platform="android"] .market-grid .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .market-grid .monkey-card__shadow,
+html[data-native="1"][data-platform="android"] .pack-opener__summary-grid .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .pack-opener__summary-grid .monkey-card__shadow,
+html[data-native="1"][data-platform="android"] .shop-direct__card .monkey-card__glow,
+html[data-native="1"][data-platform="android"] .shop-direct__card .monkey-card__shadow {
   transform: none;
   filter: none;
 }
@@ -1842,8 +1864,8 @@ html[data-native="1"][data-platform="android"] .card-focus .monkey-card__body {
   -webkit-backface-visibility: hidden;
 }
 
-html[data-native="1"][data-platform="android"] .monkey-card__foil,
-html[data-native="1"][data-platform="android"] .monkey-card__glare {
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__foil,
+html[data-native="1"][data-platform="android"] .monkey-card-scene--preview .monkey-card__glare {
   mix-blend-mode: soft-light;
 }
 
@@ -1914,11 +1936,6 @@ html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--p
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx:has(.monkey-card.is-active) .monkey-card__sheen,
 html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx:has(.monkey-card.is-active) .monkey-card__edge {
   will-change: auto;
-}
-
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-rings,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--paragon-fx .monkey-card__paragon-field {
-  contain: layout style paint;
 }
 
 @media (max-width: 820px) {
@@ -17337,7 +17354,7 @@ a.market-card__seller:hover {
 .card-lab__exchange {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: 2100;
   display: grid;
   place-items: end center;
 }

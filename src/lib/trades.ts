@@ -1,6 +1,7 @@
 import { getAccessToken, supabase, supabaseRealtime } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
+import { requestTradeInboxRefresh } from "./tradeInboxUi";
 
 type RpcErr = {
   message?: string;
@@ -111,6 +112,7 @@ export async function requestTrade(username: string): Promise<string> {
   });
   if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
+  requestTradeInboxRefresh();
   return String(data);
 }
 
@@ -125,6 +127,7 @@ export async function respondTrade(
   });
   if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
+  requestTradeInboxRefresh();
   return data === "active" ? "active" : "declined";
 }
 
@@ -135,6 +138,7 @@ export async function cancelTrade(tradeId: string): Promise<void> {
   });
   if (error) throwTradeError(error);
   cacheInvalidate("trade:inbox");
+  requestTradeInboxRefresh();
 }
 
 export async function fetchTradeInbox(
@@ -192,6 +196,7 @@ export async function setTradeReady(
   if (error) throwTradeError(error);
   const next = asTradeState(data);
   cacheInvalidate("trade:inbox");
+  requestTradeInboxRefresh();
   return next;
 }
 

@@ -49,6 +49,20 @@ export function toggleTradeInboxUiOpen() {
   setTradeInboxUiOpen(!open);
 }
 
+const refreshListeners = new Set<Listener>();
+
+/** Force all mounted TradeInbox instances to refetch (e.g. after sending a request). */
+export function requestTradeInboxRefresh() {
+  for (const fn of refreshListeners) fn();
+}
+
+export function subscribeTradeInboxRefresh(fn: Listener) {
+  refreshListeners.add(fn);
+  return () => {
+    refreshListeners.delete(fn);
+  };
+}
+
 /** Profile-page mount point for the mobile inbox panel. */
 let inboxSlot: HTMLElement | null = null;
 const slotListeners = new Set<Listener>();

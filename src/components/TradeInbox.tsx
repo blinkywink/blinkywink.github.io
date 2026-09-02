@@ -38,6 +38,7 @@ import {
   getTradeInboxUiSnapshot,
   setTradeInboxUiBadge,
   setTradeInboxUiOpen,
+  subscribeTradeInboxRefresh,
   subscribeTradeInboxSlot,
   subscribeTradeInboxUi,
 } from "../lib/tradeInboxUi";
@@ -117,6 +118,7 @@ export function TradeInbox({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const prevIncoming = useRef(0);
+  const prevBadge = useRef(0);
   const prevOutgoingIds = useRef<Set<string>>(new Set());
   const hydrated = useRef(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -187,10 +189,11 @@ export function TradeInbox({
       if (!hydrated.current) {
         hydrated.current = true;
         prevIncoming.current = hot;
+        prevBadge.current = nextBadge;
         setInboxReady(true);
         if (variant === "mobile") {
           if (nextBadge > 0) setOpenSynced(true);
-        } else if (nextSales.length > 0) {
+        } else if (nextSales.length > 0 || nextBadge > 0) {
           setOpenSynced(true);
         }
       } else if (hot > prevIncoming.current) {
@@ -199,6 +202,9 @@ export function TradeInbox({
         if (nextSales.length > 0) {
           void Promise.all([refreshCards(), refreshProfile()]);
         }
+      } else if (nextBadge > prevBadge.current) {
+        dismissedOnProfileRef.current = false;
+        setOpenSynced(true);
       } else if (
         variant === "mobile" &&
         pathnameRef.current === profilePath() &&
@@ -208,10 +214,19 @@ export function TradeInbox({
         setOpenSynced(true);
       }
       prevIncoming.current = hot;
-    } catch {
-      // Quiet - header shouldn't spam errors while offline
+      prevBadge.current = nextBadge;
+    } catch (err) {
+      if (open) {
+        setError(
+          err instanceof Error ? err.message : "Could not load inbox.",
+        );
+      }
+      if (!hydrated.current) {
+        hydrated.current = true;
+        setInboxReady(true);
+      }
     }
-  }, [user, refreshCards, refreshProfile, setOpenSynced, variant]);
+  }, [user, refreshCards, refreshProfile, setOpenSynced, variant, open]);
 
   useEffect(() => {
     return subscribeTradeInboxUi(() => {
@@ -219,6 +234,13 @@ export function TradeInbox({
       setOpen((prev) => (prev === snap.open ? prev : snap.open));
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    return subscribeTradeInboxRefresh(() => {
+      void refresh(true);
+    });
+  }, [user, refresh]);
 
   useLayoutEffect(() => {
     setInboxSlot(getTradeInboxSlot());

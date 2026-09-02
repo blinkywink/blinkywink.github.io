@@ -784,7 +784,7 @@ export function MonkeyCard({
       ref={sceneRef}
       className={[
         "monkey-card-scene",
-        isPreview ? "monkey-card-scene--preview" : "",
+        isPreview ? "monkey-card-scene--preview" : "monkey-card-scene--focus",
         locked ? "monkey-card-scene--locked" : "",
         highlight ? "monkey-card-scene--new" : "",
         isParagon && paragonAmbient
