@@ -5,9 +5,11 @@
 import http from "node:http";
 
 const PORT = Number(process.env.PORT ?? 3011);
-const SOURCE =
+const LATEST_SOURCE =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download";
-const ALLOWED = new Set([
+const MOBILE_SOURCE =
+  "https://github.com/blinkywink/blinkywink.github.io/releases/download/mobile";
+const LATEST_ALLOWED = new Set([
   "MonkeyCards.ipa",
   "MonkeyCards.apk",
   "blinkywink-mac.dmg",
@@ -15,12 +17,20 @@ const ALLOWED = new Set([
   "blinkywink-mac.app.tar.gz",
 ]);
 
+function sourceFor(file) {
+  if (/^MonkeyCards-web(-[\d.]+)?\.zip$/i.test(file)) return MOBILE_SOURCE;
+  if (LATEST_ALLOWED.has(file)) return LATEST_SOURCE;
+  return null;
+}
+
 function isGithubHtmlHost(hostname) {
   return hostname === "github.com" || hostname === "www.github.com";
 }
 
 async function blobUrl(file) {
-  let url = `${SOURCE}/${encodeURIComponent(file)}`;
+  const source = sourceFor(file);
+  if (!source) return null;
+  let url = `${source}/${encodeURIComponent(file)}`;
   for (let i = 0; i < 8; i++) {
     const res = await fetch(url, {
       method: "GET",
@@ -42,7 +52,7 @@ const server = http.createServer((req, res) => {
   void (async () => {
     const path = String(req.url ?? "").split("?")[0] ?? "";
     const file = decodeURIComponent(path.replace(/^\/downloads\//, "").replace(/^\//, ""));
-    if ((req.method !== "GET" && req.method !== "HEAD") || !ALLOWED.has(file)) {
+    if ((req.method !== "GET" && req.method !== "HEAD") || !sourceFor(file)) {
       res.writeHead(404).end("Not found");
       return;
     }

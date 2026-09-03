@@ -140,9 +140,14 @@ begin
       continue;
     end if;
 
-    -- Restock sold slots after 4 hours.
-    if (listing.price = 0 or listing.card_id = '')
-       and listing.available_at <= now() then
+    -- Sold slots restock 4h after purchase. Unsold deals rotate after 24h.
+    if (
+         ((listing.price = 0 or listing.card_id = '')
+          and listing.available_at <= now())
+         or (listing.price > 0
+             and listing.card_id <> ''
+             and listing.available_at <= now() - interval '24 hours')
+       ) then
       select coalesce(array_agg(card_id) filter (where card_id <> ''), '{}')
         into excluded
       from public.shop_direct_slots
