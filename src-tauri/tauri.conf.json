@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Monkey Cards",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "identifier": "co.blinkywink.arcade",
   "build": {
     "frontendDist": "../dist",
