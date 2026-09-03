@@ -67,8 +67,6 @@ declare
   uid uuid := public.current_account_id();
   listing public.shop_direct_slots%rowtype;
   new_balance bigint;
-  excluded text[];
-  pick record;
 begin
   if uid is null then
     uid := auth.uid();
@@ -90,6 +88,11 @@ begin
 
   if not found then
     raise exception 'Listing not found';
+  end if;
+
+  if listing.price <= 0
+     or listing.available_at > now() then
+    raise exception 'SOLD_OUT' using errcode = 'P0001';
   end if;
 
   if listing.version is distinct from p_version then
@@ -120,22 +123,12 @@ begin
   insert into public.owned_cards (user_id, card_id)
   values (uid, listing.card_id);
 
-  select coalesce(array_agg(card_id), '{}') into excluded
-  from public.shop_direct_slots
-  where slot <> p_slot;
-
-  excluded := array_append(excluded, listing.card_id);
-
-  select * into pick
-  from public._shop_pick_direct_card(excluded);
-
   update public.shop_direct_slots
   set
-    card_id = pick.card_id,
-    tier = pick.tier,
-    price = pick.price,
+    price = 0,
     version = listing.version + 1,
-    updated_at = now()
+    updated_at = now(),
+    available_at = now() + interval '4 hours'
   where slot = p_slot;
 
   return json_build_object(

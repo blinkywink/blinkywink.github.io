@@ -3,10 +3,12 @@ import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import { formatShopCountdown } from "./packTheme";
 
-export const SHOP_DIRECT_T4_PRICE = 7500;
-export const SHOP_DIRECT_T5_PRICE = 25000;
-/** Unsold limited cards rotate after this long. */
-export const SHOP_DIRECT_CYCLE_MS = 24 * 60 * 60 * 1000;
+/** Typical T4 deal ceiling (old list was 7500). */
+export const SHOP_DIRECT_T4_PRICE = 5200;
+/** Typical T5 deal ceiling (old list was 25000). */
+export const SHOP_DIRECT_T5_PRICE = 16700;
+/** Sold limited slots restock after this long. */
+export const SHOP_DIRECT_RESTOCK_MS = 4 * 60 * 60 * 1000;
 
 export type ShopDirectListing = {
   slot: number;
@@ -15,41 +17,48 @@ export type ShopDirectListing = {
   price: number;
   version: number;
   updatedAt: string;
+  availableAt: string;
 };
 
-/** UTC ms when this listing auto-cycles if unsold. */
-export function shopDirectExpiresAtMs(listing: ShopDirectListing): number {
-  const start = Date.parse(listing.updatedAt);
-  if (!Number.isFinite(start)) return Date.now() + SHOP_DIRECT_CYCLE_MS;
-  return start + SHOP_DIRECT_CYCLE_MS;
+export function shopDirectIsSold(listing: ShopDirectListing): boolean {
+  if (!listing.cardId) return true;
+  if (listing.price <= 0) return true;
+  const restock = Date.parse(listing.availableAt);
+  return Number.isFinite(restock) && restock > Date.now();
+}
+
+/** UTC ms when a sold slot restocks. */
+export function shopDirectRestockAtMs(listing: ShopDirectListing): number {
+  const start = Date.parse(listing.availableAt);
+  if (Number.isFinite(start)) return start;
+  const bought = Date.parse(listing.updatedAt);
+  if (!Number.isFinite(bought)) return Date.now() + SHOP_DIRECT_RESTOCK_MS;
+  return bought + SHOP_DIRECT_RESTOCK_MS;
 }
 
 export function formatShopDirectCountdown(
   listing: ShopDirectListing,
   now = Date.now(),
 ): string {
-  return formatShopCountdown(Math.max(0, shopDirectExpiresAtMs(listing) - now));
+  return formatShopCountdown(Math.max(0, shopDirectRestockAtMs(listing) - now));
 }
 
 function mapListing(raw: Record<string, unknown>): ShopDirectListing | null {
   const slot = Number(raw.slot);
-  const tier = Number(raw.tier);
+  const tierRaw = Number(raw.tier);
   const cardId = String(raw.cardId ?? raw.card_id ?? "").trim();
   const price = Number(raw.price);
   const version = Number(raw.version);
-  if (!cardId || (tier !== 4 && tier !== 5)) return null;
+  const tier: 4 | 5 = tierRaw === 5 ? 5 : 4;
   if (!Number.isFinite(slot) || slot < 1 || slot > 4) return null;
   return {
     slot,
     cardId,
-    tier: tier as 4 | 5,
-    price: Number.isFinite(price)
-      ? price
-      : tier === 5
-        ? SHOP_DIRECT_T5_PRICE
-        : SHOP_DIRECT_T4_PRICE,
+    tier,
+    price: Number.isFinite(price) ? price : 0,
     version: Number.isFinite(version) ? version : 0,
     updatedAt: String(raw.updatedAt ?? raw.updated_at ?? ""),
+    availableAt: String(raw.availableAt ?? raw.available_at ?? ""),
   };
 }
 

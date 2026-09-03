@@ -1,47 +1,16 @@
--- Shared shop shelf: 4 direct-sale T4/T5 cards. Global stock - buy empties the
--- slot for 4 hours, then restocks a random deal.
--- Safe to re-run. Then run shop_card_pool_seed.sql.
+-- Limited-card deals: random T4/T5 prices (~35% cheaper than old 7500/25000),
+-- sold slots stay empty for 4 hours, then restock. Safe to re-run.
 
-create table if not exists public.shop_card_pool (
-  card_id text primary key,
-  tier smallint not null,
-  constraint shop_card_pool_tier_ok check (tier in (4, 5)),
-  constraint shop_card_pool_card_id_len check (
-    char_length(card_id) between 3 and 80
-  )
-);
+alter table public.shop_direct_slots
+  add column if not exists available_at timestamptz not null default now();
 
-create index if not exists shop_card_pool_tier_idx
-  on public.shop_card_pool (tier);
+alter table public.shop_direct_slots
+  drop constraint if exists shop_direct_slots_price_ok;
 
-alter table public.shop_card_pool enable row level security;
+alter table public.shop_direct_slots
+  add constraint shop_direct_slots_price_ok check (price >= 0 and price <= 25000);
 
-drop policy if exists "Anyone can read shop card pool" on public.shop_card_pool;
-create policy "Anyone can read shop card pool"
-  on public.shop_card_pool
-  for select
-  using (true);
-
-create table if not exists public.shop_direct_slots (
-  slot smallint primary key,
-  card_id text not null,
-  tier smallint not null,
-  price integer not null,
-  version bigint not null default 1,
-  updated_at timestamptz not null default now(),
-  available_at timestamptz not null default now(),
-  constraint shop_direct_slots_slot_ok check (slot between 1 and 4),
-  constraint shop_direct_slots_tier_ok check (tier in (4, 5)),
-  constraint shop_direct_slots_price_ok check (price >= 0 and price <= 25000)
-);
-
-alter table public.shop_direct_slots enable row level security;
-
-drop policy if exists "Anyone can read shop direct slots" on public.shop_direct_slots;
-create policy "Anyone can read shop direct slots"
-  on public.shop_direct_slots
-  for select
-  using (true);
+drop function if exists public.shop_direct_price(smallint);
 
 create or replace function public.shop_direct_price(p_tier smallint)
 returns integer
@@ -55,6 +24,7 @@ declare
   hi integer;
 begin
   if p_tier = 4 then
+    -- Old list 7500; typical deal ~35% off (~4.8k). Floor ~2k.
     if r < 0.10 then
       lo := 1984;
       hi := 2479;
@@ -66,6 +36,7 @@ begin
       hi := 5186;
     end if;
   elsif p_tier = 5 then
+    -- Old list 25000; typical deal ~35% off (~16k). Rare steal ~4k.
     if r < 0.04 then
       lo := 3821;
       hi := 4894;
@@ -86,7 +57,6 @@ begin
 end;
 $$;
 
--- Pick a random pool card: 60% T4 / 40% T5. Prefer not currently shelved.
 create or replace function public._shop_pick_direct_card(p_exclude text[] default '{}')
 returns table (card_id text, tier smallint, price integer)
 language plpgsql
@@ -109,7 +79,6 @@ begin
   limit 1;
 
   if picked_id is null then
-    -- Fallback: other tier, still avoid excludes.
     select p.card_id, p.tier
       into picked_id, picked_tier
     from public.shop_card_pool p
@@ -119,7 +88,6 @@ begin
   end if;
 
   if picked_id is null then
-    -- Last resort: any card of the wanted tier.
     select p.card_id, p.tier
       into picked_id, picked_tier
     from public.shop_card_pool p
@@ -172,6 +140,7 @@ begin
       continue;
     end if;
 
+    -- Restock sold slots after 4 hours.
     if (listing.price = 0 or listing.card_id = '')
        and listing.available_at <= now() then
       select coalesce(array_agg(card_id) filter (where card_id <> ''), '{}')
@@ -238,7 +207,7 @@ as $$
 declare
   uid uuid := public.current_account_id();
   listing public.shop_direct_slots%rowtype;
-  new_balance integer;
+  new_balance bigint;
 begin
   if uid is null then
     uid := auth.uid();
@@ -281,7 +250,9 @@ begin
   perform set_config('bloon.allow_coin_update', 'on', true);
 
   update public.profiles
-  set coins = coins - listing.price
+  set
+    coins = coins - listing.price,
+    shop_spent = shop_spent + listing.price
   where id = uid
     and coins >= listing.price
   returning coins into new_balance;
@@ -321,3 +292,9 @@ grant execute on function public.get_shop_direct_listings() to anon, authenticat
 
 revoke all on function public.buy_shop_direct_card(integer, bigint) from public;
 grant execute on function public.buy_shop_direct_card(integer, bigint) to anon, authenticated;
+
+-- Reprice live shelf so the test shop is not stuck on 7500 / 25000.
+update public.shop_direct_slots
+set price = public.shop_direct_price(tier)
+where card_id <> ''
+  and price in (7500, 25000);

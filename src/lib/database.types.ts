@@ -280,6 +280,7 @@ export type Database = {
           price: number;
           version: number;
           updatedAt: string;
+          availableAt: string;
         }[];
       };
       buy_shop_direct_card: {

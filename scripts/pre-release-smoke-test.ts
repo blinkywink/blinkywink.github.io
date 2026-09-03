@@ -430,7 +430,9 @@ async function smokeFlows(
     await rpcOk(sbA, "set_profile_accent", { p_color: "#FF5500" });
     push("profile:set_profile_accent", true);
 
-    const shopRow = (shop as { slot: number; version: number; price: number }[])[0];
+    const shopRow = (shop as { slot: number; version: number; price: number; cardId?: string }[]).find(
+      (row) => row?.cardId,
+    );
     if (shopRow) {
       await rpcOk(sbA, "award_coins", { p_amount: 10_000 });
       const direct = await rpcOk(sbA, "buy_shop_direct_card", {

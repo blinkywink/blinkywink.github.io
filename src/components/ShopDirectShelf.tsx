@@ -10,7 +10,8 @@ import {
   buyShopDirectCard,
   fetchShopDirectListings,
   formatShopDirectCountdown,
-  shopDirectExpiresAtMs,
+  shopDirectIsSold,
+  shopDirectRestockAtMs,
   type ShopDirectListing,
 } from "../lib/shopDirect";
 import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
@@ -32,8 +33,8 @@ function ShopDirectCountdown({ listing }: { listing: ShopDirectListing }) {
   }, []);
 
   return (
-    <p className="shop-direct__timer" aria-label="Time until refresh">
-      {formatShopDirectCountdown(listing, now)}
+    <p className="shop-direct__timer" aria-label="Time until next deal">
+      Next deal in {formatShopDirectCountdown(listing, now)}
     </p>
   );
 }
@@ -74,7 +75,7 @@ export function ShopDirectShelf() {
     const id = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
       const t = Date.now();
-      if (listings.some((row) => shopDirectExpiresAtMs(row) <= t)) {
+      if (listings.some((row) => shopDirectIsSold(row) && shopDirectRestockAtMs(row) <= t)) {
         void load(true);
       }
     }, 1000);
@@ -88,6 +89,7 @@ export function ShopDirectShelf() {
   }
 
   function openFocus(listing: ShopDirectListing) {
+    if (shopDirectIsSold(listing)) return;
     const card = cardSpecById(listing.cardId);
     if (!card) return;
     setError(null);
@@ -237,6 +239,9 @@ export function ShopDirectShelf() {
       <div className="pack-shelf__head pack-shelf__head--sub">
         <h3 className="section-label">Limited cards</h3>
       </div>
+      <p className="shop-direct__note">
+        Random deals, get them before anyone else can. Takes 4 hours to restock.
+      </p>
 
       {error ? (
         <p className="shop-direct__banner shop-direct__banner--err">{error}</p>
@@ -250,21 +255,33 @@ export function ShopDirectShelf() {
       ) : (
         <div className="shop-direct__grid">
           {listings.map((row) => {
+            const sold = shopDirectIsSold(row);
             const card = cardSpecById(row.cardId);
             return (
               <article
-                key={`${row.slot}-${row.version}-${row.cardId}`}
-                className="shop-direct__card"
+                key={`${row.slot}-${row.version}-${row.cardId || "sold"}`}
+                className={`shop-direct__card${sold ? " shop-direct__card--sold" : ""}`}
               >
                 {card ? (
-                  <MonkeyCard
-                    entity={card.entity}
-                    pathLevels={card.pathLevels}
-                    mode="preview"
-                    owned
-                    staticArt={nativeShopPreviews}
-                    onSelect={() => openFocus(row)}
-                  />
+                  <div className="shop-direct__face">
+                    <MonkeyCard
+                      entity={card.entity}
+                      pathLevels={card.pathLevels}
+                      mode="preview"
+                      owned={!sold}
+                      staticArt={nativeShopPreviews}
+                      onSelect={sold ? undefined : () => openFocus(row)}
+                    />
+                    {sold ? (
+                      <p className="shop-direct__sold-stamp" aria-hidden="true">
+                        Sold
+                      </p>
+                    ) : null}
+                  </div>
+                ) : sold ? (
+                  <div className="shop-direct__sold" aria-hidden="true">
+                    Sold
+                  </div>
                 ) : (
                   <button
                     type="button"
@@ -275,11 +292,16 @@ export function ShopDirectShelf() {
                   </button>
                 )}
                 <div className="shop-direct__meta">
-                  <p className="shop-direct__name">
-                    {card ? card.entity.name : row.cardId}
-                  </p>
-                  <CashAmount amount={row.price} size={18} />
-                  <ShopDirectCountdown listing={row} />
+                  {sold ? (
+                    <ShopDirectCountdown listing={row} />
+                  ) : (
+                    <>
+                      <p className="shop-direct__name">
+                        {card ? card.entity.name : row.cardId}
+                      </p>
+                      <CashAmount amount={row.price} size={18} />
+                    </>
+                  )}
                 </div>
               </article>
             );
