@@ -2,6 +2,7 @@ import {
   awardGuestCards,
   loadGuestCardIds,
   loadGuestCardSeeds,
+  scrapGuestCard,
 } from "./guestCollection";
 import { cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
@@ -305,4 +306,37 @@ export async function fetchPlayerCardCopies(
 export async function fetchPlayerCardIds(userId: string): Promise<string[]> {
   const copies = await fetchPlayerCardCopies(userId);
   return copies.map((row) => row.cardId);
+}
+
+/** Copies currently held in inventories + active market listings. */
+export async function fetchCardCirculation(cardId: string): Promise<number> {
+  const id = String(cardId ?? "").trim();
+  if (!id) return 0;
+  const { data, error } = await supabase.rpc("get_card_circulation", {
+    p_card_id: id,
+  });
+  if (error) throw new Error(error.message);
+  const n = Number(data);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+/** Delete one owned copy. No Cash. Guest → localStorage; signed-in → RPC. */
+export async function scrapOwnedCard(cardId: string): Promise<void> {
+  const id = String(cardId ?? "").trim();
+  if (!id) throw new Error("Invalid card");
+
+  const app = loadAppSession();
+  if (!getAccessToken() || !app) {
+    if (!scrapGuestCard(id)) throw new Error("You do not own this card");
+    return;
+  }
+
+  const { error } = await supabase.rpc("scrap_card", { p_card_id: id });
+  if (error) throw new Error(error.message);
+
+  saveUserLocalCards(
+    app.userId,
+    loadUserLocalCards(app.userId).filter((row) => row !== id),
+  );
+  clearPendingAwards(app.userId, [id]);
 }

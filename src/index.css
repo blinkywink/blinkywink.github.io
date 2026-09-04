@@ -7902,7 +7902,145 @@ body.rewards-overlay-open .sweeper-result {
 .card-focus__panel .monkey-card-scene {
   width: min(100%, var(--card-face-w));
   max-width: none;
-  overflow: visible;
+}
+
+.card-focus__info {
+  min-width: 8.5rem;
+}
+
+.card-info {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.card-info__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(6, 18, 32, 0.72);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.card-info__panel {
+  position: relative;
+  z-index: 1;
+  width: min(28rem, calc(100vw - 1.5rem));
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  padding: 1.45rem 1.35rem 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(36, 52, 72, 0.96) 0%, rgba(14, 22, 34, 0.98) 100%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.card-info__close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  min-width: 2.15rem;
+  padding-inline: 0.45rem;
+}
+
+.card-info__face {
+  width: min(14.5rem, 52vw);
+  aspect-ratio: 2.5 / 3.5;
+}
+
+.card-info__face .monkey-card-scene {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2.5 / 3.5;
+  max-width: none;
+  pointer-events: none;
+  cursor: default;
+  touch-action: auto;
+}
+
+.card-info__copy {
+  width: 100%;
+  text-align: center;
+}
+
+.card-info__copy h2 {
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.card-info__meta {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.62);
+  font-size: 0.92rem;
+}
+
+.card-info__stat {
+  margin: 0.8rem 0 0;
+  font-size: 1.12rem;
+}
+
+.card-info__stat strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.card-info__error {
+  margin: 0.45rem 0 0;
+  color: #ff8d9a;
+  font-size: 0.85rem;
+}
+
+.card-info__trash {
+  appearance: none;
+  border: 1px solid rgba(255, 141, 154, 0.28);
+  background: rgba(255, 80, 90, 0.12);
+  color: #ff8d9a;
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.card-info__trash svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.card-info__trash:hover {
+  background: rgba(255, 80, 90, 0.22);
+  border-color: rgba(255, 141, 154, 0.45);
+}
+
+.card-info__confirm {
+  width: 100%;
+  text-align: center;
+}
+
+.card-info__confirm p {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+}
+
+.card-info__confirm-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.card-info__scrap-go {
+  color: #fff4f5;
+  background: #b42336;
+  border: 2px solid #d64558;
 }
 
 .paragon-xp-bar {
@@ -9050,6 +9188,7 @@ body.rewards-overlay-open .sweeper-result {
     scale(1.02);
 }
 
+.monkey-card--t4 .monkey-card__visualizer,
 .monkey-card--t5 .monkey-card__visualizer,
 .monkey-card--paragon .monkey-card__visualizer {
   inset: 0;
@@ -9084,10 +9223,7 @@ body.rewards-overlay-open .sweeper-result {
   opacity: calc(var(--accent-strength) * 0.28);
 }
 
-.monkey-card--t3 .monkey-card__accent-wash {
-  opacity: calc(var(--accent-strength) * 0.55);
-}
-
+.monkey-card--t3 .monkey-card__accent-wash,
 .monkey-card--t4 .monkey-card__accent-wash {
   opacity: calc(var(--accent-strength) * 0.82);
   mix-blend-mode: soft-light;
@@ -9120,10 +9256,7 @@ body.rewards-overlay-open .sweeper-result {
     inset 0 0 0 2px color-mix(in srgb, var(--accent) 70%, #fff8e8);
 }
 
-.monkey-card--t3 .monkey-card__accent-frame {
-  opacity: 0.75;
-}
-
+.monkey-card--t3 .monkey-card__accent-frame,
 .monkey-card--t4 .monkey-card__accent-frame,
 .monkey-card--t5 .monkey-card__accent-frame,
 .monkey-card--paragon .monkey-card__accent-frame {
@@ -9168,6 +9301,7 @@ body.rewards-overlay-open .sweeper-result {
   filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 70%, transparent));
 }
 
+.monkey-card--t4 .monkey-card__portrait,
 .monkey-card--t5 .monkey-card__portrait,
 .monkey-card--paragon .monkey-card__portrait {
   filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.45));

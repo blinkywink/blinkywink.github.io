@@ -103,7 +103,7 @@ function effectTier(entity: TowerEntity, levels: PathLevels): number {
 }
 
 function usesVisualizer(tier: number): boolean {
-  return tier >= 5;
+  return tier >= 4;
 }
 
 function usesHoloFx(tier: number): boolean {
@@ -114,8 +114,8 @@ function accentStrength(tier: number): number {
   if (tier <= 0) return 0;
   if (tier === 1) return 0.06;
   if (tier === 2) return 0.16;
-  if (tier === 3) return 0.42;
-  if (tier === 4) return 0.72;
+  if (tier === 3) return 0.72;
+  if (tier === 4) return 0.82;
   if (tier === 5) return 0.92;
   return 1;
 }
@@ -307,33 +307,6 @@ function popScore(hex: string, towerTint: string): number {
   if (dim) score -= 0.75;
   if (s > 0.55 && v > 0.5) score += 0.55;
   return score;
-}
-
-/** Bright, saturated palette color from the art - skip brown/mud. */
-function contrastAccent(
-  accent: Accent | undefined,
-  towerTint: string,
-  fallback: string,
-): string {
-  const candidates = [
-    accent?.secondary,
-    accent?.colors?.[1],
-    accent?.colors?.[0],
-    accent?.primary,
-    accent?.colors?.[2],
-    accent?.colors?.[3],
-    fallback,
-  ].filter((c): c is string => Boolean(c));
-  let best = candidates[0] ?? fallback;
-  let bestScore = -99;
-  for (const c of candidates) {
-    const score = popScore(c, towerTint);
-    if (score > bestScore) {
-      best = c;
-      bestScore = score;
-    }
-  }
-  return best;
 }
 
 type ParagonFxPt = { x: string; y: string };
@@ -577,16 +550,6 @@ export function MonkeyCard({
         `,
       } as React.CSSProperties;
     }
-    if (!isParagon && tier === 3) {
-      const fromImage = punchHex(contrastAccent(accent, towerTint, secondary));
-      return {
-        background: `
-          radial-gradient(ellipse 95% 85% at 42% 32%, ${hexAlpha(towerTint, 0.56 * previewBoost)}, #14181f 76%),
-          radial-gradient(ellipse 90% 70% at 86% 88%, ${hexAlpha(fromImage, 0.46)}, transparent 62%),
-          linear-gradient(165deg, #14181f 42%, ${hexAlpha(fromImage, 0.26)} 100%)
-        `,
-      } as React.CSSProperties;
-    }
     return {
       background: `
         radial-gradient(circle at 35% 28%, color-mix(in srgb, ${primary} 52%, transparent), transparent 52%),
@@ -594,7 +557,7 @@ export function MonkeyCard({
         linear-gradient(155deg, ${darkenHex(primary, 0.68)} 0%, #10141c 50%, ${darkenHex(secondary, 0.78)} 100%)
       `,
     } as React.CSSProperties;
-  }, [tier, primary, secondary, isParagon, towerTint, accent, previewBoost]);
+  }, [tier, primary, secondary, isParagon, towerTint, previewBoost]);
 
   const accentStyle = useMemo(() => {
     const [r, g, b] = isParagon
@@ -610,7 +573,7 @@ export function MonkeyCard({
       ["--accent-b" as string]: String(b),
       ["--accent-strength" as string]: String(strength),
       ["--card-shell" as string]:
-        !isParagon && tier <= 3
+        !isParagon && tier <= 2
           ? categoryShell(entity.category)
           : darkenHex(
               punchHex(
@@ -874,7 +837,7 @@ export function MonkeyCard({
                   style={colorFieldStyle}
                   aria-hidden="true"
                 />
-                {tier >= 4 ? (
+                {tier >= 3 ? (
                   <div className="monkey-card__accent-wash" aria-hidden="true" />
                 ) : null}
               </>
@@ -908,7 +871,7 @@ export function MonkeyCard({
                 el.src = src;
               }}
             />
-            {tier >= 4 ? (
+            {tier >= 3 ? (
               <div className="monkey-card__accent-frame" aria-hidden="true" />
             ) : null}
 

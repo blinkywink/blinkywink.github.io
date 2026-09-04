@@ -208,7 +208,7 @@ export function HowToPlayOverlay({ open, onClose }: Props) {
               <li>Spend Cash on packs and cards in the shop</li>
               <li>Trade with players or sell cards on the market</li>
               <li>
-                Tier 5+ cards and paragons each get unique art fx, so every copy
+                Tier 4+ cards and paragons each get unique art fx, so every copy
                 is different
               </li>
             </ul>

@@ -36,6 +36,7 @@ import { MonkeyCard } from "./MonkeyCard";
 import { TierSortButton } from "./TierSortButton";
 import { VisibleCardGrid } from "./VisibleCardGrid";
 import { ExchangeCompare } from "./ExchangeCompare";
+import { CardInfoSheet } from "./CardInfoSheet";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
 import { LoadingDots } from "./LoadingDots";
@@ -124,7 +125,7 @@ export function CardLab({
   const [exchangeOpen, setExchangeOpen] = useState(false);
   /** After pick - review You vs Them before sending. */
   const [exchangeCardId, setExchangeCardId] = useState<string | null>(null);
-  const { owned: myOwned, paragonOf, visualSeedOf } = useCardCollection();
+  const { owned: myOwned, paragonOf, visualSeedOf, scrapCard } = useCardCollection();
   const [remoteOwned, setRemoteOwned] = useState<ReadonlySet<string> | null>(
     () => (viewerCollection ? new Set(viewerCollection.ownedIds) : null),
   );
@@ -150,6 +151,7 @@ export function CardLab({
         : { kind: "towers" },
   );
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
     () => new Set(initial?.highlightIds ?? []),
   );
@@ -198,6 +200,7 @@ export function CardLab({
     setTierHighFirst(true);
     setQuery("");
     setFocused(null);
+    setInfoOpen(false);
     void Promise.all([
       fetchPlayerCardCopies(viewer.userId),
       fetchPlayerParagons(viewer.userId),
@@ -262,7 +265,7 @@ export function CardLab({
   );
   const chromeOn = hasPlayerChrome(chromeStyle);
 
-  // Only T5+ / paragons have unique art seeds - lower tiers are identical copies.
+  // Only T4+ / paragons have unique art seeds - lower tiers are identical copies.
   const sharedOwned = useMemo(() => {
     const next = new Set<string>();
     if (!isRemote) return next;
@@ -344,6 +347,7 @@ export function CardLab({
   useEffect(() => {
     if (!cardsHomeAt || isRemote) return;
     setFocused(null);
+    setInfoOpen(false);
     setQuery("");
     setView({ kind: "towers" });
   }, [cardsHomeAt, isRemote]);
@@ -425,6 +429,7 @@ export function CardLab({
       if (e.key !== "Escape") return;
       if (exchangeCardId) setExchangeCardId(null);
       else if (exchangeOpen) closeExchange();
+      else if (infoOpen) setInfoOpen(false);
       else if (focused) setFocused(null);
       else if (view.kind !== "towers") {
         setQuery("");
@@ -433,7 +438,7 @@ export function CardLab({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [exchangeCardId, exchangeOpen, focused, view.kind]);
+  }, [exchangeCardId, exchangeOpen, focused, infoOpen, view.kind]);
 
   useEffect(() => {
     if (!focused) return;
@@ -449,6 +454,16 @@ export function CardLab({
     window.scrollTo(0, 0);
   }, [view]);
 
+  const closeFocus = () => {
+    setInfoOpen(false);
+    setFocused(null);
+  };
+
+  const openFocus = (card: MonkeyCardSpec) => {
+    setInfoOpen(false);
+    setFocused(card);
+  };
+
   const focusPortal = focused
     ? createPortal(
         <div
@@ -461,7 +476,7 @@ export function CardLab({
             type="button"
             className="card-focus__backdrop"
             aria-label="Close"
-            onClick={() => setFocused(null)}
+            onClick={closeFocus}
           />
           <div className="card-focus__panel">
             <div className="card-focus__face">
@@ -469,7 +484,7 @@ export function CardLab({
                 type="button"
                 className="btn btn--ghost btn--sm card-focus__close"
                 aria-label="Close"
-                onClick={() => setFocused(null)}
+                onClick={closeFocus}
               >
                 ✕
               </button>
@@ -479,7 +494,9 @@ export function CardLab({
                 mode="focus"
                 owned
                 degree={cardDegree(focused)}
-                visualSeed={cardSeed(focused)}
+                visualSeed={
+                  isRemote ? cardSeed(focused) : visualSeedOf(focused.id)
+                }
               />
             </div>
             {focused.isParagon ? (
@@ -496,7 +513,31 @@ export function CardLab({
                 }
               />
             ) : null}
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm card-focus__info"
+              onClick={() => setInfoOpen(true)}
+            >
+              Card info
+            </button>
           </div>
+          {infoOpen ? (
+            <CardInfoSheet
+              card={focused}
+              visualSeed={
+                isRemote
+                  ? (remoteSeeds[focused.id] ?? null)
+                  : visualSeedOf(focused.id)
+              }
+              degree={cardDegree(focused)}
+              canScrap={!isRemote}
+              onClose={() => setInfoOpen(false)}
+              onScrap={async () => {
+                await scrapCard(focused.id);
+                closeFocus();
+              }}
+            />
+          ) : null}
         </div>,
         document.body,
       )
@@ -529,7 +570,7 @@ export function CardLab({
                   <p>
                     {exchangeCardId
                       ? "Check art seed and degree differences, then send the request. They’ll name a Cash fee - you accept or decline."
-                      : "Only Tier 5+ cards and paragons are unique - pick one you both own. You’ll compare copies before sending."}
+                      : "Only Tier 4+ cards and paragons are unique - pick one you both own. You’ll compare copies before sending."}
                   </p>
                 </div>
                 <button
@@ -543,7 +584,7 @@ export function CardLab({
               </div>
               {sharedOwned.size === 0 ? (
                 <p className="card-lab__exchange-empty">
-                  You don’t share any Tier 5+ or paragon cards with{" "}
+                  You don’t share any Tier 4+ or paragon cards with{" "}
                   {viewer.username} yet.
                 </p>
               ) : exchangeCardId ? (
@@ -658,7 +699,7 @@ export function CardLab({
                           visualSeed={cardSeed(card)}
                           onSelect={() => {
                             playCardFocus();
-                            setFocused(card);
+                            openFocus(card);
                           }}
                         />
                       ))}
@@ -854,6 +895,7 @@ export function CardLab({
               className="btn btn--ghost btn--sm"
               onClick={() => {
                 setFocused(null);
+                setInfoOpen(false);
                 setQuery("");
                 setView({ kind: "towers" });
               }}
@@ -901,7 +943,7 @@ export function CardLab({
                 visualSeed={cardSeed(card)}
                 onSelect={() => {
                   playCardFocus();
-                  setFocused(card);
+                  openFocus(card);
                 }}
               />
             )}
@@ -931,6 +973,7 @@ export function CardLab({
             className="btn btn--ghost btn--sm"
             onClick={() => {
               setFocused(null);
+              setInfoOpen(false);
               setView({ kind: "towers" });
             }}
           >
@@ -973,7 +1016,7 @@ export function CardLab({
               onSelect={() => {
                 if (!isOwned) return;
                 playCardFocus();
-                setFocused(card);
+                openFocus(card);
               }}
             />
           );

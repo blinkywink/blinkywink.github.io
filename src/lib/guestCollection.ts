@@ -112,6 +112,21 @@ export function awardGuestCards(ids: Iterable<string>): {
   return { all, added };
 }
 
+/** Remove one owned copy. Returns false if it was not in the guest box. */
+export function scrapGuestCard(cardId: string): boolean {
+  const id = String(cardId ?? "").trim();
+  if (!id) return false;
+  const ids = loadGuestCardIds();
+  if (!ids.includes(id)) return false;
+  saveGuestCardIds(ids.filter((row) => row !== id));
+  const seeds = loadGuestCardSeeds();
+  if (id in seeds) {
+    delete seeds[id];
+    saveGuestCardSeeds(seeds);
+  }
+  return true;
+}
+
 export function clearGuestCards(): void {
   if (typeof window === "undefined") return;
   try {

@@ -334,6 +334,14 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: unknown;
       };
+      get_card_circulation: {
+        Args: { p_card_id: string };
+        Returns: number;
+      };
+      scrap_card: {
+        Args: { p_card_id: string };
+        Returns: boolean;
+      };
       get_profile_by_username: {
         Args: { p_username: string };
         Returns: {

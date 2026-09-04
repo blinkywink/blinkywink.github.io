@@ -1,4 +1,4 @@
-/** Per-copy art seeds for T5 and Paragon cards. */
+/** Per-copy art seeds for T4, T5, and Paragon cards. */
 
 export function needsVisualSeed(cardId: string): boolean {
   const id = String(cardId ?? "").trim();
@@ -6,7 +6,7 @@ export function needsVisualSeed(cardId: string): boolean {
   if (id.endsWith("-paragon")) return true;
   const m = id.match(/-(\d)-(\d)-(\d)$/);
   if (!m) return false;
-  return Math.max(Number(m[1]), Number(m[2]), Number(m[3])) >= 5;
+  return Math.max(Number(m[1]), Number(m[2]), Number(m[3])) >= 4;
 }
 
 export function newVisualSeed(): number {

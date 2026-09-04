@@ -13,6 +13,7 @@ import { useHeroFx } from "./HeroFxProvider";
 import {
   awardCards as persistAwardCards,
   fetchOwnedCopies,
+  scrapOwnedCard,
 } from "../lib/awardCards";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
@@ -67,6 +68,8 @@ type CardCollectionContextValue = {
   visualSeedOf: (cardId: string) => number | null;
   /** Persist unlocks; returns newly added ids. */
   awardCards: (cardIds: string[]) => Promise<string[]>;
+  /** Delete one owned copy. No Cash. */
+  scrapCard: (cardId: string) => Promise<void>;
   applyParagonFeeds: (feeds: ParagonFeed[]) => Promise<ParagonApplyResult[]>;
   feedParagonsFromCards: (
     cardIds: string[],
@@ -259,6 +262,30 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
     return added;
   }, [announceTowerCompletions, applyCopies]);
 
+  const scrapCard = useCallback(
+    async (cardId: string) => {
+      const id = String(cardId ?? "").trim();
+      if (!id) return;
+      await scrapOwnedCard(id);
+      ownedRef.current = ownedRef.current.filter((row) => row !== id);
+      setOwnedIds(ownedRef.current);
+      setSeedMap((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      if (id.endsWith("-paragon") && paragonRef.current[id]) {
+        const next = { ...paragonRef.current };
+        delete next[id];
+        paragonRef.current = next;
+        setParagonMap(next);
+      }
+      void refreshProfile();
+    },
+    [refreshProfile],
+  );
+
   const announceDegreeUps = useCallback((results: ParagonApplyResult[]) => {
     for (const r of results) {
       if (r.degreesGained <= 0) continue;
@@ -370,6 +397,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       visualSeeds,
       visualSeedOf: (cardId: string) => visualSeeds.get(cardId) ?? null,
       awardCards,
+      scrapCard,
       applyParagonFeeds,
       feedParagonsFromCards,
       refresh,
@@ -381,6 +409,7 @@ export function CardCollectionProvider({ children }: { children: ReactNode }) {
       paragons,
       visualSeeds,
       awardCards,
+      scrapCard,
       applyParagonFeeds,
       feedParagonsFromCards,
       refresh,

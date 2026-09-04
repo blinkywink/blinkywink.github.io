@@ -16,6 +16,11 @@ function stripDistDownloads(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), stripDistDownloads()],
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   build: {
     rollupOptions: {
       output: {
