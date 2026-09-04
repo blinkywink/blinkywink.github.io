@@ -4,7 +4,6 @@ import {
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "./avatar";
-import { accentHexForCardId } from "./cardAccent";
 import { cached, CacheTtl } from "./cache";
 import { normalizeAccentColor } from "./profileCosmetics";
 import {
@@ -77,9 +76,7 @@ export async function fetchProfileByUsername(
         degree: row.avatar_paragon_degree,
       }),
       showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
-      accentColor:
-        accentHexForCardId(row.avatar_card_id) ??
-        normalizeAccentColor(row.accent_color),
+      accentColor: normalizeAccentColor(row.accent_color),
       ownedHeroIds: normalizeOwnedHeroIds(row.owned_hero_ids),
       equippedHeroId: row.equipped_hero_id
         ? String(row.equipped_hero_id)
@@ -129,9 +126,7 @@ export async function searchProfilesByUsername(
       degree: (row as { avatar_paragon_degree?: number | null })
         .avatar_paragon_degree,
     }),
-    accentColor:
-      accentHexForCardId(row.avatar_card_id) ??
-      normalizeAccentColor(row.accent_color),
+    accentColor: normalizeAccentColor(row.accent_color),
     badgeIds: normalizeBadgeIds(
       (row as { profile_badges?: unknown }).profile_badges,
     ),

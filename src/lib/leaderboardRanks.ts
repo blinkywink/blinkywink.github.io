@@ -4,7 +4,6 @@ import {
   type AvatarCrop,
 } from "./avatar";
 import { cached, CacheTtl } from "./cache";
-import { accentHexForCardId } from "./cardAccent";
 import { normalizeAccentColor } from "./profileCosmetics";
 import { normalizeBadgeIds } from "./profileBadges";
 import { supabase } from "./supabase";
@@ -88,10 +87,7 @@ function mapLeaderboardRows(
       visualSeed: r.avatar_visual_seed as number | null,
       degree: r.avatar_paragon_degree as number | null,
     }),
-    accentColor:
-      accentHexForCardId(
-        r.avatar_card_id == null ? null : String(r.avatar_card_id),
-      ) ?? normalizeAccentColor(r.accent_color),
+    accentColor: normalizeAccentColor(r.accent_color),
     rank: offset + i + 1,
     badgeIds: normalizeBadgeIds(r.profile_badges),
   }));
