@@ -88,6 +88,15 @@ const PARAGON_ACCENT = {
 
 const PARAGON_DEGREE_ICON = "/images/ui/paragon-degree.webp";
 
+const UPGRADE_ICON_ORIGIN = "https://monkeycards.app";
+
+function upgradeIconSrc(id: string): string {
+  const raw = String(accents[id]?.icon || `/images/upgrade-icons/${id}.webp`);
+  const path = raw.replace(/^https?:\/\/[^/]+/i, "").split("?")[0];
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${UPGRADE_ICON_ORIGIN}${normalized}?v=2`;
+}
+
 /** Effective upgrade ladder: 0 base → 5 T5 → 6 paragon. */
 function effectTier(entity: TowerEntity, levels: PathLevels): number {
   if (entity.type === "paragon") return 6;
@@ -526,10 +535,7 @@ export function MonkeyCard({
   }, [entity.image, staticArt]);
 
   const pathIcons = useMemo(() => {
-    const iconFor = (id: string) => {
-      const src = accents[id]?.icon || `/images/upgrade-icons/${id}.webp`;
-      return `${src}${src.includes("?") ? "&" : "?"}v=1`;
-    };
+    const iconFor = (id: string) => upgradeIconSrc(id);
 
     if (isParagon) {
       return [
