@@ -478,50 +478,51 @@ export function CardLab({
             aria-label="Close"
             onClick={closeFocus}
           />
-          <div className="card-focus__panel">
-            <div className="card-focus__face">
+          {!infoOpen ? (
+            <div className="card-focus__panel">
+              <div className="card-focus__face">
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm card-focus__close"
+                  aria-label="Close"
+                  onClick={closeFocus}
+                >
+                  ✕
+                </button>
+                <MonkeyCard
+                  entity={focused.entity}
+                  pathLevels={focused.pathLevels}
+                  mode="focus"
+                  owned
+                  degree={cardDegree(focused)}
+                  visualSeed={
+                    isRemote ? cardSeed(focused) : visualSeedOf(focused.id)
+                  }
+                />
+              </div>
+              {focused.isParagon ? (
+                <ParagonXpBar
+                  degree={
+                    isRemote
+                      ? (remoteParagons[focused.id]?.degree ?? 1)
+                      : (paragonOf(focused.id)?.degree ?? 1)
+                  }
+                  xp={
+                    isRemote
+                      ? (remoteParagons[focused.id]?.xp ?? 0)
+                      : (paragonOf(focused.id)?.xp ?? 0)
+                  }
+                />
+              ) : null}
               <button
                 type="button"
-                className="btn btn--ghost btn--sm card-focus__close"
-                aria-label="Close"
-                onClick={closeFocus}
+                className="btn btn--ghost btn--sm card-focus__info"
+                onClick={() => setInfoOpen(true)}
               >
-                ✕
+                Card info
               </button>
-              <MonkeyCard
-                entity={focused.entity}
-                pathLevels={focused.pathLevels}
-                mode="focus"
-                owned
-                degree={cardDegree(focused)}
-                visualSeed={
-                  isRemote ? cardSeed(focused) : visualSeedOf(focused.id)
-                }
-              />
             </div>
-            {focused.isParagon ? (
-              <ParagonXpBar
-                degree={
-                  isRemote
-                    ? (remoteParagons[focused.id]?.degree ?? 1)
-                    : (paragonOf(focused.id)?.degree ?? 1)
-                }
-                xp={
-                  isRemote
-                    ? (remoteParagons[focused.id]?.xp ?? 0)
-                    : (paragonOf(focused.id)?.xp ?? 0)
-                }
-              />
-            ) : null}
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm card-focus__info"
-              onClick={() => setInfoOpen(true)}
-            >
-              Card info
-            </button>
-          </div>
-          {infoOpen ? (
+          ) : (
             <CardInfoSheet
               card={focused}
               visualSeed={
@@ -537,7 +538,7 @@ export function CardLab({
                 closeFocus();
               }}
             />
-          ) : null}
+          )}
         </div>,
         document.body,
       )

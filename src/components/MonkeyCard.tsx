@@ -16,7 +16,7 @@ import {
   PARAGON_MIN_DEGREE,
   paragonStage,
 } from "../lib/paragonProgress";
-import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
+import { isAndroidNative } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
   onStaticVisualizerSlot,
@@ -107,19 +107,6 @@ function effectTier(entity: TowerEntity, levels: PathLevels): number {
 
 function usesVisualizer(tier: number): boolean {
   return tier >= 4;
-}
-
-/** Nested pickers (PFP / trades / market) scroll inside overflow:hidden, not the window. */
-function nearestOverflowRoot(el: Element): Element | null {
-  let node = el.parentElement;
-  while (node && node !== document.documentElement) {
-    const style = getComputedStyle(node);
-    if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflowX)) {
-      return node;
-    }
-    node = node.parentElement;
-  }
-  return null;
 }
 
 function usesHoloFx(tier: number): boolean {
@@ -390,7 +377,6 @@ export function MonkeyCard({
 }: Props) {
   const isPreview = mode === "preview";
   const showFx = !isPreview || bake;
-  const nativeShell = isNativeShell();
   const locked = !owned;
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -407,8 +393,8 @@ export function MonkeyCard({
   const [active, setActive] = useState(false);
 
   const isParagon = entity.type === "paragon";
-  /** Android WebView: paragon tilt breaks compositing — keep card static in focus. */
-  const disableParagonTilt = isAndroidNative() && isParagon && !isPreview;
+  /** Android WebView: 3D tilt blanks canvas/img layers (T4+ and paragons). */
+  const disableTilt = isAndroidNative() && !isPreview;
   const collection = useCardCollectionOptional();
   const ownedDegree = isParagon
     ? collection?.paragonOf(paragonCardId(entity.tower))?.degree
@@ -486,29 +472,15 @@ export function MonkeyCard({
       setFxOn(false);
       return;
     }
-    // Grids and the PFP picker scroll inside overflow:hidden. IntersectionObserver
-    // often reports those thumbs as off-screen and leaves T4+ on the T3 wash.
+    // Previews keep T4+ canvases on. Focus overlays are always on-screen —
+    // Android WebView IntersectionObserver flickered during tilt / nested
+    // sheets and unmounted those canvases.
     if (bake || isPreview) {
       setFxOn(bake || usesVisualizer(tier));
       return;
     }
-    const el = sceneRef.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setFxOn(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
-      {
-        root: nearestOverflowRoot(el),
-        rootMargin: nativeShell ? "64px 0px" : "180px 0px",
-        threshold: 0,
-      },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [bake, isPreview, nativeShell, staticArt, tier]);
+    setFxOn(true);
+  }, [bake, isPreview, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;
@@ -735,7 +707,7 @@ export function MonkeyCard({
           }
         },
       }
-    : locked || disableParagonTilt
+    : locked || disableTilt
       ? onSelect && !locked
         ? {
             role: "button" as const,
@@ -798,7 +770,7 @@ export function MonkeyCard({
         isParagon && paragonAmbient
           ? `monkey-card-scene--paragon-fx monkey-card-scene--paragon-s${stage}`
           : "",
-        disableParagonTilt ? "monkey-card-scene--no-tilt" : "",
+        disableTilt ? "monkey-card-scene--no-tilt" : "",
       ]
         .filter(Boolean)
         .join(" ")}
