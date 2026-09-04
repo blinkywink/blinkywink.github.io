@@ -14,6 +14,7 @@ import {
   shopDirectRestockAtMs,
   type ShopDirectListing,
 } from "../lib/shopDirect";
+import { needsVisualSeed } from "../lib/cardVisualSeed";
 import { playBuy, playCardFocus, preloadPackSounds } from "../lib/packSounds";
 import { isNativeShell } from "../lib/nativeShell";
 import { isTypingTarget } from "../lib/keyboard";
@@ -195,6 +196,7 @@ export function ShopDirectShelf() {
                 pathLevels={focused.card.pathLevels}
                 mode="focus"
                 owned
+                visualSeed={focused.listing.visualSeed}
               />
             </div>
             <div className="pack-opener__buy shop-direct-focus__buy">
@@ -269,7 +271,10 @@ export function ShopDirectShelf() {
                       pathLevels={card.pathLevels}
                       mode="preview"
                       owned={!sold}
-                      staticArt={nativeShopPreviews}
+                      staticArt={
+                        nativeShopPreviews && !needsVisualSeed(row.cardId)
+                      }
+                      visualSeed={row.visualSeed}
                       onSelect={sold ? undefined : () => openFocus(row)}
                     />
                     {sold ? (

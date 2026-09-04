@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useCardCollection } from "../auth/CardCollectionProvider";
-import { fetchPlayerCardIds } from "../lib/awardCards";
+import { fetchPlayerCardCopies } from "../lib/awardCards";
+import { needsVisualSeed } from "../lib/cardVisualSeed";
 import { fetchPlayerParagons } from "../lib/paragonApi";
 import type { ParagonMap } from "../lib/guestParagons";
 import { cardSpecById } from "../lib/cardCatalog";
@@ -27,17 +28,41 @@ import { ParagonXpBar } from "./ParagonXpBar";
 
 type FocusedOffer = {
   card: MonkeyCardSpec;
+  cardId: string;
+  side: "mine" | "theirs";
   degree?: number;
   xp?: number;
   /** Own offer cards can be removed from the focus sheet. */
   canRemove?: boolean;
 };
 
+function mergeCompletedTrade(
+  prev: TradeState | null,
+  next: TradeState,
+  fallbackMine: string[],
+): TradeState {
+  if (next.status !== "completed") return next;
+  return {
+    ...next,
+    myOffer: next.myOffer.length ? next.myOffer : (prev?.myOffer ?? fallbackMine),
+    theirOffer: next.theirOffer.length
+      ? next.theirOffer
+      : (prev?.theirOffer ?? []),
+    myOfferSeeds: Object.keys(next.myOfferSeeds).length
+      ? next.myOfferSeeds
+      : (prev?.myOfferSeeds ?? {}),
+    theirOfferSeeds: Object.keys(next.theirOfferSeeds).length
+      ? next.theirOfferSeeds
+      : (prev?.theirOfferSeeds ?? {}),
+  };
+}
+
 export function TradeRoom() {
   const { tradeId = "" } = useParams();
   const navigate = useNavigate();
   const { user, isGuest } = useAuth();
-  const { owned, paragonOf, refresh: refreshCards } = useCardCollection();
+  const { owned, paragonOf, visualSeedOf, refresh: refreshCards } =
+    useCardCollection();
   const [trade, setTrade] = useState<TradeState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +72,9 @@ export function TradeRoom() {
   const [focused, setFocused] = useState<FocusedOffer | null>(null);
   const [partnerOwned, setPartnerOwned] = useState<ReadonlySet<string>>(
     () => new Set(),
+  );
+  const [partnerSeeds, setPartnerSeeds] = useState<Record<string, number>>(
+    {},
   );
   const [partnerParagons, setPartnerParagons] = useState<ParagonMap>({});
   const strippingRef = useRef(false);
@@ -66,16 +94,7 @@ export function TradeRoom() {
     if (!tradeId || !user) return;
     try {
       const next = await fetchTrade(tradeId);
-      setTrade((prev) => {
-        if (next.status !== "completed") return next;
-        return {
-          ...next,
-          myOffer: next.myOffer.length ? next.myOffer : (prev?.myOffer ?? []),
-          theirOffer: next.theirOffer.length
-            ? next.theirOffer
-            : (prev?.theirOffer ?? []),
-        };
-      });
+      setTrade((prev) => mergeCompletedTrade(prev, next, []));
       setLocalOffer((prev) => {
         const incoming =
           next.status === "completed" && !next.myOffer.length
@@ -150,22 +169,29 @@ export function TradeRoom() {
   useEffect(() => {
     if (!partnerId) {
       setPartnerOwned(new Set());
+      setPartnerSeeds({});
       setPartnerParagons({});
       return;
     }
     let cancelled = false;
     void Promise.all([
-      fetchPlayerCardIds(partnerId),
+      fetchPlayerCardCopies(partnerId, { force: true }),
       fetchPlayerParagons(partnerId),
     ])
-      .then(([ids, nextParagons]) => {
+      .then(([copies, nextParagons]) => {
         if (cancelled) return;
-        setPartnerOwned(new Set(ids));
+        setPartnerOwned(new Set(copies.map((row) => row.cardId)));
+        const seeds: Record<string, number> = {};
+        for (const row of copies) {
+          if (row.visualSeed != null) seeds[row.cardId] = row.visualSeed;
+        }
+        setPartnerSeeds(seeds);
         setPartnerParagons(nextParagons);
       })
       .catch(() => {
         if (cancelled) return;
         setPartnerOwned(new Set());
+        setPartnerSeeds({});
         setPartnerParagons({});
       });
     return () => {
@@ -263,6 +289,8 @@ export function TradeRoom() {
     const para = card.isParagon ? paragonOf(id) : null;
     setFocused({
       card,
+      cardId: id,
+      side: "mine",
       degree: para?.degree,
       xp: para?.xp,
       canRemove: trade?.status === "active",
@@ -275,6 +303,8 @@ export function TradeRoom() {
     const para = card.isParagon ? partnerParagons[id] : null;
     setFocused({
       card,
+      cardId: id,
+      side: "theirs",
       degree: para?.degree ?? (card.isParagon ? 1 : undefined),
       xp: para?.xp ?? 0,
     });
@@ -287,16 +317,7 @@ export function TradeRoom() {
     setStatus(null);
     try {
       const next = await setTradeReady(tradeId, ready);
-      setTrade((prev) => {
-        if (next.status !== "completed") return next;
-        return {
-          ...next,
-          myOffer: next.myOffer.length ? next.myOffer : (prev?.myOffer ?? localOffer),
-          theirOffer: next.theirOffer.length
-            ? next.theirOffer
-            : (prev?.theirOffer ?? []),
-        };
-      });
+      setTrade((prev) => mergeCompletedTrade(prev, next, localOffer));
       setLocalOffer((prev) =>
         next.status === "completed" && !next.myOffer.length ? prev : next.myOffer,
       );
@@ -364,6 +385,20 @@ export function TradeRoom() {
 
   const done = trade.status === "completed";
   const active = trade.status === "active";
+  const myOfferSeeds = trade.myOfferSeeds;
+  const theirOfferSeeds = trade.theirOfferSeeds;
+
+  function offerSeed(id: string, side: "mine" | "theirs"): number | null {
+    if (side === "mine") {
+      return myOfferSeeds[id] ?? visualSeedOf(id) ?? null;
+    }
+    return (
+      theirOfferSeeds[id] ??
+      partnerSeeds[id] ??
+      (done ? visualSeedOf(id) : null) ??
+      null
+    );
+  }
 
   const focusPortal = focused
     ? createPortal(
@@ -395,6 +430,7 @@ export function TradeRoom() {
                 mode="focus"
                 owned
                 degree={focused.degree}
+                visualSeed={offerSeed(focused.cardId, focused.side)}
               />
             </div>
             {focused.card.isParagon ? (
@@ -477,12 +513,13 @@ export function TradeRoom() {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
-                          staticArt={isNativeShell()}
+                          staticArt={isNativeShell() && !needsVisualSeed(id)}
                           degree={
                             card.isParagon
                               ? (paragonOf(id)?.degree ?? 1)
                               : undefined
                           }
+                          visualSeed={offerSeed(id, "mine")}
                         />
                       </button>
                     );
@@ -520,12 +557,13 @@ export function TradeRoom() {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
-                          staticArt={isNativeShell()}
+                          staticArt={isNativeShell() && !needsVisualSeed(id)}
                           degree={
                             card.isParagon
                               ? (partnerParagons[id]?.degree ?? 1)
                               : undefined
                           }
+                          visualSeed={offerSeed(id, "theirs")}
                         />
                       </button>
                     );

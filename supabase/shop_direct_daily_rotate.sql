@@ -28,9 +28,16 @@ begin
       from public._shop_pick_direct_card(excluded);
 
       insert into public.shop_direct_slots (
-        slot, card_id, tier, price, available_at
+        slot, card_id, tier, price, available_at, visual_seed
       )
-      values (s, pick.card_id, pick.tier, pick.price, now());
+      values (
+        s,
+        pick.card_id,
+        pick.tier,
+        pick.price,
+        now(),
+        public._new_visual_seed()
+      );
       continue;
     end if;
 
@@ -55,6 +62,7 @@ begin
         card_id = pick.card_id,
         tier = pick.tier,
         price = pick.price,
+        visual_seed = public._new_visual_seed(),
         version = listing.version + 1,
         updated_at = now(),
         available_at = now()

@@ -1,6 +1,7 @@
 import { getAccessToken, supabase, supabaseRealtime } from "./supabase";
 import { loadAppSession, userFacingRpcError } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
+import { parseVisualSeed } from "./cardVisualSeed";
 import { requestTradeInboxRefresh } from "./tradeInboxUi";
 
 type RpcErr = {
@@ -54,6 +55,8 @@ export type TradeState = {
   recipientReady: boolean;
   myOffer: string[];
   theirOffer: string[];
+  myOfferSeeds: Record<string, number>;
+  theirOfferSeeds: Record<string, number>;
   updatedAt: string;
   createdAt: string;
 };
@@ -80,6 +83,17 @@ function asInboxItems(raw: unknown): TradeInboxItem[] {
   });
 }
 
+function asSeedMap(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value == null) continue;
+    const seed = parseVisualSeed(value);
+    if (seed != null) out[key] = seed;
+  }
+  return out;
+}
+
 function asTradeState(raw: unknown): TradeState {
   const r = (raw ?? {}) as Record<string, unknown>;
   const myOffer = Array.isArray(r.myOffer)
@@ -99,6 +113,8 @@ function asTradeState(raw: unknown): TradeState {
     recipientReady: Boolean(r.recipientReady),
     myOffer,
     theirOffer,
+    myOfferSeeds: asSeedMap(r.myOfferSeeds),
+    theirOfferSeeds: asSeedMap(r.theirOfferSeeds),
     updatedAt: String(r.updatedAt ?? ""),
     createdAt: String(r.createdAt ?? ""),
   };

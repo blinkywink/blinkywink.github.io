@@ -56,7 +56,10 @@ type Props = {
   bake?: boolean;
   /** Paragon degree 1-100. Falls back to the signed-in collection. */
   degree?: number;
-  /** Per-copy art seed. Falls back to the signed-in collection. */
+  /**
+   * Per-copy art seed. `undefined` falls back to the signed-in collection;
+   * pass `null` when the copy has no seed (or belongs to someone else).
+   */
   visualSeed?: number | null;
   /**
    * Preview still, but paint primary/secondary into the flat background
@@ -408,8 +411,9 @@ export function MonkeyCard({
     ? paragonCardId(entity.tower)
     : `${towerIdSlug(entity.tower)}-${formatPathLevels(pathLevels)}`;
   const resolvedSeed =
-    visualSeedProp ??
-    (!locked ? (collection?.visualSeedOf(catalogId) ?? null) : null);
+    visualSeedProp === undefined
+      ? (!locked ? (collection?.visualSeedOf(catalogId) ?? null) : null)
+      : visualSeedProp;
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);

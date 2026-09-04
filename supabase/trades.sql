@@ -374,6 +374,8 @@ declare
   recipient_name text;
   my_cards text[];
   their_cards text[];
+  my_seeds jsonb;
+  their_seeds jsonb;
   partner_id uuid;
 begin
   if uid is null then
@@ -416,6 +418,42 @@ begin
   from public.trade_offers o
   where o.trade_id = t.id and o.owner_id = partner_id;
 
+  -- Active: seed still lives on the offer owner's copy.
+  -- Completed: copies swapped, so look up the recipient's inventory.
+  select coalesce(
+    (select jsonb_object_agg(seed.card_id, seed.visual_seed)
+     from (
+       select o.card_id, oc.visual_seed
+       from public.trade_offers o
+       left join public.owned_cards oc
+         on oc.card_id = o.card_id
+        and oc.user_id = case
+          when t.status = 'completed' then partner_id
+          else uid
+        end
+       where o.trade_id = t.id and o.owner_id = uid
+     ) seed),
+    '{}'::jsonb
+  )
+  into my_seeds;
+
+  select coalesce(
+    (select jsonb_object_agg(seed.card_id, seed.visual_seed)
+     from (
+       select o.card_id, oc.visual_seed
+       from public.trade_offers o
+       left join public.owned_cards oc
+         on oc.card_id = o.card_id
+        and oc.user_id = case
+          when t.status = 'completed' then uid
+          else partner_id
+        end
+       where o.trade_id = t.id and o.owner_id = partner_id
+     ) seed),
+    '{}'::jsonb
+  )
+  into their_seeds;
+
   return jsonb_build_object(
     'id', t.id,
     'status', t.status,
@@ -427,6 +465,8 @@ begin
     'recipientReady', t.recipient_ready,
     'myOffer', to_jsonb(my_cards),
     'theirOffer', to_jsonb(their_cards),
+    'myOfferSeeds', coalesce(my_seeds, '{}'::jsonb),
+    'theirOfferSeeds', coalesce(their_seeds, '{}'::jsonb),
     'updatedAt', t.updated_at,
     'createdAt', t.created_at
   );

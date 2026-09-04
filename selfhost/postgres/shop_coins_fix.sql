@@ -120,8 +120,12 @@ begin
     raise exception 'Insufficient Cash';
   end if;
 
-  insert into public.owned_cards (user_id, card_id)
-  values (uid, listing.card_id);
+  insert into public.owned_cards (user_id, card_id, visual_seed)
+  values (
+    uid,
+    listing.card_id,
+    coalesce(listing.visual_seed, public._new_visual_seed())
+  );
 
   update public.shop_direct_slots
   set

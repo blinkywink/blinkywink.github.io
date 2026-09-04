@@ -1,6 +1,7 @@
 import { cacheInvalidate, cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession, userFacingRpcError } from "../auth/session";
+import { parseVisualSeed } from "./cardVisualSeed";
 import { formatShopCountdown } from "./packTheme";
 
 /** Typical T4 deal ceiling (old list was 7500). */
@@ -16,6 +17,7 @@ export type ShopDirectListing = {
   tier: 4 | 5;
   price: number;
   version: number;
+  visualSeed: number | null;
   updatedAt: string;
   availableAt: string;
 };
@@ -57,6 +59,7 @@ function mapListing(raw: Record<string, unknown>): ShopDirectListing | null {
     tier,
     price: Number.isFinite(price) ? price : 0,
     version: Number.isFinite(version) ? version : 0,
+    visualSeed: parseVisualSeed(raw.visualSeed ?? raw.visual_seed),
     updatedAt: String(raw.updatedAt ?? raw.updated_at ?? ""),
     availableAt: String(raw.availableAt ?? raw.available_at ?? ""),
   };

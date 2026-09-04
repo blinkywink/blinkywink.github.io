@@ -37,6 +37,9 @@ create table if not exists public.shop_direct_slots (
 
 alter table public.shop_direct_slots enable row level security;
 
+alter table public.shop_direct_slots
+  add column if not exists visual_seed bigint;
+
 drop policy if exists "Anyone can read shop direct slots" on public.shop_direct_slots;
 create policy "Anyone can read shop direct slots"
   on public.shop_direct_slots
@@ -166,9 +169,16 @@ begin
       from public._shop_pick_direct_card(excluded);
 
       insert into public.shop_direct_slots (
-        slot, card_id, tier, price, available_at
+        slot, card_id, tier, price, available_at, visual_seed
       )
-      values (s, pick.card_id, pick.tier, pick.price, now());
+      values (
+        s,
+        pick.card_id,
+        pick.tier,
+        pick.price,
+        now(),
+        public._new_visual_seed()
+      );
       continue;
     end if;
 
@@ -193,6 +203,7 @@ begin
         card_id = pick.card_id,
         tier = pick.tier,
         price = pick.price,
+        visual_seed = public._new_visual_seed(),
         version = listing.version + 1,
         updated_at = now(),
         available_at = now()
@@ -220,6 +231,7 @@ begin
           'tier', s.tier,
           'price', s.price,
           'version', s.version,
+          'visualSeed', s.visual_seed,
           'updatedAt', s.updated_at,
           'availableAt', s.available_at
         )
@@ -296,8 +308,12 @@ begin
     raise exception 'Insufficient Cash';
   end if;
 
-  insert into public.owned_cards (user_id, card_id)
-  values (uid, listing.card_id);
+  insert into public.owned_cards (user_id, card_id, visual_seed)
+  values (
+    uid,
+    listing.card_id,
+    coalesce(listing.visual_seed, public._new_visual_seed())
+  );
 
   update public.shop_direct_slots
   set

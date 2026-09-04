@@ -1,111 +1,18 @@
--- Limited-card deals: random T4/T5 prices (~35% cheaper than old 7500/25000),
--- sold slots stay empty for 4 hours, then restock. Safe to re-run.
+-- Limited shop deals get one art seed for every client, and the buyer
+-- receives that same seed. Safe to re-run.
 
 alter table public.shop_direct_slots
-  add column if not exists available_at timestamptz not null default now();
+  add column if not exists visual_seed bigint;
 
 alter table public.shop_direct_slots
-  drop constraint if exists shop_direct_slots_price_ok;
+  alter column visual_seed set default public._new_visual_seed();
+
+update public.shop_direct_slots
+set visual_seed = public._new_visual_seed()
+where visual_seed is null;
 
 alter table public.shop_direct_slots
-  add constraint shop_direct_slots_price_ok check (price >= 0 and price <= 25000);
-
-drop function if exists public.shop_direct_price(smallint);
-
-create or replace function public.shop_direct_price(p_tier smallint)
-returns integer
-language plpgsql
-volatile
-set search_path = public
-as $$
-declare
-  r double precision := random();
-  lo integer;
-  hi integer;
-begin
-  if p_tier = 4 then
-    -- Old list 7500; typical deal ~35% off (~4.8k). Floor ~2k.
-    if r < 0.10 then
-      lo := 1984;
-      hi := 2479;
-    elsif r < 0.38 then
-      lo := 2483;
-      hi := 3491;
-    else
-      lo := 3517;
-      hi := 5186;
-    end if;
-  elsif p_tier = 5 then
-    -- Old list 25000; typical deal ~35% off (~16k). Rare steal ~4k.
-    if r < 0.04 then
-      lo := 3821;
-      hi := 4894;
-    elsif r < 0.16 then
-      lo := 5126;
-      hi := 8873;
-    elsif r < 0.42 then
-      lo := 9014;
-      hi := 12887;
-    else
-      lo := 13108;
-      hi := 16742;
-    end if;
-  else
-    return null;
-  end if;
-  return lo + floor(random() * (hi - lo + 1))::integer;
-end;
-$$;
-
-create or replace function public._shop_pick_direct_card(p_exclude text[] default '{}')
-returns table (card_id text, tier smallint, price integer)
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  want_tier smallint;
-  picked_id text;
-  picked_tier smallint;
-begin
-  want_tier := case when random() < 0.60 then 4 else 5 end;
-
-  select p.card_id, p.tier
-    into picked_id, picked_tier
-  from public.shop_card_pool p
-  where p.tier = want_tier
-    and not (p.card_id = any (coalesce(p_exclude, '{}')))
-  order by random()
-  limit 1;
-
-  if picked_id is null then
-    select p.card_id, p.tier
-      into picked_id, picked_tier
-    from public.shop_card_pool p
-    where not (p.card_id = any (coalesce(p_exclude, '{}')))
-    order by random()
-    limit 1;
-  end if;
-
-  if picked_id is null then
-    select p.card_id, p.tier
-      into picked_id, picked_tier
-    from public.shop_card_pool p
-    where p.tier = want_tier
-    order by random()
-    limit 1;
-  end if;
-
-  if picked_id is null then
-    raise exception 'Shop card pool is empty - run shop_card_pool_seed.sql';
-  end if;
-
-  card_id := picked_id;
-  tier := picked_tier;
-  price := public.shop_direct_price(picked_tier);
-  return next;
-end;
-$$;
+  alter column visual_seed set not null;
 
 create or replace function public._shop_ensure_direct_slots()
 returns void
@@ -300,19 +207,3 @@ begin
   );
 end;
 $$;
-
-revoke all on function public.shop_direct_price(smallint) from public;
-revoke all on function public._shop_pick_direct_card(text[]) from public;
-revoke all on function public._shop_ensure_direct_slots() from public;
-
-revoke all on function public.get_shop_direct_listings() from public;
-grant execute on function public.get_shop_direct_listings() to anon, authenticated;
-
-revoke all on function public.buy_shop_direct_card(integer, bigint) from public;
-grant execute on function public.buy_shop_direct_card(integer, bigint) to anon, authenticated;
-
--- Reprice live shelf so the test shop is not stuck on 7500 / 25000.
-update public.shop_direct_slots
-set price = public.shop_direct_price(tier)
-where card_id <> ''
-  and price in (7500, 25000);
