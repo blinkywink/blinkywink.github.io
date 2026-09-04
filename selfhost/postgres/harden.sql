@@ -28,6 +28,13 @@ begin
 
   tok := nullif(headers->>'x-bloon-session', '');
   if tok is null then
+    select nullif(kv.value, '')
+      into tok
+    from json_each_text(headers) as kv
+    where lower(replace(kv.key, '_', '-')) = 'x-bloon-session'
+    limit 1;
+  end if;
+  if tok is null then
     return null;
   end if;
 

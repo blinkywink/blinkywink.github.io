@@ -12,7 +12,7 @@ api.blinkywink.co {
 		max_size 512KB
 	}
 
-	@allowedOrigin header_regexp Origin ^https://(www\.)?monkeycards\.app$|^https://([a-z0-9-]+\.)?monkeycards\.pages\.dev$|^https://tauri\.localhost$|^http://tauri\.localhost$|^tauri://localhost$|^capacitor://localhost$|^https://localhost$|^http://localhost(:\d+)?$
+	@allowedOrigin header_regexp Origin ^https://(www\.)?monkeycards\.app$|^https://([a-z0-9-]+\.)?monkeycards\.pages\.dev$|^https?://([a-z0-9.-]+\.)?localhost(:\d+)?$|^tauri://localhost$|^capacitor://localhost$|^ionic://localhost$
 
 	handle /auth/v1/health {
 		header Access-Control-Allow-Origin *

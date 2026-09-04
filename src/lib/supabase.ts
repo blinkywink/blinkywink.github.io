@@ -1,6 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
-import { loadAppSession } from "../auth/session";
+import {
+  emitSessionInvalid,
+  isNotAuthenticatedError,
+  loadAppSession,
+} from "../auth/session";
 
 /** Repair env typos / minify mangling: `https:/host` → `https://host`. */
 function normalizeSupabaseUrl(raw: string | undefined): string | undefined {
@@ -49,7 +53,11 @@ export function setAccessToken(token: string | null) {
 }
 
 export function getAccessToken(): string | null {
-  return sessionToken;
+  return sessionToken ?? loadAppSession()?.accessToken ?? null;
+}
+
+function activeSessionToken(): string | null {
+  return sessionToken ?? loadAppSession()?.accessToken ?? null;
 }
 
 function makeClient(): SupabaseClient<Database> {
@@ -73,12 +81,28 @@ function makeClient(): SupabaseClient<Database> {
           );
         }
         const headers = new Headers(init?.headers);
-        if (sessionToken) {
-          headers.set("x-bloon-session", sessionToken);
+        const token = activeSessionToken();
+        if (token) {
+          headers.set("x-bloon-session", token);
         } else {
           headers.delete("x-bloon-session");
         }
-        return fetch(input, { ...init, headers });
+        return fetch(input, { ...init, headers, cache: "no-store" }).then(
+          async (res) => {
+            if (!res.ok) {
+              try {
+                const body = await res.clone().text();
+                if (isNotAuthenticatedError(body)) {
+                  setAccessToken(null);
+                  emitSessionInvalid();
+                }
+              } catch {
+                /* ignore */
+              }
+            }
+            return res;
+          },
+        );
       },
     },
   });

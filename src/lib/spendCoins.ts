@@ -1,6 +1,6 @@
 import { getAccessToken, supabase } from "./supabase";
 import { spendGuestCoins } from "./guestWallet";
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, rpcErrorText } from "../auth/session";
 
 export type SpendCoinsOpts = {
   /** Counts toward the marketplace unlock (packs / shop). */
@@ -22,9 +22,7 @@ function spendErrorMessage(error: {
   hint?: string | null;
   code?: string;
 }): string {
-  const raw = [error.message, error.details, error.hint, error.code]
-    .filter(Boolean)
-    .join(" ");
+  const raw = rpcErrorText(error);
   if (/Not authenticated/i.test(raw)) return "Sign in to buy.";
   if (/Insufficient coins/i.test(raw)) return "Not enough Cash.";
   if (/Invalid coin amount/i.test(raw)) return "That purchase amount is not allowed.";

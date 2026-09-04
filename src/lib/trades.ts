@@ -1,5 +1,5 @@
 import { getAccessToken, supabase, supabaseRealtime } from "./supabase";
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, userFacingRpcError } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
 import { requestTradeInboxRefresh } from "./tradeInboxUi";
 
@@ -10,10 +10,9 @@ type RpcErr = {
 };
 
 function throwTradeError(error: RpcErr): never {
-  const raw = [error.message, error.details, error.hint]
-    .filter((s): s is string => Boolean(s && s.trim()))
-    .join(" ");
-  throw new Error(friendlyTradeError(raw));
+  throw new Error(
+    friendlyTradeError(userFacingRpcError(error, "Sign in again to trade.")),
+  );
 }
 
 function friendlyTradeError(raw: string): string {

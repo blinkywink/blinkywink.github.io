@@ -1,6 +1,6 @@
 /** Site color theme - local cache + account sync when signed in. */
 
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, userFacingRpcError } from "../auth/session";
 import { cacheInvalidate } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
 
@@ -443,7 +443,7 @@ export async function saveSiteThemeToServer(
     if (/set_site_theme/i.test(error.message)) {
       return "Could not save theme to your account yet. Try again in a moment.";
     }
-    return error.message;
+    return userFacingRpcError(error);
   }
   return null;
 }
@@ -467,7 +467,7 @@ export async function buySiteTheme(id: SiteThemeId): Promise<number> {
     if (/already unlocked/i.test(error.message)) {
       throw new Error("You already own that theme.");
     }
-    throw new Error(error.message);
+    throw new Error(userFacingRpcError(error, "Sign in to unlock themes."));
   }
   cacheInvalidate("profile:");
   return typeof data === "number" ? data : Number(data);

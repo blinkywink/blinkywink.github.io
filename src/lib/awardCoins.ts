@@ -1,6 +1,11 @@
 import { getAccessToken, supabase } from "./supabase";
 import { awardGuestCoins } from "./guestWallet";
-import { loadAppSession } from "../auth/session";
+import {
+  emitSessionInvalid,
+  isNotAuthenticatedError,
+  loadAppSession,
+  rpcErrorText,
+} from "../auth/session";
 
 /** Credit Cash - cloud if signed in, guest cookie wallet otherwise. */
 export async function awardCoins(amount: number): Promise<number | null> {
@@ -17,6 +22,7 @@ export async function awardCoins(amount: number): Promise<number | null> {
 
   if (error) {
     console.warn("award_coins failed", error.message);
+    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
     return null;
   }
 

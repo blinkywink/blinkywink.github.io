@@ -1,6 +1,6 @@
 import { cacheInvalidate, cached, CacheTtl } from "./cache";
 import { getAccessToken, supabase } from "./supabase";
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, userFacingRpcError } from "../auth/session";
 import { formatShopCountdown } from "./packTheme";
 
 /** Typical T4 deal ceiling (old list was 7500). */
@@ -99,14 +99,14 @@ export async function buyShopDirectCard(
     p_version: version,
   });
   if (error) {
-    const msg = error.message ?? "";
-    if (msg.includes("SOLD_OUT")) {
+    const msg = userFacingRpcError(error, "Sign in to buy shop cards.");
+    if (msg.includes("SOLD_OUT") || /SOLD_OUT/i.test(error.message ?? "")) {
       throw new Error("Someone else just bought that card.");
     }
-    if (msg.includes("ALREADY_OWNED")) {
+    if (msg.includes("ALREADY_OWNED") || /ALREADY_OWNED/i.test(error.message ?? "")) {
       throw new Error("You already own that card.");
     }
-    if (msg.includes("Insufficient")) {
+    if (/Insufficient/i.test(msg) || /Insufficient/i.test(error.message ?? "")) {
       throw new Error("Not enough Cash.");
     }
     throw new Error(msg || "Could not buy card.");

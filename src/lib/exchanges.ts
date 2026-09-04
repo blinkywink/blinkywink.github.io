@@ -1,5 +1,5 @@
 import { getAccessToken, supabase } from "./supabase";
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, userFacingRpcError } from "../auth/session";
 import { cached, cacheInvalidate, CacheTtl } from "./cache";
 import { requestTradeInboxRefresh } from "./tradeInboxUi";
 
@@ -66,7 +66,7 @@ export async function requestExchange(
     p_username: username.trim(),
     p_card_id: cardId.trim(),
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(userFacingRpcError(error, "Sign in again to exchange."));
   cacheInvalidate("exchange:inbox");
   bumpTradeInbox();
   return String(data);
@@ -83,7 +83,7 @@ export async function respondExchange(
     p_accept: accept,
     p_price: Math.max(0, Math.floor(price)),
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(userFacingRpcError(error, "Sign in again to exchange."));
   cacheInvalidate("exchange:inbox");
   bumpTradeInbox();
   return data === "offered" ? "offered" : "declined";
@@ -98,7 +98,7 @@ export async function confirmExchange(
     p_exchange_id: exchangeId,
     p_accept: accept,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(userFacingRpcError(error, "Sign in again to exchange."));
   cacheInvalidate("exchange:inbox");
   bumpTradeInbox();
   cacheInvalidate("player-card-copies:");
@@ -111,7 +111,7 @@ export async function cancelExchange(exchangeId: string): Promise<void> {
   const { error } = await supabase.rpc("cancel_exchange", {
     p_exchange_id: exchangeId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(userFacingRpcError(error, "Sign in again to exchange."));
   cacheInvalidate("exchange:inbox");
   bumpTradeInbox();
 }
@@ -125,7 +125,7 @@ export async function fetchExchangeInbox(
     CacheTtl.inbox,
     async () => {
       const { data, error } = await supabase.rpc("get_exchange_inbox");
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(userFacingRpcError(error, "Sign in again to exchange."));
       const raw = (data ?? {}) as Record<string, unknown>;
       return {
         incoming: asItems(raw.incoming),

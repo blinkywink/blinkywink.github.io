@@ -1,5 +1,5 @@
 import { getAccessToken, supabase } from "./supabase";
-import { loadAppSession } from "../auth/session";
+import { loadAppSession, userFacingRpcError } from "../auth/session";
 import {
   DEFAULT_AVATAR_CROP,
   normalizeAvatarCrop,
@@ -60,6 +60,17 @@ function requireSession() {
     throw new Error("Sign in to use the marketplace.");
   }
   return app;
+}
+
+function throwMarketError(error: {
+  message?: string;
+  details?: string | null;
+  hint?: string | null;
+  code?: string;
+}): never {
+  throw new Error(
+    userFacingRpcError(error, "Sign in again to use the marketplace."),
+  );
 }
 
 async function profilesByIds(ids: string[]) {
@@ -270,7 +281,7 @@ export async function fetchMarketplaceListingsPage(
             sort,
           })
         : first;
-      if (result.error) throw new Error(result.error.message);
+      if (result.error) throwMarketError(result.error);
       return hydrateListings((result.data ?? []) as ListingRow[]);
     },
     { force: opts?.force, revalidate: opts?.revalidate, onRevalidate: opts?.onRevalidate },
@@ -313,7 +324,7 @@ export async function fetchMyActiveListedCards(
           .eq("seller_id", id)
           .eq("status", "active")
       : first;
-    if (result.error) throw new Error(result.error.message);
+    if (result.error) throwMarketError(result.error);
     return (result.data ?? []).map((row) => {
       const r = row as ListingRow;
       return {
@@ -351,7 +362,7 @@ export async function fetchMyMarketplaceListings(
           sellerId: id,
         })
       : first;
-    if (result.error) throw new Error(result.error.message);
+    if (result.error) throwMarketError(result.error);
     return hydrateListings((result.data ?? []) as ListingRow[]);
   });
 }
@@ -374,7 +385,7 @@ export async function fetchMarketplaceListing(
         .maybeSingle()
     : first;
 
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) throwMarketError(result.error);
   if (!result.data) return null;
 
   const profiles = await profilesByIds([String(result.data.seller_id)]);
@@ -397,7 +408,7 @@ export async function listCardForSale(
     p_card_id: cardId,
     p_price: amount,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:");
   cacheInvalidate("profile:");
   return String(data);
@@ -408,7 +419,7 @@ export async function cancelListing(listingId: string): Promise<void> {
   const { error } = await supabase.rpc("cancel_listing", {
     p_listing_id: listingId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:");
 }
 
@@ -418,7 +429,7 @@ export async function buyListing(listingId: string): Promise<number> {
   const { data, error } = await supabase.rpc("buy_listing", {
     p_listing_id: listingId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:");
   return typeof data === "number" ? data : Number(data);
 }
@@ -432,7 +443,7 @@ export async function makeListingOffer(
     p_listing_id: listingId,
     p_offer_price: Math.round(offerPrice),
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:offers");
   return String(data);
 }
@@ -447,7 +458,7 @@ export async function respondListingOffer(
     p_offer_id: offerId,
     p_accept: accept,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:");
   if (data == null) return null;
   return typeof data === "number" ? data : Number(data);
@@ -462,7 +473,7 @@ export async function fetchMarketOfferInbox(
     CacheTtl.inbox,
     async () => {
       const { data, error } = await supabase.rpc("get_market_offer_inbox");
-      if (error) throw new Error(error.message);
+      if (error) throwMarketError(error);
       const raw = (data ?? {}) as {
         incoming?: MarketOffer[];
         outgoing?: MarketOffer[];
@@ -483,7 +494,7 @@ export async function fetchListingOffers(
   const { data, error } = await supabase.rpc("get_listing_offers", {
     p_listing_id: listingId,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   return Array.isArray(data) ? (data as ListingOfferRow[]) : [];
 }
 
@@ -506,7 +517,7 @@ export async function fetchMarketSaleNotices(
     CacheTtl.inbox,
     async () => {
       const { data, error } = await supabase.rpc("get_market_sale_notices");
-      if (error) throw new Error(error.message);
+      if (error) throwMarketError(error);
       const raw = (data ?? {}) as { sales?: MarketSaleNotice[] };
       return Array.isArray(raw.sales) ? raw.sales : [];
     },
@@ -520,7 +531,7 @@ export async function ackMarketSaleNotices(ids: string[]): Promise<void> {
   const { error } = await supabase.rpc("ack_market_sale_notices", {
     p_ids: ids,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwMarketError(error);
   cacheInvalidate("market:sales");
 }
 

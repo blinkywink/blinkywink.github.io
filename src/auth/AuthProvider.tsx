@@ -25,6 +25,9 @@ import {
   clearAppSession,
   loadAppSession,
   saveAppSession,
+  SESSION_INVALID_EVENT,
+  isNotAuthenticatedError,
+  rpcErrorText,
   type AppSession,
 } from "./session";
 import { parseFreeCategoryCounts, refreshFreeCategoryPacks } from "../lib/freeCategoryPacks";
@@ -118,18 +121,6 @@ function parseRpcJson<T extends Record<string, unknown>>(data: unknown): T | nul
     return data as T;
   }
   return null;
-}
-
-/** PostgREST sometimes puts the exception text in details/hint, not message. */
-function rpcErrorText(error: {
-  message?: string;
-  details?: string | null;
-  hint?: string | null;
-  code?: string;
-}): string {
-  return [error.message, error.details, error.hint, error.code]
-    .filter(Boolean)
-    .join(" ");
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -292,15 +283,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [profile]);
 
   useEffect(() => {
-    const existing = loadAppSession();
-    if (existing) {
+    let cancelled = false;
+    void (async () => {
+      const existing = loadAppSession();
+      if (!existing) {
+        setAccessToken(null);
+        setProfile(loadGuestProfile());
+        if (!cancelled) setReady(true);
+        return;
+      }
       setAccessToken(existing.accessToken);
+      const { error } = await supabase.rpc("get_free_category_packs");
+      if (cancelled) return;
+      const stale =
+        !loadAppSession()?.accessToken ||
+        (error && isNotAuthenticatedError(rpcErrorText(error)));
+      if (stale) {
+        applySession(null);
+        setSession(null);
+        setProfile(loadGuestProfile());
+        setReady(true);
+        return;
+      }
+      applySession(existing);
       setSession(existing);
-    } else {
-      setAccessToken(null);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const onInvalid = () => {
+      applySession(null);
+      setSession(null);
       setProfile(loadGuestProfile());
-    }
-    setReady(true);
+    };
+    window.addEventListener(SESSION_INVALID_EVENT, onInvalid);
+    return () => window.removeEventListener(SESSION_INVALID_EVENT, onInvalid);
   }, []);
 
   useEffect(() => {
