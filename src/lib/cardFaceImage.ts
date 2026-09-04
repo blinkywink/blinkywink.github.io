@@ -13,7 +13,7 @@ const IDB_NAME = "ba-card-faces";
 const IDB_STORE = "faces";
 const IDB_VERSION = 2;
 /** Bump when card chrome/colors change so stale JPEGs are dropped. */
-const FACE_STYLE_REV = "cat2";
+const FACE_STYLE_REV = "t4seed1";
 /** Soft cap so IndexedDB doesn’t grow forever. */
 const IDB_MAX_ENTRIES = 80;
 

@@ -109,6 +109,19 @@ function usesVisualizer(tier: number): boolean {
   return tier >= 4;
 }
 
+/** Nested pickers (PFP / trades / market) scroll inside overflow:hidden, not the window. */
+function nearestOverflowRoot(el: Element): Element | null {
+  let node = el.parentElement;
+  while (node && node !== document.documentElement) {
+    const style = getComputedStyle(node);
+    if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflowX)) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
 function usesHoloFx(tier: number): boolean {
   return tier >= 3;
 }
@@ -427,7 +440,9 @@ export function MonkeyCard({
   const wantsStaticVis = false;
   const [canAnimateVis, setCanAnimateVis] = useState(false);
   const [canStaticVis, setCanStaticVis] = useState(!wantsStaticVis);
-  const [fxOn, setFxOn] = useState(showFx);
+  const [fxOn, setFxOn] = useState(
+    () => showFx || (!staticArt && usesVisualizer(tier)),
+  );
   const visualizer =
     usesVisualizer(tier) &&
     !staticArt &&
@@ -484,8 +499,9 @@ export function MonkeyCard({
     const io = new IntersectionObserver(
       ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
       {
-        rootMargin: nativeShell && isPreview ? "32px 0px" : "180px 0px",
-        threshold: 0.01,
+        root: nearestOverflowRoot(el),
+        rootMargin: nativeShell && isPreview ? "64px 0px" : "180px 0px",
+        threshold: 0,
       },
     );
     io.observe(el);

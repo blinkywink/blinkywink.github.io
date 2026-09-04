@@ -628,6 +628,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
                             ? (paragons.get(card.id)?.degree ?? 1)
                             : undefined
                         }
+                        visualSeed={visualSeedOf(card.id)}
                         onSelect={
                           busyId != null || isGuest || !marketUnlocked
                             ? undefined
