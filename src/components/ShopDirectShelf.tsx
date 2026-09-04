@@ -242,7 +242,7 @@ export function ShopDirectShelf() {
         <h3 className="section-label">Limited cards</h3>
       </div>
       <p className="shop-direct__note">
-        Random deals, get them before anyone else can. Takes 4 hours to restock.
+        Random deals, get them before anyone else can. Takes 2 hours to restock.
       </p>
 
       {error ? (

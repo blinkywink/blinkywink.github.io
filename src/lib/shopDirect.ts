@@ -9,7 +9,7 @@ export const SHOP_DIRECT_T4_PRICE = 5200;
 /** Typical T5 deal ceiling (old list was 25000). */
 export const SHOP_DIRECT_T5_PRICE = 16700;
 /** Sold limited slots restock after this long. */
-export const SHOP_DIRECT_RESTOCK_MS = 4 * 60 * 60 * 1000;
+export const SHOP_DIRECT_RESTOCK_MS = 2 * 60 * 60 * 1000;
 
 export type ShopDirectListing = {
   slot: number;

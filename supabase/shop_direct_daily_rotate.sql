@@ -1,4 +1,4 @@
--- Unsold limited deals rotate after 24 hours. Sold slots still wait 4 hours.
+-- Unsold limited deals rotate after 24 hours. Sold slots still wait 2 hours.
 -- Safe to re-run.
 
 create or replace function public._shop_ensure_direct_slots()
@@ -41,7 +41,7 @@ begin
       continue;
     end if;
 
-    -- Sold slots restock 4h after purchase. Unsold deals rotate after 24h.
+    -- Sold slots restock 2h after purchase. Unsold deals rotate after 24h.
     if (
          ((listing.price = 0 or listing.card_id = '')
           and listing.available_at <= now())

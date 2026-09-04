@@ -1,5 +1,5 @@
 -- Shared shop shelf: 4 direct-sale T4/T5 cards. Global stock - buy empties the
--- slot for 4 hours, then restocks a random deal.
+-- slot for 2 hours, then restocks a random deal.
 -- Safe to re-run. Then run shop_card_pool_seed.sql.
 
 create table if not exists public.shop_card_pool (
@@ -182,7 +182,7 @@ begin
       continue;
     end if;
 
-    -- Sold slots restock 4h after purchase. Unsold deals rotate after 24h.
+    -- Sold slots restock 2h after purchase. Unsold deals rotate after 24h.
     if (
          ((listing.price = 0 or listing.card_id = '')
           and listing.available_at <= now())
@@ -320,7 +320,7 @@ begin
     price = 0,
     version = listing.version + 1,
     updated_at = now(),
-    available_at = now() + interval '4 hours'
+    available_at = now() + interval '2 hours'
   where slot = p_slot;
 
   return json_build_object(

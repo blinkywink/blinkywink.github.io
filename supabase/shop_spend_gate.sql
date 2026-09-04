@@ -238,7 +238,7 @@ begin
     price = 0,
     version = listing.version + 1,
     updated_at = now(),
-    available_at = now() + interval '4 hours'
+    available_at = now() + interval '2 hours'
   where slot = p_slot;
 
   return json_build_object(
