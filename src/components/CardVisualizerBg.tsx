@@ -428,8 +428,17 @@ export function CardVisualizerBg({
       const parent = canvas.parentElement;
       if (!parent) return;
       const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
-      const w = parent.clientWidth;
-      const h = parent.clientHeight;
+      const rect = parent.getBoundingClientRect();
+      const w =
+        parent.clientWidth ||
+        parent.offsetWidth ||
+        Math.round(rect.width) ||
+        400;
+      const h =
+        parent.clientHeight ||
+        parent.offsetHeight ||
+        Math.round(rect.height) ||
+        560;
       if (w < 2 || h < 2) return;
 
       const cw = Math.round(w * dpr);
@@ -963,6 +972,7 @@ export function CardVisualizerBg({
     };
 
     draw(0);
+    requestAnimationFrame(() => draw(0));
 
     const ro = new ResizeObserver(() => {
       if (!isLive()) return;

@@ -9198,6 +9198,16 @@ body.rewards-overlay-open .sweeper-result {
     scale(1.01);
 }
 
+/* Seed canvas sits above the T3 wash so a blank WebKit canvas still shows color. */
+.monkey-card--visualizer .monkey-card__visualizer {
+  z-index: 2;
+}
+
+.monkey-card--visualizer .monkey-card__color-field,
+.monkey-card--visualizer .monkey-card__accent-wash {
+  z-index: 0;
+}
+
 .monkey-card__accent-wash {
   position: absolute;
   inset: 0;
@@ -18505,6 +18515,7 @@ button.card-chip:hover:not(:disabled) {
 }
 
 .card-face-raster .monkey-card-scene--preview > .monkey-card {
+  --opacity: 1;
   position: absolute;
   left: 0;
   top: 0;
@@ -18514,6 +18525,12 @@ button.card-chip:hover:not(:disabled) {
   transform-origin: top left;
   /* Bake the face rect; circular crop happens in .user-avatar. */
   border-radius: 0;
+}
+
+.card-face-raster .monkey-card__visualizer,
+.card-lab--picker .monkey-card__visualizer {
+  content-visibility: visible;
+  transform: none;
 }
 
 .card-lab__title-row {

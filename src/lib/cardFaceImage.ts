@@ -13,7 +13,7 @@ const IDB_NAME = "ba-card-faces";
 const IDB_STORE = "faces";
 const IDB_VERSION = 2;
 /** Bump when card chrome/colors change so stale JPEGs are dropped. */
-const FACE_STYLE_REV = "t4seed1";
+const FACE_STYLE_REV = "t4seed2";
 /** Soft cap so IndexedDB doesn’t grow forever. */
 const IDB_MAX_ENTRIES = 80;
 
@@ -169,6 +169,47 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function canvasLooksPainted(canvas: HTMLCanvasElement): boolean {
+  if (canvas.width < 8 || canvas.height < 8) return false;
+  try {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const { data } = ctx.getImageData(0, 0, 8, 8);
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 8) return true;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+async function waitForVisualizerCanvas(root: ParentNode, timeoutMs = 2800) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const card = root.querySelector(".monkey-card");
+    if (!card) {
+      await delay(40);
+      continue;
+    }
+    const needsVis =
+      card.classList.contains("monkey-card--t4") ||
+      card.classList.contains("monkey-card--t5") ||
+      card.classList.contains("monkey-card--paragon");
+    if (!needsVis) return;
+    if (!card.classList.contains("monkey-card--visualizer")) {
+      await delay(40);
+      continue;
+    }
+    const canvases = Array.from(root.querySelectorAll("canvas"));
+    if (canvases.length > 0 && canvases.every(canvasLooksPainted)) {
+      await frame();
+      return;
+    }
+    await delay(40);
+  }
+}
+
 /**
  * html-to-image re-fetches img URLs into the SVG clone. On Tauri / asset
  * protocols that fetch often fails → blank faces. Inline already-decoded
@@ -227,10 +268,11 @@ async function rasterizeCardFace(
   const host = document.createElement("div");
   host.className = "card-face-raster";
   host.setAttribute("aria-hidden", "true");
-  // Off-screen but fully opaque - opacity:0 makes html-to-image blank on WebKit.
+  // Keep the face in the viewport. Off-screen / opacity:0 canvases capture
+  // blank on iOS WebKit and Tauri, so PFPs missed T4 seeds.
   host.style.cssText = [
     "position:fixed",
-    "left:-10000px",
+    "left:0",
     "top:0",
     `width:${CARD_FACE_W}px`,
     `height:${CARD_FACE_H}px`,
@@ -239,9 +281,10 @@ async function rasterizeCardFace(
     `--card-preview-h:${CARD_FACE_H}px`,
     "--card-preview-scale:1",
     "pointer-events:none",
-    "opacity:1",
-    "z-index:0",
+    "opacity:0.02",
+    "z-index:2",
     "overflow:hidden",
+    "transform:translateZ(0)",
   ].join(";");
   document.body.appendChild(host);
 
@@ -261,8 +304,7 @@ async function rasterizeCardFace(
     );
     await frame();
     await waitForImages(host);
-    // Let visualizer canvas + CSS FX settle.
-    await delay(160);
+    await waitForVisualizerCanvas(host);
     await frame();
 
     inlineDecodedMedia(host);

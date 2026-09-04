@@ -482,12 +482,14 @@ export function MonkeyCard({
   }, [wantsStaticVis, visId]);
 
   useEffect(() => {
-    if (bake) {
-      setFxOn(true);
+    if (staticArt) {
+      setFxOn(false);
       return;
     }
-    if (staticArt || !usesVisualizer(tier)) {
-      setFxOn(!staticArt && usesVisualizer(tier));
+    // Grids and the PFP picker scroll inside overflow:hidden. IntersectionObserver
+    // often reports those thumbs as off-screen and leaves T4+ on the T3 wash.
+    if (bake || isPreview) {
+      setFxOn(bake || usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -500,7 +502,7 @@ export function MonkeyCard({
       ([entry]) => setFxOn(Boolean(entry?.isIntersecting)),
       {
         root: nearestOverflowRoot(el),
-        rootMargin: nativeShell && isPreview ? "64px 0px" : "180px 0px",
+        rootMargin: nativeShell ? "64px 0px" : "180px 0px",
         threshold: 0,
       },
     );
@@ -835,6 +837,14 @@ export function MonkeyCard({
 
         <div className="monkey-card__body">
           <div className="monkey-card__bleed">
+            <div
+              className="monkey-card__color-field"
+              style={colorFieldStyle}
+              aria-hidden="true"
+            />
+            {tier >= 3 ? (
+              <div className="monkey-card__accent-wash" aria-hidden="true" />
+            ) : null}
             {visualizer ? (
               <CardVisualizerBg
                 seed={
@@ -846,18 +856,7 @@ export function MonkeyCard({
                 animated={animateVisualizer}
                 intensity={isParagon ? "paragon" : "standard"}
               />
-            ) : (
-              <>
-                <div
-                  className="monkey-card__color-field"
-                  style={colorFieldStyle}
-                  aria-hidden="true"
-                />
-                {tier >= 3 ? (
-                  <div className="monkey-card__accent-wash" aria-hidden="true" />
-                ) : null}
-              </>
-            )}
+            ) : null}
             {holo ? (
               <>
                 <div className="monkey-card__foil" aria-hidden="true" />
