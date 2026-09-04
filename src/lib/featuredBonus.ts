@@ -10,14 +10,27 @@ export type FeaturedBonusGame = GamePath;
 
 const POOL: readonly FeaturedBonusGame[] = GAME_PATHS;
 
+/** Quiz / 10-round games: clear the run, or get at least half right. */
+export const FEATURED_QUIZ_DECENT_CORRECT = 5;
+/** Banana Catch: solid haul without needing the pack-clear bar. */
+export const FEATURED_BANANA_DECENT = 12;
+/** Camo Detection: survive this many answered rounds. */
+export const FEATURED_CAMO_DECENT_ROUNDS = 5;
+/** Round Check / Helium Pop: this many solves in the run. */
+export const FEATURED_SOLVE_DECENT = 2;
+
 function isGameId(v: string): v is FeaturedBonusGame {
   return (POOL as readonly string[]).includes(v);
 }
 
-function pickRandom(exclude?: FeaturedBonusGame | null): FeaturedBonusGame {
-  const bag = exclude ? POOL.filter((g) => g !== exclude) : [...POOL];
-  const list = bag.length ? bag : [...POOL];
-  return list[Math.floor(Math.random() * list.length)]!;
+function pickRandom(
+  bag: readonly FeaturedBonusGame[],
+  exclude?: FeaturedBonusGame | null,
+): FeaturedBonusGame {
+  const filtered = exclude ? bag.filter((g) => g !== exclude) : [...bag];
+  const list = filtered.length ? filtered : [...bag];
+  const fallback = list.length ? list : [...POOL];
+  return fallback[Math.floor(Math.random() * fallback.length)]!;
 }
 
 export function readFeaturedBonusGame(): FeaturedBonusGame | null {
@@ -51,51 +64,117 @@ function writeFeaturedBonusGame(game: FeaturedBonusGame): void {
 export function getOrCreateFeaturedBonusGame(): FeaturedBonusGame {
   const cur = readFeaturedBonusGame();
   if (cur) return cur;
-  const next = pickRandom();
+  const next = pickRandom(POOL);
   writeFeaturedBonusGame(next);
   return next;
 }
 
+export function featuredDidDecentQuiz(
+  cleared: boolean,
+  correctCount: number,
+): boolean {
+  return cleared || correctCount >= FEATURED_QUIZ_DECENT_CORRECT;
+}
+
+export function featuredDidDecentBanana(bananas: number): boolean {
+  return bananas >= FEATURED_BANANA_DECENT;
+}
+
+export function featuredDidDecentCamo(
+  cleared: boolean,
+  answeredRounds: number,
+): boolean {
+  return cleared || answeredRounds >= FEATURED_CAMO_DECENT_ROUNDS;
+}
+
+export function featuredDidDecentSolves(
+  cleared: boolean,
+  solves: number,
+): boolean {
+  return cleared || solves >= FEATURED_SOLVE_DECENT;
+}
+
+/** Bloon Hero: finishing the chart counts; early death does not. */
+export function featuredDidDecentHero(cleared: boolean): boolean {
+  return cleared;
+}
+
+/** Win/lose boards (sweeper, dailies): only a win is decent. */
+export function featuredDidDecentWin(cleared: boolean): boolean {
+  return cleared;
+}
+
 /**
- * Resolve after any finished run.
- * Always rotates the featured glow (unless Silas holds it).
- * Awards +500 only when the run cleared the current featured game.
+ * Resolve after a finished run.
+ *
+ * - Award +500 when you did decent on the current featured game.
+ * - Rotate when you beat the featured game, finish any *other* game, or
+ *   burn a one-shot daily attempt (win or lose). Weak fails on the featured
+ *   quiz leave it in place so you can retry.
+ * - Silas may steer the next pick into your top played games.
  */
 export function resolveFeaturedBonusGame(
   played: FeaturedBonusGame,
-  cleared: boolean,
-  opts: { silasHoldChance?: number; silasFreezeChance?: number } = {},
+  didDecent: boolean,
+  opts: {
+    /** Daily one-shot: rotate even on a failed attempt. */
+    oneShotAttempt?: boolean;
+    silasFavoriteChance?: number;
+    /** @deprecated use silasFavoriteChance */
+    silasHoldChance?: number;
+    /** @deprecated use silasFavoriteChance */
+    silasFreezeChance?: number;
+    favoriteGames?: readonly FeaturedBonusGame[];
+  } = {},
 ): {
   awarded: boolean;
   amount: number;
   next: FeaturedBonusGame | null;
+  silasSteered?: boolean;
+  /** @deprecated alias of silasSteered */
   silasHeld?: boolean;
-  /** @deprecated alias of silasHeld */
+  /** @deprecated alias of silasSteered */
   silasFroze?: boolean;
 } {
   const featured = getOrCreateFeaturedBonusGame();
-  const wasFeaturedClear = cleared && played === featured;
+  const awarded = didDecent && played === featured;
+  const shouldRotate =
+    awarded || played !== featured || Boolean(opts.oneShotAttempt);
 
-  const holdChance = opts.silasHoldChance ?? opts.silasFreezeChance ?? 0;
-  const held = holdChance > 0 && Math.random() < holdChance;
-  const next = held ? featured : pickRandom(featured);
-  if (!held) writeFeaturedBonusGame(next);
-
-  if (!wasFeaturedClear) {
+  if (!shouldRotate) {
     return {
       awarded: false,
       amount: 0,
-      next,
-      silasHeld: held,
-      silasFroze: held,
+      next: featured,
+      silasSteered: false,
+      silasHeld: false,
+      silasFroze: false,
     };
   }
 
+  const steerChance =
+    opts.silasFavoriteChance ??
+    opts.silasHoldChance ??
+    opts.silasFreezeChance ??
+    0;
+  const favorites = (opts.favoriteGames ?? []).filter(isGameId);
+  const steered =
+    steerChance > 0 &&
+    favorites.length > 0 &&
+    Math.random() < steerChance;
+
+  const next = steered
+    ? pickRandom(favorites, featured)
+    : pickRandom(POOL, featured);
+
+  if (next !== featured) writeFeaturedBonusGame(next);
+
   return {
-    awarded: true,
-    amount: FEATURED_BONUS_CASH,
+    awarded,
+    amount: awarded ? FEATURED_BONUS_CASH : 0,
     next,
-    silasHeld: held,
-    silasFroze: held,
+    silasSteered: steered,
+    silasHeld: steered,
+    silasFroze: steered,
   };
 }

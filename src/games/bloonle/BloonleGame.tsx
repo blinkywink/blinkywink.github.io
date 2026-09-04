@@ -14,7 +14,7 @@ type Props = {
   onBack: () => void;
   /** Fired once when solved in ≤3 guesses. */
   onFastSolve?: (guessCount: number) => void;
-  /** Fired once when a daily round ends (win or lose). Not on revisit. */
+  /** Fired once when a round ends (win or lose). Daily revisit does not fire. */
   onRunEnd?: (info: {
     cleared: boolean;
     coinsEarned: number;
@@ -22,7 +22,6 @@ type Props = {
     answer: string;
   }) => void;
 };
-
 const ROWS = [
   "qwertyuiop".split(""),
   "asdfghjkl".split(""),
@@ -90,11 +89,48 @@ export function BloonleGame({
   );
   const dailyHaulLock = useRef(state.haulReported);
   const fastSolveLock = useRef(false);
+  const runEndLock = useRef(false);
+  const practiceHaulLock = useRef(false);
 
   useEffect(() => {
-    if (state.mode !== "daily") return;
+    if (state.mode !== "daily") {
+      // Practice: fire once when the round ends (win or lose).
+      if (state.status === "playing") {
+        practiceHaulLock.current = false;
+        return;
+      }
+      if (practiceHaulLock.current) return;
+      practiceHaulLock.current = true;
+      const guesses = state.guesses.length;
+      if (state.status === "won") {
+        const coinsEarned =
+          state.reward > 0
+            ? state.reward
+            : bloonleSolveReward(state.mode, guesses);
+        if (!fastSolveLock.current && guesses > 0 && guesses <= 3) {
+          fastSolveLock.current = true;
+          onFastSolve?.(guesses);
+        }
+        onRunEnd?.({
+          cleared: true,
+          coinsEarned,
+          guesses,
+          answer: state.puzzle.slug,
+        });
+        return;
+      }
+      onRunEnd?.({
+        cleared: false,
+        coinsEarned: 0,
+        guesses,
+        answer: state.puzzle.slug,
+      });
+      return;
+    }
+
     if (state.status === "playing") return;
 
+    // Daily haul claim is separate from featured-bonus / pack reporting.
     if (openedAlreadyDone.current) {
       if (!state.haulReported && !dailyHaulLock.current) {
         dailyHaulLock.current = true;
@@ -104,14 +140,18 @@ export function BloonleGame({
       return;
     }
 
-    if (state.haulReported || dailyHaulLock.current) return;
-    if (!claimBloonleDailyHaulOnce(state.day)) {
-      dailyHaulLock.current = true;
-      markHaulReported();
-      return;
+    if (runEndLock.current) return;
+    runEndLock.current = true;
+
+    if (!state.haulReported && !dailyHaulLock.current) {
+      if (claimBloonleDailyHaulOnce(state.day)) {
+        dailyHaulLock.current = true;
+        markHaulReported();
+      } else {
+        dailyHaulLock.current = true;
+        markHaulReported();
+      }
     }
-    dailyHaulLock.current = true;
-    markHaulReported();
 
     const guesses = state.guesses.length;
     if (state.status === "won") {

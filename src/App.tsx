@@ -48,8 +48,14 @@ import {
 } from "./lib/mobileView";
 import { isNativeShell } from "./lib/nativeShell";
 import { grantFreeCategoryPack } from "./lib/freeCategoryPacks";
-import { recordGameRun } from "./lib/accountStats";
+import { recordGameRun, readAccountStatsLocal, topPlayedGames, GAME_STAT_LABELS } from "./lib/accountStats";
 import {
+  featuredDidDecentBanana,
+  featuredDidDecentCamo,
+  featuredDidDecentHero,
+  featuredDidDecentQuiz,
+  featuredDidDecentSolves,
+  featuredDidDecentWin,
   getOrCreateFeaturedBonusGame,
   resolveFeaturedBonusGame,
   type FeaturedBonusGame,
@@ -303,7 +309,7 @@ function MobileChromeSync() {
 }
 
 function AppShell() {
-  const { session, setCoinBalance, refreshProfile } = useAuth();
+  const { session, setCoinBalance, refreshProfile, profile } = useAuth();
   const { equipped, notifyHeroProc } = useHeroFx();
   const navigate = useNavigate();
   const location = useLocation();
@@ -331,26 +337,42 @@ function AppShell() {
   );
 
   const settleFeaturedBonus = useCallback(
-    async (game: FeaturedBonusGame, cleared: boolean) => {
-      const result = resolveFeaturedBonusGame(game, cleared, {
-        silasHoldChance:
-          equipped?.heroId === "silas"
-            ? heroEffectsAtLevel("silas", equipped.level).featuredFreezeChance
-            : 0,
+    async (
+      game: FeaturedBonusGame,
+      didDecent: boolean,
+      opts: { oneShotAttempt?: boolean } = {},
+    ) => {
+      const usingSilas = equipped?.heroId === "silas";
+      const plays = {
+        ...readAccountStatsLocal(profile?.account_stats).gamePlays,
+      };
+      plays[game] = (plays[game] ?? 0) + 1;
+      const result = resolveFeaturedBonusGame(game, didDecent, {
+        oneShotAttempt: opts.oneShotAttempt,
+        silasFavoriteChance: usingSilas
+          ? heroEffectsAtLevel("silas", equipped.level).featuredFavoriteChance
+          : 0,
+        favoriteGames: usingSilas ? topPlayedGames(plays, 3) : [],
       });
-      if (result.silasHeld || result.silasFroze) {
+      if (result.silasSteered && result.next) {
         notifyHeroProc({
           heroId: "silas",
-          message: "Silas: featured game held",
+          message: `Silas: featured → ${GAME_STAT_LABELS[result.next]}`,
         });
       }
       if (!result.awarded || result.amount <= 0) return;
       const balance = await awardCoins(result.amount);
       if (balance != null) setCoinBalance(balance);
-      setBonusToast(`+${result.amount.toLocaleString()} featured clear bonus`);
+      setBonusToast(`+${result.amount.toLocaleString()} featured bonus`);
       window.setTimeout(() => setBonusToast(null), 3200);
     },
-    [equipped?.heroId, notifyHeroProc, setCoinBalance],
+    [
+      equipped?.heroId,
+      equipped?.level,
+      notifyHeroProc,
+      profile?.account_stats,
+      setCoinBalance,
+    ],
   );
 
   const beginEndlessHaul = useCallback(
@@ -413,7 +435,10 @@ function AppShell() {
           haulAfter: true,
         });
         void creditHeroClear(info.cleared);
-        void settleFeaturedBonus(game, info.cleared);
+        void settleFeaturedBonus(
+          game,
+          featuredDidDecentQuiz(info.cleared, info.correctCount),
+        );
       };
     return {
       zoomed: make("zoomed"),
@@ -447,7 +472,10 @@ function AppShell() {
         alwaysHaul: true,
       });
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("camodetection", info.cleared);
+      void settleFeaturedBonus(
+        "camodetection",
+        featuredDidDecentCamo(info.cleared, info.score),
+      );
     },
     [
       settleFeaturedBonus,
@@ -488,7 +516,11 @@ function AppShell() {
       void recordGameRun("bloonle", info.cleared);
       void (async () => {
         await creditHeroClear(info.cleared);
-        void settleFeaturedBonus("bloonle", info.cleared);
+        void settleFeaturedBonus(
+          "bloonle",
+          featuredDidDecentWin(info.cleared),
+          { oneShotAttempt: true },
+        );
       })();
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
@@ -520,7 +552,10 @@ function AppShell() {
       });
       void recordGameRun("roundcheck", info.cleared);
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("roundcheck", info.cleared);
+      void settleFeaturedBonus(
+        "roundcheck",
+        featuredDidDecentSolves(info.cleared, info.solves),
+      );
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -551,7 +586,10 @@ function AppShell() {
       });
       void recordGameRun("heliumpop", info.cleared);
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("heliumpop", info.cleared);
+      void settleFeaturedBonus(
+        "heliumpop",
+        featuredDidDecentSolves(info.cleared, info.solves),
+      );
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -579,7 +617,10 @@ function AppShell() {
       });
       void recordGameRun("bloonssweeper", info.cleared);
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("bloonssweeper", info.cleared);
+      void settleFeaturedBonus(
+        "bloonssweeper",
+        featuredDidDecentWin(info.cleared),
+      );
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -607,7 +648,11 @@ function AppShell() {
       });
       void recordGameRun("blowfree", info.cleared);
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("blowfree", info.cleared);
+      void settleFeaturedBonus(
+        "blowfree",
+        featuredDidDecentWin(info.cleared),
+        { oneShotAttempt: info.mode === "daily" },
+      );
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
@@ -628,7 +673,10 @@ function AppShell() {
         alwaysHaul: true,
       });
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("bananacatch", info.cleared);
+      void settleFeaturedBonus(
+        "bananacatch",
+        featuredDidDecentBanana(info.score),
+      );
     },
     [
       settleFeaturedBonus,
@@ -654,7 +702,10 @@ function AppShell() {
       });
       void recordGameRun("bloonhero", info.cleared);
       void creditHeroClear(info.cleared);
-      void settleFeaturedBonus("bloonhero", info.cleared);
+      void settleFeaturedBonus(
+        "bloonhero",
+        featuredDidDecentHero(info.cleared),
+      );
     },
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );

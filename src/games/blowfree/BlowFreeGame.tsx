@@ -80,6 +80,7 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
   /** Sync lock so Strict Mode / remounts can't double-fire hauls. */
   const dailyHaulLock = useRef(state.haulReported);
   const practiceHaulIds = useRef<Set<string>>(new Set());
+  const runEndLock = useRef(false);
 
   useEffect(() => {
     if (state.status !== "won" || !state.awarded) return;
@@ -93,8 +94,18 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
         }
         return;
       }
+
+      // Featured bonus / packs must fire even if the haul claim raced.
+      if (!runEndLock.current) {
+        runEndLock.current = true;
+        onRunEnd?.({
+          cleared: true,
+          coinsEarned: state.reward,
+          mode: "daily",
+        });
+      }
+
       if (state.haulReported || dailyHaulLock.current) return;
-      // Claim in localStorage first - Play again remounts before setState lands.
       if (!claimDailyHaulOnce(state.day)) {
         dailyHaulLock.current = true;
         markHaulReported();
@@ -102,11 +113,6 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
       }
       dailyHaulLock.current = true;
       markHaulReported();
-      onRunEnd?.({
-        cleared: true,
-        coinsEarned: state.reward,
-        mode: "daily",
-      });
       return;
     }
 

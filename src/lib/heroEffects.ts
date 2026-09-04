@@ -13,7 +13,7 @@ export type HeroEffectStats = {
   btd6DiscountChance: number;
   btd6DiscountPct: number;
   paragonWeightBonus: number;
-  featuredFreezeChance: number;
+  featuredFavoriteChance: number;
 };
 
 const ZERO: HeroEffectStats = {
@@ -25,7 +25,7 @@ const ZERO: HeroEffectStats = {
   btd6DiscountChance: 0,
   btd6DiscountPct: 0,
   paragonWeightBonus: 0,
-  featuredFreezeChance: 0,
+  featuredFavoriteChance: 0,
 };
 
 /**
@@ -41,7 +41,7 @@ export const HERO_EFFECTS_L1 = {
   ezili: { t5WeightBonus: 0.0015 },
   sauda: { btd6DiscountChance: 0.12, btd6DiscountPct: 0.08 },
   psi: { paragonWeightBonus: 0.00025 },
-  silas: { featuredFreezeChance: 0.2 },
+  silas: { featuredFavoriteChance: 0.35 },
 } as const;
 
 const L1: Record<string, HeroEffectStats> = {
@@ -52,7 +52,7 @@ const L1: Record<string, HeroEffectStats> = {
   ezili: { ...ZERO, t5WeightBonus: 0.0015 },
   sauda: { ...ZERO, btd6DiscountChance: 0.12, btd6DiscountPct: 0.08 },
   psi: { ...ZERO, paragonWeightBonus: 0.00025 },
-  silas: { ...ZERO, featuredFreezeChance: 0.2 },
+  silas: { ...ZERO, featuredFavoriteChance: 0.35 },
 };
 
 const L20: Record<string, HeroEffectStats> = {
@@ -66,8 +66,8 @@ const L20: Record<string, HeroEffectStats> = {
   sauda: { ...ZERO, btd6DiscountChance: 0.22, btd6DiscountPct: 0.15 },
   /** Paragon 0.10% → ~0.19% at L20 (~1.9×). */
   psi: { ...ZERO, paragonWeightBonus: 0.0009 },
-  /** Hold procs stay spicy; L20 still expects rotate most of the time. */
-  silas: { ...ZERO, featuredFreezeChance: 0.4 },
+  /** Steer featured bonus into your most-played games. */
+  silas: { ...ZERO, featuredFavoriteChance: 0.6 },
 };
 
 export type EquippedHeroContext = {
@@ -106,9 +106,9 @@ export function heroEffectsAtLevel(
     btd6DiscountChance: lerp(a.btd6DiscountChance, b.btd6DiscountChance, t),
     btd6DiscountPct: lerp(a.btd6DiscountPct, b.btd6DiscountPct, t),
     paragonWeightBonus: lerp(a.paragonWeightBonus, b.paragonWeightBonus, t),
-    featuredFreezeChance: lerp(
-      a.featuredFreezeChance,
-      b.featuredFreezeChance,
+    featuredFavoriteChance: lerp(
+      a.featuredFavoriteChance,
+      b.featuredFavoriteChance,
       t,
     ),
   };
@@ -165,7 +165,7 @@ export function heroBlurb(heroId: string, level = 1): string {
     case "psi":
       return `+${pctLabel(e.paragonWeightBonus)} absolute Paragon pack weight`;
     case "silas":
-      return `${pctLabel(e.featuredFreezeChance)} chance featured game doesn't change`;
+      return `${pctLabel(e.featuredFavoriteChance)} chance featured game becomes one of your top 3 most played`;
     default:
       return "Hero passive";
   }

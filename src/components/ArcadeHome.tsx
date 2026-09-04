@@ -775,7 +775,7 @@ export function ArcadeHome({
               className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}`}
               aria-label={
                 isBonus
-                  ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash`
+                  ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
                   : g.label
               }
               onClick={() => {
@@ -789,7 +789,7 @@ export function ArcadeHome({
                 <span className="game-card__title">{g.title}</span>
                 {isBonus ? (
                   <span className="game-card__bonus">
-                    +{FEATURED_BONUS_CASH.toLocaleString()} Clear bonus
+                    +{FEATURED_BONUS_CASH.toLocaleString()} Solid-run bonus
                   </span>
                 ) : (
                   <span className="game-card__blurb">{g.blurb}</span>

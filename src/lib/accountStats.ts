@@ -237,20 +237,37 @@ export async function fetchPublicAccountStats(
   };
 }
 
+/** Most-played games, highest count first (ties keep GAME_PATHS order). */
+export function topPlayedGames(
+  gamePlays: Partial<Record<GamePath, number>>,
+  limit = 3,
+): GamePath[] {
+  const n = Math.max(0, Math.floor(limit));
+  if (n <= 0) return [];
+  return [...GAME_PATHS]
+    .filter((id) => (gamePlays[id] ?? 0) > 0)
+    .sort((a, b) => (gamePlays[b] ?? 0) - (gamePlays[a] ?? 0))
+    .slice(0, n);
+}
+
 export function favoriteGameFromStats(
   stats: AccountStats,
 ): { id: GamePath; label: string; plays: number } | null {
-  let best: GamePath | null = null;
-  let bestN = 0;
-  for (const id of GAME_PATHS) {
-    const n = stats.gamePlays[id] ?? 0;
-    if (n > bestN) {
-      best = id;
-      bestN = n;
-    }
-  }
-  if (!best || bestN < 1) return null;
-  return { id: best, label: GAME_STAT_LABELS[best], plays: bestN };
+  const top = topPlayedGames(stats.gamePlays, 1);
+  const best = top[0];
+  if (!best) return null;
+  return {
+    id: best,
+    label: GAME_STAT_LABELS[best],
+    plays: stats.gamePlays[best] ?? 0,
+  };
+}
+
+/** Guest LS, or profile blob when signed in / provided. */
+export function readAccountStatsLocal(profileStats?: unknown): AccountStats {
+  if (profileStats != null) return statsFromProfile(profileStats);
+  if (signedIn()) return { ...EMPTY_ACCOUNT_STATS, gamePlays: {} };
+  return readGuest();
 }
 
 export function statsFromProfile(raw: unknown): AccountStats {
