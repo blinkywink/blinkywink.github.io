@@ -16,7 +16,6 @@ import {
   PARAGON_MIN_DEGREE,
   paragonStage,
 } from "../lib/paragonProgress";
-import { isDesktopShell } from "../lib/desktopOnline";
 import { isAndroidNative, isNativeShell } from "../lib/nativeShell";
 import {
   onAnimatedVisualizerSlot,
@@ -441,19 +440,17 @@ export function MonkeyCard({
   const accent = accents[entity.id];
   const tier = effectTier(entity, pathLevels);
   const strength = accentStrength(tier);
-  const desktopPreview = isPreview && isDesktopShell() && !bake;
   const visId = useMemo(
     () => `${catalogId}:${resolvedSeed ?? "default"}`,
     [catalogId, resolvedSeed],
   );
   const wantsAnimatedVis =
-    showFx && !isPreview && !staticArt && !desktopPreview && usesVisualizer(tier);
+    showFx && !isPreview && !staticArt && usesVisualizer(tier);
   const wantsStaticVis =
     nativeShell &&
     isPreview &&
     !bake &&
     !staticArt &&
-    !desktopPreview &&
     usesVisualizer(tier);
   const [canAnimateVis, setCanAnimateVis] = useState(false);
   const [canStaticVis, setCanStaticVis] = useState(!wantsStaticVis);
@@ -461,7 +458,6 @@ export function MonkeyCard({
   const visualizer =
     usesVisualizer(tier) &&
     !staticArt &&
-    !desktopPreview &&
     fxOn &&
     (!wantsStaticVis || canStaticVis);
   const animateVisualizer = visualizer && wantsAnimatedVis && canAnimateVis;
@@ -502,8 +498,8 @@ export function MonkeyCard({
       setFxOn(true);
       return;
     }
-    if (desktopPreview || staticArt || !usesVisualizer(tier)) {
-      setFxOn(!staticArt && !desktopPreview && usesVisualizer(tier));
+    if (staticArt || !usesVisualizer(tier)) {
+      setFxOn(!staticArt && usesVisualizer(tier));
       return;
     }
     const el = sceneRef.current;
@@ -521,7 +517,7 @@ export function MonkeyCard({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [bake, desktopPreview, isPreview, nativeShell, staticArt, tier]);
+  }, [bake, isPreview, nativeShell, staticArt, tier]);
 
   useEffect(() => {
     portraitTries.current = 0;

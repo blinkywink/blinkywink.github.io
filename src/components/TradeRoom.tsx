@@ -20,6 +20,7 @@ import {
 import { collectionPath, marketplacePath } from "../lib/routes";
 import { startVisiblePoll } from "../lib/visiblePoll";
 import { PageHeader } from "./PageHeader";
+import { isNativeShell } from "../lib/nativeShell";
 import { MonkeyCard } from "./MonkeyCard";
 import { OwnedCardPicker } from "./OwnedCardPicker";
 import { ParagonXpBar } from "./ParagonXpBar";
@@ -476,7 +477,7 @@ export function TradeRoom() {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
-                          staticArt
+                          staticArt={isNativeShell()}
                           degree={
                             card.isParagon
                               ? (paragonOf(id)?.degree ?? 1)
@@ -519,7 +520,7 @@ export function TradeRoom() {
                           pathLevels={card.pathLevels}
                           mode="preview"
                           owned
-                          staticArt
+                          staticArt={isNativeShell()}
                           degree={
                             card.isParagon
                               ? (partnerParagons[id]?.degree ?? 1)

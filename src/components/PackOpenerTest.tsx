@@ -1752,7 +1752,7 @@ export function PackOpenerTest({
                     pathLevels={card.pathLevels}
                     mode="preview"
                     owned
-                    staticArt
+                    staticArt={nativeLite}
                     degree={card.isParagon ? PARAGON_MIN_DEGREE : undefined}
                     onSelect={() => {
                       playCardFocus();
