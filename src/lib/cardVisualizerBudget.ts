@@ -1,6 +1,6 @@
-/** Cap WebView GPU load — mobile site runs fine in Chrome; the app shell cannot run dozens of canvases. */
+/** Cap animated focus visualizers. Preview grids match the website (IO-gated). */
 
-const STATIC_LIMIT = 2;
+const STATIC_LIMIT = 24;
 
 let animatedHolder: string | null = null;
 const animatedWaiters = new Set<() => void>();

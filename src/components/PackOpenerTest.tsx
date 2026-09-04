@@ -49,6 +49,7 @@ import {
   playerChromeStyle,
 } from "../lib/profileCosmetics";
 import { isNativeShell } from "../lib/nativeShell";
+import { needsVisualSeed } from "../lib/cardVisualSeed";
 
 const SLASH_NEED = 90;
 const SWIPE_NEED = 42;
@@ -284,7 +285,7 @@ export function PackOpenerTest({
       unsub();
     };
   }, [pack.category, pack.kind, userId, open]);
-  const { awardCards, feedParagonsFromCards, owned, listed, paragonOf } =
+  const { awardCards, feedParagonsFromCards, owned, listed, paragonOf, visualSeedOf } =
     useCardCollection();
   const ownedForDup = useMemo(
     () => new Set([...owned, ...listed]),
@@ -1636,9 +1637,11 @@ export function PackOpenerTest({
                       entity={current.entity}
                       pathLevels={current.pathLevels}
                       mode="focus"
+                      owned
                       degree={
                         current.isParagon ? PARAGON_MIN_DEGREE : undefined
                       }
+                      visualSeed={visualSeedOf(current.id)}
                     />
                     {currentIsDup || paragonFeeds.get(current.id) ? (
                       <div className="pack-opener__dup-stack" role="status">
@@ -1752,8 +1755,9 @@ export function PackOpenerTest({
                     pathLevels={card.pathLevels}
                     mode="preview"
                     owned
-                    staticArt={nativeLite}
+                    staticArt={nativeLite && !needsVisualSeed(card.id)}
                     degree={card.isParagon ? PARAGON_MIN_DEGREE : undefined}
+                    visualSeed={visualSeedOf(card.id)}
                     onSelect={() => {
                       playCardFocus();
                       setFocused(card);
@@ -1817,6 +1821,7 @@ export function PackOpenerTest({
                 degree={
                   focused.isParagon ? paragonOf(focused.id)?.degree : undefined
                 }
+                visualSeed={visualSeedOf(focused.id)}
               />
             </div>
             {focused.isParagon ? (

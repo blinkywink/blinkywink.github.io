@@ -423,12 +423,8 @@ export function MonkeyCard({
   );
   const wantsAnimatedVis =
     showFx && !isPreview && !staticArt && usesVisualizer(tier);
-  const wantsStaticVis =
-    nativeShell &&
-    isPreview &&
-    !bake &&
-    !staticArt &&
-    usesVisualizer(tier);
+  // Native used to budget 2 preview canvases; T4+ seeds must match the website.
+  const wantsStaticVis = false;
   const [canAnimateVis, setCanAnimateVis] = useState(false);
   const [canStaticVis, setCanStaticVis] = useState(!wantsStaticVis);
   const [fxOn, setFxOn] = useState(showFx);
