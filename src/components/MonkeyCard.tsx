@@ -393,8 +393,8 @@ export function MonkeyCard({
   const [active, setActive] = useState(false);
 
   const isParagon = entity.type === "paragon";
-  /** Android WebView: 3D tilt blanks canvas/img layers (T4+ and paragons). */
-  const disableTilt = isAndroidNative() && !isPreview;
+  /** Android WebView: paragon tilt still breaks compositing — keep those static. */
+  const disableTilt = isAndroidNative() && isParagon && !isPreview;
   const collection = useCardCollectionOptional();
   const ownedDegree = isParagon
     ? collection?.paragonOf(paragonCardId(entity.tower))?.degree

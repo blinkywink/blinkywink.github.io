@@ -1680,30 +1680,32 @@ html[data-native="1"]:not([data-platform="android"]) .pack-shelf__item {
 }
 
 /*
- * Android focus cards: 3D tilt + canvas/img layers blank in WebView.
- * Keep the face flat; glow/holo mix-blend layers flash portraits away.
+ * Android focus: keep tilt + holo shine. Flatten inner 3D/parallax so the
+ * canvas and portrait ride with the card instead of dropping out on press.
  */
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus,
-html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene {
-  perspective: none;
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus.monkey-card-scene--no-tilt,
+html[data-native="1"][data-platform="android"] .card-focus .monkey-card-scene--no-tilt {
   touch-action: auto;
   cursor: default;
 }
 
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus > .monkey-card,
 html[data-native="1"][data-platform="android"] .monkey-card-scene--no-tilt > .monkey-card {
   transform: none !important;
-  transform-style: flat;
   transition: none;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus > .monkey-card {
+  transform-style: flat;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card.is-active {
   will-change: auto;
 }
 
 html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__glow,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__shadow,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__foil,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__glare,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__spark,
-html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__sheen {
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__shadow {
   display: none;
 }
 
@@ -1713,7 +1715,12 @@ html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey
 html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__map,
 html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__edge {
   transform: none !important;
+}
+
+html[data-native="1"][data-platform="android"] .monkey-card-scene--focus .monkey-card__portrait {
   filter: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 html[data-native="1"][data-platform="android"] .card-focus__backdrop,
@@ -1724,24 +1731,7 @@ html[data-native="1"][data-platform="android"] .card-info__backdrop {
 
 html[data-native="1"][data-platform="android"] .card-info {
   z-index: 12;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   isolation: isolate;
-}
-
-html[data-native="1"][data-platform="android"] .card-info__panel {
-  width: min(28rem, 100%);
-  max-height: none;
-  overflow: visible;
-}
-
-html[data-native="1"][data-platform="android"] .card-info__face {
-  width: min(12.5rem, 46vw);
 }
 
 /*
@@ -12006,23 +11996,6 @@ body.rewards-overlay-open .sweeper-result {
       )
     );
     max-height: 100%;
-  }
-
-  .card-info {
-    place-items: start center;
-    align-content: start;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0.55rem 0.75rem 0.75rem;
-  }
-
-  .card-info__panel {
-    width: min(28rem, 100%);
-  }
-
-  .card-info__face {
-    width: min(12.5rem, 48vw);
   }
 
   .pack-opener__panel,
