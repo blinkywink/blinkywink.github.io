@@ -526,8 +526,10 @@ export function MonkeyCard({
   }, [entity.image, staticArt]);
 
   const pathIcons = useMemo(() => {
-    const iconFor = (id: string) =>
-      accents[id]?.icon || `/images/upgrade-icons/${id}.webp`;
+    const iconFor = (id: string) => {
+      const src = accents[id]?.icon || `/images/upgrade-icons/${id}.webp`;
+      return `${src}${src.includes("?") ? "&" : "?"}v=1`;
+    };
 
     if (isParagon) {
       return [
