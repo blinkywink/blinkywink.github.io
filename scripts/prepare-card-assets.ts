@@ -6,7 +6,7 @@
  * Usage:
  *   npx tsx scripts/prepare-card-assets.ts
  *   npx tsx scripts/prepare-card-assets.ts "Ninja Monkey"
- *   npx tsx scripts/prepare-card-assets.ts all
+ *   npx tsx scripts/prepare-card-assets.ts --missing-only
  */
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -31,6 +31,48 @@ async function apiJson<T>(params: Record<string, string>): Promise<T> {
   });
   if (!res.ok) throw new Error(`API ${res.status}`);
   return (await res.json()) as T;
+}
+
+function normalizeIconName(name: string): string {
+  return name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "");
+}
+
+/** Wiki labels that do not match BTD6 / our dataset names. */
+const ICON_NAME_ALIASES: Record<string, string[]> = {
+  fastfiring: ["fasterfiring"],
+  kylieboomerang: ["kylieboomerangs"],
+  necromancerunpoppedarmy: ["necromancer"],
+};
+
+/** Direct wiki filenames when the Upgrade Icons table label still misses. */
+const ICON_FILE_FALLBACKS: Record<string, string> = {
+  "sniper-monkey-31": "FastFiringUpgradeIcon.png",
+  "boomerang-monkey-14": "MoarGlaivesUpgradeIcon.png",
+  "boomerang-monkey-33": "KylieBoomerangUpgradeIcon.png",
+  "wizard-monkey-34": "NecromancerUnpoppedArmyUpgradeIcon.png",
+  "spike-factory-35": "Perma-SpikeUpgradeIcon.png",
+};
+
+function lookupWikiFile(
+  map: Map<string, string>,
+  entityName: string,
+): string | undefined {
+  const lower = entityName.toLowerCase();
+  const direct = map.get(lower);
+  if (direct) return direct;
+
+  const byNorm = new Map<string, string>();
+  for (const [label, file] of map) {
+    byNorm.set(normalizeIconName(label), file);
+  }
+  const n = normalizeIconName(entityName);
+  const exactNorm = byNorm.get(n);
+  if (exactNorm) return exactNorm;
+  for (const alias of ICON_NAME_ALIASES[n] ?? []) {
+    const hit = byNorm.get(alias);
+    if (hit) return hit;
+  }
+  return undefined;
 }
 
 async function fetchUpgradeIconMap(towerName: string): Promise<Map<string, string>> {
@@ -310,7 +352,8 @@ async function prepareTower(towerName: string) {
   > = {};
 
   for (const entity of entities) {
-    const file = iconFiles.get(entity.name.toLowerCase());
+    const file =
+      lookupWikiFile(iconFiles, entity.name) ?? ICON_FILE_FALLBACKS[entity.id];
     let iconPath: string | null = null;
     if (file) {
       const slug = entity.id;
@@ -323,7 +366,26 @@ async function prepareTower(towerName: string) {
         console.warn(`icon ✗ ${entity.name}`, e);
       }
     } else {
-      console.warn(`no wiki icon match for ${entity.name}`);
+      const portraitAbs = path.join(
+        ROOT,
+        "public",
+        entity.image.replace(/^\//, ""),
+      );
+      const out = path.join(ICONS_DIR, `${entity.id}.webp`);
+      try {
+        await access(portraitAbs);
+        await sharp(portraitAbs)
+          .resize(128, 128, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .webp({ quality: 90 })
+          .toFile(out);
+        iconPath = `/images/upgrade-icons/${entity.id}.webp`;
+        console.warn(`icon portrait-fallback ${entity.name}`);
+      } catch {
+        console.warn(`no wiki icon match for ${entity.name}`);
+      }
     }
 
     const portraitAbs = path.join(ROOT, "public", entity.image.replace(/^\//, ""));
@@ -346,8 +408,77 @@ async function prepareTower(towerName: string) {
   return accents;
 }
 
+async function iconOnDisk(id: string): Promise<boolean> {
+  try {
+    await access(path.join(ICONS_DIR, `${id}.webp`));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function fillMissingIcons() {
+  await mkdir(ICONS_DIR, { recursive: true });
+  const accents = JSON.parse(await readFile(ACCENTS_OUT, "utf8")) as Record<
+    string,
+    { icon?: string | null }
+  >;
+  const byTower = new Map<string, Entity[]>();
+  for (const entity of towers as Entity[]) {
+    if (await iconOnDisk(entity.id)) continue;
+    const list = byTower.get(entity.tower) ?? [];
+    list.push(entity);
+    byTower.set(entity.tower, list);
+  }
+
+  for (const [tower, ents] of byTower) {
+    let map = new Map<string, string>();
+    try {
+      map = await fetchUpgradeIconMap(tower);
+    } catch (e) {
+      console.warn(`wiki section ${tower}`, e);
+    }
+    for (const entity of ents) {
+      const file =
+        lookupWikiFile(map, entity.name) ?? ICON_FILE_FALLBACKS[entity.id];
+      const out = path.join(ICONS_DIR, `${entity.id}.webp`);
+      try {
+        if (file) {
+          await downloadIcon(file, out);
+        } else {
+          const portraitAbs = path.join(
+            ROOT,
+            "public",
+            entity.image.replace(/^\//, ""),
+          );
+          await sharp(portraitAbs)
+            .resize(128, 128, {
+              fit: "contain",
+              background: { r: 0, g: 0, b: 0, alpha: 0 },
+            })
+            .webp({ quality: 90 })
+            .toFile(out);
+          console.warn(`icon portrait-fallback ${entity.name}`);
+        }
+        const icon = `/images/upgrade-icons/${entity.id}.webp`;
+        if (accents[entity.id]) accents[entity.id].icon = icon;
+        console.log(`filled ${entity.id} (${entity.name})`);
+      } catch (e) {
+        console.warn(`fail ${entity.id}`, e);
+      }
+    }
+  }
+
+  await writeFile(ACCENTS_OUT, `${JSON.stringify(accents, null, 2)}\n`);
+}
+
 async function main() {
   await mkdir(ICONS_DIR, { recursive: true });
+
+  if (process.argv.includes("--missing-only")) {
+    await fillMissingIcons();
+    return;
+  }
 
   const arg = process.argv[2] ?? "Dart Monkey";
   const towerNames =

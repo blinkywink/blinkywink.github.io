@@ -527,7 +527,7 @@ export function MonkeyCard({
 
   const pathIcons = useMemo(() => {
     const iconFor = (id: string) =>
-      accents[id]?.icon ?? `/images/upgrade-icons/${id}.webp`;
+      accents[id]?.icon || `/images/upgrade-icons/${id}.webp`;
 
     if (isParagon) {
       return [
@@ -931,7 +931,7 @@ export function MonkeyCard({
                       alt=""
                       draggable={false}
                       onError={(e) => {
-                        e.currentTarget.style.opacity = "0.35";
+                        e.currentTarget.style.display = "none";
                       }}
                     />
                   ))
