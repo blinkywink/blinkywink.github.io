@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.22",
-  "version": "1.0.22",
-  "shopDay": "2026-9-3",
+  "minDesktopVersion": "1.0.23",
+  "version": "1.0.23",
+  "shopDay": "2026-9-4",
   "featuredTowers": [
-    "Monkey Ace",
-    "Dartling Gunner",
-    "Heli Pilot"
+    "Super Monkey",
+    "Wizard Monkey",
+    "Monkey Buccaneer"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://api.blinkywink.co/downloads/blinkywink-mac.dmg",

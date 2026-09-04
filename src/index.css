@@ -101,12 +101,23 @@ html[data-native="1"] select {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  background-color: var(--site-bg-bottom);
+  background-image:
+    radial-gradient(circle at 18% 0%, var(--site-bg-glow-a), transparent 34%),
+    radial-gradient(circle at 86% 100%, var(--site-bg-glow-b), transparent 38%),
+    linear-gradient(
+      180deg,
+      var(--site-bg-top) 0%,
+      var(--site-bg-mid) 55%,
+      var(--site-bg-bottom) 100%
+    );
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background:
+  background-color: var(--site-bg-bottom);
+  background-image:
     radial-gradient(circle at 18% 0%, var(--site-bg-glow-a), transparent 34%),
     radial-gradient(circle at 86% 100%, var(--site-bg-glow-b), transparent 38%),
     linear-gradient(

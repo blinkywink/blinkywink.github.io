@@ -389,6 +389,12 @@ export function siteThemeById(id: SiteThemeId = current) {
 export function applySiteTheme(id: SiteThemeId): void {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.siteTheme = id;
+  // index.html used to set inline `background`, which blocked the themed page
+  // gradient so only the header appeared to change.
+  for (const el of [document.documentElement, document.body]) {
+    el?.style.removeProperty("background");
+    el?.style.removeProperty("background-color");
+  }
 }
 
 function writeLocalTheme(id: SiteThemeId): void {
