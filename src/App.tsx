@@ -492,6 +492,8 @@ function AppShell() {
       guesses: number;
       answer: string;
     }) => {
+      // Account-sync / empty hydrate of an already-finished daily.
+      if (info.guesses < 1) return;
       setEndlessHaul(null);
       setRunHaul({
         game: "bloonle",

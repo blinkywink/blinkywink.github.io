@@ -73,20 +73,23 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
   } = useBlowFree();
   const gridRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  /** Wordle: opening an already-cleared daily never re-triggers haul/packs. */
-  const openedAlreadyWon = useRef(
-    state.mode === "daily" && state.status === "won",
-  );
-  /** Sync lock so Strict Mode / remounts can't double-fire hauls. */
+  const prevStatus = useRef(state.status);
   const dailyHaulLock = useRef(state.haulReported);
   const practiceHaulIds = useRef<Set<string>>(new Set());
   const runEndLock = useRef(false);
 
   useEffect(() => {
-    if (state.status !== "won" || !state.awarded) return;
+    if (state.status === "playing") {
+      prevStatus.current = "playing";
+      return;
+    }
+
+    const cameFromPlaying = prevStatus.current === "playing";
 
     if (state.mode === "daily") {
-      if (openedAlreadyWon.current) {
+      const alreadyDone = !cameFromPlaying || state.haulReported;
+      if (alreadyDone) {
+        prevStatus.current = state.status;
         if (!state.haulReported && !dailyHaulLock.current) {
           dailyHaulLock.current = true;
           claimDailyHaulOnce(state.day);
@@ -95,29 +98,33 @@ export function BlowFreeGame({ onBack: _onBack, onRunEnd }: Props) {
         return;
       }
 
-      // Featured bonus / packs must fire even if the haul claim raced.
-      if (!runEndLock.current) {
-        runEndLock.current = true;
-        onRunEnd?.({
-          cleared: true,
-          coinsEarned: state.reward,
-          mode: "daily",
-        });
-      }
-
-      if (state.haulReported || dailyHaulLock.current) return;
-      if (!claimDailyHaulOnce(state.day)) {
+      // Fresh clear this visit — wait for payout so Nice Haul can show cash.
+      // Keep prevStatus as playing until then so this doesn't look like a revisit.
+      if (!state.awarded) return;
+      if (runEndLock.current) return;
+      runEndLock.current = true;
+      prevStatus.current = state.status;
+      onRunEnd?.({
+        cleared: true,
+        coinsEarned: state.reward,
+        mode: "daily",
+      });
+      if (!dailyHaulLock.current) {
         dailyHaulLock.current = true;
+        claimDailyHaulOnce(state.day);
         markHaulReported();
-        return;
       }
-      dailyHaulLock.current = true;
-      markHaulReported();
       return;
     }
 
+    if (!cameFromPlaying) {
+      prevStatus.current = state.status;
+      return;
+    }
+    if (!state.awarded) return;
     if (practiceHaulIds.current.has(state.level.id)) return;
     practiceHaulIds.current.add(state.level.id);
+    prevStatus.current = state.status;
     onRunEnd?.({
       cleared: true,
       coinsEarned: state.reward,

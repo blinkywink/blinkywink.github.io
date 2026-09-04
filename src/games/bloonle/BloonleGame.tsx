@@ -83,23 +83,23 @@ export function BloonleGame({
   const done = state.status !== "playing";
   const isDaily = state.mode === "daily";
   const [kbInset, setKbInset] = useState(0);
-  /** Opening an already-finished daily must never re-trigger Nice Haul / packs. */
-  const openedAlreadyDone = useRef(
-    state.mode === "daily" && state.status !== "playing",
-  );
+  const prevStatus = useRef(state.status);
   const dailyHaulLock = useRef(state.haulReported);
   const fastSolveLock = useRef(false);
   const runEndLock = useRef(false);
   const practiceHaulLock = useRef(false);
 
   useEffect(() => {
-    if (state.mode !== "daily") {
-      // Practice: fire once when the round ends (win or lose).
-      if (state.status === "playing") {
-        practiceHaulLock.current = false;
-        return;
-      }
-      if (practiceHaulLock.current) return;
+    const wasPlaying = prevStatus.current === "playing";
+    prevStatus.current = state.status;
+
+    if (state.status === "playing") {
+      if (state.mode === "practice") practiceHaulLock.current = false;
+      return;
+    }
+
+    if (state.mode === "practice") {
+      if (!wasPlaying || practiceHaulLock.current) return;
       practiceHaulLock.current = true;
       const guesses = state.guesses.length;
       if (state.status === "won") {
@@ -128,30 +128,25 @@ export function BloonleGame({
       return;
     }
 
-    if (state.status === "playing") return;
+    if (!state.haulReported && !dailyHaulLock.current) {
+      dailyHaulLock.current = true;
+      claimBloonleDailyHaulOnce(state.day);
+      markHaulReported();
+    }
 
-    // Daily haul claim is separate from featured-bonus / pack reporting.
-    if (openedAlreadyDone.current) {
-      if (!state.haulReported && !dailyHaulLock.current) {
-        dailyHaulLock.current = true;
-        claimBloonleDailyHaulOnce(state.day);
-        markHaulReported();
-      }
+    // Revisit / account-sync of an already-finished daily: keep the next-puzzle
+    // panel. Nice Haul only on a real playing → done finish this visit.
+    // haulReported is also set when the account already claimed today, even if
+    // local state briefly looked like a playing → won transition.
+    if (
+      state.haulReported ||
+      !wasPlaying ||
+      state.guesses.length < 1 ||
+      runEndLock.current
+    ) {
       return;
     }
-
-    if (runEndLock.current) return;
     runEndLock.current = true;
-
-    if (!state.haulReported && !dailyHaulLock.current) {
-      if (claimBloonleDailyHaulOnce(state.day)) {
-        dailyHaulLock.current = true;
-        markHaulReported();
-      } else {
-        dailyHaulLock.current = true;
-        markHaulReported();
-      }
-    }
 
     const guesses = state.guesses.length;
     if (state.status === "won") {
