@@ -25,7 +25,12 @@ create policy reward_buckets_no_client
   with check (false);
 
 revoke all on table public.reward_buckets from public, anon, authenticated;
-grant all on table public.reward_buckets to service_role;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant all on table public.reward_buckets to service_role';
+  end if;
+end $$;
 
 -- Generous enough for heavy play + guest merge chunks; stops unlimited minting.
 -- Per-call coin max stays 10_000 (Bloon Hero / merge chunks).
@@ -117,10 +122,11 @@ declare
   today date := (timezone('utc', now()))::date;
   b public.reward_buckets%rowtype;
   want integer;
-  -- Caps
+  -- Caps. Pack grinding can unlock hundreds of unique cards in a day;
+  -- this is only a brake on scripted minting, not normal play.
   max_per_call constant integer := 40;
-  max_per_minute constant integer := 120;
-  max_per_day constant integer := 800;
+  max_per_minute constant integer := 400;
+  max_per_day constant integer := 10000;
 begin
   if uid is null then
     raise exception 'Not authenticated';
