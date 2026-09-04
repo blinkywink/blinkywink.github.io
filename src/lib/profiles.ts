@@ -4,6 +4,7 @@ import {
   normalizeAvatarCrop,
   type AvatarCrop,
 } from "./avatar";
+import { accentHexForCardId } from "./cardAccent";
 import { cached, CacheTtl } from "./cache";
 import { normalizeAccentColor } from "./profileCosmetics";
 import {
@@ -47,7 +48,7 @@ export async function fetchProfileByUsername(
   const raw = String(username ?? "").trim();
   if (!raw) return null;
 
-  const key = `profile:name:${raw.toLowerCase()}`;
+  const key = `profile:name:v2:${raw.toLowerCase()}`;
   return cached(
     key,
     CacheTtl.profiles,
@@ -72,9 +73,13 @@ export async function fetchProfileByUsername(
         zoom: row.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
         x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
         y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+        visualSeed: row.avatar_visual_seed,
+        degree: row.avatar_paragon_degree,
       }),
       showcaseCardIds: normalizeShowcaseIds(row.showcase_card_ids),
-      accentColor: normalizeAccentColor(row.accent_color),
+      accentColor:
+        accentHexForCardId(row.avatar_card_id) ??
+        normalizeAccentColor(row.accent_color),
       ownedHeroIds: normalizeOwnedHeroIds(row.owned_hero_ids),
       equippedHeroId: row.equipped_hero_id
         ? String(row.equipped_hero_id)
@@ -99,7 +104,7 @@ export async function searchProfilesByUsername(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, profile_badges(badge_id)",
+      "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, avatar_visual_seed, avatar_paragon_degree, accent_color, profile_badges(badge_id)",
     )
     .ilike("username", pattern)
     .order("coins_earned", { ascending: false })
@@ -119,8 +124,14 @@ export async function searchProfilesByUsername(
       zoom: row.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
       x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
       y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+      visualSeed: (row as { avatar_visual_seed?: number | null })
+        .avatar_visual_seed,
+      degree: (row as { avatar_paragon_degree?: number | null })
+        .avatar_paragon_degree,
     }),
-    accentColor: normalizeAccentColor(row.accent_color),
+    accentColor:
+      accentHexForCardId(row.avatar_card_id) ??
+      normalizeAccentColor(row.accent_color),
     badgeIds: normalizeBadgeIds(
       (row as { profile_badges?: unknown }).profile_badges,
     ),

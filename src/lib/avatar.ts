@@ -5,6 +5,10 @@ export type AvatarCrop = {
   zoom: number;
   x: number;
   y: number;
+  /** Owner's T4+ copy seed. Leaderboard / other players need this. */
+  visualSeed?: number | null;
+  /** Paragon degree for the PFP copy. */
+  degree?: number | null;
 };
 
 export const DEFAULT_AVATAR_CROP: AvatarCrop = {
@@ -29,12 +33,18 @@ export function normalizeAvatarCrop(input: {
   zoom?: number | null;
   x?: number | null;
   y?: number | null;
+  visualSeed?: number | null;
+  degree?: number | null;
 }): AvatarCrop {
   const cardId = input.cardId ? String(input.cardId) : null;
+  const seed = Number(input.visualSeed);
+  const degree = Number(input.degree);
   return {
     cardId: cardId && cardId.length >= 3 ? cardId : null,
     zoom: clampAvatarZoom(Number(input.zoom ?? DEFAULT_AVATAR_CROP.zoom)),
     x: clamp01(Number(input.x ?? DEFAULT_AVATAR_CROP.x)),
     y: clamp01(Number(input.y ?? DEFAULT_AVATAR_CROP.y)),
+    visualSeed: Number.isFinite(seed) && seed >= 0 ? Math.floor(seed) : null,
+    degree: Number.isFinite(degree) && degree > 0 ? Math.floor(degree) : null,
   };
 }

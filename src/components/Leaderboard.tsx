@@ -108,7 +108,7 @@ export function Leaderboard({ onBack: _onBack, onOpenCollection }: Props) {
 
   useEffect(() => {
     const cached = cacheGetStale<LeaderboardEntry[]>(
-      `leaderboard:page:0:${LEADERBOARD_PAGE_SIZE}`,
+      `leaderboard:page:v2:0:${LEADERBOARD_PAGE_SIZE}`,
     );
     if (cached?.length) {
       applyPage(cached);

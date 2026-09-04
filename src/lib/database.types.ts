@@ -22,6 +22,8 @@ export type Profile = {
   avatar_zoom: number;
   avatar_x: number;
   avatar_y: number;
+  avatar_visual_seed?: number | null;
+  avatar_paragon_degree?: number | null;
   /** Up to 3 owned card ids shown on the public collection page. */
   showcase_card_ids?: string[] | null;
   /** Purchased showcase slot capacity (0-3). */
@@ -83,6 +85,8 @@ export type Database = {
           avatar_zoom?: number;
           avatar_x?: number;
           avatar_y?: number;
+          avatar_visual_seed?: number | null;
+          avatar_paragon_degree?: number | null;
           showcase_card_ids?: string[] | null;
           showcase_slots?: number;
           accent_unlocked?: boolean;
@@ -114,6 +118,8 @@ export type Database = {
           avatar_zoom?: number;
           avatar_x?: number;
           avatar_y?: number;
+          avatar_visual_seed?: number | null;
+          avatar_paragon_degree?: number | null;
           showcase_card_ids?: string[] | null;
           showcase_slots?: number;
           accent_unlocked?: boolean;
@@ -358,6 +364,8 @@ export type Database = {
           equipped_hero_id: string | null;
           hero_levels: Record<string, number> | null;
           badge_ids: string[] | null;
+          avatar_visual_seed: number | null;
+          avatar_paragon_degree: number | null;
         }[];
       };
       buy_hero: {

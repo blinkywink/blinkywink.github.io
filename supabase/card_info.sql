@@ -79,6 +79,14 @@ begin
       when avatar_card_id = cleaned then null
       else avatar_card_id
     end,
+    avatar_visual_seed = case
+      when avatar_card_id = cleaned then null
+      else avatar_visual_seed
+    end,
+    avatar_paragon_degree = case
+      when avatar_card_id = cleaned then null
+      else avatar_paragon_degree
+    end,
     aura_card_id = case
       when aura_card_id = cleaned then null
       else aura_card_id

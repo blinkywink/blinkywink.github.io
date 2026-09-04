@@ -78,7 +78,7 @@ async function profilesByIds(ids: string[]) {
   if (!ids.length) return map;
   const { data: profileRows } = await supabase
     .from("profiles")
-    .select("id, username, avatar_card_id, avatar_zoom, avatar_x, avatar_y")
+    .select("id, username, avatar_card_id, avatar_zoom, avatar_x, avatar_y, avatar_visual_seed, avatar_paragon_degree")
     .in("id", ids);
   for (const p of profileRows ?? []) {
     map.set(String(p.id), {
@@ -88,6 +88,9 @@ async function profilesByIds(ids: string[]) {
         zoom: p.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
         x: p.avatar_x ?? DEFAULT_AVATAR_CROP.x,
         y: p.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+        visualSeed: (p as { avatar_visual_seed?: number | null }).avatar_visual_seed,
+        degree: (p as { avatar_paragon_degree?: number | null })
+          .avatar_paragon_degree,
       }),
     });
   }

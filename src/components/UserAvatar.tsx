@@ -29,8 +29,8 @@ export function UserAvatar({
 }: Props) {
   const cardId = crop?.cardId ?? null;
   const card = cardId ? cardSpecById(cardId) : null;
-  const degree = face?.degree;
-  const visualSeed = face?.visualSeed;
+  const degree = face?.degree ?? crop?.degree;
+  const visualSeed = face?.visualSeed ?? crop?.visualSeed;
   const bakeOpts: CardFaceBakeOpts | undefined =
     degree != null || visualSeed != null
       ? { degree, visualSeed }

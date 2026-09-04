@@ -4,6 +4,7 @@ import {
   type AvatarCrop,
 } from "./avatar";
 import { cached, CacheTtl } from "./cache";
+import { accentHexForCardId } from "./cardAccent";
 import { normalizeAccentColor } from "./profileCosmetics";
 import { normalizeBadgeIds } from "./profileBadges";
 import { supabase } from "./supabase";
@@ -84,8 +85,13 @@ function mapLeaderboardRows(
       zoom: Number(r.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom),
       x: Number(r.avatar_x ?? DEFAULT_AVATAR_CROP.x),
       y: Number(r.avatar_y ?? DEFAULT_AVATAR_CROP.y),
+      visualSeed: r.avatar_visual_seed as number | null,
+      degree: r.avatar_paragon_degree as number | null,
     }),
-    accentColor: normalizeAccentColor(r.accent_color),
+    accentColor:
+      accentHexForCardId(
+        r.avatar_card_id == null ? null : String(r.avatar_card_id),
+      ) ?? normalizeAccentColor(r.accent_color),
     rank: offset + i + 1,
     badgeIds: normalizeBadgeIds(r.profile_badges),
   }));
@@ -107,13 +113,13 @@ export async function fetchLeaderboardPage(
     Math.max(1, opts?.limit ?? LEADERBOARD_PAGE_SIZE),
   );
   return cached(
-    `leaderboard:page:${start}:${limit}`,
+    `leaderboard:page:v2:${start}:${limit}`,
     CacheTtl.leaderboard,
     async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, accent_color, profile_badges(badge_id)",
+          "id, username, coins_earned, avatar_card_id, avatar_zoom, avatar_x, avatar_y, avatar_visual_seed, avatar_paragon_degree, accent_color, profile_badges(badge_id)",
         )
         .order("coins_earned", { ascending: false })
         .range(start, start + limit - 1);

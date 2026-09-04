@@ -26,11 +26,15 @@ export function avatarFromProfile(row: {
   avatar_zoom?: number | null;
   avatar_x?: number | null;
   avatar_y?: number | null;
+  avatar_visual_seed?: number | null;
+  avatar_paragon_degree?: number | null;
 }): AvatarCrop {
   return normalizeAvatarCrop({
     cardId: row.avatar_card_id ?? null,
     zoom: row.avatar_zoom ?? DEFAULT_AVATAR_CROP.zoom,
     x: row.avatar_x ?? DEFAULT_AVATAR_CROP.x,
     y: row.avatar_y ?? DEFAULT_AVATAR_CROP.y,
+    visualSeed: row.avatar_visual_seed,
+    degree: row.avatar_paragon_degree,
   });
 }
