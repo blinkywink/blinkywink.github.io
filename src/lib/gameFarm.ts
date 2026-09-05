@@ -124,8 +124,8 @@ function readLocalSpam(): Partial<Record<GamePath, string>> {
   }
 }
 
-/** Replace the local mirror with server (or guest) truth — never invent mutes here. */
-function cacheSpamFromServer(
+/** Replace the local mirror with a full cloud snapshot (fetch). */
+function replaceSpamCache(
   spam: Partial<Record<GamePath, string>>,
 ): Partial<Record<GamePath, string>> {
   const cleaned = parseSpam(spam);
@@ -143,12 +143,22 @@ function cacheSpamFromServer(
 }
 
 /**
+ * Merge one game's mute into the mirror without wiping other games' timers.
+ * Price Check and Order Up (etc.) each keep their own countdown.
+ */
+function mergeSpamCache(
+  spam: Partial<Record<GamePath, string>>,
+): Partial<Record<GamePath, string>> {
+  return replaceSpamCache(mergeSpamMaps(readLocalSpam(), spam));
+}
+
+/**
  * Optimistic mute mirror so the games page can paint instantly.
  * Cloud write must still succeed — this alone is not anti-cheat.
  */
 export function rememberGameMute(game: GamePath, untilMs: number): void {
   const until = new Date(Math.max(Date.now() + 1000, untilMs)).toISOString();
-  cacheSpamFromServer(mergeSpamMaps(readLocalSpam(), { [game]: until }));
+  mergeSpamCache({ [game]: until });
 }
 
 /** Seed UI from the last server mirror (may be empty). */
@@ -161,8 +171,22 @@ export function peekCachedFarm(
   );
 }
 
-function adoptServerFarm(snap: GameFarmSnapshot): GameFarmSnapshot {
-  const spamUntil = cacheSpamFromServer(snap.spamUntil);
+/** Full cloud fetch — replace cache with server truth for every game. */
+function adoptFullFarm(snap: GameFarmSnapshot): GameFarmSnapshot {
+  const spamUntil = replaceSpamCache(snap.spamUntil);
+  return decorateMute(snap, spamUntil);
+}
+
+/** Partial update (flag one game) — merge so other games' timers stay. */
+function adoptPartialFarm(snap: GameFarmSnapshot): GameFarmSnapshot {
+  const spamUntil = mergeSpamCache(snap.spamUntil);
+  return decorateMute(snap, spamUntil);
+}
+
+function decorateMute(
+  snap: GameFarmSnapshot,
+  spamUntil: Partial<Record<GamePath, string>>,
+): GameFarmSnapshot {
   const gid = snap.game;
   const muted = Boolean(gid && spamUntil[gid]);
   return {
@@ -373,7 +397,7 @@ export async function fetchGameFarm(
   game: GamePath | null = null,
 ): Promise<GameFarmSnapshot> {
   if (!signedIn()) {
-    return adoptServerFarm(snapshotFromStored(readGuest(), game));
+    return adoptFullFarm(snapshotFromStored(readGuest(), game));
   }
   const { data, error } = await supabase.rpc("get_game_farm", {
     p_game_id: game,
@@ -384,8 +408,8 @@ export async function fetchGameFarm(
     // Soft fallback: last cloud mirror only (not a place to invent locks).
     return peekCachedFarm(game);
   }
-  // Cloud is source of truth — replaces any optimistic local mirror.
-  return adoptServerFarm(parseSnap(data, game));
+  // Cloud is source of truth — full map for every game.
+  return adoptFullFarm(parseSnap(data, game));
 }
 
 export async function noteGameFarmRun(
@@ -393,7 +417,7 @@ export async function noteGameFarmRun(
   won: boolean,
 ): Promise<GameFarmSnapshot> {
   if (!signedIn()) {
-    const snap = adoptServerFarm(guestNoteRun(game, won));
+    const snap = adoptPartialFarm(guestNoteRun(game, won));
     emitGameFarm(snap);
     return snap;
   }
@@ -406,7 +430,8 @@ export async function noteGameFarmRun(
     if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
     return peekCachedFarm(game);
   }
-  const snap = adoptServerFarm(parseSnap(data, game));
+  // Server snapshot includes the full spamUntil map.
+  const snap = adoptFullFarm(parseSnap(data, game));
   emitGameFarm(snap);
   return snap;
 }
@@ -417,7 +442,7 @@ export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
   rememberGameMute(game, untilMs);
 
   if (!signedIn()) {
-    const snap = adoptServerFarm(guestFlagSpam(game));
+    const snap = adoptPartialFarm(guestFlagSpam(game));
     emitGameFarm(snap);
     return snap;
   }
@@ -428,14 +453,14 @@ export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
       p_game_id: game,
     });
     if (!error) {
-      let snap = adoptServerFarm(parseSnap(data, game));
+      // Full map from cloud (other games' timers preserved server-side).
+      let snap = adoptFullFarm(parseSnap(data, game));
       if (spamUnlockMs(snap, game) <= 0) {
-        // Write may have landed — re-read cloud instead of trusting client-only.
         snap = await fetchGameFarm(game);
       }
       if (spamUnlockMs(snap, game) <= 0) {
         rememberGameMute(game, untilMs);
-        snap = {
+        snap = adoptPartialFarm({
           ...snap,
           canPay: false,
           reason: "spam",
@@ -443,7 +468,7 @@ export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
             ...snap.spamUntil,
             [game]: new Date(untilMs).toISOString(),
           },
-        };
+        });
       }
       emitGameFarm(snap);
       return snap;
@@ -457,12 +482,13 @@ export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
   }
 
   console.warn("flag_game_spam failed after retries", lastError);
-  // Still emit optimistic so this session stops paying; cloud retry on next award/fetch.
-  const optimistic = adoptServerFarm({
+  const optimistic = adoptPartialFarm({
     ...emptySnap(game),
     canPay: false,
     reason: "spam",
-    spamUntil: { [game]: new Date(untilMs).toISOString() },
+    spamUntil: mergeSpamMaps(readLocalSpam(), {
+      [game]: new Date(untilMs).toISOString(),
+    }),
   });
   emitGameFarm(optimistic);
   return optimistic;
@@ -477,7 +503,7 @@ export async function awardGameCoins(
     return { ...emptySnap(game), coins: loadGuestWallet().coins };
   }
   if (!signedIn()) {
-    const snap = adoptServerFarm(guestTryPay(game, rounded));
+    const snap = adoptPartialFarm(guestTryPay(game, rounded));
     if (!snap.canPay || snap.reason !== "ok") emitGameFarm(snap);
     return snap;
   }
@@ -491,7 +517,7 @@ export async function awardGameCoins(
     if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
     return peekCachedFarm(game);
   }
-  const snap = adoptServerFarm(parseSnap(data, game));
+  const snap = adoptFullFarm(parseSnap(data, game));
   if (!snap.canPay || snap.reason !== "ok" || snap.justPaused) {
     emitGameFarm(snap);
   }
@@ -534,8 +560,8 @@ export function farmNoPayGames(
 
 export function emitGameFarm(snap: GameFarmSnapshot) {
   if (typeof window === "undefined") return;
-  // Cache whatever authoritative snap we were given (usually cloud).
-  const detail = adoptServerFarm(snap);
+  // Merge so a one-game update never wipes other games' timers in the UI.
+  const detail = adoptPartialFarm(snap);
   window.dispatchEvent(
     new CustomEvent("monkeycards:game-farm", { detail }),
   );

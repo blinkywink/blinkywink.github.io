@@ -135,18 +135,28 @@ export function GameFarmGate({
           muteUntilRef.current,
           Date.now() + serverWait,
         );
-        setSnap(server);
-        return;
       }
-      // Keep the local 20‑minute mute if the server reply didn't include a timer.
+      // Always merge spamUntil so other games keep their own timers.
       setSnap((prev) => {
-        if (prev && spamUnlockMs(prev, game) > 0) return prev;
-        const until = new Date(muteUntilRef.current).toISOString();
+        const base = prev ?? emptyLocal(game);
+        const spamUntil = {
+          ...base.spamUntil,
+          ...server.spamUntil,
+        };
+        if (serverWait <= 0 && muteUntilRef.current > Date.now()) {
+          spamUntil[game] = new Date(muteUntilRef.current).toISOString();
+        }
+        const muted = spamUnlockMs({ ...server, spamUntil }, game) > 0;
         return {
-          ...(server.coins != null ? server : emptyLocal(game)),
-          canPay: false,
-          reason: "spam",
-          spamUntil: { [game]: until },
+          ...base,
+          ...server,
+          spamUntil,
+          canPay: !muted,
+          reason: muted
+            ? server.reason === "paused"
+              ? "paused"
+              : "spam"
+            : "ok",
         };
       });
     });
@@ -165,7 +175,14 @@ export function GameFarmGate({
         armMute(FARM_STREAK_COOL_MS, "paused");
         return;
       }
-      setSnap(next);
+      setSnap((prev) => {
+        const base = prev ?? emptyLocal(game);
+        return {
+          ...base,
+          ...next,
+          spamUntil: { ...base.spamUntil, ...next.spamUntil },
+        };
+      });
       if (serverWait > 0 || next.justPaused || next.reason === "spam") {
         setDismissed(false);
       }
