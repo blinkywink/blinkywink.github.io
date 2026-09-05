@@ -292,16 +292,21 @@ export async function noteGameFarmRun(
 }
 
 export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
-  if (!signedIn()) return guestFlagSpam(game);
-  const { data, error } = await supabase.rpc("flag_game_spam", {
-    p_game_id: game,
-  });
-  if (error) {
-    console.warn("flag_game_spam failed", error.message);
-    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    return guestFlagSpam(game);
-  }
-  return parseSnap(data, game);
+  const snap = !signedIn()
+    ? guestFlagSpam(game)
+    : await (async () => {
+        const { data, error } = await supabase.rpc("flag_game_spam", {
+          p_game_id: game,
+        });
+        if (error) {
+          console.warn("flag_game_spam failed", error.message);
+          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+          return guestFlagSpam(game);
+        }
+        return parseSnap(data, game);
+      })();
+  emitGameFarm(snap);
+  return snap;
 }
 
 export async function awardGameCoins(
@@ -338,14 +343,15 @@ export function spamUnlockMs(snap: GameFarmSnapshot, game: GamePath): number {
   return Math.max(0, ts - Date.now());
 }
 
+export function formatSpamClock(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export function formatSpamWait(ms: number): string {
-  const total = Math.max(1, Math.ceil(ms / 60000));
-  if (total >= 60) {
-    const h = Math.floor(total / 60);
-    const m = total % 60;
-    return m ? `${h}h ${m}m` : `${h}h`;
-  }
-  return `${total} min`;
+  return formatSpamClock(ms);
 }
 
 export function emitGameFarm(snap: GameFarmSnapshot) {

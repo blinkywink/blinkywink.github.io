@@ -3061,9 +3061,15 @@ body:has(.roundcheck-page) {
     padding: 0.7rem;
   }
 
+  .arcade--embed .game-card__art,
+  .arcade__featured--hub .game-card__art {
+    width: min(42%, 9.75rem);
+    flex: 0 0 auto;
+  }
+
   .arcade--embed .game-preview,
   .arcade__featured--hub .game-preview {
-    width: min(42%, 9.75rem);
+    width: 100%;
     flex: 0 0 auto;
     aspect-ratio: 1;
   }
@@ -3926,6 +3932,44 @@ body:has(.roundcheck-page) {
   position: relative;
   flex-shrink: 0;
   pointer-events: none;
+}
+
+.game-card__art {
+  position: relative;
+  width: 100%;
+}
+
+.game-preview__cash-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.12rem;
+  border-radius: 14px;
+  background: rgba(8, 12, 20, 0.66);
+  color: #fff8e8;
+  pointer-events: none;
+  text-align: center;
+}
+
+.game-preview__cash-lock span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 232, 0.82);
+}
+
+.game-preview__cash-lock strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 6vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #f0c84a;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
 }
 
 .game-preview--zoomed {

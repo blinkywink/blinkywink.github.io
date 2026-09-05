@@ -7,6 +7,13 @@ import {
   getOrCreateFeaturedBonusGame,
   type FeaturedBonusGame,
 } from "../lib/featuredBonus";
+import {
+  fetchGameFarm,
+  formatSpamClock,
+  spamUnlockMs,
+  type GameFarmSnapshot,
+} from "../lib/gameFarm";
+import type { GamePath } from "../lib/routes";
 import { preloadImage } from "../utils/imageProcessing";
 import {
   DISCORD_INVITE_URL,
@@ -636,6 +643,36 @@ export function ArcadeHome({
   const [bonusGame, setBonusGame] = useState<FeaturedBonusGame | null>(
     () => bonusGameProp ?? getOrCreateFeaturedBonusGame(),
   );
+  const [farm, setFarm] = useState<GameFarmSnapshot | null>(null);
+  const [, setFarmTick] = useState(0);
+
+  useEffect(() => {
+    void fetchGameFarm(null).then(setFarm);
+    const onFarm = (e: Event) => {
+      const detail = (e as CustomEvent<GameFarmSnapshot>).detail;
+      if (detail) setFarm(detail);
+    };
+    window.addEventListener("monkeycards:game-farm", onFarm);
+    const onVis = () => {
+      void fetchGameFarm(null).then(setFarm);
+    };
+    window.addEventListener("focus", onVis);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("monkeycards:game-farm", onFarm);
+      window.removeEventListener("focus", onVis);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
+  const spamLeft = farm
+    ? Object.values(farm.spamUntil).some((iso) => Date.parse(iso) > Date.now())
+    : false;
+  useEffect(() => {
+    if (!spamLeft) return;
+    const id = window.setInterval(() => setFarmTick((n) => n + 1), 250);
+    return () => window.clearInterval(id);
+  }, [spamLeft]);
 
   useEffect(() => {
     if (bonusGameProp != null) {
@@ -768,15 +805,18 @@ export function ArcadeHome({
       >
         {shown.map((g) => {
           const isBonus = bonusGame === g.id;
+          const lockMs = farm ? spamUnlockMs(farm, g.id as GamePath) : 0;
           return (
             <button
               key={g.id}
               type="button"
               className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}`}
               aria-label={
-                isBonus
-                  ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
-                  : g.label
+                lockMs > 0
+                  ? `${g.label} · No Cash for ${formatSpamClock(lockMs)}`
+                  : isBonus
+                    ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
+                    : g.label
               }
               onClick={() => {
                 /* iOS needs focus in the same user gesture as navigate — click only, not pointerdown (scroll). */
@@ -784,7 +824,15 @@ export function ArcadeHome({
                 onPlay(g.id);
               }}
             >
-              {g.preview}
+              <div className="game-card__art">
+                {g.preview}
+                {lockMs > 0 ? (
+                  <div className="game-preview__cash-lock" aria-hidden>
+                    <span>No Cash</span>
+                    <strong>{formatSpamClock(lockMs)}</strong>
+                  </div>
+                ) : null}
+              </div>
               <div className="game-card__foot">
                 <span className="game-card__title">{g.title}</span>
                 {isBonus ? (
