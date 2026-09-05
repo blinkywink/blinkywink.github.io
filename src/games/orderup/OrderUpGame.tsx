@@ -13,8 +13,6 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import { formatCash, type PricedCombo } from "../pricecheck/costs";
 import { useOrderUp } from "./useOrderUp";
-import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
-import { useGameFarm } from "../../components/GameFarmGate";
 
 type Props = {
   onBack: () => void;
@@ -98,14 +96,6 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
     timerSeconds,
   } = useOrderUp();
   const { profile } = useAuth();
-  const farm = useGameFarm();
-  const guard = useRef(
-    createInstantPlayGuard({ instantLimit: 3, nextLimit: 3 }),
-  );
-  const roundShownAt = useRef(
-    typeof performance !== "undefined" ? performance.now() : 0,
-  );
-  const revealAt = useRef(0);
   const didDrag = useRef(false);
 
   const dragFrom = useRef<number | null>(null);
@@ -118,13 +108,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
 
   useEffect(() => {
     if (state.phase === "playing") {
-      roundShownAt.current =
-        typeof performance !== "undefined" ? performance.now() : 0;
       didDrag.current = false;
-    }
-    if (state.phase === "reveal") {
-      revealAt.current =
-        typeof performance !== "undefined" ? performance.now() : 0;
     }
   }, [state.phase, state.round.round]);
 
@@ -207,21 +191,12 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
   }, [state.round.round, state.phase]);
 
   const onLockIn = useCallback(() => {
-    // Locking in within the first 2s, multiple rounds in a row = cheating.
-    const instant =
-      typeof performance !== "undefined" &&
-      performance.now() - roundShownAt.current < 2000;
-    if (guard.current.markAction(instant)) farm?.reportInstantSpam();
     lockIn();
-  }, [farm, lockIn]);
+  }, [lockIn]);
 
   const onGoNext = useCallback(() => {
-    const instant =
-      typeof performance !== "undefined" &&
-      performance.now() - revealAt.current < 800;
-    if (guard.current.markNext(instant)) farm?.reportInstantSpam();
     goNext();
-  }, [farm, goNext]);
+  }, [goNext]);
 
   useEffect(() => {
     if (state.phase !== "reveal") return;

@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
-import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
 import { useGameFarm } from "../../components/GameFarmGate";
 import {
   pickRandomRound,
@@ -113,20 +112,6 @@ export function useRoundCheck() {
   onCorrectCashRef.current = onCorrectCash;
   const canPayRef = useRef(true);
   canPayRef.current = farm?.canPay !== false && !farm?.isMutedNow?.();
-  const farmRef = useRef(farm);
-  farmRef.current = farm;
-  const guard = useRef(
-    createInstantPlayGuard({
-      instantLimit: 3,
-      nextLimit: 3,
-      awardGapMs: 4000,
-      awardLimit: 3,
-    }),
-  );
-  const puzzleShownAt = useRef(
-    typeof performance !== "undefined" ? performance.now() : 0,
-  );
-  const puzzleDoneAt = useRef(0);
 
   const [state, setState] = useState<RoundCheckState>(() => makeRun());
 
@@ -137,29 +122,17 @@ export function useRoundCheck() {
     [state.guesses],
   );
 
-  const tripSpam = useCallback(() => {
-    canPayRef.current = false;
-    farmRef.current?.reportInstantSpam();
+  const award = useCallback((amount: number) => {
+    if (amount <= 0 || !canPayRef.current) return;
+    void (async () => {
+      const balance = await awardCoins(amount, "roundcheck");
+      if (balance != null) setCoinBalanceRef.current(balance);
+      if (!canPayRef.current) return;
+      void onCorrectCashRef.current(setCoinBalanceRef.current, {
+        gameId: "roundcheck",
+      });
+    })();
   }, []);
-
-  const award = useCallback(
-    (amount: number) => {
-      if (amount <= 0 || !canPayRef.current) return;
-      if (guard.current.markAward()) {
-        tripSpam();
-        return;
-      }
-      void (async () => {
-        const balance = await awardCoins(amount, "roundcheck");
-        if (balance != null) setCoinBalanceRef.current(balance);
-        if (!canPayRef.current) return;
-        void onCorrectCashRef.current(setCoinBalanceRef.current, {
-          gameId: "roundcheck",
-        });
-      })();
-    },
-    [tripSpam],
-  );
 
   const submit = useCallback(
     (raw: number) => {
@@ -180,12 +153,6 @@ export function useRoundCheck() {
         const guesses = [...s.guesses, { value, hint }];
 
         if (hint === "correct") {
-          const instant =
-            typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 2000;
-          if (guard.current.markAction(instant)) tripSpam();
-          puzzleDoneAt.current =
-            typeof performance !== "undefined" ? performance.now() : 0;
           const piece = canPayRef.current ? payoutFor(guesses, answer, true) : 0;
           award(piece);
           const solves = s.solves + 1;
@@ -205,12 +172,6 @@ export function useRoundCheck() {
         }
 
         if (guesses.length >= ROUND_CHECK_MAX_GUESSES) {
-          const instant =
-            typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 2000;
-          if (guard.current.markAction(instant)) tripSpam();
-          puzzleDoneAt.current =
-            typeof performance !== "undefined" ? performance.now() : 0;
           const piece = canPayRef.current
             ? payoutFor(guesses, answer, false)
             : 0;
@@ -233,18 +194,12 @@ export function useRoundCheck() {
         return { ...s, guesses };
       });
     },
-    [award, tripSpam],
+    [award],
   );
 
   const continueRun = useCallback(() => {
     setState((s) => {
       if (s.status !== "puzzle_done") return s;
-      const instantNext =
-        typeof performance !== "undefined" &&
-        performance.now() - puzzleDoneAt.current < 800;
-      if (guard.current.markNext(instantNext)) tripSpam();
-      puzzleShownAt.current =
-        typeof performance !== "undefined" ? performance.now() : 0;
       return startPuzzle(s.recent, {
         reward: s.reward,
         solves: s.solves,
@@ -253,12 +208,9 @@ export function useRoundCheck() {
         recent: s.recent,
       });
     });
-  }, [tripSpam]);
+  }, []);
 
   const playAgain = useCallback(() => {
-    guard.current.reset();
-    puzzleShownAt.current =
-      typeof performance !== "undefined" ? performance.now() : 0;
     setState((s) => makeRun(s.recent));
   }, []);
 

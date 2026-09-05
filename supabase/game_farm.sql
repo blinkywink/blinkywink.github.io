@@ -1,7 +1,6 @@
 -- Arcade farm brakes:
--- 1) Instant-click / fast-award spam → No Cash for 20 minutes
--- 2) Same game 5 times in a row → No Cash for 3 minutes
--- You can keep playing either way; Cash just stops until the timer ends.
+-- Same game 5 times in a row → No Cash for 3 minutes on that game.
+-- You can keep playing; Cash just stops until the timer ends.
 -- Safe to re-run.
 
 alter table public.profiles
@@ -402,6 +401,7 @@ declare
   st jsonb;
   coins bigint;
 begin
+  -- 20-minute instant-spam mute retired; keep RPC so old clients don't 404.
   if uid is null then
     uid := auth.uid();
   end if;
@@ -413,11 +413,8 @@ begin
   end if;
 
   st := public.read_game_farm(uid);
-  st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
-  perform public.write_game_farm(uid, st);
-
   select p.coins into coins from public.profiles p where p.id = uid;
-  return public.game_farm_snapshot(st, gid, false, 'spam', coins);
+  return public.game_farm_snapshot(st, gid, false, 'ok', coins);
 end;
 $$;
 
@@ -437,14 +434,8 @@ declare
   max_per_call constant integer := 10000;
   snap json;
   spam_until text;
-  last_pay text;
-  fast integer := 0;
-  last_pay_at timestamptz;
   last_pay_map jsonb;
-  fast_map jsonb;
   new_balance bigint;
-  -- Fast-answer mute is only for these mashable puzzle games.
-  apply_fast_spam boolean;
 begin
   if uid is null then
     uid := auth.uid();
@@ -459,11 +450,10 @@ begin
     raise exception 'Invalid coin amount';
   end if;
 
-  apply_fast_spam := gid in ('orderup', 'roundcheck');
-
   st := public.read_game_farm(uid);
   select p.coins into cur_coins from public.profiles p where p.id = uid;
 
+  -- Still honor an active mute (e.g. 3-minute same-game cool-off).
   spam_until := st -> 'spamUntil' ->> gid;
   if spam_until is not null then
     begin
@@ -476,46 +466,10 @@ begin
     end;
   end if;
 
-  last_pay := st -> 'lastPayAt' ->> gid;
-  begin
-    last_pay_at := last_pay::timestamptz;
-  exception when others then
-    last_pay_at := null;
-  end;
-  begin
-    fast := greatest(0, coalesce((st -> 'fastStreak' ->> gid)::integer, 0));
-  exception when others then
-    fast := 0;
-  end;
-
-  -- Rapid awards: 3 payouts within 4s (Order Up / Round Check only).
-  if apply_fast_spam
-     and last_pay_at is not null
-     and last_pay_at > now() - interval '4 seconds' then
-    fast := fast + 1;
-  else
-    fast := 0;
-  end if;
-
   last_pay_map := coalesce(st -> 'lastPayAt', '{}'::jsonb) || jsonb_build_object(gid, now());
-  fast_map := coalesce(st -> 'fastStreak', '{}'::jsonb);
-
-  if apply_fast_spam and fast >= 3 then
-    fast_map := fast_map || jsonb_build_object(gid, 0);
-    st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
-    st := st || jsonb_build_object(
-      'lastPayAt', last_pay_map,
-      'fastStreak', fast_map
-    );
-    perform public.write_game_farm(uid, st);
-    snap := public.game_farm_snapshot(st, gid, false, 'spam', cur_coins);
-    return snap;
-  end if;
-
-  fast_map := fast_map || jsonb_build_object(gid, fast);
   st := st || jsonb_build_object(
     'lastPayAt', last_pay_map,
-    'fastStreak', fast_map
+    'fastStreak', coalesce(st -> 'fastStreak', '{}'::jsonb)
   );
 
   insert into public.reward_buckets (user_id)

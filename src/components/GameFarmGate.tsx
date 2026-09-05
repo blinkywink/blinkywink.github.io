@@ -12,11 +12,9 @@ import { useNavigate } from "react-router-dom";
 import type { GamePath } from "../lib/routes";
 import { gamesPath } from "../lib/routes";
 import {
-  FARM_SPAM_LOCK_MS,
   FARM_STREAK_COOL_MS,
   farmGameLabel,
   fetchGameFarm,
-  flagGameSpam,
   formatSpamClock,
   rememberGameMute,
   spamUnlockMs,
@@ -105,62 +103,9 @@ export function GameFarmGate({
     return spamUnlockMs(snap, game) > 0;
   }, [game, snap]);
 
-  const armMute = useCallback(
-    (ms: number, reason: "spam" | "paused") => {
-      const untilMs = Date.now() + ms;
-      muteUntilRef.current = Math.max(muteUntilRef.current, untilMs);
-      rememberGameMute(game, muteUntilRef.current);
-      const until = new Date(muteUntilRef.current).toISOString();
-      setDismissed(false);
-      setSnap((prev) => {
-        const base = prev ?? emptyLocal(game);
-        return {
-          ...base,
-          canPay: false,
-          reason,
-          justPaused: reason === "paused",
-          spamUntil: { ...base.spamUntil, [game]: until },
-        };
-      });
-    },
-    [game],
-  );
-
   const reportInstantSpam = useCallback(() => {
-    armMute(FARM_SPAM_LOCK_MS, "spam");
-    void flagGameSpam(game).then((server) => {
-      const serverWait = spamUnlockMs(server, game);
-      if (serverWait > 0) {
-        muteUntilRef.current = Math.max(
-          muteUntilRef.current,
-          Date.now() + serverWait,
-        );
-      }
-      // Always merge spamUntil so other games keep their own timers.
-      setSnap((prev) => {
-        const base = prev ?? emptyLocal(game);
-        const spamUntil = {
-          ...base.spamUntil,
-          ...server.spamUntil,
-        };
-        if (serverWait <= 0 && muteUntilRef.current > Date.now()) {
-          spamUntil[game] = new Date(muteUntilRef.current).toISOString();
-        }
-        const muted = spamUnlockMs({ ...server, spamUntil }, game) > 0;
-        return {
-          ...base,
-          ...server,
-          spamUntil,
-          canPay: !muted,
-          reason: muted
-            ? server.reason === "paused"
-              ? "paused"
-              : "spam"
-            : "ok",
-        };
-      });
-    });
-  }, [armMute, game]);
+    // Instant-spam 20-min mute retired.
+  }, []);
 
   const applyExternal = useCallback(
     (next: GameFarmSnapshot) => {
