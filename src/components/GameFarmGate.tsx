@@ -273,7 +273,9 @@ export function GameFarmGate({
     <Ctx.Provider value={value}>
       {muted ? (
         <div className="game-farm-banner" role="status">
-          You can keep playing — {label} won’t pay Cash for {clock}.
+          {coolReason === "paused"
+            ? `Play something else — Cash back on ${label} in ${clock}.`
+            : `A little sus — Cash back on ${label} in ${clock}.`}
         </div>
       ) : null}
       {children}
@@ -284,14 +286,15 @@ export function GameFarmGate({
           aria-modal="true"
         >
           <div className="game-farm-overlay__panel">
-            <p className="eyebrow">
-              {coolReason === "paused" ? "Mix it up" : "Slow down"}
-            </p>
-            <h2>You can keep playing — no Cash for now</h2>
+            <h2>
+              {coolReason === "paused"
+                ? "Please play something else lol"
+                : "Your activity is a little sus"}
+            </h2>
             <p>
               {coolReason === "paused"
-                ? `Same game five times in a row is enough. ${label} still works, but won’t pay Cash for ${clock}.`
-                : `Answers came in under 2 seconds too many times. ${label} still works, but won’t pay Cash for ${clock}.`}
+                ? `You can continue earning for this game in ${clock}.`
+                : `You have to wait ${clock} to earn on this game again.`}
             </p>
             <div className="game-farm-overlay__row">
               <button
