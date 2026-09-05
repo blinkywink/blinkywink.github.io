@@ -2,6 +2,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
+import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
+import { useGameFarm } from "../../components/GameFarmGate";
 import {
   pickRandomRound,
   resolveBloonSrc,
@@ -103,11 +105,23 @@ function payoutFor(
 
 export function useRoundCheck() {
   const { setCoinBalance } = useAuth();
+  const farm = useGameFarm();
   const { onCorrectCash } = useQuizHeroFx();
   const setCoinBalanceRef = useRef(setCoinBalance);
   setCoinBalanceRef.current = setCoinBalance;
   const onCorrectCashRef = useRef(onCorrectCash);
   onCorrectCashRef.current = onCorrectCash;
+  const canPayRef = useRef(true);
+  canPayRef.current = farm?.canPay !== false;
+  const farmRef = useRef(farm);
+  farmRef.current = farm;
+  const guard = useRef(
+    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+  );
+  const puzzleShownAt = useRef(
+    typeof performance !== "undefined" ? performance.now() : 0,
+  );
+  const puzzleDoneAt = useRef(0);
 
   const [state, setState] = useState<RoundCheckState>(() => makeRun());
 
@@ -119,11 +133,13 @@ export function useRoundCheck() {
   );
 
   const award = useCallback((amount: number) => {
-    if (amount <= 0) return;
+    if (amount <= 0 || !canPayRef.current) return;
     void (async () => {
-      const balance = await awardCoins(amount);
+      const balance = await awardCoins(amount, "roundcheck");
       if (balance != null) setCoinBalanceRef.current(balance);
-      void onCorrectCashRef.current(setCoinBalanceRef.current);
+      void onCorrectCashRef.current(setCoinBalanceRef.current, {
+        gameId: "roundcheck",
+      });
     })();
   }, []);
 
@@ -146,7 +162,15 @@ export function useRoundCheck() {
         const guesses = [...s.guesses, { value, hint }];
 
         if (hint === "correct") {
-          const piece = payoutFor(guesses, answer, true);
+          const instant =
+            typeof performance !== "undefined" &&
+            performance.now() - puzzleShownAt.current < 700;
+          if (guard.current.markAction(instant)) {
+            farmRef.current?.reportInstantSpam();
+          }
+          puzzleDoneAt.current =
+            typeof performance !== "undefined" ? performance.now() : 0;
+          const piece = canPayRef.current ? payoutFor(guesses, answer, true) : 0;
           award(piece);
           const solves = s.solves + 1;
           const perfectSoFar = s.perfectSoFar && guesses.length === 1;
@@ -165,7 +189,17 @@ export function useRoundCheck() {
         }
 
         if (guesses.length >= ROUND_CHECK_MAX_GUESSES) {
-          const piece = payoutFor(guesses, answer, false);
+          const instant =
+            typeof performance !== "undefined" &&
+            performance.now() - puzzleShownAt.current < 700;
+          if (guard.current.markAction(instant)) {
+            farmRef.current?.reportInstantSpam();
+          }
+          puzzleDoneAt.current =
+            typeof performance !== "undefined" ? performance.now() : 0;
+          const piece = canPayRef.current
+            ? payoutFor(guesses, answer, false)
+            : 0;
           award(piece);
           const lives = s.lives - 1;
           const dead = lives <= 0;
@@ -193,6 +227,14 @@ export function useRoundCheck() {
   const continueRun = useCallback(() => {
     setState((s) => {
       if (s.status !== "puzzle_done") return s;
+      const instantNext =
+        typeof performance !== "undefined" &&
+        performance.now() - puzzleDoneAt.current < 350;
+      if (guard.current.markNext(instantNext)) {
+        farmRef.current?.reportInstantSpam();
+      }
+      puzzleShownAt.current =
+        typeof performance !== "undefined" ? performance.now() : 0;
       return startPuzzle(s.recent, {
         reward: s.reward,
         solves: s.solves,
@@ -204,6 +246,9 @@ export function useRoundCheck() {
   }, []);
 
   const playAgain = useCallback(() => {
+    guard.current.reset();
+    puzzleShownAt.current =
+      typeof performance !== "undefined" ? performance.now() : 0;
     setState((s) => makeRun(s.recent));
   }, []);
 

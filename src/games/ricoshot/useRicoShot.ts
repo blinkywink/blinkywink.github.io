@@ -133,7 +133,7 @@ export function useRicoShot() {
   const award = useCallback((amount: number) => {
     if (amount <= 0) return;
     void (async () => {
-      const balance = await awardCoins(amount);
+      const balance = await awardCoins(amount, "heliumpop");
       if (balance != null) setCoinBalanceRef.current(balance);
       void onCorrectCashRef.current(setCoinBalanceRef.current);
     })();

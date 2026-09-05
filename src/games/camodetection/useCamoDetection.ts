@@ -221,7 +221,7 @@ export function useCamoDetection() {
       };
     });
     if (awardPoints > 0) {
-      void awardCoins(awardPoints).then((balance) => {
+      void awardCoins(awardPoints, "camodetection").then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
       void onCorrectCashRef.current(setCoinBalanceRef.current);

@@ -209,7 +209,7 @@ export function useGeoguessr() {
       });
       const bonus = perfect ? perfectRunBonus(partial.score) : 0;
       if (bonus > 0) {
-        void awardCoins(bonus).then((balance) => {
+        void awardCoins(bonus, "geoguessr").then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
       }
@@ -413,10 +413,10 @@ export function useGeoguessr() {
         feedback: { kind: "correct", breakdown, streak },
       });
 
-      void awardCoins(breakdown.points).then((balance) => {
+      void awardCoins(breakdown.points, "geoguessr").then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
-      void onCorrectCash(setCoinBalanceRef.current);
+      void onCorrectCash(setCoinBalanceRef.current, { gameId: "geoguessr" });
       onGwenStreakProc(streak);
       return;
     }

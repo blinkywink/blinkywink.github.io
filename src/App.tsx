@@ -32,6 +32,7 @@ import { MobileInboxHost } from "./components/MobileInboxStrip";
 import { TradeRoom } from "./components/TradeRoom";
 import { T5GridExport } from "./components/T5GridExport";
 import { HubPeekExport } from "./components/HubPeekExport";
+import { GameFarmGate } from "./components/GameFarmGate";
 import { RouteFallback } from "./components/RouteFallback";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { DesktopOnlineGate } from "./components/DesktopOnlineGate";
@@ -361,7 +362,7 @@ function AppShell() {
         });
       }
       if (!result.awarded || result.amount <= 0) return;
-      const balance = await awardCoins(result.amount);
+      const balance = await awardCoins(result.amount, game);
       if (balance != null) setCoinBalance(balance);
       setBonusToast(`+${result.amount.toLocaleString()} featured bonus`);
       window.setTimeout(() => setBonusToast(null), 3200);
@@ -801,11 +802,13 @@ function AppShell() {
             path="/zoomed"
             element={
               <LazyGame>
+                <GameFarmGate game="zoomed">
                 <ZoomedGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.zoomed}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -813,11 +816,13 @@ function AppShell() {
             path="/geoguessr"
             element={
               <LazyGame>
+                <GameFarmGate game="geoguessr">
                 <GeoguessrGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.geoguessr}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -825,11 +830,13 @@ function AppShell() {
             path="/pricecheck"
             element={
               <LazyGame>
+                <GameFarmGate game="pricecheck">
                 <PriceCheckGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.pricecheck}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -837,11 +844,13 @@ function AppShell() {
             path="/orderup"
             element={
               <LazyGame>
+                <GameFarmGate game="orderup">
                 <OrderUpGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.orderup}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -849,11 +858,13 @@ function AppShell() {
             path="/bloonle"
             element={
               <LazyGame>
+                <GameFarmGate game="bloonle">
                 <BloonleGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onBloonleRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -861,11 +872,13 @@ function AppShell() {
             path="/roundcheck"
             element={
               <LazyGame>
+                <GameFarmGate game="roundcheck">
                 <RoundCheckGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onRoundCheckRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -873,11 +886,13 @@ function AppShell() {
             path="/heliumpop"
             element={
               <LazyGame>
+                <GameFarmGate game="heliumpop">
                 <RicoShotGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onRicoShotRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -886,11 +901,13 @@ function AppShell() {
             path="/camodetection"
             element={
               <LazyGame>
+                <GameFarmGate game="camodetection">
                 <CamoDetectionGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onCamoDetectionRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -898,11 +915,13 @@ function AppShell() {
             path="/bloonssweeper"
             element={
               <LazyGame>
+                <GameFarmGate game="bloonssweeper">
                 <BloonsSweeperGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onSweeperRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -910,11 +929,13 @@ function AppShell() {
             path="/blowfree"
             element={
               <LazyGame>
+                <GameFarmGate game="blowfree">
                 <BlowFreeGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onBlowFreeRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -922,11 +943,13 @@ function AppShell() {
             path="/bananacatch"
             element={
               <LazyGame>
+                <GameFarmGate game="bananacatch">
                 <BananaCatchGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onBananaCatchRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />
@@ -934,11 +957,13 @@ function AppShell() {
             path="/bloonhero"
             element={
               <LazyGame>
+                <GameFarmGate game="bloonhero">
                 <BloonHeroGame
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={onBloonHeroRunEnd}
                 />
+                </GameFarmGate>
               </LazyGame>
             }
           />

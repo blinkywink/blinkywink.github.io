@@ -13,6 +13,8 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import { formatCash, type PricedCombo } from "../pricecheck/costs";
 import { useOrderUp } from "./useOrderUp";
+import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
+import { useGameFarm } from "../../components/GameFarmGate";
 
 type Props = {
   onBack: () => void;
@@ -96,6 +98,15 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
     timerSeconds,
   } = useOrderUp();
   const { profile } = useAuth();
+  const farm = useGameFarm();
+  const guard = useRef(
+    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+  );
+  const roundShownAt = useRef(
+    typeof performance !== "undefined" ? performance.now() : 0,
+  );
+  const revealAt = useRef(0);
+  const didDrag = useRef(false);
 
   const dragFrom = useRef<number | null>(null);
   const runEndNotified = useRef(false);
@@ -104,6 +115,18 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
 
   const revealed = state.phase === "reveal";
   const playing = state.phase === "playing";
+
+  useEffect(() => {
+    if (state.phase === "playing") {
+      roundShownAt.current =
+        typeof performance !== "undefined" ? performance.now() : 0;
+      didDrag.current = false;
+    }
+    if (state.phase === "reveal") {
+      revealAt.current =
+        typeof performance !== "undefined" ? performance.now() : 0;
+    }
+  }, [state.phase, state.round.round]);
 
   useEffect(() => {
     if (state.phase === "results" && !runEndNotified.current) {
@@ -143,6 +166,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
       e.preventDefault();
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
       dragFrom.current = index;
+      didDrag.current = true;
       setDragId(state.order[index]?.id ?? null);
     },
     [playing, state.order],
@@ -182,18 +206,35 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
     setDragId(null);
   }, [state.round.round, state.phase]);
 
+  const onLockIn = useCallback(() => {
+    const instant =
+      !didDrag.current &&
+      typeof performance !== "undefined" &&
+      performance.now() - roundShownAt.current < 600;
+    if (guard.current.markAction(instant)) farm?.reportInstantSpam();
+    lockIn();
+  }, [farm, lockIn]);
+
+  const onGoNext = useCallback(() => {
+    const instant =
+      typeof performance !== "undefined" &&
+      performance.now() - revealAt.current < 300;
+    if (guard.current.markNext(instant)) farm?.reportInstantSpam();
+    goNext();
+  }, [farm, goNext]);
+
   useEffect(() => {
     if (state.phase !== "reveal") return;
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        goNext();
+        onGoNext();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [state.phase, goNext]);
+  }, [state.phase, onGoNext]);
 
   if (state.phase === "results" && state.lastRun) {
     return (
@@ -311,7 +352,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
             <button
               type="button"
               className="btn btn--primary btn--lg"
-              onClick={lockIn}
+              onClick={onLockIn}
             >
               LOCK IN
             </button>
@@ -324,7 +365,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
           <button
             type="button"
             className="btn btn--primary btn--lg orderup-next-bar__btn"
-            onClick={goNext}
+            onClick={onGoNext}
             autoFocus
           >
             {endLabel}

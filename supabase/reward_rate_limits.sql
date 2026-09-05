@@ -1,4 +1,5 @@
--- Rate-limit client-callable award_coins / award_cards (anti-devtools mint).
+-- Client-callable award_coins / award_cards.
+-- Cash has no daily/minute cap (ban abusers by hand). Card awards still rate-limited.
 -- Keeps the same RPC signatures so the web/desktop clients need no changes.
 -- Safe to re-run.
 
@@ -34,6 +35,7 @@ end $$;
 
 -- Generous enough for heavy play + guest merge chunks; stops unlimited minting.
 -- Per-call coin max stays 10_000 (Bloon Hero / merge chunks).
+-- Daily / per-minute Cash caps are off — ban abusers by hand.
 create or replace function public.award_coins(p_amount integer)
 returns bigint
 language plpgsql
@@ -45,10 +47,8 @@ declare
   new_balance bigint;
   today date := (timezone('utc', now()))::date;
   b public.reward_buckets%rowtype;
-  -- Caps (tune here only)
+  -- Per-call sanity bound only (Bloon Hero / merge chunks). No daily/minute cap.
   max_per_call constant integer := 10000;
-  max_per_minute constant integer := 120000;
-  max_per_day constant integer := 1000000;
 begin
   if uid is null then
     uid := auth.uid();
@@ -75,14 +75,6 @@ begin
   if b.coin_window_start < now() - interval '60 seconds' then
     b.coin_window_start := now();
     b.coins_in_window := 0;
-  end if;
-
-  if b.coins_in_window + p_amount > max_per_minute then
-    raise exception 'Cash earn rate limit - try again in a minute';
-  end if;
-
-  if b.coins_today + p_amount > max_per_day then
-    raise exception 'Daily Cash earn limit reached';
   end if;
 
   update public.reward_buckets

@@ -2,6 +2,7 @@ import { getAccessToken, supabase } from "./supabase";
 import { loadAppSession } from "../auth/session";
 import type { GamePath } from "./routes";
 import { GAME_PATHS } from "./routes";
+import { noteGameFarmRun, emitGameFarm, type GameFarmSnapshot } from "./gameFarm";
 
 const LS_KEY = "bloon-arcade:account-stats:guest";
 
@@ -162,7 +163,7 @@ async function bump(
 export async function recordGameRun(
   game: GamePath,
   cleared: boolean,
-): Promise<void> {
+): Promise<GameFarmSnapshot | null> {
   await bump(
     {
       gamesPlayed: 1,
@@ -170,6 +171,13 @@ export async function recordGameRun(
     },
     game,
   );
+  try {
+    const farm = await noteGameFarmRun(game, cleared);
+    emitGameFarm(farm);
+    return farm;
+  } catch {
+    return null;
+  }
 }
 
 /** Pack reveal finished / cards drawn. */

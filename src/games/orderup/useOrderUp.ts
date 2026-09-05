@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { awardCoins } from "../../lib/awardCoins";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
+import { useGameFarm } from "../../components/GameFarmGate";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import type { PricedCombo } from "../pricecheck/costs";
@@ -134,6 +135,7 @@ function initialState(): State {
 
 export function useOrderUp() {
   const { profile, setCoinBalance } = useAuth();
+  const farm = useGameFarm();
   const { streakBonusPct, onCorrectCash, onGwenStreakProc } = useQuizHeroFx();
   const [state, setState] = useState<State>(initialState);
   const setCoinBalanceRef = useRef(setCoinBalance);
@@ -143,6 +145,8 @@ export function useOrderUp() {
   const stateRef = useRef(state);
   stateRef.current = state;
   const submitting = useRef(false);
+  const canPayRef = useRef(true);
+  canPayRef.current = farm?.canPay !== false;
 
   const setOrder = useCallback(
     (next: PricedCombo[] | ((prev: PricedCombo[]) => PricedCombo[])) => {
@@ -176,12 +180,12 @@ export function useOrderUp() {
     });
     const lives = ok ? s.lives : s.lives - 1;
 
-    if (points > 0) {
-      void awardCoins(points).then((balance) => {
+    if (points > 0 && canPayRef.current) {
+      void awardCoins(points, "orderup").then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
       if (ok) {
-        void onCorrectCash(setCoinBalanceRef.current);
+        void onCorrectCash(setCoinBalanceRef.current, { gameId: "orderup" });
         if (streak >= 2 && streakBonusPct > 0) {
           onGwenStreakProc(streak);
         }
@@ -244,7 +248,8 @@ export function useOrderUp() {
     setState((s) => {
       if (s.phase !== "reveal") return s;
       const awardBonus = (bonus: number) => {
-        void awardCoins(bonus).then((balance) => {
+        if (!canPayRef.current) return;
+        void awardCoins(bonus, "orderup").then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
       };

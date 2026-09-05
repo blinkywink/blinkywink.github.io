@@ -273,6 +273,22 @@ export type Database = {
         Args: { p_amount: number };
         Returns: number;
       };
+      award_game_coins: {
+        Args: { p_amount: number; p_game_id: string };
+        Returns: unknown;
+      };
+      get_game_farm: {
+        Args: { p_game_id?: string | null };
+        Returns: unknown;
+      };
+      note_game_run: {
+        Args: { p_game_id: string; p_won: boolean };
+        Returns: unknown;
+      };
+      flag_game_spam: {
+        Args: { p_game_id: string };
+        Returns: unknown;
+      };
       spend_coins: {
         Args: { p_amount: number; p_shop?: boolean };
         Returns: number;

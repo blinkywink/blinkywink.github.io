@@ -214,7 +214,7 @@ export function useBlowFree() {
       const reward =
         mode === "daily" ? blowFreeDailyReward() : blowFreePracticeReward();
       if (reward <= 0) return { awarded: true, reward: 0 };
-      const balance = await awardCoins(reward);
+      const balance = await awardCoins(reward, "blowfree");
       if (balance != null) setCoinBalanceRef.current(balance);
       return { awarded: true, reward };
     },

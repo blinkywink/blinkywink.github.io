@@ -61,7 +61,7 @@ export function useBloonsSweeper() {
 
   const awardWin = useCallback(async (reward: number) => {
     if (reward <= 0) return;
-    const balance = await awardCoins(reward);
+    const balance = await awardCoins(reward, "bloonssweeper");
     if (balance != null) setCoinBalanceRef.current(balance);
   }, []);
 

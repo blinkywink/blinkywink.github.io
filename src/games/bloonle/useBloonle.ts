@@ -233,14 +233,14 @@ export function useBloonle() {
         if (claimed.coins != null) setCoinBalanceRef.current(claimed.coins);
         void refreshProfile();
         const reward = claimed.already ? 0 : claimed.amount;
-        if (reward > 0) void onCorrectCash(setCoinBalanceRef.current);
+        if (reward > 0) void onCorrectCash(setCoinBalanceRef.current, { gameId: "bloonle" });
         return { awarded: true, reward };
       }
       const reward = bloonleSolveReward(mode, _guessCount);
       if (reward <= 0) return { awarded: true, reward: 0 };
-      const balance = await awardCoins(reward);
+      const balance = await awardCoins(reward, "bloonle");
       if (balance != null) setCoinBalanceRef.current(balance);
-      void onCorrectCash(setCoinBalanceRef.current);
+      void onCorrectCash(setCoinBalanceRef.current, { gameId: "bloonle" });
       return { awarded: true, reward };
     },
     [onCorrectCash, refreshProfile],

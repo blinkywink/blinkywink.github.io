@@ -77,8 +77,6 @@ declare
   today date := (timezone('utc', now()))::date;
   b public.reward_buckets%rowtype;
   max_per_call constant integer := 10000;
-  max_per_minute constant integer := 120000;
-  max_per_day constant integer := 1000000;
 begin
   if uid is null then
     uid := auth.uid();
@@ -105,14 +103,6 @@ begin
   if b.coin_window_start < now() - interval '60 seconds' then
     b.coin_window_start := now();
     b.coins_in_window := 0;
-  end if;
-
-  if b.coins_in_window + p_amount > max_per_minute then
-    raise exception 'Cash earn rate limit - try again in a minute';
-  end if;
-
-  if b.coins_today + p_amount > max_per_day then
-    raise exception 'Daily Cash earn limit reached';
   end if;
 
   update public.reward_buckets

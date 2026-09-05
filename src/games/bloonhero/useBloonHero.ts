@@ -299,7 +299,7 @@ export function useBloonHero() {
     const amount = pendingCashRef.current;
     if (amount <= 0) return;
     pendingCashRef.current = 0;
-    const balance = await awardCoins(amount);
+    const balance = await awardCoins(amount, "bloonhero");
     if (balance != null) setCoinBalanceRef.current(balance);
   }, []);
 
@@ -714,7 +714,7 @@ export function useBloonHero() {
       }
       grant = Math.max(0, Math.round(grant));
       if (grant > 0) {
-        const balance = await awardCoins(grant);
+        const balance = await awardCoins(grant, "bloonhero");
         if (balance != null) setCoinBalanceRef.current(balance);
       }
     })();

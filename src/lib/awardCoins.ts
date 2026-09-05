@@ -6,11 +6,21 @@ import {
   loadAppSession,
   rpcErrorText,
 } from "../auth/session";
+import type { GamePath } from "./routes";
+import { awardGameCoins } from "./gameFarm";
 
 /** Credit Cash - cloud if signed in, guest cookie wallet otherwise. */
-export async function awardCoins(amount: number): Promise<number | null> {
+export async function awardCoins(
+  amount: number,
+  gameId?: GamePath | null,
+): Promise<number | null> {
   if (!Number.isFinite(amount) || amount < 1) return null;
   const rounded = Math.round(amount);
+
+  if (gameId) {
+    const snap = await awardGameCoins(rounded, gameId);
+    return snap.coins;
+  }
 
   if (!getAccessToken() || !loadAppSession()) {
     return awardGuestCoins(rounded);

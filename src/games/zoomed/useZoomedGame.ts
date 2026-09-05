@@ -204,7 +204,7 @@ export function useZoomedGame() {
       });
       const bonus = perfect ? perfectRunBonus(partial.score) : 0;
       if (bonus > 0) {
-        void awardCoins(bonus).then((balance) => {
+        void awardCoins(bonus, "zoomed").then((balance) => {
           if (balance != null) setCoinBalanceRef.current(balance);
         });
       }
@@ -409,10 +409,10 @@ export function useZoomedGame() {
         feedback: { kind: "correct", breakdown, streak },
       });
 
-      void awardCoins(breakdown.points).then((balance) => {
+      void awardCoins(breakdown.points, "zoomed").then((balance) => {
         if (balance != null) setCoinBalance(balance);
       });
-      void onCorrectCash(setCoinBalance);
+      void onCorrectCash(setCoinBalance, { gameId: "zoomed" });
       if (streak >= 2 && streakBonusPct > 0) {
         onGwenStreakProc(streak);
       }

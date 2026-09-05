@@ -7,6 +7,7 @@ import {
   rollChance,
   type EquippedHeroContext,
 } from "./heroEffects";
+import type { GamePath } from "./routes";
 import type { PackPullMods, DupCashMods } from "./packPull";
 
 /** Shared helpers for signed-in equipped hero procs (scaled by level). */
@@ -30,12 +31,12 @@ export function useQuizHeroFx() {
   const onCorrectCash = useCallback(
     async (
       setCoinBalance: (n: number) => void,
-      opts?: { alreadyAwarded?: number },
+      opts?: { alreadyAwarded?: number; gameId?: GamePath },
     ) => {
       if (equipped?.heroId !== "quincy" || !fx) return;
       const bonus = fx.bonusCashPerCorrect;
       if (bonus <= 0) return;
-      const bal = await awardCoins(bonus);
+      const bal = await awardCoins(bonus, opts?.gameId);
       if (bal != null) setCoinBalance(bal);
       notifyHeroProc({
         heroId: "quincy",

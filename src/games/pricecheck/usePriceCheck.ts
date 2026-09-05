@@ -205,10 +205,10 @@ export function usePriceCheck() {
     paidAnswered.current = state.answered;
     const fb = state.feedback;
     if (fb.correct && fb.points > 0) {
-      void awardCoins(fb.points).then((balance) => {
+      void awardCoins(fb.points, "pricecheck").then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
-      void onCorrectCash(setCoinBalanceRef.current);
+      void onCorrectCash(setCoinBalanceRef.current, { gameId: "pricecheck" });
       if (state.streak >= 2 && streakBonusRef.current > 0) {
         onGwenStreakProc(state.streak);
       }
@@ -239,7 +239,7 @@ export function usePriceCheck() {
     perfectPaid.current = true;
     const bonus = perfectRunBonus(state.score);
     if (bonus <= 0) return;
-    void awardCoins(bonus).then((balance) => {
+    void awardCoins(bonus, "pricecheck").then((balance) => {
       if (balance != null) setCoinBalanceRef.current(balance);
     });
   }, [state.phase, state.perfectRun, state.score]);

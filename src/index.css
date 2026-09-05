@@ -5124,6 +5124,79 @@ body:has(.roundcheck-page) {
   color: rgba(255, 248, 232, 0.92);
 }
 
+.game-farm-banner {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  margin: 0 auto 0.45rem;
+  max-width: 36rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(18, 28, 42, 0.92);
+  border: 1px solid rgba(240, 200, 74, 0.35);
+  color: rgba(255, 248, 232, 0.92);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.game-farm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(6, 10, 18, 0.72);
+}
+
+.game-farm-overlay__panel {
+  width: min(26rem, calc(100vw - 1.5rem));
+  display: grid;
+  gap: 0.7rem;
+  padding: 1.35rem 1.25rem 1.2rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(36, 52, 72, 0.98) 0%,
+    rgba(14, 22, 34, 0.98) 100%
+  );
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.game-farm-overlay__panel h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.game-farm-overlay__panel p {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.game-farm-overlay__progress {
+  font-weight: 800;
+  color: #f0c84a !important;
+}
+
+.game-farm-overlay--pause {
+  z-index: 1900;
+}
+
+.game-farm-overlay__row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 820px) {
   .game-header__title {
     display: none;

@@ -4,6 +4,9 @@
 alter table public.profiles
   add column if not exists account_stats jsonb not null default '{}'::jsonb;
 
+alter table public.profiles
+  add column if not exists game_farm jsonb not null default '{}'::jsonb;
+
 -- Block client writes to account_stats (same gate as coins / free packs).
 create or replace function public.protect_profile_coins()
 returns trigger
@@ -38,6 +41,10 @@ begin
 
   if new.account_stats is distinct from old.account_stats then
     new.account_stats := old.account_stats;
+  end if;
+
+  if new.game_farm is distinct from old.game_farm then
+    new.game_farm := old.game_farm;
   end if;
 
   new.updated_at := now();
