@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import { useGameFarm } from "../../components/GameFarmGate";
 import { awardCoins } from "../../lib/awardCoins";
+import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -183,6 +185,7 @@ function advanceReveal(s: State, prepared?: PriceRound | null): State {
 
 export function usePriceCheck() {
   const { profile, setCoinBalance } = useAuth();
+  const farm = useGameFarm();
   const { streakBonusPct, onCorrectCash, onGwenStreakProc } = useQuizHeroFx();
   const [state, setState] = useState<State>(initialState);
   const setCoinBalanceRef = useRef(setCoinBalance);
@@ -191,13 +194,42 @@ export function usePriceCheck() {
   profileRef.current = profile;
   const streakBonusRef = useRef(streakBonusPct);
   streakBonusRef.current = streakBonusPct;
+  const canPayRef = useRef(true);
+  canPayRef.current = farm?.canPay !== false;
+  const farmRef = useRef(farm);
+  farmRef.current = farm;
+  const guard = useRef(
+    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+  );
+  const roundShownAt = useRef(
+    typeof performance !== "undefined" ? performance.now() : 0,
+  );
+  const revealAt = useRef(0);
   const paidAnswered = useRef(0);
   const perfectPaid = useRef(false);
   const nextRoundRef = useRef<PriceRound | null>(null);
 
   const guess = useCallback((side: Guess) => {
+    const instant =
+      typeof performance !== "undefined" &&
+      performance.now() - roundShownAt.current < 600;
+    if (guard.current.markAction(instant)) {
+      farmRef.current?.reportInstantSpam();
+    }
     setState((s) => applyGuess(s, side, false, streakBonusRef.current));
   }, []);
+
+  useEffect(() => {
+    if (state.phase === "playing") {
+      roundShownAt.current =
+        typeof performance !== "undefined" ? performance.now() : 0;
+      guard.current.reset();
+    }
+    if (state.phase === "reveal") {
+      revealAt.current =
+        typeof performance !== "undefined" ? performance.now() : 0;
+    }
+  }, [state.phase, state.round.round]);
 
   useEffect(() => {
     if (state.phase !== "reveal" || !state.feedback) return;
@@ -205,10 +237,12 @@ export function usePriceCheck() {
     paidAnswered.current = state.answered;
     const fb = state.feedback;
     if (fb.correct && fb.points > 0) {
-      void awardCoins(fb.points, "pricecheck").then((balance) => {
-        if (balance != null) setCoinBalanceRef.current(balance);
-      });
-      void onCorrectCash(setCoinBalanceRef.current, { gameId: "pricecheck" });
+      if (canPayRef.current) {
+        void awardCoins(fb.points, "pricecheck").then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
+        });
+        void onCorrectCash(setCoinBalanceRef.current, { gameId: "pricecheck" });
+      }
       if (state.streak >= 2 && streakBonusRef.current > 0) {
         onGwenStreakProc(state.streak);
       }
@@ -238,7 +272,7 @@ export function usePriceCheck() {
     if (!state.perfectRun || perfectPaid.current) return;
     perfectPaid.current = true;
     const bonus = perfectRunBonus(state.score);
-    if (bonus <= 0) return;
+    if (bonus <= 0 || !canPayRef.current) return;
     void awardCoins(bonus, "pricecheck").then((balance) => {
       if (balance != null) setCoinBalanceRef.current(balance);
     });
@@ -292,6 +326,12 @@ export function usePriceCheck() {
   }, [state.phase, state.round.round]);
 
   const goNext = useCallback(() => {
+    const instant =
+      typeof performance !== "undefined" &&
+      performance.now() - revealAt.current < 300;
+    if (guard.current.markNext(instant)) {
+      farmRef.current?.reportInstantSpam();
+    }
     setState((s) => {
       const prepared = nextRoundRef.current;
       nextRoundRef.current = null;

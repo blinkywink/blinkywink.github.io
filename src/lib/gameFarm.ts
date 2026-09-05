@@ -1,13 +1,24 @@
 import { getAccessToken, supabase } from "./supabase";
 import { awardGuestCoins, loadGuestWallet } from "./guestWallet";
-import { emitSessionInvalid, isNotAuthenticatedError, loadAppSession, rpcErrorText } from "../auth/session";
+import {
+  emitSessionInvalid,
+  isNotAuthenticatedError,
+  loadAppSession,
+  rpcErrorText,
+} from "../auth/session";
 import { GAME_PATHS, type GamePath } from "./routes";
 import { GAME_STAT_LABELS } from "./accountStats";
 
 const LS_KEY = "bloon-arcade:game-farm";
-export const FARM_UNIQUE_WINS_NEED = 4;
+/** Same game this many completed runs in a row → short No Cash cool-off. */
 export const FARM_STREAK_PAUSE = 5;
+/** Cool-off after farming one game 5× in a row. */
+export const FARM_STREAK_COOL_MS = 2 * 60 * 1000;
+/** Cool-off after instant-click / fast-award spam. */
 export const FARM_SPAM_LOCK_MS = 20 * 60 * 1000;
+
+/** @deprecated unique-wins unlock removed; kept for old snapshots. */
+export const FARM_UNIQUE_WINS_NEED = 0;
 
 export type GameFarmReason = "ok" | "paused" | "spam";
 
@@ -61,25 +72,12 @@ function emptySnap(game: GamePath | null = null): GameFarmSnapshot {
     justPaused: false,
     game,
     have: 0,
-    need: FARM_UNIQUE_WINS_NEED,
+    need: 0,
     paused: {},
     spamUntil: {},
     lastGame: null,
     streak: 0,
   };
-}
-
-function parsePaused(raw: unknown): Partial<Record<GamePath, GamePath[]>> {
-  const out: Partial<Record<GamePath, GamePath[]>> = {};
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
-  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    if (!isGamePath(k)) continue;
-    const wins = Array.isArray(v)
-      ? v.map(String).filter(isGamePath).filter((id) => id !== k)
-      : [];
-    out[k] = [...new Set(wins)];
-  }
-  return out;
 }
 
 function parseSpam(raw: unknown): Partial<Record<GamePath, string>> {
@@ -88,11 +86,22 @@ function parseSpam(raw: unknown): Partial<Record<GamePath, string>> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
     if (!isGamePath(k)) continue;
-    const ts = Date.parse(String(v ?? ""));
+    const ts = Date.parse(String(v ?? "").replace(" ", "T"));
     if (!Number.isFinite(ts) || ts <= now) continue;
     out[k] = new Date(ts).toISOString();
   }
   return out;
+}
+
+function extendMute(
+  spamUntil: Partial<Record<GamePath, string>>,
+  game: GamePath,
+  untilMs: number,
+): Partial<Record<GamePath, string>> {
+  const nextIso = new Date(untilMs).toISOString();
+  const cur = spamUntil[game];
+  if (cur && Date.parse(cur) >= untilMs) return spamUntil;
+  return { ...spamUntil, [game]: nextIso };
 }
 
 function snapshotFromStored(
@@ -101,24 +110,20 @@ function snapshotFromStored(
   extra: Partial<GameFarmSnapshot> = {},
 ): GameFarmSnapshot {
   const spamUntil = parseSpam(st.spamUntil);
-  const paused = st.paused;
   const gid = game && isGamePath(game) ? game : null;
-  const spam = Boolean(gid && spamUntil[gid]);
-  const isPaused = Boolean(gid && paused[gid]);
-  const wins = gid ? (paused[gid] ?? []) : [];
+  const muted = Boolean(gid && spamUntil[gid]);
   let reason: GameFarmReason = extra.reason ?? "ok";
-  if (spam) reason = "spam";
-  else if (isPaused) reason = "paused";
+  if (muted && reason === "ok") reason = "spam";
   return {
     coins: extra.coins ?? null,
     paid: extra.paid ?? 0,
-    canPay: extra.canPay ?? (!spam && !isPaused),
-    reason,
+    canPay: extra.canPay ?? !muted,
+    reason: muted ? reason : "ok",
     justPaused: extra.justPaused ?? false,
     game: gid,
-    have: wins.length,
-    need: FARM_UNIQUE_WINS_NEED,
-    paused,
+    have: 0,
+    need: 0,
+    paused: {},
     spamUntil,
     lastGame: st.lastGame,
     streak: st.streak,
@@ -126,16 +131,18 @@ function snapshotFromStored(
 }
 
 function readGuest(): StoredFarm {
-  if (typeof window === "undefined") return { ...EMPTY_STORED, paused: {}, spamUntil: {}, lastPayAt: {}, fastStreak: {} };
+  if (typeof window === "undefined") {
+    return { ...EMPTY_STORED };
+  }
   try {
     const raw = window.localStorage.getItem(LS_KEY);
-    if (!raw) return { ...EMPTY_STORED, paused: {}, spamUntil: {}, lastPayAt: {}, fastStreak: {} };
+    if (!raw) return { ...EMPTY_STORED };
     const obj = JSON.parse(raw) as Partial<StoredFarm>;
     const lastGame = isGamePath(obj.lastGame ?? "") ? obj.lastGame! : null;
     return {
       lastGame,
       streak: Math.max(0, Math.floor(Number(obj.streak) || 0)),
-      paused: parsePaused(obj.paused),
+      paused: {},
       spamUntil: parseSpam(obj.spamUntil),
       lastPayAt:
         obj.lastPayAt && typeof obj.lastPayAt === "object"
@@ -147,7 +154,7 @@ function readGuest(): StoredFarm {
           : {},
     };
   } catch {
-    return { ...EMPTY_STORED, paused: {}, spamUntil: {}, lastPayAt: {}, fastStreak: {} };
+    return { ...EMPTY_STORED };
   }
 }
 
@@ -160,7 +167,10 @@ function writeGuest(st: StoredFarm) {
   }
 }
 
-function parseSnap(raw: unknown, fallbackGame: GamePath | null): GameFarmSnapshot {
+function parseSnap(
+  raw: unknown,
+  fallbackGame: GamePath | null,
+): GameFarmSnapshot {
   if (!raw || typeof raw !== "object") return emptySnap(fallbackGame);
   const obj = raw as Record<string, unknown>;
   const game = isGamePath(String(obj.game ?? ""))
@@ -169,6 +179,8 @@ function parseSnap(raw: unknown, fallbackGame: GamePath | null): GameFarmSnapsho
   const reasonRaw = String(obj.reason ?? "ok");
   const reason: GameFarmReason =
     reasonRaw === "paused" || reasonRaw === "spam" ? reasonRaw : "ok";
+  const spamUntil = parseSpam(obj.spamUntil);
+  const muted = Boolean(game && spamUntil[game]);
   const coins =
     typeof obj.coins === "number" && Number.isFinite(obj.coins)
       ? obj.coins
@@ -178,14 +190,14 @@ function parseSnap(raw: unknown, fallbackGame: GamePath | null): GameFarmSnapsho
   return {
     coins,
     paid: Math.max(0, Math.floor(Number(obj.paid) || 0)),
-    canPay: obj.canPay !== false && reason === "ok",
-    reason,
+    canPay: obj.canPay !== false && !muted,
+    reason: muted ? (reason === "ok" ? "spam" : reason) : "ok",
     justPaused: Boolean(obj.justPaused),
     game,
-    have: Math.max(0, Math.floor(Number(obj.have) || 0)),
-    need: Math.max(1, Math.floor(Number(obj.need) || FARM_UNIQUE_WINS_NEED)),
-    paused: parsePaused(obj.paused),
-    spamUntil: parseSpam(obj.spamUntil),
+    have: 0,
+    need: 0,
+    paused: {},
+    spamUntil,
     lastGame: isGamePath(String(obj.lastGame ?? ""))
       ? (obj.lastGame as GamePath)
       : null,
@@ -193,35 +205,42 @@ function parseSnap(raw: unknown, fallbackGame: GamePath | null): GameFarmSnapsho
   };
 }
 
-function guestNoteRun(game: GamePath, won: boolean): GameFarmSnapshot {
+function guestNoteRun(game: GamePath, _won: boolean): GameFarmSnapshot {
   const st = readGuest();
-  const paused = { ...st.paused };
-  if (won) {
-    for (const [pausedId, wins] of Object.entries(paused) as [GamePath, GamePath[]][]) {
-      if (pausedId === game) continue;
-      const next = [...new Set([...(wins ?? []), game])];
-      if (next.length >= FARM_UNIQUE_WINS_NEED) delete paused[pausedId];
-      else paused[pausedId] = next;
-    }
-  }
-  const streak = st.lastGame === game ? st.streak + 1 : 1;
+  let streak = st.lastGame === game ? st.streak + 1 : 1;
   let justPaused = false;
-  if (streak >= FARM_STREAK_PAUSE && !paused[game]) {
-    paused[game] = [];
+  let spamUntil = { ...st.spamUntil };
+  if (streak >= FARM_STREAK_PAUSE) {
+    spamUntil = extendMute(
+      spamUntil,
+      game,
+      Date.now() + FARM_STREAK_COOL_MS,
+    );
     justPaused = true;
+    streak = 0;
   }
-  const next: StoredFarm = { ...st, lastGame: game, streak, paused };
+  const next: StoredFarm = {
+    ...st,
+    lastGame: game,
+    streak,
+    spamUntil,
+    paused: {},
+  };
   writeGuest(next);
-  return snapshotFromStored(next, game, { justPaused });
+  return snapshotFromStored(next, game, {
+    justPaused,
+    reason: justPaused ? "paused" : "ok",
+  });
 }
 
 function guestFlagSpam(game: GamePath): GameFarmSnapshot {
   const st = readGuest();
-  const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
-  const next: StoredFarm = {
-    ...st,
-    spamUntil: { ...st.spamUntil, [game]: until },
-  };
+  const spamUntil = extendMute(
+    st.spamUntil,
+    game,
+    Date.now() + FARM_SPAM_LOCK_MS,
+  );
+  const next: StoredFarm = { ...st, spamUntil };
   writeGuest(next);
   return snapshotFromStored(next, game, { reason: "spam", canPay: false });
 }
@@ -278,17 +297,22 @@ export async function noteGameFarmRun(
   game: GamePath,
   won: boolean,
 ): Promise<GameFarmSnapshot> {
-  if (!signedIn()) return guestNoteRun(game, won);
-  const { data, error } = await supabase.rpc("note_game_run", {
-    p_game_id: game,
-    p_won: won,
-  });
-  if (error) {
-    console.warn("note_game_run failed", error.message);
-    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    return emptySnap(game);
-  }
-  return parseSnap(data, game);
+  const snap = !signedIn()
+    ? guestNoteRun(game, won)
+    : await (async () => {
+        const { data, error } = await supabase.rpc("note_game_run", {
+          p_game_id: game,
+          p_won: won,
+        });
+        if (error) {
+          console.warn("note_game_run failed", error.message);
+          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+          return emptySnap(game);
+        }
+        return parseSnap(data, game);
+      })();
+  emitGameFarm(snap);
+  return snap;
 }
 
 export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
@@ -301,7 +325,7 @@ export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
         if (error) {
           console.warn("flag_game_spam failed", error.message);
           if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-          return guestFlagSpam(game);
+          return emptySnap(game);
         }
         return parseSnap(data, game);
       })();
@@ -317,18 +341,24 @@ export async function awardGameCoins(
   if (!Number.isFinite(rounded) || rounded < 1) {
     return { ...emptySnap(game), coins: loadGuestWallet().coins };
   }
-  if (!signedIn()) return guestTryPay(game, rounded);
-
-  const { data, error } = await supabase.rpc("award_game_coins", {
-    p_amount: rounded,
-    p_game_id: game,
-  });
-  if (error) {
-    console.warn("award_game_coins failed", error.message);
-    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    return emptySnap(game);
+  const snap = !signedIn()
+    ? guestTryPay(game, rounded)
+    : await (async () => {
+        const { data, error } = await supabase.rpc("award_game_coins", {
+          p_amount: rounded,
+          p_game_id: game,
+        });
+        if (error) {
+          console.warn("award_game_coins failed", error.message);
+          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+          return emptySnap(game);
+        }
+        return parseSnap(data, game);
+      })();
+  if (!snap.canPay || snap.reason !== "ok" || snap.justPaused) {
+    emitGameFarm(snap);
   }
-  return parseSnap(data, game);
+  return snap;
 }
 
 export function farmGameLabel(id: GamePath): string {
@@ -358,11 +388,11 @@ export function farmNoPayGames(
   snap: GameFarmSnapshot | null | undefined,
 ): GamePath[] {
   if (!snap) return [];
-  const out = new Set<GamePath>();
+  const out: GamePath[] = [];
   for (const id of GAME_PATHS) {
-    if (spamUnlockMs(snap, id) > 0 || snap.paused[id]) out.add(id);
+    if (spamUnlockMs(snap, id) > 0) out.push(id);
   }
-  return [...out];
+  return out;
 }
 
 export function emitGameFarm(snap: GameFarmSnapshot) {

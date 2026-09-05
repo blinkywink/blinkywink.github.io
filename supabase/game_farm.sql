@@ -1,6 +1,8 @@
--- Arcade farm brakes: pause Cash after 5 of the same game in a row until
--- you win 4 other unique games. Instant-click spam locks Round Check / Order Up.
--- Server-side so the client can't skip it. Safe to re-run.
+-- Arcade farm brakes:
+-- 1) Instant-click / fast-award spam → No Cash for 20 minutes
+-- 2) Same game 5 times in a row → No Cash for 2 minutes
+-- You can keep playing either way; Cash just stops until the timer ends.
+-- Safe to re-run.
 
 alter table public.profiles
   add column if not exists game_farm jsonb not null default '{}'::jsonb;
@@ -79,22 +81,25 @@ language plpgsql
 stable
 as $$
 declare
-  gid text;
-  other text;
-  wins jsonb;
-  paused jsonb := '{}'::jsonb;
+  cleaned jsonb;
+  last_game text;
+  streak integer := 0;
   spam jsonb := '{}'::jsonb;
   last_pay jsonb := '{}'::jsonb;
   fast jsonb := '{}'::jsonb;
-  cleaned jsonb := '{}'::jsonb;
-  last_game text;
-  streak integer;
-  arr text[];
+  gid text;
   ts text;
   n integer;
 begin
   if raw is null or jsonb_typeof(raw) <> 'object' then
-    raw := '{}'::jsonb;
+    return jsonb_build_object(
+      'lastGame', null,
+      'streak', 0,
+      'paused', '{}'::jsonb,
+      'spamUntil', '{}'::jsonb,
+      'lastPayAt', '{}'::jsonb,
+      'fastStreak', '{}'::jsonb
+    );
   end if;
 
   last_game := public.arcade_game_id(raw ->> 'lastGame');
@@ -105,28 +110,6 @@ begin
   end;
   if last_game is null then
     streak := 0;
-  end if;
-
-  if jsonb_typeof(raw -> 'paused') = 'object' then
-    for gid in select jsonb_object_keys(raw -> 'paused') loop
-      if public.arcade_game_id(gid) is null then
-        continue;
-      end if;
-      arr := '{}';
-      wins := (raw -> 'paused') -> gid;
-      if jsonb_typeof(wins) = 'array' then
-        for other in select jsonb_array_elements_text(wins) loop
-          other := public.arcade_game_id(other);
-          if other is null or other = gid then
-            continue;
-          end if;
-          if not (other = any (arr)) then
-            arr := arr || other;
-          end if;
-        end loop;
-      end if;
-      paused := paused || jsonb_build_object(gid, to_jsonb(arr));
-    end loop;
   end if;
 
   if jsonb_typeof(raw -> 'spamUntil') = 'object' then
@@ -140,7 +123,7 @@ begin
       end if;
       begin
         if ts::timestamptz > now() then
-          spam := spam || jsonb_build_object(gid, ts);
+          spam := spam || jsonb_build_object(gid, (ts::timestamptz));
         end if;
       exception when others then
         null;
@@ -185,7 +168,7 @@ begin
   cleaned := jsonb_build_object(
     'lastGame', last_game,
     'streak', streak,
-    'paused', paused,
+    'paused', '{}'::jsonb,
     'spamUntil', spam,
     'lastPayAt', last_pay,
     'fastStreak', fast
@@ -208,17 +191,11 @@ as $$
 declare
   gid text := public.arcade_game_id(p_game_id);
   st jsonb := public.normalize_game_farm(p_state);
-  wins jsonb := '[]'::jsonb;
-  have integer := 0;
   spam_until text;
-  paused boolean := false;
   spam boolean := false;
   reason text := coalesce(nullif(p_reason, ''), 'ok');
 begin
   if gid is not null then
-    wins := coalesce(st -> 'paused' -> gid, '[]'::jsonb);
-    have := coalesce(jsonb_array_length(wins), 0);
-    paused := (st -> 'paused') ? gid;
     spam_until := st -> 'spamUntil' ->> gid;
     if spam_until is not null then
       begin
@@ -230,21 +207,23 @@ begin
   end if;
 
   if spam then
-    reason := 'spam';
-  elsif paused and reason is distinct from 'spam' then
-    reason := 'paused';
+    if reason is distinct from 'paused' then
+      reason := 'spam';
+    end if;
+  else
+    reason := 'ok';
   end if;
 
   return json_build_object(
     'coins', p_coins,
     'paid', 0,
-    'canPay', (not spam and not paused),
+    'canPay', (not spam),
     'reason', reason,
     'justPaused', coalesce(p_just_paused, false),
     'game', gid,
-    'have', have,
-    'need', 4,
-    'paused', coalesce(st -> 'paused', '{}'::jsonb),
+    'have', 0,
+    'need', 0,
+    'paused', '{}'::jsonb,
     'spamUntil', coalesce(st -> 'spamUntil', '{}'::jsonb),
     'lastGame', st -> 'lastGame',
     'streak', coalesce((st ->> 'streak')::integer, 0)
@@ -252,9 +231,12 @@ begin
 end;
 $$;
 
+-- Must be SECURITY DEFINER: authenticated only has SELECT on profiles.
 create or replace function public.read_game_farm(uid uuid)
 returns jsonb
 language plpgsql
+security definer
+set search_path = public
 as $$
 declare
   raw jsonb;
@@ -276,12 +258,49 @@ $$;
 create or replace function public.write_game_farm(uid uuid, st jsonb)
 returns void
 language plpgsql
+security definer
+set search_path = public
 as $$
 begin
   perform set_config('bloon.allow_coin_update', 'on', true);
   update public.profiles
   set game_farm = public.normalize_game_farm(st)
   where id = uid;
+end;
+$$;
+
+create or replace function public.extend_game_mute(
+  p_state jsonb,
+  p_game_id text,
+  p_until timestamptz
+)
+returns jsonb
+language plpgsql
+stable
+as $$
+declare
+  st jsonb := public.normalize_game_farm(p_state);
+  gid text := public.arcade_game_id(p_game_id);
+  spam jsonb;
+  existing text;
+  keep boolean := false;
+begin
+  if gid is null then
+    return st;
+  end if;
+  spam := coalesce(st -> 'spamUntil', '{}'::jsonb);
+  existing := spam ->> gid;
+  if existing is not null then
+    begin
+      keep := existing::timestamptz >= p_until;
+    exception when others then
+      keep := false;
+    end;
+  end if;
+  if not keep then
+    spam := spam || jsonb_build_object(gid, p_until);
+  end if;
+  return st || jsonb_build_object('spamUntil', spam);
 end;
 $$;
 
@@ -321,12 +340,7 @@ declare
   coins bigint;
   last_game text;
   streak integer;
-  paused jsonb;
-  wins jsonb;
-  gid2 text;
-  arr jsonb;
   just_paused boolean := false;
-  won boolean := coalesce(p_won, false);
 begin
   if uid is null then
     uid := auth.uid();
@@ -341,25 +355,6 @@ begin
   st := public.read_game_farm(uid);
   last_game := st ->> 'lastGame';
   streak := coalesce((st ->> 'streak')::integer, 0);
-  paused := coalesce(st -> 'paused', '{}'::jsonb);
-
-  -- Unique other-game wins unlock any paused title.
-  if won then
-    for gid2 in select jsonb_object_keys(paused) loop
-      if gid2 = gid then
-        continue;
-      end if;
-      arr := coalesce(paused -> gid2, '[]'::jsonb);
-      if not (arr ? gid) then
-        arr := arr || jsonb_build_array(gid);
-      end if;
-      if jsonb_array_length(arr) >= 4 then
-        paused := paused - gid2;
-      else
-        paused := paused || jsonb_build_object(gid2, arr);
-      end if;
-    end loop;
-  end if;
 
   if last_game is not distinct from gid then
     streak := streak + 1;
@@ -367,20 +362,28 @@ begin
     streak := 1;
   end if;
 
-  if streak >= 5 and not (paused ? gid) then
-    paused := paused || jsonb_build_object(gid, '[]'::jsonb);
+  -- Five of the same game in a row → 2 minute No Cash cool-off.
+  if streak >= 5 then
+    st := public.extend_game_mute(st, gid, now() + interval '2 minutes');
     just_paused := true;
+    streak := 0;
   end if;
 
   st := st || jsonb_build_object(
     'lastGame', gid,
     'streak', streak,
-    'paused', paused
+    'paused', '{}'::jsonb
   );
   perform public.write_game_farm(uid, st);
 
   select p.coins into coins from public.profiles p where p.id = uid;
-  return public.game_farm_snapshot(st, gid, just_paused, 'ok', coins);
+  return public.game_farm_snapshot(
+    st,
+    gid,
+    just_paused,
+    case when just_paused then 'paused' else 'ok' end,
+    coins
+  );
 end;
 $$;
 
@@ -394,8 +397,6 @@ declare
   uid uuid := public.current_account_id();
   gid text := public.arcade_game_id(p_game_id);
   st jsonb;
-  spam jsonb;
-  until_ts timestamptz := now() + interval '20 minutes';
   coins bigint;
 begin
   if uid is null then
@@ -409,9 +410,7 @@ begin
   end if;
 
   st := public.read_game_farm(uid);
-  spam := coalesce(st -> 'spamUntil', '{}'::jsonb);
-  spam := spam || jsonb_build_object(gid, until_ts);
-  st := st || jsonb_build_object('spamUntil', spam);
+  st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
   perform public.write_game_farm(uid, st);
 
   select p.coins into coins from public.profiles p where p.id = uid;
@@ -438,10 +437,8 @@ declare
   last_pay text;
   fast integer := 0;
   last_pay_at timestamptz;
-  spam jsonb;
   last_pay_map jsonb;
   fast_map jsonb;
-  until_ts timestamptz;
   new_balance bigint;
 begin
   if uid is null then
@@ -472,11 +469,6 @@ begin
     end;
   end if;
 
-  if (st -> 'paused') ? gid then
-    snap := public.game_farm_snapshot(st, gid, false, 'paused', coins);
-    return snap;
-  end if;
-
   last_pay := st -> 'lastPayAt' ->> gid;
   begin
     last_pay_at := last_pay::timestamptz;
@@ -499,11 +491,9 @@ begin
   fast_map := coalesce(st -> 'fastStreak', '{}'::jsonb);
 
   if fast >= 4 then
-    until_ts := now() + interval '20 minutes';
-    spam := coalesce(st -> 'spamUntil', '{}'::jsonb) || jsonb_build_object(gid, until_ts);
     fast_map := fast_map || jsonb_build_object(gid, 0);
+    st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
     st := st || jsonb_build_object(
-      'spamUntil', spam,
       'lastPayAt', last_pay_map,
       'fastStreak', fast_map
     );
@@ -555,7 +545,6 @@ begin
     raise exception 'Profile not found';
   end if;
 
-  -- write_game_farm also sets allow_coin_update
   perform public.write_game_farm(uid, st);
 
   snap := public.game_farm_snapshot(st, gid, false, 'ok', new_balance);
@@ -564,10 +553,14 @@ begin
 end;
 $$;
 
+revoke all on function public.read_game_farm(uuid) from public;
+revoke all on function public.write_game_farm(uuid, jsonb) from public;
+revoke all on function public.extend_game_mute(jsonb, text, timestamptz) from public;
 revoke all on function public.get_game_farm(text) from public;
 revoke all on function public.note_game_run(text, boolean) from public;
 revoke all on function public.flag_game_spam(text) from public;
 revoke all on function public.award_game_coins(integer, text) from public;
+
 grant execute on function public.get_game_farm(text) to anon, authenticated;
 grant execute on function public.note_game_run(text, boolean) to anon, authenticated;
 grant execute on function public.flag_game_spam(text) to anon, authenticated;

@@ -811,22 +811,19 @@ export function ArcadeHome({
       >
         {shown.map((g) => {
           const lockMs = farm ? spamUnlockMs(farm, g.id as GamePath) : 0;
-          const noCash =
-            lockMs > 0 || Boolean(farm?.paused[g.id as GamePath]);
+          const noCash = lockMs > 0;
           const isBonus = bonusGame === g.id && !noCash;
           return (
             <button
               key={g.id}
               type="button"
-              className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}`}
+              className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}${noCash ? " game-card--no-cash" : ""}`}
               aria-label={
-                lockMs > 0
+                noCash
                   ? `${g.label} · No Cash for ${formatSpamClock(lockMs)}`
-                  : noCash
-                    ? `${g.label} · No Cash right now`
-                    : isBonus
-                      ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
-                      : g.label
+                  : isBonus
+                    ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
+                    : g.label
               }
               onClick={() => {
                 /* iOS needs focus in the same user gesture as navigate — click only, not pointerdown (scroll). */
@@ -839,15 +836,17 @@ export function ArcadeHome({
                 {noCash ? (
                   <div className="game-preview__cash-lock" aria-hidden>
                     <span>No Cash</span>
-                    {lockMs > 0 ? (
-                      <strong>{formatSpamClock(lockMs)}</strong>
-                    ) : null}
+                    <strong>{formatSpamClock(lockMs)}</strong>
                   </div>
                 ) : null}
               </div>
               <div className="game-card__foot">
                 <span className="game-card__title">{g.title}</span>
-                {isBonus ? (
+                {noCash ? (
+                  <span className="game-card__no-cash">
+                    No Cash · {formatSpamClock(lockMs)}
+                  </span>
+                ) : isBonus ? (
                   <span className="game-card__bonus">
                     +{FEATURED_BONUS_CASH.toLocaleString()} Solid-run bonus
                   </span>
