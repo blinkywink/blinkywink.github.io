@@ -165,15 +165,39 @@ export function GameFarmGate({
   const applyExternal = useCallback(
     (next: GameFarmSnapshot) => {
       const serverWait = spamUnlockMs(next, game);
+      const streakCool =
+        next.justPaused ||
+        (next.reason === "paused" && (serverWait > 0 || next.game === game));
+
+      if (streakCool) {
+        const ms = Math.max(serverWait, FARM_STREAK_COOL_MS);
+        muteUntilRef.current = Math.max(muteUntilRef.current, Date.now() + ms);
+        rememberGameMute(game, muteUntilRef.current);
+        setDismissed(false);
+        setSnap((prev) => {
+          const base = prev ?? emptyLocal(game);
+          const until = new Date(muteUntilRef.current).toISOString();
+          return {
+            ...base,
+            ...next,
+            canPay: false,
+            reason: "paused",
+            justPaused: true,
+            spamUntil: {
+              ...base.spamUntil,
+              ...next.spamUntil,
+              [game]: until,
+            },
+          };
+        });
+        return;
+      }
+
       if (serverWait > 0) {
         muteUntilRef.current = Math.max(
           muteUntilRef.current,
           Date.now() + serverWait,
         );
-      } else if (next.justPaused) {
-        // Streak cool-off from note_game_run — arm 2 min if server omitted parseable until.
-        armMute(FARM_STREAK_COOL_MS, "paused");
-        return;
       }
       setSnap((prev) => {
         const base = prev ?? emptyLocal(game);
@@ -183,11 +207,11 @@ export function GameFarmGate({
           spamUntil: { ...base.spamUntil, ...next.spamUntil },
         };
       });
-      if (serverWait > 0 || next.justPaused || next.reason === "spam") {
+      if (serverWait > 0 || next.reason === "spam") {
         setDismissed(false);
       }
     },
-    [armMute, game],
+    [game],
   );
 
   const snapWait = snap ? spamUnlockMs(snap, game) : 0;

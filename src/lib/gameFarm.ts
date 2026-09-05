@@ -417,7 +417,20 @@ export async function noteGameFarmRun(
   won: boolean,
 ): Promise<GameFarmSnapshot> {
   if (!signedIn()) {
-    const snap = adoptPartialFarm(guestNoteRun(game, won));
+    let snap = adoptPartialFarm(guestNoteRun(game, won));
+    if (snap.justPaused) {
+      const until = Date.now() + Math.max(spamUnlockMs(snap, game), FARM_STREAK_COOL_MS);
+      rememberGameMute(game, until);
+      snap = adoptPartialFarm({
+        ...snap,
+        canPay: false,
+        reason: "paused",
+        spamUntil: {
+          ...snap.spamUntil,
+          [game]: new Date(until).toISOString(),
+        },
+      });
+    }
     emitGameFarm(snap);
     return snap;
   }
@@ -431,7 +444,24 @@ export async function noteGameFarmRun(
     return peekCachedFarm(game);
   }
   // Server snapshot includes the full spamUntil map.
-  const snap = adoptFullFarm(parseSnap(data, game));
+  let snap = adoptFullFarm(parseSnap(data, game));
+  // 5 same-game runs → always a 2-minute mute on THIS game (cloud + UI).
+  if (snap.justPaused || (snap.reason === "paused" && spamUnlockMs(snap, game) > 0)) {
+    const until =
+      Date.now() +
+      Math.max(spamUnlockMs(snap, game), FARM_STREAK_COOL_MS);
+    rememberGameMute(game, until);
+    snap = adoptPartialFarm({
+      ...snap,
+      canPay: false,
+      reason: "paused",
+      justPaused: true,
+      spamUntil: {
+        ...snap.spamUntil,
+        [game]: new Date(until).toISOString(),
+      },
+    });
+  }
   emitGameFarm(snap);
   return snap;
 }
