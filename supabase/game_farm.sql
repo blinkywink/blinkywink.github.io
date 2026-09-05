@@ -1,6 +1,6 @@
 -- Arcade farm brakes:
 -- 1) Instant-click / fast-award spam → No Cash for 20 minutes
--- 2) Same game 5 times in a row → No Cash for 2 minutes
+-- 2) Same game 5 times in a row → No Cash for 3 minutes
 -- You can keep playing either way; Cash just stops until the timer ends.
 -- Safe to re-run.
 
@@ -365,9 +365,9 @@ begin
     streak := 1;
   end if;
 
-  -- Five of the same game in a row → 2 minute No Cash cool-off.
+  -- Five of the same game in a row → 3 minute No Cash cool-off.
   if streak >= 5 then
-    st := public.extend_game_mute(st, gid, now() + interval '2 minutes');
+    st := public.extend_game_mute(st, gid, now() + interval '3 minutes');
     just_paused := true;
     streak := 0;
   end if;
@@ -431,7 +431,7 @@ declare
   uid uuid := public.current_account_id();
   gid text := public.arcade_game_id(p_game_id);
   st jsonb;
-  coins bigint;
+  cur_coins bigint;
   today date := (timezone('utc', now()))::date;
   b public.reward_buckets%rowtype;
   max_per_call constant integer := 10000;
@@ -443,6 +443,8 @@ declare
   last_pay_map jsonb;
   fast_map jsonb;
   new_balance bigint;
+  -- Fast-answer mute is only for these mashable puzzle games.
+  apply_fast_spam boolean;
 begin
   if uid is null then
     uid := auth.uid();
@@ -457,14 +459,16 @@ begin
     raise exception 'Invalid coin amount';
   end if;
 
+  apply_fast_spam := gid in ('orderup', 'roundcheck');
+
   st := public.read_game_farm(uid);
-  select p.coins into coins from public.profiles p where p.id = uid;
+  select p.coins into cur_coins from public.profiles p where p.id = uid;
 
   spam_until := st -> 'spamUntil' ->> gid;
   if spam_until is not null then
     begin
       if spam_until::timestamptz > now() then
-        snap := public.game_farm_snapshot(st, gid, false, 'spam', coins);
+        snap := public.game_farm_snapshot(st, gid, false, 'spam', cur_coins);
         return snap;
       end if;
     exception when others then
@@ -484,8 +488,10 @@ begin
     fast := 0;
   end;
 
-  -- Rapid awards: 3 payouts within 4s of each other (quiz spam / slider mash).
-  if last_pay_at is not null and last_pay_at > now() - interval '4 seconds' then
+  -- Rapid awards: 3 payouts within 4s (Order Up / Round Check only).
+  if apply_fast_spam
+     and last_pay_at is not null
+     and last_pay_at > now() - interval '4 seconds' then
     fast := fast + 1;
   else
     fast := 0;
@@ -494,7 +500,7 @@ begin
   last_pay_map := coalesce(st -> 'lastPayAt', '{}'::jsonb) || jsonb_build_object(gid, now());
   fast_map := coalesce(st -> 'fastStreak', '{}'::jsonb);
 
-  if fast >= 3 then
+  if apply_fast_spam and fast >= 3 then
     fast_map := fast_map || jsonb_build_object(gid, 0);
     st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
     st := st || jsonb_build_object(
@@ -502,7 +508,7 @@ begin
       'fastStreak', fast_map
     );
     perform public.write_game_farm(uid, st);
-    snap := public.game_farm_snapshot(st, gid, false, 'spam', coins);
+    snap := public.game_farm_snapshot(st, gid, false, 'spam', cur_coins);
     return snap;
   end if;
 
@@ -538,12 +544,12 @@ begin
 
   perform set_config('bloon.allow_coin_update', 'on', true);
 
-  update public.profiles
+  update public.profiles p
   set
-    coins = coins + p_amount,
-    coins_earned = coins_earned + p_amount
-  where id = uid
-  returning coins into new_balance;
+    coins = p.coins + p_amount,
+    coins_earned = p.coins_earned + p_amount
+  where p.id = uid
+  returning p.coins into new_balance;
 
   if new_balance is null then
     raise exception 'Profile not found';

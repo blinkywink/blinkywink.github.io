@@ -15,7 +15,7 @@ const LS_SPAM_KEY = "bloon-arcade:game-farm-spam-v1";
 /** Same game this many completed runs in a row → short No Cash cool-off. */
 export const FARM_STREAK_PAUSE = 5;
 /** Cool-off after farming one game 5× in a row. */
-export const FARM_STREAK_COOL_MS = 2 * 60 * 1000;
+export const FARM_STREAK_COOL_MS = 3 * 60 * 1000;
 /** Cool-off after instant-click / fast-award spam. */
 export const FARM_SPAM_LOCK_MS = 20 * 60 * 1000;
 
@@ -441,11 +441,29 @@ export async function noteGameFarmRun(
   if (error) {
     console.warn("note_game_run failed", error.message);
     if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    return peekCachedFarm(game);
+    // Keep counting locally so a stale API schema can't soft-disable the cool-off.
+    let snap = adoptPartialFarm(guestNoteRun(game, won));
+    if (snap.justPaused) {
+      const until =
+        Date.now() + Math.max(spamUnlockMs(snap, game), FARM_STREAK_COOL_MS);
+      rememberGameMute(game, until);
+      snap = adoptPartialFarm({
+        ...snap,
+        canPay: false,
+        reason: "paused",
+        justPaused: true,
+        spamUntil: {
+          ...snap.spamUntil,
+          [game]: new Date(until).toISOString(),
+        },
+      });
+    }
+    emitGameFarm(snap);
+    return snap;
   }
   // Server snapshot includes the full spamUntil map.
   let snap = adoptFullFarm(parseSnap(data, game));
-  // 5 same-game runs → always a 2-minute mute on THIS game (cloud + UI).
+  // 5 same-game runs → always a 3-minute mute on THIS game (cloud + UI).
   if (snap.justPaused || (snap.reason === "paused" && spamUnlockMs(snap, game) > 0)) {
     const until =
       Date.now() +

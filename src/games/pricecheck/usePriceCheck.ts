@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { useGameFarm } from "../../components/GameFarmGate";
 import { awardCoins } from "../../lib/awardCoins";
-import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
 import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
@@ -196,52 +195,13 @@ export function usePriceCheck() {
   streakBonusRef.current = streakBonusPct;
   const canPayRef = useRef(true);
   canPayRef.current = farm?.canPay !== false && !farm?.isMutedNow?.();
-  const farmRef = useRef(farm);
-  farmRef.current = farm;
-  const guard = useRef(
-    createInstantPlayGuard({
-      instantLimit: 3,
-      nextLimit: 3,
-      awardGapMs: 4000,
-      awardLimit: 3,
-    }),
-  );
-  const roundShownAt = useRef(
-    typeof performance !== "undefined" ? performance.now() : 0,
-  );
-  const revealAt = useRef(0);
   const paidAnswered = useRef(0);
   const perfectPaid = useRef(false);
   const nextRoundRef = useRef<PriceRound | null>(null);
 
-  const tripSpam = useCallback(() => {
-    canPayRef.current = false;
-    farmRef.current?.reportInstantSpam();
+  const guess = useCallback((side: Guess) => {
+    setState((s) => applyGuess(s, side, false, streakBonusRef.current));
   }, []);
-
-  const guess = useCallback(
-    (side: Guess) => {
-      // Answering in the first 2s, multiple rounds in a row = cheating.
-      const instant =
-        typeof performance !== "undefined" &&
-        performance.now() - roundShownAt.current < 2000;
-      if (guard.current.markAction(instant)) tripSpam();
-      setState((s) => applyGuess(s, side, false, streakBonusRef.current));
-    },
-    [tripSpam],
-  );
-
-  useEffect(() => {
-    if (state.phase === "playing") {
-      // Do NOT reset the instant streak here — it must stack across rounds.
-      roundShownAt.current =
-        typeof performance !== "undefined" ? performance.now() : 0;
-    }
-    if (state.phase === "reveal") {
-      revealAt.current =
-        typeof performance !== "undefined" ? performance.now() : 0;
-    }
-  }, [state.phase, state.round.round]);
 
   useEffect(() => {
     if (state.phase !== "reveal" || !state.feedback) return;
@@ -250,16 +210,12 @@ export function usePriceCheck() {
     const fb = state.feedback;
     if (fb.correct && fb.points > 0) {
       if (canPayRef.current) {
-        if (guard.current.markAward()) {
-          tripSpam();
-        } else {
-          void awardCoins(fb.points, "pricecheck").then((balance) => {
-            if (balance != null) setCoinBalanceRef.current(balance);
-          });
-          void onCorrectCash(setCoinBalanceRef.current, {
-            gameId: "pricecheck",
-          });
-        }
+        void awardCoins(fb.points, "pricecheck").then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
+        });
+        void onCorrectCash(setCoinBalanceRef.current, {
+          gameId: "pricecheck",
+        });
       }
       if (state.streak >= 2 && streakBonusRef.current > 0) {
         onGwenStreakProc(state.streak);
@@ -280,7 +236,6 @@ export function usePriceCheck() {
     state.streak,
     onCorrectCash,
     onGwenStreakProc,
-    tripSpam,
   ]);
 
   useEffect(() => {
@@ -345,16 +300,12 @@ export function usePriceCheck() {
   }, [state.phase, state.round.round]);
 
   const goNext = useCallback(() => {
-    const instant =
-      typeof performance !== "undefined" &&
-      performance.now() - revealAt.current < 800;
-    if (guard.current.markNext(instant)) tripSpam();
     setState((s) => {
       const prepared = nextRoundRef.current;
       nextRoundRef.current = null;
       return advanceReveal(s, prepared);
     });
-  }, [tripSpam]);
+  }, []);
 
   const buyContinue = useCallback(async () => {
     let allowed = false;
@@ -409,7 +360,6 @@ export function usePriceCheck() {
   const playAgain = useCallback(() => {
     paidAnswered.current = 0;
     perfectPaid.current = false;
-    guard.current.reset();
     setState(initialState());
   }, []);
 
