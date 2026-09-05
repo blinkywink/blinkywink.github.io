@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
-import { awardCoins } from "../../lib/awardCoins";
-import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { useGameFarm } from "../../components/GameFarmGate";
+import { awardCoins } from "../../lib/awardCoins";
+import { createInstantPlayGuard } from "../../lib/instantPlayGuard";
+import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { spendCoins } from "../../lib/spendCoins";
 import { SHARED_RUN, isFlawlessClear, perfectRunBonus } from "../rewards";
 import type { PricedCombo } from "../pricecheck/costs";
@@ -147,6 +148,14 @@ export function useOrderUp() {
   const submitting = useRef(false);
   const canPayRef = useRef(true);
   canPayRef.current = farm?.canPay !== false;
+  const awardGuard = useRef(
+    createInstantPlayGuard({
+      instantLimit: 99,
+      nextLimit: 99,
+      awardGapMs: 4000,
+      awardLimit: 3,
+    }),
+  );
 
   const setOrder = useCallback(
     (next: PricedCombo[] | ((prev: PricedCombo[]) => PricedCombo[])) => {
@@ -181,15 +190,22 @@ export function useOrderUp() {
     const lives = ok ? s.lives : s.lives - 1;
 
     if (points > 0 && canPayRef.current) {
-      void awardCoins(points, "orderup").then((balance) => {
-        if (balance != null) setCoinBalanceRef.current(balance);
-      });
-      if (ok) {
-        void onCorrectCash(setCoinBalanceRef.current, { gameId: "orderup" });
-        if (streak >= 2 && streakBonusPct > 0) {
-          onGwenStreakProc(streak);
+      if (awardGuard.current.markAward()) {
+        canPayRef.current = false;
+        farm?.reportInstantSpam();
+      } else {
+        void awardCoins(points, "orderup").then((balance) => {
+          if (balance != null) setCoinBalanceRef.current(balance);
+        });
+        if (ok) {
+          void onCorrectCash(setCoinBalanceRef.current, { gameId: "orderup" });
+          if (streak >= 2 && streakBonusPct > 0) {
+            onGwenStreakProc(streak);
+          }
         }
       }
+    } else if (ok && streak >= 2 && streakBonusPct > 0) {
+      onGwenStreakProc(streak);
     }
 
     setState({

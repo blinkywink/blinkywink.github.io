@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import type { GamePath } from "../lib/routes";
 import { gamesPath } from "../lib/routes";
 import {
+  FARM_SPAM_LOCK_MS,
   farmGameLabel,
   fetchGameFarm,
   flagGameSpam,
@@ -64,6 +65,30 @@ export function GameFarmGate({
 
   const reportInstantSpam = useCallback(() => {
     setDismissed(false);
+    const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
+    // Optimistic mute so Cash stops before the RPC round-trip.
+    setSnap((prev) => {
+      const base: GameFarmSnapshot = prev ?? {
+        coins: null,
+        paid: 0,
+        canPay: false,
+        reason: "spam",
+        justPaused: false,
+        game,
+        have: 0,
+        need: 0,
+        paused: {},
+        spamUntil: {},
+        lastGame: null,
+        streak: 0,
+      };
+      return {
+        ...base,
+        canPay: false,
+        reason: "spam",
+        spamUntil: { ...base.spamUntil, [game]: until },
+      };
+    });
     void flagGameSpam(game).then(setSnap);
   }, [game]);
 

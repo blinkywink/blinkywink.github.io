@@ -100,7 +100,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
   const { profile } = useAuth();
   const farm = useGameFarm();
   const guard = useRef(
-    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+    createInstantPlayGuard({ instantLimit: 3, nextLimit: 3 }),
   );
   const roundShownAt = useRef(
     typeof performance !== "undefined" ? performance.now() : 0,
@@ -210,7 +210,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
     const instant =
       !didDrag.current &&
       typeof performance !== "undefined" &&
-      performance.now() - roundShownAt.current < 600;
+      performance.now() - roundShownAt.current < 2500;
     if (guard.current.markAction(instant)) farm?.reportInstantSpam();
     lockIn();
   }, [farm, lockIn]);
@@ -218,7 +218,7 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
   const onGoNext = useCallback(() => {
     const instant =
       typeof performance !== "undefined" &&
-      performance.now() - revealAt.current < 300;
+      performance.now() - revealAt.current < 800;
     if (guard.current.markNext(instant)) farm?.reportInstantSpam();
     goNext();
   }, [farm, goNext]);

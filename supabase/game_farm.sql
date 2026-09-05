@@ -481,7 +481,8 @@ begin
     fast := 0;
   end;
 
-  if last_pay_at is not null and last_pay_at > now() - interval '800 milliseconds' then
+  -- Rapid awards: 3 payouts within 4s of each other (quiz spam / slider mash).
+  if last_pay_at is not null and last_pay_at > now() - interval '4 seconds' then
     fast := fast + 1;
   else
     fast := 0;
@@ -490,7 +491,7 @@ begin
   last_pay_map := coalesce(st -> 'lastPayAt', '{}'::jsonb) || jsonb_build_object(gid, now());
   fast_map := coalesce(st -> 'fastStreak', '{}'::jsonb);
 
-  if fast >= 4 then
+  if fast >= 3 then
     fast_map := fast_map || jsonb_build_object(gid, 0);
     st := public.extend_game_mute(st, gid, now() + interval '20 minutes');
     st := st || jsonb_build_object(

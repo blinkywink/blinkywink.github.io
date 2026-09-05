@@ -253,8 +253,8 @@ function guestTryPay(game: GamePath, amount: number): GameFarmSnapshot {
   }
 
   const last = st.lastPayAt[game] ?? 0;
-  const fast = Date.now() - last < 800 ? (st.fastStreak[game] ?? 0) + 1 : 0;
-  if (fast >= 4) {
+  const fast = Date.now() - last < 4000 ? (st.fastStreak[game] ?? 0) + 1 : 0;
+  if (fast >= 3) {
     return guestFlagSpam(game);
   }
   const coins = awardGuestCoins(amount);

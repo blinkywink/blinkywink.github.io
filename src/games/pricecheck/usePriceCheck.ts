@@ -199,7 +199,12 @@ export function usePriceCheck() {
   const farmRef = useRef(farm);
   farmRef.current = farm;
   const guard = useRef(
-    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+    createInstantPlayGuard({
+      instantLimit: 3,
+      nextLimit: 3,
+      awardGapMs: 4000,
+      awardLimit: 3,
+    }),
   );
   const roundShownAt = useRef(
     typeof performance !== "undefined" ? performance.now() : 0,
@@ -209,15 +214,21 @@ export function usePriceCheck() {
   const perfectPaid = useRef(false);
   const nextRoundRef = useRef<PriceRound | null>(null);
 
-  const guess = useCallback((side: Guess) => {
-    const instant =
-      typeof performance !== "undefined" &&
-      performance.now() - roundShownAt.current < 600;
-    if (guard.current.markAction(instant)) {
-      farmRef.current?.reportInstantSpam();
-    }
-    setState((s) => applyGuess(s, side, false, streakBonusRef.current));
+  const tripSpam = useCallback(() => {
+    canPayRef.current = false;
+    farmRef.current?.reportInstantSpam();
   }, []);
+
+  const guess = useCallback(
+    (side: Guess) => {
+      const instant =
+        typeof performance !== "undefined" &&
+        performance.now() - roundShownAt.current < 2500;
+      if (guard.current.markAction(instant)) tripSpam();
+      setState((s) => applyGuess(s, side, false, streakBonusRef.current));
+    },
+    [tripSpam],
+  );
 
   useEffect(() => {
     if (state.phase === "playing") {
@@ -238,10 +249,16 @@ export function usePriceCheck() {
     const fb = state.feedback;
     if (fb.correct && fb.points > 0) {
       if (canPayRef.current) {
-        void awardCoins(fb.points, "pricecheck").then((balance) => {
-          if (balance != null) setCoinBalanceRef.current(balance);
-        });
-        void onCorrectCash(setCoinBalanceRef.current, { gameId: "pricecheck" });
+        if (guard.current.markAward()) {
+          tripSpam();
+        } else {
+          void awardCoins(fb.points, "pricecheck").then((balance) => {
+            if (balance != null) setCoinBalanceRef.current(balance);
+          });
+          void onCorrectCash(setCoinBalanceRef.current, {
+            gameId: "pricecheck",
+          });
+        }
       }
       if (state.streak >= 2 && streakBonusRef.current > 0) {
         onGwenStreakProc(state.streak);
@@ -262,6 +279,7 @@ export function usePriceCheck() {
     state.streak,
     onCorrectCash,
     onGwenStreakProc,
+    tripSpam,
   ]);
 
   useEffect(() => {
@@ -328,16 +346,14 @@ export function usePriceCheck() {
   const goNext = useCallback(() => {
     const instant =
       typeof performance !== "undefined" &&
-      performance.now() - revealAt.current < 300;
-    if (guard.current.markNext(instant)) {
-      farmRef.current?.reportInstantSpam();
-    }
+      performance.now() - revealAt.current < 800;
+    if (guard.current.markNext(instant)) tripSpam();
     setState((s) => {
       const prepared = nextRoundRef.current;
       nextRoundRef.current = null;
       return advanceReveal(s, prepared);
     });
-  }, []);
+  }, [tripSpam]);
 
   const buyContinue = useCallback(async () => {
     let allowed = false;

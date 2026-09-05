@@ -116,7 +116,12 @@ export function useRoundCheck() {
   const farmRef = useRef(farm);
   farmRef.current = farm;
   const guard = useRef(
-    createInstantPlayGuard({ instantLimit: 3, nextLimit: 4 }),
+    createInstantPlayGuard({
+      instantLimit: 3,
+      nextLimit: 3,
+      awardGapMs: 4000,
+      awardLimit: 3,
+    }),
   );
   const puzzleShownAt = useRef(
     typeof performance !== "undefined" ? performance.now() : 0,
@@ -132,16 +137,29 @@ export function useRoundCheck() {
     [state.guesses],
   );
 
-  const award = useCallback((amount: number) => {
-    if (amount <= 0 || !canPayRef.current) return;
-    void (async () => {
-      const balance = await awardCoins(amount, "roundcheck");
-      if (balance != null) setCoinBalanceRef.current(balance);
-      void onCorrectCashRef.current(setCoinBalanceRef.current, {
-        gameId: "roundcheck",
-      });
-    })();
+  const tripSpam = useCallback(() => {
+    canPayRef.current = false;
+    farmRef.current?.reportInstantSpam();
   }, []);
+
+  const award = useCallback(
+    (amount: number) => {
+      if (amount <= 0 || !canPayRef.current) return;
+      if (guard.current.markAward()) {
+        tripSpam();
+        return;
+      }
+      void (async () => {
+        const balance = await awardCoins(amount, "roundcheck");
+        if (balance != null) setCoinBalanceRef.current(balance);
+        if (!canPayRef.current) return;
+        void onCorrectCashRef.current(setCoinBalanceRef.current, {
+          gameId: "roundcheck",
+        });
+      })();
+    },
+    [tripSpam],
+  );
 
   const submit = useCallback(
     (raw: number) => {
@@ -164,10 +182,8 @@ export function useRoundCheck() {
         if (hint === "correct") {
           const instant =
             typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 700;
-          if (guard.current.markAction(instant)) {
-            farmRef.current?.reportInstantSpam();
-          }
+            performance.now() - puzzleShownAt.current < 3500;
+          if (guard.current.markAction(instant)) tripSpam();
           puzzleDoneAt.current =
             typeof performance !== "undefined" ? performance.now() : 0;
           const piece = canPayRef.current ? payoutFor(guesses, answer, true) : 0;
@@ -191,10 +207,8 @@ export function useRoundCheck() {
         if (guesses.length >= ROUND_CHECK_MAX_GUESSES) {
           const instant =
             typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 700;
-          if (guard.current.markAction(instant)) {
-            farmRef.current?.reportInstantSpam();
-          }
+            performance.now() - puzzleShownAt.current < 3500;
+          if (guard.current.markAction(instant)) tripSpam();
           puzzleDoneAt.current =
             typeof performance !== "undefined" ? performance.now() : 0;
           const piece = canPayRef.current
@@ -203,8 +217,6 @@ export function useRoundCheck() {
           award(piece);
           const lives = s.lives - 1;
           const dead = lives <= 0;
-          // Need at least one solve to clear - dying with 0 solves is a miss.
-          // Clear only via 4 solves; lives gate how many misses you can eat.
           return {
             ...s,
             guesses,
@@ -221,7 +233,7 @@ export function useRoundCheck() {
         return { ...s, guesses };
       });
     },
-    [award],
+    [award, tripSpam],
   );
 
   const continueRun = useCallback(() => {
@@ -229,10 +241,8 @@ export function useRoundCheck() {
       if (s.status !== "puzzle_done") return s;
       const instantNext =
         typeof performance !== "undefined" &&
-        performance.now() - puzzleDoneAt.current < 350;
-      if (guard.current.markNext(instantNext)) {
-        farmRef.current?.reportInstantSpam();
-      }
+        performance.now() - puzzleDoneAt.current < 800;
+      if (guard.current.markNext(instantNext)) tripSpam();
       puzzleShownAt.current =
         typeof performance !== "undefined" ? performance.now() : 0;
       return startPuzzle(s.recent, {
@@ -243,7 +253,7 @@ export function useRoundCheck() {
         recent: s.recent,
       });
     });
-  }, []);
+  }, [tripSpam]);
 
   const playAgain = useCallback(() => {
     guard.current.reset();
