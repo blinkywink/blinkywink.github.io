@@ -13,6 +13,7 @@ import type { GamePath } from "../lib/routes";
 import { gamesPath } from "../lib/routes";
 import {
   FARM_SPAM_LOCK_MS,
+  FARM_STREAK_COOL_MS,
   farmGameLabel,
   fetchGameFarm,
   flagGameSpam,
@@ -46,6 +47,23 @@ function useNow(active: boolean) {
   }, [active]);
 }
 
+function emptyLocal(game: GamePath): GameFarmSnapshot {
+  return {
+    coins: null,
+    paid: 0,
+    canPay: true,
+    reason: "ok",
+    justPaused: false,
+    game,
+    have: 0,
+    need: 0,
+    paused: {},
+    spamUntil: {},
+    lastGame: null,
+    streak: 0,
+  };
+}
+
 export function GameFarmGate({
   game,
   children,
@@ -56,92 +74,120 @@ export function GameFarmGate({
   const navigate = useNavigate();
   const [snap, setSnap] = useState<GameFarmSnapshot | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const mutedNowRef = useRef(false);
+  /** Wall-clock ms when local mute ends (spam or streak). Survives bad RPC replies. */
+  const muteUntilRef = useRef(0);
 
   const refresh = useCallback(() => {
-    void fetchGameFarm(game).then(setSnap);
+    void fetchGameFarm(game).then((next) => {
+      const serverWait = spamUnlockMs(next, game);
+      if (serverWait > 0) {
+        muteUntilRef.current = Math.max(
+          muteUntilRef.current,
+          Date.now() + serverWait,
+        );
+      }
+      setSnap(next);
+    });
   }, [game]);
 
   useEffect(() => {
     setDismissed(false);
-    mutedNowRef.current = false;
+    muteUntilRef.current = 0;
     refresh();
   }, [game, refresh]);
 
+  const localWait = () => Math.max(0, muteUntilRef.current - Date.now());
+
   const isMutedNow = useCallback(() => {
-    if (mutedNowRef.current) return true;
+    if (localWait() > 0) return true;
     if (!snap) return false;
     return spamUnlockMs(snap, game) > 0;
   }, [game, snap]);
 
-  const reportInstantSpam = useCallback(() => {
-    mutedNowRef.current = true;
-    setDismissed(false);
-    const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
-    // Optimistic mute so Cash stops before the RPC round-trip.
-    setSnap((prev) => {
-      const base: GameFarmSnapshot = prev ?? {
-        coins: null,
-        paid: 0,
-        canPay: false,
-        reason: "spam",
-        justPaused: false,
-        game,
-        have: 0,
-        need: 0,
-        paused: {},
-        spamUntil: {},
-        lastGame: null,
-        streak: 0,
-      };
-      return {
-        ...base,
-        canPay: false,
-        reason: "spam",
-        spamUntil: { ...base.spamUntil, [game]: until },
-      };
-    });
-    void flagGameSpam(game).then(setSnap);
-  }, [game]);
-
-  const applyExternal = useCallback((next: GameFarmSnapshot) => {
-    setSnap(next);
-    if (next.justPaused || next.reason === "spam" || next.reason === "paused") {
-      mutedNowRef.current = true;
+  const armMute = useCallback(
+    (ms: number, reason: "spam" | "paused") => {
+      const untilMs = Date.now() + ms;
+      muteUntilRef.current = Math.max(muteUntilRef.current, untilMs);
+      const until = new Date(muteUntilRef.current).toISOString();
       setDismissed(false);
-    }
-  }, []);
+      setSnap((prev) => {
+        const base = prev ?? emptyLocal(game);
+        return {
+          ...base,
+          canPay: false,
+          reason,
+          justPaused: reason === "paused",
+          spamUntil: { ...base.spamUntil, [game]: until },
+        };
+      });
+    },
+    [game],
+  );
 
-  const wait = snap ? spamUnlockMs(snap, game) : 0;
-  useNow(wait > 0);
-  const waitNow = snap ? spamUnlockMs(snap, game) : 0;
-  const muted = waitNow > 0 || mutedNowRef.current;
+  const reportInstantSpam = useCallback(() => {
+    armMute(FARM_SPAM_LOCK_MS, "spam");
+    void flagGameSpam(game).then((server) => {
+      const serverWait = spamUnlockMs(server, game);
+      if (serverWait > 0) {
+        muteUntilRef.current = Math.max(
+          muteUntilRef.current,
+          Date.now() + serverWait,
+        );
+        setSnap(server);
+        return;
+      }
+      // Keep the local 20‑minute mute if the server reply didn't include a timer.
+      setSnap((prev) => {
+        if (prev && spamUnlockMs(prev, game) > 0) return prev;
+        const until = new Date(muteUntilRef.current).toISOString();
+        return {
+          ...(server.coins != null ? server : emptyLocal(game)),
+          canPay: false,
+          reason: "spam",
+          spamUntil: { [game]: until },
+        };
+      });
+    });
+  }, [armMute, game]);
+
+  const applyExternal = useCallback(
+    (next: GameFarmSnapshot) => {
+      const serverWait = spamUnlockMs(next, game);
+      if (serverWait > 0) {
+        muteUntilRef.current = Math.max(
+          muteUntilRef.current,
+          Date.now() + serverWait,
+        );
+      } else if (next.justPaused) {
+        // Streak cool-off from note_game_run — arm 2 min if server omitted parseable until.
+        armMute(FARM_STREAK_COOL_MS, "paused");
+        return;
+      }
+      setSnap(next);
+      if (serverWait > 0 || next.justPaused || next.reason === "spam") {
+        setDismissed(false);
+      }
+    },
+    [armMute, game],
+  );
+
+  const snapWait = snap ? spamUnlockMs(snap, game) : 0;
+  const waitNow = Math.max(snapWait, localWait());
+  useNow(waitNow > 0);
+  const muted = waitNow > 0;
   const canPay = !muted;
   const coolReason = snap?.reason === "paused" ? "paused" : "spam";
 
   useEffect(() => {
-    if (waitNow > 0) mutedNowRef.current = true;
-    if (snap && waitNow <= 0 && !snap.canPay) refresh();
-    if (waitNow <= 0 && snap?.canPay !== false && snap?.reason === "ok") {
-      mutedNowRef.current = false;
+    if (waitNow > 0) return;
+    if (muteUntilRef.current > 0 && muteUntilRef.current <= Date.now()) {
+      muteUntilRef.current = 0;
+      refresh();
     }
-  }, [refresh, snap, waitNow]);
+  }, [refresh, waitNow]);
 
   const value = useMemo<FarmCtx>(() => {
-    const base: GameFarmSnapshot = snap ?? {
-      coins: null,
-      paid: 0,
-      canPay: true,
-      reason: "ok",
-      justPaused: false,
-      game,
-      have: 0,
-      need: 0,
-      paused: {},
-      spamUntil: {},
-      lastGame: null,
-      streak: 0,
-    };
+    const base = snap ?? emptyLocal(game);
     return {
       game,
       snap: {
@@ -169,20 +215,22 @@ export function GameFarmGate({
     const onFarm = (e: Event) => {
       const detail = (e as CustomEvent<GameFarmSnapshot>).detail;
       if (!detail) return;
-      if (detail.game === game || detail.spamUntil[game]) applyExternal(detail);
+      if (detail.game === game || detail.spamUntil[game] || detail.justPaused) {
+        applyExternal(detail);
+      }
     };
     window.addEventListener("monkeycards:game-farm", onFarm);
     return () => window.removeEventListener("monkeycards:game-farm", onFarm);
   }, [applyExternal, game]);
 
   const label = farmGameLabel(game);
+  const clock = formatSpamClock(waitNow);
 
   return (
     <Ctx.Provider value={value}>
       {muted ? (
         <div className="game-farm-banner" role="status">
-          You can keep playing — {label} won’t pay Cash for{" "}
-          {formatSpamClock(waitNow)}.
+          You can keep playing — {label} won’t pay Cash for {clock}.
         </div>
       ) : null}
       {children}
@@ -199,8 +247,8 @@ export function GameFarmGate({
             <h2>You can keep playing — no Cash for now</h2>
             <p>
               {coolReason === "paused"
-                ? `Same game five times in a row is enough. ${label} still works, but won’t pay Cash for ${formatSpamClock(waitNow)}.`
-                : `Answers came in under 2 seconds too many times. ${label} still works, but won’t pay Cash for ${formatSpamClock(waitNow)}.`}
+                ? `Same game five times in a row is enough. ${label} still works, but won’t pay Cash for ${clock}.`
+                : `Answers came in under 2 seconds too many times. ${label} still works, but won’t pay Cash for ${clock}.`}
             </p>
             <div className="game-farm-overlay__row">
               <button

@@ -316,19 +316,35 @@ export async function noteGameFarmRun(
 }
 
 export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
-  const snap = !signedIn()
-    ? guestFlagSpam(game)
-    : await (async () => {
-        const { data, error } = await supabase.rpc("flag_game_spam", {
-          p_game_id: game,
-        });
-        if (error) {
-          console.warn("flag_game_spam failed", error.message);
-          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-          return emptySnap(game);
-        }
-        return parseSnap(data, game);
-      })();
+  if (!signedIn()) {
+    const snap = guestFlagSpam(game);
+    emitGameFarm(snap);
+    return snap;
+  }
+  const { data, error } = await supabase.rpc("flag_game_spam", {
+    p_game_id: game,
+  });
+  if (error) {
+    console.warn("flag_game_spam failed", error.message);
+    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+    // Keep a real local mute so the UI timer isn't wiped to 0:00.
+    const snap = guestFlagSpam(game);
+    emitGameFarm(snap);
+    return snap;
+  }
+  const snap = parseSnap(data, game);
+  // If the server ack'd spam but the timestamp didn't parse, still mute locally.
+  if (spamUnlockMs(snap, game) <= 0 && snap.reason === "spam") {
+    const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
+    const fixed: GameFarmSnapshot = {
+      ...snap,
+      canPay: false,
+      reason: "spam",
+      spamUntil: { ...snap.spamUntil, [game]: until },
+    };
+    emitGameFarm(fixed);
+    return fixed;
+  }
   emitGameFarm(snap);
   return snap;
 }
