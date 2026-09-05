@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.35",
-  "version": "1.0.35",
-  "shopDay": "2026-9-4",
+  "minDesktopVersion": "1.0.36",
+  "version": "1.0.36",
+  "shopDay": "2026-9-5",
   "featuredTowers": [
-    "Super Monkey",
-    "Wizard Monkey",
-    "Monkey Buccaneer"
+    "Bomb Shooter",
+    "Sniper Monkey",
+    "Druid"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://api.blinkywink.co/downloads/blinkywink-mac.dmg",
