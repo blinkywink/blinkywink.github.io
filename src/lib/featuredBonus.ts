@@ -23,11 +23,20 @@ function isGameId(v: string): v is FeaturedBonusGame {
   return (POOL as readonly string[]).includes(v);
 }
 
+function asExcludeSet(
+  exclude?: FeaturedBonusGame | null | readonly FeaturedBonusGame[],
+): Set<FeaturedBonusGame> {
+  if (exclude == null) return new Set();
+  if (typeof exclude === "string") return new Set([exclude]);
+  return new Set(exclude);
+}
+
 function pickRandom(
   bag: readonly FeaturedBonusGame[],
-  exclude?: FeaturedBonusGame | null,
+  exclude?: FeaturedBonusGame | null | readonly FeaturedBonusGame[],
 ): FeaturedBonusGame {
-  const filtered = exclude ? bag.filter((g) => g !== exclude) : [...bag];
+  const ban = asExcludeSet(exclude);
+  const filtered = ban.size ? bag.filter((g) => !ban.has(g)) : [...bag];
   const list = filtered.length ? filtered : [...bag];
   const fallback = list.length ? list : [...POOL];
   return fallback[Math.floor(Math.random() * fallback.length)]!;
@@ -60,12 +69,18 @@ function writeFeaturedBonusGame(game: FeaturedBonusGame): void {
   }
 }
 
-/** Current glowing bonus game - creates one if missing. */
-export function getOrCreateFeaturedBonusGame(): FeaturedBonusGame {
+/**
+ * Current glowing bonus game - creates one if missing.
+ * Pass `exclude` to skip no-Cash / spam-locked games (rotates if current is banned).
+ */
+export function getOrCreateFeaturedBonusGame(
+  exclude: readonly FeaturedBonusGame[] = [],
+): FeaturedBonusGame {
+  const ban = asExcludeSet(exclude);
   const cur = readFeaturedBonusGame();
-  if (cur) return cur;
-  const next = pickRandom(POOL);
-  writeFeaturedBonusGame(next);
+  if (cur && !ban.has(cur)) return cur;
+  const next = pickRandom(POOL, cur ? [...ban, cur] : [...ban]);
+  if (next !== cur) writeFeaturedBonusGame(next);
   return next;
 }
 
@@ -125,6 +140,8 @@ export function resolveFeaturedBonusGame(
     /** @deprecated use silasFavoriteChance */
     silasFreezeChance?: number;
     favoriteGames?: readonly FeaturedBonusGame[];
+    /** Games that must not become the next featured bonus (e.g. no-Cash locks). */
+    exclude?: readonly FeaturedBonusGame[];
   } = {},
 ): {
   awarded: boolean;
@@ -136,10 +153,15 @@ export function resolveFeaturedBonusGame(
   /** @deprecated alias of silasSteered */
   silasFroze?: boolean;
 } {
-  const featured = getOrCreateFeaturedBonusGame();
-  const awarded = didDecent && played === featured;
+  const featured = getOrCreateFeaturedBonusGame(opts.exclude ?? []);
+  const banned = asExcludeSet(opts.exclude);
+  const awarded =
+    didDecent && played === featured && !banned.has(played);
   const shouldRotate =
-    awarded || played !== featured || Boolean(opts.oneShotAttempt);
+    awarded ||
+    played !== featured ||
+    Boolean(opts.oneShotAttempt) ||
+    banned.has(featured);
 
   if (!shouldRotate) {
     return {
@@ -163,9 +185,13 @@ export function resolveFeaturedBonusGame(
     favorites.length > 0 &&
     Math.random() < steerChance;
 
+  const avoid = opts.exclude?.length
+    ? [...opts.exclude, featured]
+    : featured;
+
   const next = steered
-    ? pickRandom(favorites, featured)
-    : pickRandom(POOL, featured);
+    ? pickRandom(favorites, avoid)
+    : pickRandom(POOL, avoid);
 
   if (next !== featured) writeFeaturedBonusGame(next);
 

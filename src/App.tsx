@@ -41,6 +41,10 @@ import { MobileUpdateGate } from "./components/MobileUpdateGate";
 import { LivePlayerSync } from "./components/LivePlayerSync";
 import { NavigationRefresh } from "./components/NavigationRefresh";
 import { earnsQuizBonusPack } from "./games/rewards";
+import {
+  farmNoPayGames,
+  fetchGameFarm,
+} from "./lib/gameFarm";
 import { awardCoins } from "./lib/awardCoins";
 import {
   getMobileNavSizeId,
@@ -348,12 +352,14 @@ function AppShell() {
         ...readAccountStatsLocal(profile?.account_stats).gamePlays,
       };
       plays[game] = (plays[game] ?? 0) + 1;
+      const farm = await fetchGameFarm(null);
       const result = resolveFeaturedBonusGame(game, didDecent, {
         oneShotAttempt: opts.oneShotAttempt,
         silasFavoriteChance: usingSilas
           ? heroEffectsAtLevel("silas", equipped.level).featuredFavoriteChance
           : 0,
         favoriteGames: usingSilas ? topPlayedGames(plays, 3) : [],
+        exclude: farmNoPayGames(farm),
       });
       if (result.silasSteered && result.next) {
         notifyHeroProc({

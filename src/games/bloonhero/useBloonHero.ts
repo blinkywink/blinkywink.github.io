@@ -7,6 +7,7 @@ import {
   APPROACH_S,
   DART_SPEED_PX_S,
   EMPTY_STREAK_PER_LIFE,
+  HERO_BONUS_MIN_DURATION_S,
   HERO_BONUS_RATIO,
   HERO_LIVES,
   HIT_LINE_Y,
@@ -677,7 +678,10 @@ export function useBloonHero() {
     const ratio = hitsRef.current / attempted;
     // Clear = survived to the end of the song. Misses never fail you.
     const cleared = !opts.died;
-    const didWell = cleared && ratio >= HERO_BONUS_RATIO;
+    const longEnough =
+      durationRef.current >= HERO_BONUS_MIN_DURATION_S;
+    const didWell =
+      cleared && longEnough && ratio >= HERO_BONUS_RATIO;
     setState((prev) => ({
       ...prev,
       phase: "results",

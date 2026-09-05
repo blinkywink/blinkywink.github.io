@@ -354,6 +354,17 @@ export function formatSpamWait(ms: number): string {
   return formatSpamClock(ms);
 }
 
+export function farmNoPayGames(
+  snap: GameFarmSnapshot | null | undefined,
+): GamePath[] {
+  if (!snap) return [];
+  const out = new Set<GamePath>();
+  for (const id of GAME_PATHS) {
+    if (spamUnlockMs(snap, id) > 0 || snap.paused[id]) out.add(id);
+  }
+  return [...out];
+}
+
 export function emitGameFarm(snap: GameFarmSnapshot) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(

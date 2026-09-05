@@ -17,6 +17,8 @@ export const WINDOW_GOOD = 0.16;
 export const HERO_LIVES = 5;
 /** Hit accuracy needed after finishing a song for the bonus pack / cash. */
 export const HERO_BONUS_RATIO = 0.65;
+/** Songs shorter than this never grant the shop bonus pack (or good-clear Cash). */
+export const HERO_BONUS_MIN_DURATION_S = 60;
 /** Consecutive empty taps before you lose one strike. */
 export const EMPTY_STREAK_PER_LIFE = 8;
 

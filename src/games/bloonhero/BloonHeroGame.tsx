@@ -14,7 +14,7 @@ import { LivesMeter } from "../../components/LivesMeter";
 import { isTypingTarget } from "../../lib/keyboard";
 import { prefersKeyboardAutofocus } from "../../lib/focus";
 import { playBloonPop } from "../../lib/packSounds";
-import { EMPTY_STREAK_PER_LIFE, LANES } from "./config";
+import { EMPTY_STREAK_PER_LIFE, HERO_BONUS_MIN_DURATION_S, LANES } from "./config";
 import {
   enchorArtUrl,
   diffScoreFor,
@@ -979,8 +979,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   <p className="hero-overlay__detail">
                     {state.cleared
                       ? state.didWell
-                        ? "Finished the song + strong accuracy. Pack & bonus"
-                        : "Finished the song. Free pack unlocked"
+                        ? "Finished the song + strong accuracy. Shop pack unlocked"
+                        : state.duration < HERO_BONUS_MIN_DURATION_S
+                          ? "Finished the song. Need 1+ min for the shop pack"
+                          : "Finished the song"
                       : "Too much spamming. Finish the track to clear"}
                   </p>
                   <p className="hero-overlay__detail">

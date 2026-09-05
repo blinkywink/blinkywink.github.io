@@ -3937,6 +3937,7 @@ body:has(.roundcheck-page) {
 .game-card__art {
   position: relative;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .game-preview__cash-lock {
@@ -7139,8 +7140,13 @@ body.rewards-overlay-open .sweeper-result {
     padding: 0.7rem;
   }
 
-  .arcade:not(.arcade--embed) .game-preview {
+  .arcade:not(.arcade--embed) .game-card__art {
     width: min(42%, 9.75rem);
+    flex: 0 0 auto;
+  }
+
+  .arcade:not(.arcade--embed) .game-preview {
+    width: 100%;
     flex: 0 0 auto;
     aspect-ratio: 1;
   }

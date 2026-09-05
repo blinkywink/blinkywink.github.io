@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
 import { BLOON_IMAGES, LANES } from "../games/bloonhero/config";
 import { armBloonleKeyboard } from "../games/bloonle/bloonleKeyboardBridge";
 import {
@@ -8,6 +9,7 @@ import {
   type FeaturedBonusGame,
 } from "../lib/featuredBonus";
 import {
+  farmNoPayGames,
   fetchGameFarm,
   formatSpamClock,
   spamUnlockMs,
@@ -640,6 +642,7 @@ export function ArcadeHome({
   pick,
   bonusGame: bonusGameProp = null,
 }: Props) {
+  const { ready: authReady } = useAuth();
   const [bonusGame, setBonusGame] = useState<FeaturedBonusGame | null>(
     () => bonusGameProp ?? getOrCreateFeaturedBonusGame(),
   );
@@ -647,6 +650,7 @@ export function ArcadeHome({
   const [, setFarmTick] = useState(0);
 
   useEffect(() => {
+    if (!authReady) return;
     void fetchGameFarm(null).then(setFarm);
     const onFarm = (e: Event) => {
       const detail = (e as CustomEvent<GameFarmSnapshot>).detail;
@@ -663,7 +667,7 @@ export function ArcadeHome({
       window.removeEventListener("focus", onVis);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [authReady]);
 
   const spamLeft = farm
     ? Object.values(farm.spamUntil).some((iso) => Date.parse(iso) > Date.now())
@@ -674,17 +678,19 @@ export function ArcadeHome({
     return () => window.clearInterval(id);
   }, [spamLeft]);
 
+  const noPay = farmNoPayGames(farm);
+
   useEffect(() => {
     if (bonusGameProp != null) {
       setBonusGame(bonusGameProp);
       return;
     }
-    setBonusGame(getOrCreateFeaturedBonusGame());
-  }, [bonusGameProp]);
+    setBonusGame(getOrCreateFeaturedBonusGame(noPay));
+  }, [bonusGameProp, noPay.join("|")]);
 
   // Re-read when returning to the hub (e.g. after a run rotates the bonus).
   useEffect(() => {
-    const sync = () => setBonusGame(getOrCreateFeaturedBonusGame());
+    const sync = () => setBonusGame(getOrCreateFeaturedBonusGame(noPay));
     window.addEventListener("focus", sync);
     document.addEventListener("visibilitychange", sync);
     window.addEventListener(FEATURED_BONUS_CHANGED, sync);
@@ -693,12 +699,12 @@ export function ArcadeHome({
       document.removeEventListener("visibilitychange", sync);
       window.removeEventListener(FEATURED_BONUS_CHANGED, sync);
     };
-  }, []);
+  }, [noPay.join("|")]);
 
   // Hub remount / path back from a game.
   useEffect(() => {
-    setBonusGame(getOrCreateFeaturedBonusGame());
-  }, []);
+    setBonusGame(getOrCreateFeaturedBonusGame(noPay));
+  }, [noPay.join("|")]);
 
   const games = [
     {
@@ -804,8 +810,10 @@ export function ArcadeHome({
         aria-label="Available games"
       >
         {shown.map((g) => {
-          const isBonus = bonusGame === g.id;
           const lockMs = farm ? spamUnlockMs(farm, g.id as GamePath) : 0;
+          const noCash =
+            lockMs > 0 || Boolean(farm?.paused[g.id as GamePath]);
+          const isBonus = bonusGame === g.id && !noCash;
           return (
             <button
               key={g.id}
@@ -814,9 +822,11 @@ export function ArcadeHome({
               aria-label={
                 lockMs > 0
                   ? `${g.label} · No Cash for ${formatSpamClock(lockMs)}`
-                  : isBonus
-                    ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
-                    : g.label
+                  : noCash
+                    ? `${g.label} · No Cash right now`
+                    : isBonus
+                      ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
+                      : g.label
               }
               onClick={() => {
                 /* iOS needs focus in the same user gesture as navigate — click only, not pointerdown (scroll). */
@@ -826,10 +836,12 @@ export function ArcadeHome({
             >
               <div className="game-card__art">
                 {g.preview}
-                {lockMs > 0 ? (
+                {noCash ? (
                   <div className="game-preview__cash-lock" aria-hidden>
                     <span>No Cash</span>
-                    <strong>{formatSpamClock(lockMs)}</strong>
+                    {lockMs > 0 ? (
+                      <strong>{formatSpamClock(lockMs)}</strong>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
