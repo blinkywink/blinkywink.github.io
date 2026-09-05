@@ -3957,11 +3957,13 @@ body:has(.roundcheck-page) {
 }
 
 .game-preview__cash-lock span {
-  font-size: 0.82rem;
+  max-width: 90%;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #f0c84a;
+  line-height: 1.2;
 }
 
 .game-preview__cash-lock strong {

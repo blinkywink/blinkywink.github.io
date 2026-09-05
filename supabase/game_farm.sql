@@ -298,7 +298,10 @@ begin
     end;
   end if;
   if not keep then
-    spam := spam || jsonb_build_object(gid, p_until);
+    spam := spam || jsonb_build_object(
+      gid,
+      to_char(p_until at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    );
   end if;
   return st || jsonb_build_object('spamUntil', spam);
 end;

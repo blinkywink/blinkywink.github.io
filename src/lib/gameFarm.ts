@@ -10,6 +10,8 @@ import { GAME_PATHS, type GamePath } from "./routes";
 import { GAME_STAT_LABELS } from "./accountStats";
 
 const LS_KEY = "bloon-arcade:game-farm";
+/** Client-side spam timers so the games page still shows them if the server lag/fails. */
+const LS_SPAM_KEY = "bloon-arcade:game-farm-spam-v1";
 /** Same game this many completed runs in a row → short No Cash cool-off. */
 export const FARM_STREAK_PAUSE = 5;
 /** Cool-off after farming one game 5× in a row. */
@@ -91,6 +93,95 @@ function parseSpam(raw: unknown): Partial<Record<GamePath, string>> {
     out[k] = new Date(ts).toISOString();
   }
   return out;
+}
+
+function mergeSpamMaps(
+  ...maps: Array<Partial<Record<GamePath, string>> | null | undefined>
+): Partial<Record<GamePath, string>> {
+  const out: Partial<Record<GamePath, string>> = {};
+  const now = Date.now();
+  for (const map of maps) {
+    if (!map) continue;
+    for (const [k, iso] of Object.entries(map) as [GamePath, string][]) {
+      if (!isGamePath(k) || !iso) continue;
+      const ts = Date.parse(iso);
+      if (!Number.isFinite(ts) || ts <= now) continue;
+      const prev = out[k] ? Date.parse(out[k]!) : 0;
+      if (ts >= prev) out[k] = new Date(ts).toISOString();
+    }
+  }
+  return out;
+}
+
+function readLocalSpam(): Partial<Record<GamePath, string>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LS_SPAM_KEY);
+    if (!raw) return {};
+    return parseSpam(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
+/** Replace the local mirror with server (or guest) truth — never invent mutes here. */
+function cacheSpamFromServer(
+  spam: Partial<Record<GamePath, string>>,
+): Partial<Record<GamePath, string>> {
+  const cleaned = parseSpam(spam);
+  if (typeof window === "undefined") return cleaned;
+  try {
+    if (Object.keys(cleaned).length === 0) {
+      window.localStorage.removeItem(LS_SPAM_KEY);
+    } else {
+      window.localStorage.setItem(LS_SPAM_KEY, JSON.stringify(cleaned));
+    }
+  } catch {
+    /* ignore */
+  }
+  return cleaned;
+}
+
+/**
+ * Optimistic mute mirror so the games page can paint instantly.
+ * Cloud write must still succeed — this alone is not anti-cheat.
+ */
+export function rememberGameMute(game: GamePath, untilMs: number): void {
+  const until = new Date(Math.max(Date.now() + 1000, untilMs)).toISOString();
+  cacheSpamFromServer(mergeSpamMaps(readLocalSpam(), { [game]: until }));
+}
+
+/** Seed UI from the last server mirror (may be empty). */
+export function peekCachedFarm(
+  game: GamePath | null = null,
+): GameFarmSnapshot {
+  return snapshotFromStored(
+    { ...EMPTY_STORED, spamUntil: readLocalSpam() },
+    game,
+  );
+}
+
+function adoptServerFarm(snap: GameFarmSnapshot): GameFarmSnapshot {
+  const spamUntil = cacheSpamFromServer(snap.spamUntil);
+  const gid = snap.game;
+  const muted = Boolean(gid && spamUntil[gid]);
+  return {
+    ...snap,
+    spamUntil,
+    canPay: !muted,
+    reason: muted
+      ? snap.reason === "paused"
+        ? "paused"
+        : "spam"
+      : "ok",
+  };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => {
+    const t = globalThis.setTimeout ?? setTimeout;
+    t(r, ms);
+  });
 }
 
 function extendMute(
@@ -281,72 +372,100 @@ export function parseGameFarmSnapshot(
 export async function fetchGameFarm(
   game: GamePath | null = null,
 ): Promise<GameFarmSnapshot> {
-  if (!signedIn()) return snapshotFromStored(readGuest(), game);
+  if (!signedIn()) {
+    return adoptServerFarm(snapshotFromStored(readGuest(), game));
+  }
   const { data, error } = await supabase.rpc("get_game_farm", {
     p_game_id: game,
   });
   if (error) {
     console.warn("get_game_farm failed", error.message);
     if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    return emptySnap(game);
+    // Soft fallback: last cloud mirror only (not a place to invent locks).
+    return peekCachedFarm(game);
   }
-  return parseSnap(data, game);
+  // Cloud is source of truth — replaces any optimistic local mirror.
+  return adoptServerFarm(parseSnap(data, game));
 }
 
 export async function noteGameFarmRun(
   game: GamePath,
   won: boolean,
 ): Promise<GameFarmSnapshot> {
-  const snap = !signedIn()
-    ? guestNoteRun(game, won)
-    : await (async () => {
-        const { data, error } = await supabase.rpc("note_game_run", {
-          p_game_id: game,
-          p_won: won,
-        });
-        if (error) {
-          console.warn("note_game_run failed", error.message);
-          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-          return emptySnap(game);
-        }
-        return parseSnap(data, game);
-      })();
+  if (!signedIn()) {
+    const snap = adoptServerFarm(guestNoteRun(game, won));
+    emitGameFarm(snap);
+    return snap;
+  }
+  const { data, error } = await supabase.rpc("note_game_run", {
+    p_game_id: game,
+    p_won: won,
+  });
+  if (error) {
+    console.warn("note_game_run failed", error.message);
+    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+    return peekCachedFarm(game);
+  }
+  const snap = adoptServerFarm(parseSnap(data, game));
   emitGameFarm(snap);
   return snap;
 }
 
 export async function flagGameSpam(game: GamePath): Promise<GameFarmSnapshot> {
+  const untilMs = Date.now() + FARM_SPAM_LOCK_MS;
+  // Optimistic mirror for this device's games page while cloud write lands.
+  rememberGameMute(game, untilMs);
+
   if (!signedIn()) {
-    const snap = guestFlagSpam(game);
+    const snap = adoptServerFarm(guestFlagSpam(game));
     emitGameFarm(snap);
     return snap;
   }
-  const { data, error } = await supabase.rpc("flag_game_spam", {
-    p_game_id: game,
+
+  let lastError: string | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, error } = await supabase.rpc("flag_game_spam", {
+      p_game_id: game,
+    });
+    if (!error) {
+      let snap = adoptServerFarm(parseSnap(data, game));
+      if (spamUnlockMs(snap, game) <= 0) {
+        // Write may have landed — re-read cloud instead of trusting client-only.
+        snap = await fetchGameFarm(game);
+      }
+      if (spamUnlockMs(snap, game) <= 0) {
+        rememberGameMute(game, untilMs);
+        snap = {
+          ...snap,
+          canPay: false,
+          reason: "spam",
+          spamUntil: {
+            ...snap.spamUntil,
+            [game]: new Date(untilMs).toISOString(),
+          },
+        };
+      }
+      emitGameFarm(snap);
+      return snap;
+    }
+    lastError = error.message;
+    if (isNotAuthenticatedError(rpcErrorText(error))) {
+      emitSessionInvalid();
+      break;
+    }
+    await sleep(200 * (attempt + 1));
+  }
+
+  console.warn("flag_game_spam failed after retries", lastError);
+  // Still emit optimistic so this session stops paying; cloud retry on next award/fetch.
+  const optimistic = adoptServerFarm({
+    ...emptySnap(game),
+    canPay: false,
+    reason: "spam",
+    spamUntil: { [game]: new Date(untilMs).toISOString() },
   });
-  if (error) {
-    console.warn("flag_game_spam failed", error.message);
-    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-    // Keep a real local mute so the UI timer isn't wiped to 0:00.
-    const snap = guestFlagSpam(game);
-    emitGameFarm(snap);
-    return snap;
-  }
-  const snap = parseSnap(data, game);
-  // If the server ack'd spam but the timestamp didn't parse, still mute locally.
-  if (spamUnlockMs(snap, game) <= 0 && snap.reason === "spam") {
-    const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
-    const fixed: GameFarmSnapshot = {
-      ...snap,
-      canPay: false,
-      reason: "spam",
-      spamUntil: { ...snap.spamUntil, [game]: until },
-    };
-    emitGameFarm(fixed);
-    return fixed;
-  }
-  emitGameFarm(snap);
-  return snap;
+  emitGameFarm(optimistic);
+  return optimistic;
 }
 
 export async function awardGameCoins(
@@ -357,20 +476,22 @@ export async function awardGameCoins(
   if (!Number.isFinite(rounded) || rounded < 1) {
     return { ...emptySnap(game), coins: loadGuestWallet().coins };
   }
-  const snap = !signedIn()
-    ? guestTryPay(game, rounded)
-    : await (async () => {
-        const { data, error } = await supabase.rpc("award_game_coins", {
-          p_amount: rounded,
-          p_game_id: game,
-        });
-        if (error) {
-          console.warn("award_game_coins failed", error.message);
-          if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
-          return emptySnap(game);
-        }
-        return parseSnap(data, game);
-      })();
+  if (!signedIn()) {
+    const snap = adoptServerFarm(guestTryPay(game, rounded));
+    if (!snap.canPay || snap.reason !== "ok") emitGameFarm(snap);
+    return snap;
+  }
+
+  const { data, error } = await supabase.rpc("award_game_coins", {
+    p_amount: rounded,
+    p_game_id: game,
+  });
+  if (error) {
+    console.warn("award_game_coins failed", error.message);
+    if (isNotAuthenticatedError(rpcErrorText(error))) emitSessionInvalid();
+    return peekCachedFarm(game);
+  }
+  const snap = adoptServerFarm(parseSnap(data, game));
   if (!snap.canPay || snap.reason !== "ok" || snap.justPaused) {
     emitGameFarm(snap);
   }
@@ -413,7 +534,9 @@ export function farmNoPayGames(
 
 export function emitGameFarm(snap: GameFarmSnapshot) {
   if (typeof window === "undefined") return;
+  // Cache whatever authoritative snap we were given (usually cloud).
+  const detail = adoptServerFarm(snap);
   window.dispatchEvent(
-    new CustomEvent("monkeycards:game-farm", { detail: snap }),
+    new CustomEvent("monkeycards:game-farm", { detail }),
   );
 }

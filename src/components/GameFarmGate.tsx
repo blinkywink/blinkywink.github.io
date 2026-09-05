@@ -18,6 +18,7 @@ import {
   fetchGameFarm,
   flagGameSpam,
   formatSpamClock,
+  rememberGameMute,
   spamUnlockMs,
   type GameFarmSnapshot,
 } from "../lib/gameFarm";
@@ -108,6 +109,7 @@ export function GameFarmGate({
     (ms: number, reason: "spam" | "paused") => {
       const untilMs = Date.now() + ms;
       muteUntilRef.current = Math.max(muteUntilRef.current, untilMs);
+      rememberGameMute(game, muteUntilRef.current);
       const until = new Date(muteUntilRef.current).toISOString();
       setDismissed(false);
       setSnap((prev) => {

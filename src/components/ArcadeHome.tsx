@@ -12,6 +12,7 @@ import {
   farmNoPayGames,
   fetchGameFarm,
   formatSpamClock,
+  peekCachedFarm,
   spamUnlockMs,
   type GameFarmSnapshot,
 } from "../lib/gameFarm";
@@ -646,11 +647,14 @@ export function ArcadeHome({
   const [bonusGame, setBonusGame] = useState<FeaturedBonusGame | null>(
     () => bonusGameProp ?? getOrCreateFeaturedBonusGame(),
   );
-  const [farm, setFarm] = useState<GameFarmSnapshot | null>(null);
+  const [farm, setFarm] = useState<GameFarmSnapshot | null>(() =>
+    peekCachedFarm(null),
+  );
   const [, setFarmTick] = useState(0);
 
   useEffect(() => {
     if (!authReady) return;
+    // Always re-pull cloud so other devices / refresh can't desync.
     void fetchGameFarm(null).then(setFarm);
     const onFarm = (e: Event) => {
       const detail = (e as CustomEvent<GameFarmSnapshot>).detail;
@@ -658,14 +662,20 @@ export function ArcadeHome({
     };
     window.addEventListener("monkeycards:game-farm", onFarm);
     const onVis = () => {
+      if (document.visibilityState === "hidden") return;
       void fetchGameFarm(null).then(setFarm);
     };
     window.addEventListener("focus", onVis);
     document.addEventListener("visibilitychange", onVis);
+    const onPageShow = () => {
+      void fetchGameFarm(null).then(setFarm);
+    };
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       window.removeEventListener("monkeycards:game-farm", onFarm);
       window.removeEventListener("focus", onVis);
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [authReady]);
 
@@ -820,7 +830,7 @@ export function ArcadeHome({
               className={`game-card game-card--live${isBonus ? " game-card--bonus" : ""}${noCash ? " game-card--no-cash" : ""}`}
               aria-label={
                 noCash
-                  ? `${g.label} · No Cash for ${formatSpamClock(lockMs)}`
+                  ? `${g.label} · Earn Cash again in ${formatSpamClock(lockMs)}`
                   : isBonus
                     ? `${g.label} · Featured +${FEATURED_BONUS_CASH.toLocaleString()} Cash for a solid run`
                     : g.label
@@ -835,7 +845,7 @@ export function ArcadeHome({
                 {g.preview}
                 {noCash ? (
                   <div className="game-preview__cash-lock" aria-hidden>
-                    <span>No Cash</span>
+                    <span>Earn Cash again in</span>
                     <strong>{formatSpamClock(lockMs)}</strong>
                   </div>
                 ) : null}
@@ -844,7 +854,7 @@ export function ArcadeHome({
                 <span className="game-card__title">{g.title}</span>
                 {noCash ? (
                   <span className="game-card__no-cash">
-                    No Cash · {formatSpamClock(lockMs)}
+                    Earn Cash again in {formatSpamClock(lockMs)}
                   </span>
                 ) : isBonus ? (
                   <span className="game-card__bonus">
