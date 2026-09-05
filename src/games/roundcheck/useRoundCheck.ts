@@ -112,7 +112,7 @@ export function useRoundCheck() {
   const onCorrectCashRef = useRef(onCorrectCash);
   onCorrectCashRef.current = onCorrectCash;
   const canPayRef = useRef(true);
-  canPayRef.current = farm?.canPay !== false;
+  canPayRef.current = farm?.canPay !== false && !farm?.isMutedNow?.();
   const farmRef = useRef(farm);
   farmRef.current = farm;
   const guard = useRef(
@@ -182,7 +182,7 @@ export function useRoundCheck() {
         if (hint === "correct") {
           const instant =
             typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 3500;
+            performance.now() - puzzleShownAt.current < 2000;
           if (guard.current.markAction(instant)) tripSpam();
           puzzleDoneAt.current =
             typeof performance !== "undefined" ? performance.now() : 0;
@@ -207,7 +207,7 @@ export function useRoundCheck() {
         if (guesses.length >= ROUND_CHECK_MAX_GUESSES) {
           const instant =
             typeof performance !== "undefined" &&
-            performance.now() - puzzleShownAt.current < 3500;
+            performance.now() - puzzleShownAt.current < 2000;
           if (guard.current.markAction(instant)) tripSpam();
           puzzleDoneAt.current =
             typeof performance !== "undefined" ? performance.now() : 0;

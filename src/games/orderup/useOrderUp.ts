@@ -147,7 +147,7 @@ export function useOrderUp() {
   stateRef.current = state;
   const submitting = useRef(false);
   const canPayRef = useRef(true);
-  canPayRef.current = farm?.canPay !== false;
+  canPayRef.current = farm?.canPay !== false && !farm?.isMutedNow?.();
   const awardGuard = useRef(
     createInstantPlayGuard({
       instantLimit: 99,
@@ -189,7 +189,7 @@ export function useOrderUp() {
     });
     const lives = ok ? s.lives : s.lives - 1;
 
-    if (points > 0 && canPayRef.current) {
+    if (points > 0 && canPayRef.current && !farm?.isMutedNow?.()) {
       if (awardGuard.current.markAward()) {
         canPayRef.current = false;
         farm?.reportInstantSpam();

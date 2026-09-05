@@ -207,10 +207,10 @@ export function OrderUpGame({ onBack, onRunEnd }: Props) {
   }, [state.round.round, state.phase]);
 
   const onLockIn = useCallback(() => {
+    // Locking in within the first 2s, multiple rounds in a row = cheating.
     const instant =
-      !didDrag.current &&
       typeof performance !== "undefined" &&
-      performance.now() - roundShownAt.current < 2500;
+      performance.now() - roundShownAt.current < 2000;
     if (guard.current.markAction(instant)) farm?.reportInstantSpam();
     lockIn();
   }, [farm, lockIn]);

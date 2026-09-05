@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -24,6 +25,8 @@ type FarmCtx = {
   game: GamePath;
   snap: GameFarmSnapshot;
   canPay: boolean;
+  /** Sync read — true immediately after reportInstantSpam (before re-render). */
+  isMutedNow: () => boolean;
   reportInstantSpam: () => void;
   refresh: () => void;
 };
@@ -53,6 +56,7 @@ export function GameFarmGate({
   const navigate = useNavigate();
   const [snap, setSnap] = useState<GameFarmSnapshot | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const mutedNowRef = useRef(false);
 
   const refresh = useCallback(() => {
     void fetchGameFarm(game).then(setSnap);
@@ -60,10 +64,18 @@ export function GameFarmGate({
 
   useEffect(() => {
     setDismissed(false);
+    mutedNowRef.current = false;
     refresh();
   }, [game, refresh]);
 
+  const isMutedNow = useCallback(() => {
+    if (mutedNowRef.current) return true;
+    if (!snap) return false;
+    return spamUnlockMs(snap, game) > 0;
+  }, [game, snap]);
+
   const reportInstantSpam = useCallback(() => {
+    mutedNowRef.current = true;
     setDismissed(false);
     const until = new Date(Date.now() + FARM_SPAM_LOCK_MS).toISOString();
     // Optimistic mute so Cash stops before the RPC round-trip.
@@ -95,6 +107,7 @@ export function GameFarmGate({
   const applyExternal = useCallback((next: GameFarmSnapshot) => {
     setSnap(next);
     if (next.justPaused || next.reason === "spam" || next.reason === "paused") {
+      mutedNowRef.current = true;
       setDismissed(false);
     }
   }, []);
@@ -102,12 +115,16 @@ export function GameFarmGate({
   const wait = snap ? spamUnlockMs(snap, game) : 0;
   useNow(wait > 0);
   const waitNow = snap ? spamUnlockMs(snap, game) : 0;
-  const muted = waitNow > 0;
+  const muted = waitNow > 0 || mutedNowRef.current;
   const canPay = !muted;
   const coolReason = snap?.reason === "paused" ? "paused" : "spam";
 
   useEffect(() => {
+    if (waitNow > 0) mutedNowRef.current = true;
     if (snap && waitNow <= 0 && !snap.canPay) refresh();
+    if (waitNow <= 0 && snap?.canPay !== false && snap?.reason === "ok") {
+      mutedNowRef.current = false;
+    }
   }, [refresh, snap, waitNow]);
 
   const value = useMemo<FarmCtx>(() => {
@@ -133,10 +150,20 @@ export function GameFarmGate({
         reason: muted ? coolReason : "ok",
       },
       canPay,
+      isMutedNow,
       reportInstantSpam,
       refresh,
     };
-  }, [canPay, coolReason, game, muted, refresh, reportInstantSpam, snap]);
+  }, [
+    canPay,
+    coolReason,
+    game,
+    isMutedNow,
+    muted,
+    refresh,
+    reportInstantSpam,
+    snap,
+  ]);
 
   useEffect(() => {
     const onFarm = (e: Event) => {
@@ -172,8 +199,8 @@ export function GameFarmGate({
             <h2>You can keep playing — no Cash for now</h2>
             <p>
               {coolReason === "paused"
-                ? `Same game five times in a row is enough. ${label} still works, but questions won’t pay Cash for ${formatSpamClock(waitNow)}.`
-                : `Those answers came in too fast. ${label} still works, but questions won’t pay Cash until the timer hits zero (${formatSpamClock(waitNow)}).`}
+                ? `Same game five times in a row is enough. ${label} still works, but won’t pay Cash for ${formatSpamClock(waitNow)}.`
+                : `Answers came in under 2 seconds too many times. ${label} still works, but won’t pay Cash for ${formatSpamClock(waitNow)}.`}
             </p>
             <div className="game-farm-overlay__row">
               <button

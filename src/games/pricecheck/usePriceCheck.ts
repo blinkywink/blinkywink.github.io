@@ -195,7 +195,7 @@ export function usePriceCheck() {
   const streakBonusRef = useRef(streakBonusPct);
   streakBonusRef.current = streakBonusPct;
   const canPayRef = useRef(true);
-  canPayRef.current = farm?.canPay !== false;
+  canPayRef.current = farm?.canPay !== false && !farm?.isMutedNow?.();
   const farmRef = useRef(farm);
   farmRef.current = farm;
   const guard = useRef(
@@ -221,9 +221,10 @@ export function usePriceCheck() {
 
   const guess = useCallback(
     (side: Guess) => {
+      // Answering in the first 2s, multiple rounds in a row = cheating.
       const instant =
         typeof performance !== "undefined" &&
-        performance.now() - roundShownAt.current < 2500;
+        performance.now() - roundShownAt.current < 2000;
       if (guard.current.markAction(instant)) tripSpam();
       setState((s) => applyGuess(s, side, false, streakBonusRef.current));
     },
@@ -232,9 +233,9 @@ export function usePriceCheck() {
 
   useEffect(() => {
     if (state.phase === "playing") {
+      // Do NOT reset the instant streak here — it must stack across rounds.
       roundShownAt.current =
         typeof performance !== "undefined" ? performance.now() : 0;
-      guard.current.reset();
     }
     if (state.phase === "reveal") {
       revealAt.current =
@@ -408,6 +409,7 @@ export function usePriceCheck() {
   const playAgain = useCallback(() => {
     paidAnswered.current = 0;
     perfectPaid.current = false;
+    guard.current.reset();
     setState(initialState());
   }, []);
 
