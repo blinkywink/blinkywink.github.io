@@ -9,6 +9,8 @@ where lower(p.username) in (
   lower('swift574'),
   lower('sharkninja0731'),
   lower('arit'),
-  lower('TristanTodd')
+  lower('TristanTodd'),
+  lower('huluxmu'),
+  lower('YeSOtis')
 )
 on conflict (user_id, badge_id) do nothing;

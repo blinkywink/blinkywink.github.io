@@ -11,6 +11,9 @@ export const BFB_IMAGE = "/images/bloons/bfb.webp";
 /** Starting lives, each bloon hit costs one. */
 export const CATCH_LIVES = 3;
 
+/** After a hit, ignore further bloon damage for this long (ms). */
+export const PLAYER_IFRAME_MS = 2000;
+
 /** Fewer bananas, each one pays more. */
 export const CASH_PER_BANANA = 35;
 

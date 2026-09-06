@@ -19,6 +19,7 @@ import {
   PINK_UNLOCK_S,
   PLAYER_HEIGHT,
   PLAYER_HIT,
+  PLAYER_IFRAME_MS,
   PLAYER_LERP,
   PLAYER_WIDTH,
   SPAWN_BANANA_MS_MIN,
@@ -66,6 +67,8 @@ export type CatchState = {
   fieldW: number;
   fieldH: number;
   cleared: boolean;
+  /** True while post-hit i-frames are active (red flash). */
+  invulnerable: boolean;
 };
 
 type OrdinaryKind = "red" | "blue" | "green" | "pink";
@@ -329,6 +332,7 @@ const INITIAL: CatchState = {
   fieldW: CATCH_LOGIC_W,
   fieldH: CATCH_LOGIC_H,
   cleared: false,
+  invulnerable: false,
 };
 
 export function useBananaCatch() {
@@ -357,6 +361,8 @@ export function useBananaCatch() {
   const movePlayerRef = useRef<((x: number) => void) | null>(null);
   const bananaFxRef = useRef<((x: number, y: number) => void) | null>(null);
   const displayWRef = useRef(CATCH_LOGIC_W);
+  /** performance.now() until which bloon damage is ignored. */
+  const invulnUntilRef = useRef(0);
 
   const nextId = useCallback(() => {
     const id = nextIdRef.current;
@@ -413,6 +419,7 @@ export function useBananaCatch() {
     lastTsRef.current = 0;
     targetXRef.current = 0.5;
     playerXRef.current = 0.5;
+    invulnUntilRef.current = 0;
     dropsRef.current = [];
     setState((s) => ({
       ...INITIAL,
@@ -428,6 +435,7 @@ export function useBananaCatch() {
     pendingCashRef.current = 0;
     cancelAnimationFrame(frameRef.current);
     lastTsRef.current = 0;
+    invulnUntilRef.current = 0;
     dropsRef.current = [];
     setState((s) => ({
       ...INITIAL,
@@ -555,6 +563,10 @@ export function useBananaCatch() {
       let bananas = s.bananas;
       let lives = s.lives;
       let cashEarned = s.cashEarned;
+      const nowMs =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
+      const wasInvuln = nowMs < invulnUntilRef.current;
+      let invulnerable = wasInvuln;
 
       const nextDrops: Drop[] = [];
       for (const d of [...dropsRef.current, ...spawn]) {
@@ -583,8 +595,13 @@ export function useBananaCatch() {
             cashEarned += CASH_PER_BANANA;
             pendingCashRef.current += CASH_PER_BANANA;
             bananaFxRef.current?.(d.x, d.y);
+          } else if (invulnerable) {
+            // I-frames: bloon pops with no life loss.
           } else {
-            lives -= d.damage;
+            // One life per contact, then brief i-frames so stacks can't wipe you.
+            lives -= 1;
+            invulnUntilRef.current = nowMs + PLAYER_IFRAME_MS;
+            invulnerable = true;
           }
           continue;
         }
@@ -604,7 +621,8 @@ export function useBananaCatch() {
         bananas !== s.bananas ||
         lives !== s.lives ||
         cashEarned !== s.cashEarned ||
-        cleared !== s.cleared;
+        cleared !== s.cleared ||
+        invulnerable !== s.invulnerable;
 
       if (hudChanged) {
         setState({
@@ -617,7 +635,13 @@ export function useBananaCatch() {
           fieldW,
           fieldH,
           cleared,
+          invulnerable: dead ? false : invulnerable,
         });
+      } else if (wasInvuln && !invulnerable) {
+        // I-frames just ended with no other HUD change.
+        setState((cur) =>
+          cur.invulnerable ? { ...cur, invulnerable: false } : cur,
+        );
       }
 
       if (pendingCashRef.current >= CASH_PER_BANANA * 5) {

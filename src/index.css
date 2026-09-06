@@ -15170,6 +15170,26 @@ body.rewards-overlay-open .sweeper-result {
   user-select: none;
 }
 
+.catch-player.is-hurt {
+  animation: catch-hurt-flash 0.28s steps(2, end) infinite;
+}
+
+@keyframes catch-hurt-flash {
+  0%,
+  100% {
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4))
+      brightness(1.15)
+      sepia(1)
+      hue-rotate(-50deg)
+      saturate(6);
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4));
+    opacity: 0.45;
+  }
+}
+
 .catch-overlay {
   position: absolute;
   inset: 0;

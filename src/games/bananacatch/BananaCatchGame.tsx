@@ -383,7 +383,7 @@ export function BananaCatchGame({ onBack, onRunEnd }: Props) {
 
           <img
             ref={playerRef}
-            className="catch-player"
+            className={`catch-player${state.invulnerable ? " is-hurt" : ""}`}
             src={MONKEY_IMAGE}
             alt=""
             draggable={false}
