@@ -22,6 +22,8 @@ const rest = args.slice(1);
 if (!target) {
   console.error(`Usage:
   npm run ship -- apk|ios|desktop|mobile|ota|all [desktop bump args]
+  ota = Capgo mobile + desktop slim web zip (after desktop 1.0.38+)
+  desktop = full Mac/Windows shell (native bumps / seed OTA loader)
 
 Desktop builds run on this machine (Mac + Windows).
 Mobile APK / IPA / OTA run on GitHub Actions.

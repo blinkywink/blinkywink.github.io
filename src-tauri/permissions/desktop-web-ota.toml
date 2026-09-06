@@ -1,0 +1,8 @@
+[[permission]]
+identifier = "allow-desktop-web-ota"
+description = "Download and apply the slim web OTA bundle used by desktop"
+commands.allow = [
+  "desktop_web_ota_status",
+  "desktop_web_ota_apply",
+  "desktop_web_ota_reload",
+]

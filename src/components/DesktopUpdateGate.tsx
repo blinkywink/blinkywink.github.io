@@ -9,6 +9,11 @@ import {
   mergeDesktopSignals,
   type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
+import {
+  desktopNeedsWebOta,
+  desktopWebOtaApply,
+  desktopWebOtaReload,
+} from "../lib/desktopWebOta";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
 import { startVisiblePoll } from "../lib/visiblePoll";
 import { ExternalLink } from "./ExternalLink";
@@ -30,9 +35,8 @@ export function DesktopUpdateGate() {
     busyRef.current = true;
 
     try {
-      const [{ getVersion }, { check }, remoteCfg, latest] = await Promise.all([
+      const [{ getVersion }, remoteCfg, latest] = await Promise.all([
         import("@tauri-apps/api/app"),
-        import("@tauri-apps/plugin-updater"),
         fetchDesktopRemoteConfig(),
         fetchDesktopLatestManifest(),
       ]);
@@ -44,60 +48,77 @@ export function DesktopUpdateGate() {
       }
 
       const current = await getVersion();
-      const versionBehind = Boolean(
-        remote &&
-          ((remote.version && isOlderVersion(current, remote.version)) ||
-            isOlderVersion(current, remote.minDesktopVersion)),
+      const needsShell = Boolean(
+        remote && isOlderVersion(current, remote.minDesktopVersion),
       );
 
-      let update: Awaited<ReturnType<typeof check>> = null;
-      try {
-        update = await check({ timeout: 15_000 });
-      } catch (err) {
-        // Only hard-block when the installed binary is behind. Shop/tower
-        // drift is already applied from the manifest above.
-        if (versionBehind) {
+      // Native shell bump (new commands / Rust) — full Tauri updater.
+      // Run before web OTA so pre-loader installs aren't stuck on missing invokes.
+      if (needsShell) {
+        const { check } = await import("@tauri-apps/plugin-updater");
+        let update: Awaited<ReturnType<typeof check>> = null;
+        try {
+          update = await check({ timeout: 15_000 });
+        } catch (err) {
           setStatus("blocked");
           setMessage("Could not reach the update server. Try again.");
-        } else {
           console.warn("Desktop update check failed", err);
+          return;
         }
-        return;
-      }
 
-      if (!update) {
-        if (versionBehind) {
+        if (!update) {
           setStatus("blocked");
           setMessage(
             remote?.message ??
               "This desktop app is out of date. Download the latest version.",
           );
+          return;
         }
+
+        installingRef.current = true;
+        setStatus("updating");
+        setMessage("Updating");
+        setProgress(null);
+
+        let downloaded = 0;
+        let total = 0;
+        await update.download((event) => {
+          if (event.event === "Started") {
+            total = event.data.contentLength ?? 0;
+            downloaded = 0;
+            setProgress(total > 0 ? 0 : null);
+          } else if (event.event === "Progress") {
+            downloaded += event.data.chunkLength;
+            if (total > 0) {
+              setProgress(Math.min(100, (downloaded / total) * 100));
+            }
+          } else if (event.event === "Finished") {
+            setProgress(100);
+          }
+        });
+        await update.install();
+        const { relaunch } = await import("@tauri-apps/plugin-process");
+        await relaunch();
         return;
       }
 
-      installingRef.current = true;
-      setStatus("updating");
-      setMessage("Updating");
-      setProgress(null);
+      // Day-to-day: same slim zip as mobile Capgo.
+      const webOta = await desktopNeedsWebOta();
+      if (webOta.needed && webOta.manifest) {
+        installingRef.current = true;
+        setStatus("updating");
+        setMessage("Updating");
+        setProgress(null);
+        await desktopWebOtaApply(webOta.manifest);
+        setProgress(100);
+        await desktopWebOtaReload();
+        window.setTimeout(() => {
+          window.location.reload();
+        }, 250);
+        return;
+      }
 
-      let downloaded = 0;
-      let total = 0;
-      await update.download((event) => {
-        if (event.event === "Started") {
-          total = event.data.contentLength ?? 0;
-          downloaded = 0;
-          setProgress(total > 0 ? 0 : null);
-        } else if (event.event === "Progress") {
-          downloaded += event.data.chunkLength;
-          if (total > 0) setProgress(Math.min(100, (downloaded / total) * 100));
-        } else if (event.event === "Finished") {
-          setProgress(100);
-        }
-      });
-      await update.install();
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
+      setStatus("idle");
     } catch (err) {
       console.warn("Desktop update failed", err);
       installingRef.current = false;

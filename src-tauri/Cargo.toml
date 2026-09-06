@@ -26,6 +26,8 @@ tauri-plugin-log = "2"
 tauri-plugin-process = "2.3.1"
 ureq = "2"
 tauri-plugin-opener = "2"
+sha2 = "0.10"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2.10.1"
