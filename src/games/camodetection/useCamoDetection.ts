@@ -141,6 +141,8 @@ export function useCamoDetection() {
   onCorrectCashRef.current = onCorrectCash;
   const onGwenStreakProcRef = useRef(onGwenStreakProc);
   onGwenStreakProcRef.current = onGwenStreakProc;
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Flash camo, then open recall.
   useEffect(() => {
@@ -181,52 +183,48 @@ export function useCamoDetection() {
   }, []);
 
   const settle = useCallback((timedOut: boolean) => {
-    let awardPoints = 0;
-    let awardStreak = 0;
-    let awardBonusPct = 0;
-    setState((s) => {
-      if (s.phase !== "recalling") return s;
-      const bonusPct = streakBonusPctRef.current;
-      const ok = !timedOut && setsEqual(s.picked, s.round.camo);
-      const streak = ok ? s.streak + 1 : 0;
-      const bestStreak = Math.max(s.bestStreak, streak);
-      const points = ok
-        ? pointsForCorrect(s.round.round, streak, streak >= 2 ? bonusPct : 0)
-        : 0;
-      const lives = ok ? s.lives : s.lives - 1;
-      const feedback: Feedback = {
-        correct: ok,
-        points,
-        picked: [...s.picked].sort((a, b) => a - b),
-        camo: s.round.camo,
-        timedOut: timedOut || undefined,
-      };
-      if (ok && points > 0) {
-        awardPoints = points;
-        awardStreak = streak;
-        awardBonusPct = bonusPct;
-      }
-      return {
-        ...s,
-        phase: "reveal",
-        streak,
-        bestStreak,
-        score: s.score + points,
-        correct: s.correct + (ok ? 1 : 0),
-        answered: s.answered + 1,
-        lives,
-        feedback,
-        timeLeftMs: 0,
-        flashOn: false,
-      };
+    const s = stateRef.current;
+    if (s.phase !== "recalling") return;
+
+    const bonusPct = streakBonusPctRef.current;
+    const ok = !timedOut && setsEqual(s.picked, s.round.camo);
+    const streak = ok ? s.streak + 1 : 0;
+    const bestStreak = Math.max(s.bestStreak, streak);
+    const points = ok
+      ? pointsForCorrect(s.round.round, streak, streak >= 2 ? bonusPct : 0)
+      : 0;
+    const lives = ok ? s.lives : s.lives - 1;
+    const feedback: Feedback = {
+      correct: ok,
+      points,
+      picked: [...s.picked].sort((a, b) => a - b),
+      camo: s.round.camo,
+      timedOut: timedOut || undefined,
+    };
+
+    setState({
+      ...s,
+      phase: "reveal",
+      streak,
+      bestStreak,
+      score: s.score + points,
+      correct: s.correct + (ok ? 1 : 0),
+      answered: s.answered + 1,
+      lives,
+      feedback,
+      timeLeftMs: 0,
+      flashOn: false,
     });
-    if (awardPoints > 0) {
-      void awardCoins(awardPoints, "camodetection").then((balance) => {
+
+    if (ok && points > 0) {
+      void awardCoins(points, "camodetection").then((balance) => {
         if (balance != null) setCoinBalanceRef.current(balance);
       });
-      void onCorrectCashRef.current(setCoinBalanceRef.current);
-      if (awardStreak >= 2 && awardBonusPct > 0) {
-        onGwenStreakProcRef.current(awardStreak);
+      void onCorrectCashRef.current(setCoinBalanceRef.current, {
+        gameId: "camodetection",
+      });
+      if (streak >= 2 && bonusPct > 0) {
+        onGwenStreakProcRef.current(streak);
       }
     }
   }, []);
