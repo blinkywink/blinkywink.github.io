@@ -94,8 +94,8 @@ export function paragonStageLabel(degree: number): string {
   return PARAGON_STAGE_LABELS[paragonStage(degree)];
 }
 
-/** Mid ask for a degree-1 Paragon (the pull itself ~100 tower packs). */
-const PARAGON_DEGREE_1_MID = 90_000;
+/** Mid ask for a degree-1 Paragon (still above limited T5 ~15k). */
+const PARAGON_DEGREE_1_MID = 45_000;
 
 function expectedXpPerTowerPack(): number {
   let xp = 0;
@@ -132,7 +132,7 @@ function roundParagonAsk(n: number): number {
 }
 
 /**
- * Suggested Cash ask from pack grind: deg 1 is ~80-100k (the Paragon pull),
+ * Suggested Cash ask: deg 1 is ~40-50k (above limited T5 deals),
  * then each extra degree adds dedicated tower-pack cost (~1k Cash each).
  */
 export function suggestedParagonValue(degree: number): number {

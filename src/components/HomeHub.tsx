@@ -127,7 +127,7 @@ export function HomeHub() {
   );
   const marketPeek = useMemo(() => {
     const card = cardSpecById(HUB_MARKET_PEEK_CARD_ID);
-    const price = card ? suggestedListingRange(card).mid : 41_500;
+    const price = card ? suggestedListingRange(card).mid : 15_000;
     return { cardId: HUB_MARKET_PEEK_CARD_ID, price };
   }, []);
 

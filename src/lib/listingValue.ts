@@ -22,9 +22,9 @@ function offPath(levels: PathLevels): number {
 }
 
 /**
- * Rough player-market ask band. Specific T5s run ~35k-55k+ (tower packs
- * are 1k with ~0.7% T5/card - a named T5 is ~3× rarer than “any T5”).
- * Paragons start ~80-100k at degree 1 and climb with tower-pack grind.
+ * Player-market ask band. Tuned near limited shop deals so people actually
+ * buy (T5 limited is ~16.7k → market guide ~12k-18k, mid ~15k).
+ * Paragons stay a step above via suggestedParagonValue.
  */
 export function suggestedListingRange(
   card: MonkeyCardSpec,
@@ -45,31 +45,33 @@ export function suggestedListingRange(
   let low: number;
   let high: number;
   if (tier >= 5) {
+    // Limited T5 ≈ 16.7k — market wants a deal / seed, not 40k+.
     if (off >= 2) {
-      low = 48_000;
-      high = 68_000;
+      low = 14_000;
+      high = 18_500;
     } else if (off === 1) {
-      low = 40_000;
-      high = 55_000;
+      low = 12_500;
+      high = 17_000;
     } else {
-      low = 35_000;
-      high = 48_000;
+      low = 11_500;
+      high = 15_500;
     }
   } else if (tier === 4) {
-    low = off >= 2 ? 8_500 : off === 1 ? 7_200 : 6_500;
-    high = off >= 2 ? 13_500 : off === 1 ? 11_500 : 10_500;
+    // Limited T4 ≈ 5.2k.
+    low = off >= 2 ? 4_200 : off === 1 ? 3_600 : 3_200;
+    high = off >= 2 ? 6_200 : off === 1 ? 5_400 : 4_800;
   } else if (tier === 3) {
-    low = off >= 2 ? 3_200 : 2_200;
-    high = off >= 2 ? 6_000 : 5_000;
+    low = off >= 2 ? 1_200 : 900;
+    high = off >= 2 ? 2_400 : 1_900;
   } else if (tier === 2) {
-    low = 800;
-    high = off >= 2 ? 2_400 : 2_000;
-  } else if (tier === 1) {
     low = 350;
-    high = 900;
+    high = off >= 2 ? 900 : 750;
+  } else if (tier === 1) {
+    low = 150;
+    high = 400;
   } else {
-    low = 180;
-    high = 450;
+    low = 80;
+    high = 200;
   }
 
   return {
