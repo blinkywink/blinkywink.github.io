@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cardSpecById } from "../lib/cardCatalog";
 import {
   fetchCollectionOffers,
@@ -6,21 +7,126 @@ import {
   respondCollectionOffer,
   type CollectionOffer,
 } from "../lib/marketplace";
-import { formatPathLevels } from "../lib/pathCombos";
 import { CashAmount } from "./CurrencyChip";
+import { MonkeyCard } from "./MonkeyCard";
+import { UserAvatar } from "./UserAvatar";
 
 type Props = {
   onAccepted: () => void;
   onChanged?: (incoming: number) => void;
 };
 
-function cardLabel(cardId: string): { name: string; detail: string } {
+function OfferThumb({
+  cardId,
+  visualSeed,
+  degree,
+  label,
+  onOpen,
+}: {
+  cardId: string;
+  visualSeed: number | null;
+  degree: number | null;
+  label: string;
+  onOpen: () => void;
+}) {
   const card = cardSpecById(cardId);
-  if (!card) return { name: cardId, detail: "" };
-  return {
-    name: card.entity.name,
-    detail: card.isParagon ? "Paragon" : formatPathLevels(card.pathLevels),
-  };
+  if (!card) return null;
+  return (
+    <button
+      type="button"
+      className="offer-thumb"
+      aria-label={`View ${label}`}
+      onClick={onOpen}
+    >
+      <MonkeyCard
+        entity={card.entity}
+        pathLevels={card.pathLevels}
+        mode="preview"
+        owned
+        staticArt
+        degree={card.isParagon ? (degree ?? 1) : undefined}
+        visualSeed={visualSeed}
+      />
+    </button>
+  );
+}
+
+function OfferFocus({
+  offer,
+  onClose,
+}: {
+  offer: CollectionOffer;
+  onClose: () => void;
+}) {
+  const card = cardSpecById(offer.cardId);
+  if (!card) return null;
+  return createPortal(
+    <div className="card-focus" role="dialog" aria-modal="true" aria-label={card.entity.name}>
+      <button
+        type="button"
+        className="card-focus__backdrop"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div className="card-focus__panel">
+        <div className="card-focus__face">
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm card-focus__close"
+            aria-label="Close"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+          <MonkeyCard
+            entity={card.entity}
+            pathLevels={card.pathLevels}
+            mode="focus"
+            owned
+            degree={card.isParagon ? (offer.paragonDegree ?? 1) : undefined}
+            visualSeed={offer.visualSeed}
+          />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function OfferRow({
+  offer,
+  busy,
+  onOpen,
+  children,
+}: {
+  offer: CollectionOffer;
+  busy: boolean;
+  onOpen: () => void;
+  children: ReactNode;
+}) {
+  const card = cardSpecById(offer.cardId);
+  const label = card?.entity.name ?? offer.cardId;
+  return (
+    <li className="market-offers__card">
+      <OfferThumb
+        cardId={offer.cardId}
+        visualSeed={offer.visualSeed}
+        degree={offer.paragonDegree}
+        label={label}
+        onOpen={onOpen}
+      />
+      <div className="market-offers__side">
+        <UserAvatar
+          crop={offer.partnerAvatar}
+          size={28}
+          alt={offer.partnerUsername}
+        />
+        <CashAmount amount={offer.offerPrice} size={16} />
+      </div>
+      <div className="market-offers__actions">{children}</div>
+      {busy ? <span className="visually-hidden">Working</span> : null}
+    </li>
+  );
 }
 
 export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
@@ -30,6 +136,7 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [focused, setFocused] = useState<CollectionOffer | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,6 +166,7 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
         setStatus("Offer accepted. Cash added, card sent.");
         onAccepted();
       }
+      if (focused?.id === offer.id) setFocused(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update offer.");
@@ -73,6 +181,7 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
     try {
       const n = await ignoreCollectionOffers();
       setStatus(n > 0 ? "Ignored all offers." : "No offers to ignore.");
+      setFocused(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not ignore offers.");
@@ -115,39 +224,31 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
           <p className="market-empty">No offers waiting.</p>
         ) : (
           <ul className="market-offers__list">
-            {incoming.map((offer) => {
-              const label = cardLabel(offer.cardId);
-              return (
-                <li key={offer.id} className="market-offers__card">
-                  <div className="market-offers__copy">
-                    <strong>{label.name}</strong>
-                    <span>
-                      {label.detail ? `${label.detail} · ` : ""}
-                      from {offer.partnerUsername}
-                    </span>
-                  </div>
-                  <CashAmount amount={offer.offerPrice} size={18} />
-                  <div className="market-offers__actions">
-                    <button
-                      type="button"
-                      className="btn btn--primary btn--sm"
-                      disabled={busyId != null}
-                      onClick={() => void onRespond(offer, true)}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={busyId != null}
-                      onClick={() => void onRespond(offer, false)}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+            {incoming.map((offer) => (
+              <OfferRow
+                key={offer.id}
+                offer={offer}
+                busy={busyId != null}
+                onOpen={() => setFocused(offer)}
+              >
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
+                  disabled={busyId != null}
+                  onClick={() => void onRespond(offer, true)}
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  disabled={busyId != null}
+                  onClick={() => void onRespond(offer, false)}
+                >
+                  Decline
+                </button>
+              </OfferRow>
+            ))}
           </ul>
         )}
       </section>
@@ -158,34 +259,28 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
           <p className="market-empty">You have no pending offers.</p>
         ) : (
           <ul className="market-offers__list">
-            {outgoing.map((offer) => {
-              const label = cardLabel(offer.cardId);
-              return (
-                <li key={offer.id} className="market-offers__card">
-                  <div className="market-offers__copy">
-                    <strong>{label.name}</strong>
-                    <span>
-                      {label.detail ? `${label.detail} · ` : ""}
-                      waiting on {offer.partnerUsername}
-                    </span>
-                  </div>
-                  <CashAmount amount={offer.offerPrice} size={18} />
-                  <div className="market-offers__actions">
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={busyId != null}
-                      onClick={() => void onRespond(offer, false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+            {outgoing.map((offer) => (
+              <OfferRow
+                key={offer.id}
+                offer={offer}
+                busy={busyId != null}
+                onOpen={() => setFocused(offer)}
+              >
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  disabled={busyId != null}
+                  onClick={() => void onRespond(offer, false)}
+                >
+                  Cancel
+                </button>
+              </OfferRow>
+            ))}
           </ul>
         )}
       </section>
+
+      {focused ? <OfferFocus offer={focused} onClose={() => setFocused(null)} /> : null}
     </div>
   );
 }

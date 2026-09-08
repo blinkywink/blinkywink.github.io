@@ -1,13 +1,20 @@
 import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
+import type { AvatarCrop } from "../lib/avatar";
 import { MAX_MARKET_PRICE } from "../lib/marketplace";
-import { formatPathLevels, type MonkeyCardSpec } from "../lib/pathCombos";
+import type { MonkeyCardSpec } from "../lib/pathCombos";
 import { CashAmount } from "./CurrencyChip";
+import { MonkeyCard } from "./MonkeyCard";
+import { UserAvatar } from "./UserAvatar";
 
 const MIN_OFFER = 10;
 
 type Props = {
   card: MonkeyCardSpec;
+  visualSeed: number | null;
+  degree: number | null;
   ownerName: string;
+  ownerAvatar: AvatarCrop | null;
   balance: number | null;
   busy: boolean;
   error: string | null;
@@ -24,7 +31,10 @@ function digitsOnly(raw: string): string {
 
 export function CollectionOfferSheet({
   card,
+  visualSeed,
+  degree,
   ownerName,
+  ownerAvatar,
   balance,
   busy,
   error,
@@ -33,14 +43,18 @@ export function CollectionOfferSheet({
 }: Props) {
   const fieldId = useId();
   const [amount, setAmount] = useState("");
+  const [full, setFull] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (full) setFull(false);
+        else onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [full, onClose]);
 
   const price = amount ? Number(amount) : NaN;
   const tooLow = Number.isFinite(price) && price < MIN_OFFER;
@@ -52,8 +66,6 @@ export function CollectionOfferSheet({
     price >= MIN_OFFER &&
     price <= MAX_MARKET_PRICE &&
     !overBalance;
-
-  const path = card.isParagon ? "Paragon" : formatPathLevels(card.pathLevels);
 
   return (
     <div className="offer-sheet" role="dialog" aria-modal="true" aria-label="Make an offer">
@@ -79,14 +91,30 @@ export function CollectionOfferSheet({
         >
           ✕
         </button>
-        <p className="offer-sheet__kicker">Offer</p>
-        <h2 className="offer-sheet__title">{card.entity.name}</h2>
-        <p className="offer-sheet__meta">
-          {path} · {ownerName}
-        </p>
+
+        <div className="offer-sheet__who">
+          <button
+            type="button"
+            className="offer-thumb"
+            aria-label={`View ${card.entity.name}`}
+            onClick={() => setFull(true)}
+          >
+            <MonkeyCard
+              entity={card.entity}
+              pathLevels={card.pathLevels}
+              mode="preview"
+              owned
+              staticArt
+              degree={card.isParagon ? (degree ?? 1) : undefined}
+              visualSeed={visualSeed}
+            />
+          </button>
+          <UserAvatar crop={ownerAvatar} size={36} alt={ownerName} />
+          {balance != null ? <CashAmount amount={balance} size={16} /> : null}
+        </div>
 
         <label className="offer-sheet__field" htmlFor={fieldId}>
-          <span>Cash</span>
+          <span className="visually-hidden">Offer amount</span>
           <span className="offer-sheet__input">
             <img src="/images/ui/money-icon.webp" alt="" width={22} height={22} />
             <input
@@ -113,19 +141,8 @@ export function CollectionOfferSheet({
           </span>
         </label>
 
-        <p className="offer-sheet__hint">
-          Held until they accept, decline, or you cancel. Min{" "}
-          <CashAmount amount={MIN_OFFER} size={14} />.
-          {balance != null ? (
-            <>
-              {" "}
-              You have <CashAmount amount={balance} size={14} />.
-            </>
-          ) : null}
-        </p>
-
         {tooLow ? (
-          <p className="offer-sheet__err">Offer must be at least 10 Cash.</p>
+          <p className="offer-sheet__err">At least 10 Cash.</p>
         ) : overBalance ? (
           <p className="offer-sheet__err">Not enough Cash.</p>
         ) : error ? (
@@ -146,6 +163,45 @@ export function CollectionOfferSheet({
           </button>
         </div>
       </form>
+
+      {full
+        ? createPortal(
+            <div
+              className="card-focus card-focus--over-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-label={card.entity.name}
+            >
+              <button
+                type="button"
+                className="card-focus__backdrop"
+                aria-label="Close"
+                onClick={() => setFull(false)}
+              />
+              <div className="card-focus__panel">
+                <div className="card-focus__face">
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm card-focus__close"
+                    aria-label="Close"
+                    onClick={() => setFull(false)}
+                  >
+                    ✕
+                  </button>
+                  <MonkeyCard
+                    entity={card.entity}
+                    pathLevels={card.pathLevels}
+                    mode="focus"
+                    owned
+                    degree={card.isParagon ? (degree ?? 1) : undefined}
+                    visualSeed={visualSeed}
+                  />
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

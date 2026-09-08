@@ -549,6 +549,9 @@ export type CollectionOffer = {
   partnerId: string;
   partnerUsername: string;
   createdAt: string;
+  visualSeed: number | null;
+  paragonDegree: number | null;
+  partnerAvatar: AvatarCrop;
 };
 
 export type CollectionOfferInbox = {
@@ -560,6 +563,12 @@ const EMPTY_COLLECTION_OFFERS: CollectionOfferInbox = {
   incoming: [],
   outgoing: [],
 };
+
+function optionalInt(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.floor(n);
+}
 
 function mapCollectionOffer(raw: unknown): CollectionOffer | null {
   if (!raw || typeof raw !== "object") return null;
@@ -574,6 +583,16 @@ function mapCollectionOffer(raw: unknown): CollectionOffer | null {
     partnerId: String(row.partnerId ?? ""),
     partnerUsername: String(row.partnerUsername ?? "Player"),
     createdAt: String(row.createdAt ?? ""),
+    visualSeed: optionalInt(row.visualSeed),
+    paragonDegree: optionalInt(row.paragonDegree),
+    partnerAvatar: normalizeAvatarCrop({
+      cardId: row.avatarCardId == null ? null : String(row.avatarCardId),
+      zoom: Number(row.avatarZoom),
+      x: Number(row.avatarX),
+      y: Number(row.avatarY),
+      visualSeed: optionalInt(row.avatarVisualSeed),
+      degree: optionalInt(row.avatarDegree),
+    }),
   };
 }
 

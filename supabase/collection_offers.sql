@@ -338,9 +338,21 @@ begin
       o.offer_price as "offerPrice",
       o.buyer_id::text as "partnerId",
       coalesce(p.username, 'Player') as "partnerUsername",
-      o.created_at as "createdAt"
+      o.created_at as "createdAt",
+      oc.visual_seed as "visualSeed",
+      pp.degree as "paragonDegree",
+      p.avatar_card_id as "avatarCardId",
+      p.avatar_zoom as "avatarZoom",
+      p.avatar_x as "avatarX",
+      p.avatar_y as "avatarY",
+      p.avatar_visual_seed as "avatarVisualSeed",
+      p.avatar_paragon_degree as "avatarDegree"
     from public.collection_offers o
     left join public.profiles p on p.id = o.buyer_id
+    left join public.owned_cards oc
+      on oc.user_id = o.seller_id and oc.card_id = o.card_id
+    left join public.paragon_progress pp
+      on pp.user_id = o.seller_id and pp.card_id = o.card_id
     where o.status = 'pending'
       and o.seller_id = uid
   ) x;
@@ -354,9 +366,21 @@ begin
       o.offer_price as "offerPrice",
       o.seller_id::text as "partnerId",
       coalesce(p.username, 'Player') as "partnerUsername",
-      o.created_at as "createdAt"
+      o.created_at as "createdAt",
+      oc.visual_seed as "visualSeed",
+      pp.degree as "paragonDegree",
+      p.avatar_card_id as "avatarCardId",
+      p.avatar_zoom as "avatarZoom",
+      p.avatar_x as "avatarX",
+      p.avatar_y as "avatarY",
+      p.avatar_visual_seed as "avatarVisualSeed",
+      p.avatar_paragon_degree as "avatarDegree"
     from public.collection_offers o
     left join public.profiles p on p.id = o.seller_id
+    left join public.owned_cards oc
+      on oc.user_id = o.seller_id and oc.card_id = o.card_id
+    left join public.paragon_progress pp
+      on pp.user_id = o.seller_id and pp.card_id = o.card_id
     where o.status = 'pending'
       and o.buyer_id = uid
   ) x;

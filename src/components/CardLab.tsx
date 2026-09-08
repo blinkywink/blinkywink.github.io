@@ -491,7 +491,14 @@ export function CardLab({
           {offerOpen && canRequestTrade && viewer && focused ? (
             <CollectionOfferSheet
               card={focused}
+              visualSeed={
+                isRemote
+                  ? (remoteSeeds[focused.id] ?? null)
+                  : (visualSeedOf(focused.id) ?? null)
+              }
+              degree={cardDegree(focused) ?? null}
               ownerName={viewer.username}
+              ownerAvatar={viewer.avatar ?? null}
               balance={profile?.coins ?? null}
               busy={offerBusy}
               error={offerError}
