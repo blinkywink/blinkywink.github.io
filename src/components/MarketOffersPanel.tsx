@@ -208,6 +208,33 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
       ) : null}
 
       <section className="market-offers__section">
+        <h2>Your offers</h2>
+        {outgoing.length === 0 ? (
+          <p className="market-empty">You have no pending offers.</p>
+        ) : (
+          <ul className="market-offers__list">
+            {outgoing.map((offer) => (
+              <OfferRow
+                key={offer.id}
+                offer={offer}
+                busy={busyId != null}
+                onOpen={() => setFocused(offer)}
+              >
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  disabled={busyId != null}
+                  onClick={() => void onRespond(offer, false)}
+                >
+                  Cancel
+                </button>
+              </OfferRow>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="market-offers__section">
         <div className="market-offers__head">
           <h2>On your cards</h2>
           {incoming.length > 0 ? (
@@ -247,33 +274,6 @@ export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
                   onClick={() => void onRespond(offer, false)}
                 >
                   Decline
-                </button>
-              </OfferRow>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="market-offers__section">
-        <h2>Your offers</h2>
-        {outgoing.length === 0 ? (
-          <p className="market-empty">You have no pending offers.</p>
-        ) : (
-          <ul className="market-offers__list">
-            {outgoing.map((offer) => (
-              <OfferRow
-                key={offer.id}
-                offer={offer}
-                busy={busyId != null}
-                onOpen={() => setFocused(offer)}
-              >
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  disabled={busyId != null}
-                  onClick={() => void onRespond(offer, false)}
-                >
-                  Cancel
                 </button>
               </OfferRow>
             ))}
