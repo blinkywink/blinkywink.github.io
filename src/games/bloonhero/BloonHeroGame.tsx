@@ -491,7 +491,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           />
           <span className="hero-settings__hint">
             Expert charts are 5 notes. This folds the last lane into the
-            fourth so you only need 4 keys.
+            fourth. On a phone, notes are bigger and less spammy.
           </span>
         </label>
 
@@ -539,7 +539,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 lyricsScale: 1,
                 lyricsOffsetY: 0,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
-                fourNote: false,
+                fourNote: true,
               })
             }
           >
@@ -815,37 +815,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   />
                 </div>
               ) : null}
-              {(settings.lyricsEnabled ?? true) &&
-              state.currentLyric &&
-              (playing || state.phase === "ready") ? (
-                <p
-                  key={`${state.currentLyric.fullWord}:${state.currentLyric.visible}`}
-                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}${(state.currentLyric.opacity ?? 1) < 0.99 ? " is-fading-out" : ""}`}
-                  style={
-                    {
-                      "--lyrics-scale": settings.lyricsScale ?? 1,
-                      "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
-                      ...((state.currentLyric.opacity ?? 1) < 0.99
-                        ? { opacity: state.currentLyric.opacity }
-                        : {}),
-                    } as CSSProperties
-                  }
-                  aria-live="polite"
-                >
-                  {state.currentLyric.pending ? (
-                    <span className="hero-lyrics__word">
-                      <span className="hero-lyrics__visible">
-                        {state.currentLyric.visible}
-                      </span>
-                      <span className="hero-lyrics__pending" aria-hidden="true">
-                        {state.currentLyric.pending}
-                      </span>
-                    </span>
-                  ) : (
-                    state.currentLyric.visible
-                  )}
-                </p>
-              ) : null}
               <div className="hero-progress" aria-hidden>
                 <span ref={setProgressFillEl} />
               </div>
@@ -895,6 +864,38 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   ))}
                 </div>
               </div>
+
+              {(settings.lyricsEnabled ?? true) &&
+              state.currentLyric &&
+              (playing || state.phase === "ready") ? (
+                <p
+                  key={`${state.currentLyric.fullWord}:${state.currentLyric.visible}`}
+                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}${(state.currentLyric.opacity ?? 1) < 0.99 ? " is-fading-out" : ""}`}
+                  style={
+                    {
+                      "--lyrics-scale": settings.lyricsScale ?? 1,
+                      "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
+                      ...((state.currentLyric.opacity ?? 1) < 0.99
+                        ? { opacity: state.currentLyric.opacity }
+                        : {}),
+                    } as CSSProperties
+                  }
+                  aria-live="polite"
+                >
+                  {state.currentLyric.pending ? (
+                    <span className="hero-lyrics__word">
+                      <span className="hero-lyrics__visible">
+                        {state.currentLyric.visible}
+                      </span>
+                      <span className="hero-lyrics__pending" aria-hidden="true">
+                        {state.currentLyric.pending}
+                      </span>
+                    </span>
+                  ) : (
+                    state.currentLyric.visible
+                  )}
+                </p>
+              ) : null}
 
               <div
                 className="hero-countdown"

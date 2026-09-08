@@ -31,7 +31,7 @@ export const DEFAULT_SETTINGS: HeroSettings = {
   lyricsScale: 1,
   lyricsOffsetY: 0,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
-  fourNote: false,
+  fourNote: true,
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -72,7 +72,7 @@ export function readHeroSettings(): HeroSettings {
         ? clamp(lyricsOffsetY, -60, 200)
         : 0,
       keys,
-      fourNote: Boolean(parsed.fourNote),
+      fourNote: parsed.fourNote === undefined ? true : Boolean(parsed.fourNote),
     };
   } catch {
     return {
@@ -122,4 +122,30 @@ export function foldNotesToFour<T extends { t: number; lane: number; dur: number
     out.push(next);
   }
   return out;
+}
+
+/** Phone play: one tap at a time, no chord spam, no hold-spam. */
+export function simplifyNotesForTouch<
+  T extends { t: number; lane: number; dur: number; sustain?: boolean },
+>(notes: T[]): T[] {
+  const out: T[] = [];
+  const minGap = 0.2;
+  for (const note of notes) {
+    const next = { ...note, dur: 0, sustain: false };
+    const prev = out[out.length - 1];
+    if (!prev) {
+      out.push(next);
+      continue;
+    }
+    if (next.t - prev.t < 0.05) continue;
+    if (next.t - prev.t < minGap) continue;
+    out.push(next);
+  }
+  return out;
+}
+
+export function isHeroTouchPlay(): boolean {
+  if (typeof window === "undefined") return false;
+  if (document.documentElement.dataset.native === "1") return true;
+  return window.matchMedia("(max-width: 820px), (pointer: coarse)").matches;
 }

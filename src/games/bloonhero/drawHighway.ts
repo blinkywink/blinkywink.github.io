@@ -60,6 +60,8 @@ export type HighwayDrawState = {
   laneLabels?: readonly string[];
   /** 4 when 4-note mode is on. */
   laneCount?: number;
+  /** Bigger tap tiles on phones. */
+  pianoTiles?: boolean;
   darts?: readonly DartFx[];
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
@@ -321,7 +323,9 @@ export function drawHeroHighway(
   const gap = 4;
   const laneW = (cssW - gap * (laneCount - 1)) / laneCount;
   const hitY = (HIT_LINE_Y / 100) * cssH;
-  const bloonSize = Math.min(laneW * 0.56, 40) * scaleMul;
+  const bloonSize = state.pianoTiles
+    ? Math.min(laneW * 0.82, 92) * scaleMul
+    : Math.min(laneW * 0.56, 40) * scaleMul;
 
   // Lane columns
   for (let i = 0; i < laneCount; i++) {
@@ -463,7 +467,9 @@ export function drawHeroHighway(
     const y = startY + (endY - startY) * fly;
     // Spins scale with flight progress (~2 turns).
     const spin = fly * Math.PI * 2 * 2;
-    const size = Math.min(laneW * 0.55, 34);
+    const size = state.pianoTiles
+      ? Math.min(laneW * 0.7, 72)
+      : Math.min(laneW * 0.55, 34);
     if (fly < 1) {
       drawShuriken(ctx, cx, y, size, spin);
     } else {

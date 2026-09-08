@@ -37,8 +37,10 @@ import {
 } from "./recentPlays";
 import {
   foldNotesToFour,
+  isHeroTouchPlay,
   keyToLaneMap,
   readHeroSettings,
+  simplifyNotesForTouch,
   writeHeroSettings,
   type HeroKeybinds,
   type HeroSettings,
@@ -757,9 +759,10 @@ export function useBloonHero() {
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     dartsRef.current = [];
     hitFlashesRef.current = [];
-    const sourceNotes = settingsRef.current.fourNote
+    let sourceNotes = settingsRef.current.fourNote
       ? foldNotesToFour(song.chart.notes)
       : song.chart.notes;
+    if (isHeroTouchPlay()) sourceNotes = simplifyNotesForTouch(sourceNotes);
     notesRef.current = sourceNotes.map((n, i) => ({
       ...n,
       id: i,
@@ -1150,6 +1153,7 @@ export function useBloonHero() {
             bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
             laneCount: settingsRef.current.fourNote ? 4 : 5,
+            pianoTiles: isHeroTouchPlay(),
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
             wallMs,
@@ -1182,6 +1186,7 @@ export function useBloonHero() {
             bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
             laneCount: settingsRef.current.fourNote ? 4 : 5,
+            pianoTiles: isHeroTouchPlay(),
             darts: [],
             hitFlashes: [],
             wallMs,
@@ -1349,6 +1354,7 @@ export function useBloonHero() {
           bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
           laneCount: settingsRef.current.fourNote ? 4 : 5,
+          pianoTiles: isHeroTouchPlay(),
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
           wallMs: wall,
@@ -1513,6 +1519,7 @@ export function useBloonHero() {
           bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
           laneCount: settingsRef.current.fourNote ? 4 : 5,
+          pianoTiles: isHeroTouchPlay(),
           darts: [],
           hitFlashes: [],
           wallMs: performance.now(),
