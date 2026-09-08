@@ -4,6 +4,7 @@ use tauri::{http, Manager, Url};
 use web_ota::WebOtaStatus;
 
 const DESKTOP_CONFIG_URLS: &[&str] = &[
+  "https://monkeycards.app/desktop-config.json",
   "https://blinkywink.github.io/desktop-config.json",
   "https://raw.githubusercontent.com/blinkywink/blinkywink.github.io/main/public/desktop-config.json",
 ];

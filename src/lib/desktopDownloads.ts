@@ -87,6 +87,7 @@ export async function fetchDesktopRemoteConfig(): Promise<DesktopRemoteConfig | 
 const LATEST_URLS = [
   `${DESKTOP_RELEASE_TAG_BASE}/latest.json`,
   "https://blinkywink.github.io/desktop-latest.json",
+  "https://monkeycards.app/desktop-latest.json",
 ];
 
 /** Updater manifest on GitHub Releases / the site (version + today's shop). */

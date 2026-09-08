@@ -8,14 +8,21 @@ export function DesktopOnlineGate() {
 
   const check = useCallback(async () => {
     if (!isDesktopShell()) return;
-    const result = await assertOnlineBackend(3000);
+    // Only lock the app when the machine is actually offline. A slow or
+    // blocked health ping must not sit on top of the updater.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setBlocked(true);
+      setMessage("No internet connection.");
+      return;
+    }
+    const result = await assertOnlineBackend(8000);
     if (result === true) {
       setBlocked(false);
       setMessage("");
       return;
     }
-    setBlocked(true);
-    setMessage(result);
+    setBlocked(false);
+    setMessage("");
   }, []);
 
   useEffect(() => {
