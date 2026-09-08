@@ -58,6 +58,8 @@ export type HighwayDrawState = {
   bloonScale?: number;
   /** Lane key labels (defaults to D F J K L). */
   laneLabels?: readonly string[];
+  /** 4 when 4-note mode is on. */
+  laneCount?: number;
   darts?: readonly DartFx[];
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
@@ -315,7 +317,7 @@ export function drawHeroHighway(
   ctx.fillStyle = "#0a0a0c";
   ctx.fillRect(0, 0, cssW, cssH);
 
-  const laneCount = 5;
+  const laneCount = state.laneCount === 4 ? 4 : 5;
   const gap = 4;
   const laneW = (cssW - gap * (laneCount - 1)) / laneCount;
   const hitY = (HIT_LINE_Y / 100) * cssH;

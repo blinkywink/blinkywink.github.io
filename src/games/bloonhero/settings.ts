@@ -17,6 +17,8 @@ export type HeroSettings = {
   lyricsOffsetY: number;
   /** Keys for lanes 0-4. Lowercase. */
   keys: HeroKeybinds;
+  /** Fold the 5th expert lane into the 4th so you only play 4 keys. */
+  fourNote: boolean;
 };
 
 const KEY = "bloonhero-settings-v1";
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: HeroSettings = {
   lyricsScale: 1,
   lyricsOffsetY: 0,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
+  fourNote: false,
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -69,6 +72,7 @@ export function readHeroSettings(): HeroSettings {
         ? clamp(lyricsOffsetY, -60, 200)
         : 0,
       keys,
+      fourNote: Boolean(parsed.fourNote),
     };
   } catch {
     return {
@@ -86,10 +90,36 @@ export function writeHeroSettings(next: HeroSettings): void {
   }
 }
 
-export function keyToLaneMap(keys: HeroKeybinds): Record<string, number> {
+export function keyToLaneMap(
+  keys: HeroKeybinds,
+  fourNote = false,
+): Record<string, number> {
   const out: Record<string, number> = {};
-  keys.forEach((k, i) => {
+  const used = fourNote ? keys.slice(0, 4) : keys;
+  used.forEach((k, i) => {
+    if (!k) return;
     out[k.toLowerCase()] = i;
   });
+  return out;
+}
+
+/** Expert charts are 5-fret. Fold orange into blue and merge same-time doubles. */
+export function foldNotesToFour<T extends { t: number; lane: number; dur: number; sustain?: boolean }>(
+  notes: T[],
+): T[] {
+  const out: T[] = [];
+  for (const note of notes) {
+    const lane = note.lane >= 4 ? 3 : note.lane;
+    const next = { ...note, lane };
+    const prev = out[out.length - 1];
+    if (prev && prev.lane === lane && Math.abs(prev.t - next.t) < 0.02) {
+      if (next.dur > prev.dur) {
+        prev.dur = next.dur;
+        if ("sustain" in prev) prev.sustain = Boolean(next.sustain || next.dur >= 0.14);
+      }
+      continue;
+    }
+    out.push(next);
+  }
   return out;
 }

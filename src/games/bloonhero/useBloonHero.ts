@@ -36,6 +36,7 @@ import {
   type BloonHeroRecentPlay,
 } from "./recentPlays";
 import {
+  foldNotesToFour,
   keyToLaneMap,
   readHeroSettings,
   writeHeroSettings,
@@ -242,8 +243,8 @@ export function useBloonHero() {
   volumeRef.current = state.volume;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
-  const keyMapRef = useRef(keyToLaneMap(settings.keys));
-  keyMapRef.current = keyToLaneMap(settings.keys);
+  const keyMapRef = useRef(keyToLaneMap(settings.keys, settings.fourNote));
+  keyMapRef.current = keyToLaneMap(settings.keys, settings.fourNote);
   const dartsRef = useRef<DartFx[]>([]);
   const dartIdRef = useRef(0);
   const hitFlashesRef = useRef<HitFlash[]>([]);
@@ -398,10 +399,12 @@ export function useBloonHero() {
           partial.lyricsOffsetY != null
             ? Math.min(200, Math.max(-60, partial.lyricsOffsetY))
             : prev.lyricsOffsetY,
+        fourNote:
+          partial.fourNote != null ? partial.fourNote : prev.fourNote,
       };
       writeHeroSettings(next);
       settingsRef.current = next;
-      keyMapRef.current = keyToLaneMap(next.keys);
+      keyMapRef.current = keyToLaneMap(next.keys, next.fourNote);
       return next;
     });
   }, []);
@@ -462,7 +465,10 @@ export function useBloonHero() {
   }, []);
 
   const highwayLabels = useCallback((): string[] => {
-    return settingsRef.current.keys.map((k) => k.toUpperCase());
+    const keys = settingsRef.current.fourNote
+      ? settingsRef.current.keys.slice(0, 4)
+      : settingsRef.current.keys;
+    return keys.map((k) => k.toUpperCase());
   }, []);
 
   const search = useCallback(async (query?: string) => {
@@ -751,7 +757,10 @@ export function useBloonHero() {
     missHudAccumRef.current = { count: 0, lane: -1, at: 0 };
     dartsRef.current = [];
     hitFlashesRef.current = [];
-    notesRef.current = song.chart.notes.map((n, i) => ({
+    const sourceNotes = settingsRef.current.fourNote
+      ? foldNotesToFour(song.chart.notes)
+      : song.chart.notes;
+    notesRef.current = sourceNotes.map((n, i) => ({
       ...n,
       id: i,
       resolved: false,
@@ -780,7 +789,7 @@ export function useBloonHero() {
       title: prev.title,
       artist: prev.artist,
       artUrl: prev.artUrl,
-      noteCount: prev.noteCount,
+      noteCount: notesRef.current.length,
       duration: durationRef.current,
       volume: prev.volume,
       instrument: prev.instrument,
@@ -1013,10 +1022,7 @@ export function useBloonHero() {
       spawnHitFlash(lane, judge);
       playBloonPop(settingsRef.current.popVolume ?? 1);
 
-      const noteCount = Math.max(
-        1,
-        songRef.current?.chart.notes.length ?? stateRef.current.noteCount,
-      );
+      const noteCount = Math.max(1, notesRef.current.length);
       const pools = heroCashPools(durationRef.current);
       const pay = cashForHit(
         judge,
@@ -1143,6 +1149,7 @@ export function useBloonHero() {
             approachSec: approachSec(),
             bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
+            laneCount: settingsRef.current.fourNote ? 4 : 5,
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
             wallMs,
@@ -1174,6 +1181,7 @@ export function useBloonHero() {
             approachSec: approachSec(),
             bloonScale: bloonScale(),
             laneLabels: highwayLabels(),
+            laneCount: settingsRef.current.fourNote ? 4 : 5,
             darts: [],
             hitFlashes: [],
             wallMs,
@@ -1340,6 +1348,7 @@ export function useBloonHero() {
           approachSec: approachSec(),
           bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
+          laneCount: settingsRef.current.fourNote ? 4 : 5,
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
           wallMs: wall,
@@ -1503,6 +1512,7 @@ export function useBloonHero() {
           approachSec: approachSec(),
           bloonScale: bloonScale(),
           laneLabels: highwayLabels(),
+          laneCount: settingsRef.current.fourNote ? 4 : 5,
           darts: [],
           hitFlashes: [],
           wallMs: performance.now(),

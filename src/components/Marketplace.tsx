@@ -13,6 +13,7 @@ import { useCardCollection } from "../auth/CardCollectionProvider";
 import { towers as baseTowers } from "../data/towers";
 import { cardSpecById, matchesCardQuery, allCardSpecs } from "../lib/cardCatalog";
 import {
+  fetchCollectionOffers,
   fetchMarketplaceListingsPage,
   fetchMyMarketplaceListings,
   listCardForSale,
@@ -121,6 +122,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const [priceInput, setPriceInput] = useState("100");
   const [sellQuery, setSellQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [incomingOffers, setIncomingOffers] = useState(0);
   const [hideOwned, setHideOwned] = useState(false);
   const [showMineOnly, setShowMineOnly] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -129,6 +131,23 @@ export function Marketplace({ onBack: _onBack }: Props) {
   const loadingMoreRef = useRef(false);
   const marketUnlocked = shopSpendUnlocked(profile?.shop_spent);
   const marketSpendLeft = shopSpendRemaining(profile?.shop_spent);
+
+  const refreshOfferCount = useCallback(async () => {
+    if (!user || isGuest) {
+      setIncomingOffers(0);
+      return;
+    }
+    try {
+      const next = await fetchCollectionOffers({ force: true });
+      setIncomingOffers(next.incoming.length);
+    } catch {
+      setIncomingOffers(0);
+    }
+  }, [user, isGuest]);
+
+  useEffect(() => {
+    void refreshOfferCount();
+  }, [refreshOfferCount]);
 
   useEffect(() => {
     const q = query.trim();
@@ -596,6 +615,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   type="button"
                   className={`market-chip${tab === "offers" ? " is-on" : ""}`}
                   aria-pressed={tab === "offers"}
+                  aria-label={
+                    incomingOffers > 0
+                      ? `Offers, ${incomingOffers} waiting`
+                      : "Offers"
+                  }
                   disabled={isGuest || !user}
                   onClick={() => {
                     setError(null);
@@ -606,6 +630,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   }}
                 >
                   Offers
+                  {incomingOffers > 0 ? (
+                    <span className="market-chip__badge" aria-hidden>
+                      {incomingOffers > 99 ? "99+" : incomingOffers}
+                    </span>
+                  ) : null}
                 </button>
               </div>
             </div>
@@ -617,6 +646,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
             <p className="market-banner">Sign in to see offers.</p>
           ) : (
             <MarketOffersPanel
+              onChanged={(incoming) => setIncomingOffers(incoming)}
               onAccepted={() => {
                 void refreshProfile();
                 void refreshCards();

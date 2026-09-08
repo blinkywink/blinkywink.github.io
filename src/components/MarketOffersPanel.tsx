@@ -11,6 +11,7 @@ import { CashAmount } from "./CurrencyChip";
 
 type Props = {
   onAccepted: () => void;
+  onChanged?: (incoming: number) => void;
 };
 
 function cardLabel(cardId: string): { name: string; detail: string } {
@@ -22,7 +23,7 @@ function cardLabel(cardId: string): { name: string; detail: string } {
   };
 }
 
-export function MarketOffersPanel({ onAccepted }: Props) {
+export function MarketOffersPanel({ onAccepted, onChanged }: Props) {
   const [incoming, setIncoming] = useState<CollectionOffer[]>([]);
   const [outgoing, setOutgoing] = useState<CollectionOffer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +37,7 @@ export function MarketOffersPanel({ onAccepted }: Props) {
       const next = await fetchCollectionOffers({ force: true });
       setIncoming(next.incoming);
       setOutgoing(next.outgoing);
+      onChanged?.(next.incoming.length);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load offers.");

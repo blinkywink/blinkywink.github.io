@@ -17266,6 +17266,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .market-chip {
+  position: relative;
   appearance: none;
   border: 1.5px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.045);
@@ -17300,6 +17301,24 @@ body.rewards-overlay-open .sweeper-result {
 .market-chip:disabled {
   opacity: 0.38;
   cursor: default;
+}
+
+.market-chip__badge {
+  position: absolute;
+  top: -0.38rem;
+  right: -0.32rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.05rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px #14141c;
+  pointer-events: none;
 }
 
 @media (max-width: 820px) {

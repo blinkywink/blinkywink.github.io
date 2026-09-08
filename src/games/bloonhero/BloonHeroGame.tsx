@@ -304,7 +304,10 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     !state.paused &&
     (state.countdown != null || state.songTime < 0);
   const attemptsUsed = maxLives - state.lives;
-  const keyHint = settings.keys.map((k) => formatKey(k)).join(" ");
+  const playLanes = settings.fourNote ? LANES.slice(0, 4) : LANES;
+  const keyHint = (settings.fourNote ? settings.keys.slice(0, 4) : settings.keys)
+    .map((k) => formatKey(k))
+    .join(" ");
   const needsInstrumentPick = state.availableInstruments.length > 1;
   const resuming =
     playing && state.paused && state.countdown != null;
@@ -478,10 +481,31 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           </span>
         </label>
 
+        <label className="hero-settings__row hero-settings__row--check">
+          <span>4 note mode</span>
+          <input
+            type="checkbox"
+            checked={settings.fourNote}
+            aria-label="4 note mode"
+            onChange={(e) => updateSettings({ fourNote: e.target.checked })}
+          />
+          <span className="hero-settings__hint">
+            Expert charts are 5 notes. This folds the last lane into the
+            fourth so you only need 4 keys.
+          </span>
+        </label>
+
         <div className="hero-settings__binds">
           <span>Keybinds</span>
-          <div className="hero-settings__keys" role="group" aria-label="Lane keys">
-            {LANES.map((lane) => (
+          <div
+            className="hero-settings__keys"
+            role="group"
+            aria-label="Lane keys"
+            style={{
+              gridTemplateColumns: `repeat(${playLanes.length}, 1fr)`,
+            }}
+          >
+            {playLanes.map((lane) => (
               <button
                 key={lane.id}
                 type="button"
@@ -515,6 +539,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 lyricsScale: 1,
                 lyricsOffsetY: 0,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
+                fourNote: false,
               })
             }
           >
@@ -835,8 +860,13 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   className="hero-highway-canvas"
                   aria-hidden
                 />
-                <div className="hero-lane-hits">
-                  {LANES.map((lane) => (
+                <div
+                  className="hero-lane-hits"
+                  style={{
+                    gridTemplateColumns: `repeat(${playLanes.length}, minmax(0, 1fr))`,
+                  }}
+                >
+                  {playLanes.map((lane) => (
                     <button
                       key={lane.id}
                       type="button"
@@ -935,7 +965,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   ) : null}
                   <p className="hero-overlay__detail">
                     {state.instrument
-                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · ${keyHint}`
+                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · ${keyHint}${settings.fourNote ? " · 4 note" : ""}`
                       : "Pick Guitar or Vocals"}
                   </p>
                   {state.error ? (
