@@ -140,6 +140,7 @@ function parseSyllable(raw: string): Syllable | null {
 
   s = s.replace(/\$$/, "");
   s = s.replace(/_/g, " ");
+  s = s.replace(/<\/?[a-z]+>/gi, "");
   s = s.replace(/^[#^*%]+|[#^*%]+$/g, "");
   s = s.trim();
 
@@ -459,11 +460,11 @@ export function parseLyricsFromPack(opts: {
   midBytes?: Uint8Array | null;
   offsetSec?: number;
 }): LyricCue[] {
-  const offset = opts.offsetSec ?? 0;
-  const fromChart = opts.chartText
-    ? parseLyricsFromChart(opts.chartText, offset)
-    : [];
-  const fromMidi = opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
+  const midiOffset = opts.offsetSec ?? 0;
+  // Chart lyrics use the .chart Offset, same clock as the notes. Don't shift
+  // them by song.ini — that was pushing every word off the play window.
+  const fromChart = opts.chartText ? parseLyricsFromChart(opts.chartText, 0) : [];
+  const fromMidi = opts.midBytes ? parseLyricsFromMidi(opts.midBytes, midiOffset) : [];
   return fromChart.length >= fromMidi.length ? fromChart : fromMidi;
 }
 

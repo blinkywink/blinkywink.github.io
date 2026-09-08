@@ -564,8 +564,8 @@ function drawHighwayLyric(
   const boxW = Math.min(cssW - 16, metrics.width + padX * 2);
   const boxH = fontSize + padY * 2;
   const x = (cssW - boxW) / 2;
-  // Below the dart monkey overlay, which covers the top of the stage.
-  const y = Math.min(cssH * 0.22, 150);
+  // Under the dart monkey image, which covers the top of the stage.
+  const y = Math.max(120, Math.min(cssH * 0.34, 220));
   ctx.fillStyle = "rgba(0,0,0,0.78)";
   ctx.fillRect(x, y, boxW, boxH);
   ctx.fillStyle = "#fff8e8";

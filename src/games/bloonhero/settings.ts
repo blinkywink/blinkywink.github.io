@@ -124,20 +124,26 @@ export function foldNotesToFour<T extends { t: number; lane: number; dur: number
   return out;
 }
 
-/** Phone play: one tap at a time, no chord spam, no hold-spam. */
+/** Phone play: one tap at a time, less spam. Holds stay — you still have to keep the lane down. */
 export function simplifyNotesForTouch<
   T extends { t: number; lane: number; dur: number; sustain?: boolean },
 >(notes: T[]): T[] {
   const out: T[] = [];
   const minGap = 0.2;
   for (const note of notes) {
-    const next = { ...note, dur: 0, sustain: false };
+    const next = { ...note };
     const prev = out[out.length - 1];
     if (!prev) {
       out.push(next);
       continue;
     }
-    if (next.t - prev.t < 0.05) continue;
+    if (next.t - prev.t < 0.05) {
+      if (next.dur > prev.dur) {
+        prev.dur = next.dur;
+        if ("sustain" in prev) prev.sustain = Boolean(next.sustain || next.dur >= 0.14);
+      }
+      continue;
+    }
     if (next.t - prev.t < minGap) continue;
     out.push(next);
   }
