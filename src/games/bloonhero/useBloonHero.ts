@@ -254,17 +254,10 @@ export function useBloonHero() {
   const lyricsRef = useRef<LyricPhrase[]>([]);
   const lyricsUiAtRef = useRef(0);
   const lyricElRef = useRef<HTMLElement | null>(null);
-  const lyricBannerRef = useRef<HTMLElement | null>(null);
   const lyricLineAt = (songTime: number): string => {
     if (settingsRef.current.lyricsEnabled === false) return "";
     const line = lyricDisplayAtTime(lyricsRef.current, songTime);
     return (line?.visible || line?.fullWord || "").trim();
-  };
-  const paintLyricBanner = (songTime: number) => {
-    const el = lyricBannerRef.current;
-    if (!el) return;
-    const text = lyricLineAt(songTime);
-    if (el.textContent !== text) el.textContent = text;
   };
   const pausedRef = useRef(false);
   /** When set, countdown before unpausing. wall ms start. */
@@ -339,10 +332,6 @@ export function useBloonHero() {
 
   const setLyricEl = useCallback((el: HTMLElement | null) => {
     lyricElRef.current = el;
-  }, []);
-
-  const setLyricBannerEl = useCallback((el: HTMLElement | null) => {
-    lyricBannerRef.current = el;
   }, []);
 
   const resizeCanvas = useCallback(() => {
@@ -1248,7 +1237,6 @@ export function useBloonHero() {
         now = advanceSongClock(clockRef.current, sample, wallMs / 1000);
       }
       songTimeRef.current = now;
-      paintLyricBanner(now);
 
       // Dart monkey mouth follows vocal chart notes (not audio loudness).
       if (stateRef.current.hasVocals) {
@@ -1391,7 +1379,7 @@ export function useBloonHero() {
       }
 
       if (
-        settingsRef.current.lyricsEnabled &&
+        settingsRef.current.lyricsEnabled !== false &&
         lyricsRef.current.length > 0 &&
         wallMs - lyricsUiAtRef.current > 35
       ) {
@@ -1622,6 +1610,5 @@ export function useBloonHero() {
     setProgressFillEl,
     setCountdownEl,
     setLyricEl,
-    setLyricBannerEl,
   };
 }

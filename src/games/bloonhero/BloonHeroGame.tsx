@@ -171,7 +171,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setProgressFillEl,
     setCountdownEl,
     setLyricEl,
-    setLyricBannerEl,
     togglePause,
   } = useBloonHero();
 
@@ -797,8 +796,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             )}
 
-            {playing && (settings.lyricsEnabled ?? true) ? (
-              <p ref={setLyricBannerEl} className="hero-lyric-banner" />
+            {playing &&
+            (settings.lyricsEnabled ?? true) &&
+            (state.currentLyric?.visible || state.currentLyric?.fullWord) ? (
+              <p className="hero-lyric-banner">
+                {state.currentLyric.visible || state.currentLyric.fullWord}
+              </p>
             ) : null}
 
             <div className="hero-stage">
