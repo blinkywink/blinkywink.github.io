@@ -15536,6 +15536,19 @@ body.rewards-overlay-open .sweeper-result {
   color: var(--hero-ink);
 }
 
+.hero-page.is-playing,
+.hero-page.is-playing * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+.hero-page.is-playing .hero-stage,
+.hero-page.is-playing .hero-board {
+  touch-action: none;
+}
+
 .hero-page > .game-header {
   flex: 0 0 auto;
 }
@@ -15802,8 +15815,10 @@ body.rewards-overlay-open .sweeper-result {
   display: block;
   height: calc(100% - 4px);
   padding: 0.45rem 0.45rem 0.55rem;
-  touch-action: manipulation;
+  touch-action: none;
   z-index: 1;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .hero-highway-canvas {
@@ -15830,6 +15845,10 @@ body.rewards-overlay-open .sweeper-result {
   background: transparent;
   cursor: pointer;
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .hero-stage__art {

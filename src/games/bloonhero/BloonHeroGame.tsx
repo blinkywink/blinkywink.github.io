@@ -300,6 +300,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   );
 
   const playing = state.phase === "playing";
+  useEffect(() => {
+    if (!playing) return;
+    const blockSelect = (e: Event) => e.preventDefault();
+    document.addEventListener("selectstart", blockSelect);
+    return () => document.removeEventListener("selectstart", blockSelect);
+  }, [playing]);
   const countingIn =
     playing &&
     !state.paused &&
@@ -552,7 +558,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   ) : null;
 
   return (
-    <div className={`hero-page${state.phase === "results" ? " is-done" : ""}`}>
+    <div
+      className={`hero-page${state.phase === "results" ? " is-done" : ""}${playing ? " is-playing" : ""}`}
+      onContextMenu={(e) => {
+        if (playing) e.preventDefault();
+      }}
+    >
       <GameHeader title="BLOON HERO" icon="" />
 
       <button
@@ -674,6 +685,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                           {instruments
                             .map((i) => INSTRUMENT_LABEL[i])
                             .join(" · ")}
+                          {hit.notesData?.hasLyrics ? " · lyrics" : ""}
                         </span>
                       </span>
                     </button>
@@ -852,10 +864,12 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                       aria-label={`Lane ${formatKey(settings.keys[lane.id] ?? "")}`}
                       onPointerDown={(e) => {
                         e.preventDefault();
+                        window.getSelection()?.removeAllRanges();
                         if (!playing || state.paused) return;
                         e.currentTarget.setPointerCapture?.(e.pointerId);
                         applyHit(lane.id);
                       }}
+                      onContextMenu={(e) => e.preventDefault()}
                       onPointerUp={(e) => {
                         if (!playing || state.paused) return;
                         releaseLane(lane.id);
@@ -962,7 +976,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                   ) : null}
                   <p className="hero-overlay__detail">
                     {state.instrument
-                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · ${keyHint}${settings.fourNote ? " · 4 note" : ""}`
+                      ? `${INSTRUMENT_LABEL[state.instrument]} · ${noteCount.toLocaleString()} notes · ${keyHint}${settings.fourNote ? " · 4 note" : ""} · ${state.hasLyrics ? "lyrics on" : "no lyrics in this chart"}`
                       : "Pick Guitar or Vocals"}
                   </p>
                   {state.error ? (
