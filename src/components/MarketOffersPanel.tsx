@@ -115,14 +115,15 @@ function OfferRow({
         label={label}
         onOpen={onOpen}
       />
-      <div className="market-offers__side">
+      <span className="offer-owner">
         <UserAvatar
           crop={offer.partnerAvatar}
           size={28}
-          alt={offer.partnerUsername}
+          alt=""
         />
-        <CashAmount amount={offer.offerPrice} size={16} />
-      </div>
+        <span>{offer.partnerUsername}</span>
+      </span>
+      <CashAmount amount={offer.offerPrice} size={16} />
       <div className="market-offers__actions">{children}</div>
       {busy ? <span className="visually-hidden">Working</span> : null}
     </li>

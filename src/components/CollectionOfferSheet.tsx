@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import type { AvatarCrop } from "../lib/avatar";
 import { MAX_MARKET_PRICE } from "../lib/marketplace";
 import type { MonkeyCardSpec } from "../lib/pathCombos";
-import { CashAmount } from "./CurrencyChip";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
 
@@ -109,8 +108,10 @@ export function CollectionOfferSheet({
               visualSeed={visualSeed}
             />
           </button>
-          <UserAvatar crop={ownerAvatar} size={36} alt={ownerName} />
-          {balance != null ? <CashAmount amount={balance} size={16} /> : null}
+          <span className="offer-owner">
+            <UserAvatar crop={ownerAvatar} size={28} alt="" />
+            <span>{ownerName}</span>
+          </span>
         </div>
 
         <label className="offer-sheet__field" htmlFor={fieldId}>

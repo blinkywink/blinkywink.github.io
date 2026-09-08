@@ -8134,8 +8134,9 @@ body.rewards-overlay-open .sweeper-result {
 .offer-sheet__panel {
   position: relative;
   z-index: 1;
-  width: min(24rem, 100%);
+  width: min(22rem, 100%);
   display: grid;
+  justify-items: center;
   gap: 0.7rem;
   padding: 1.2rem 1.1rem 1.05rem;
   border-radius: 1.15rem;
@@ -8152,15 +8153,31 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .offer-sheet__who {
-  display: flex;
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+}
+
+.offer-owner {
+  display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
-  padding-right: 1.6rem;
+  justify-content: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  color: rgba(240, 240, 244, 0.82);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.offer-owner span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .offer-thumb {
-  --card-preview-w: 4.6rem;
-  --card-preview-scale: 0.184;
+  --card-preview-w: 7.4rem;
+  --card-preview-scale: 0.296;
   --card-preview-h: calc(var(--card-preview-w) * 3.5 / 2.5);
   --card-face-w: 400px;
   appearance: none;
@@ -8189,6 +8206,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .offer-sheet__field {
+  width: 100%;
   display: grid;
   gap: 0.35rem;
   font-size: 0.72rem;
@@ -8246,6 +8264,7 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .offer-sheet__actions {
+  width: 100%;
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   gap: 0.5rem;
@@ -8283,32 +8302,26 @@ body.rewards-overlay-open .sweeper-result {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  justify-items: center;
+  gap: 0.75rem;
 }
 
 .market-offers__card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem 0.75rem;
-  padding: 0.65rem 0.75rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  width: min(100%, 11rem);
+  padding: 0.75rem 0.7rem 0.7rem;
   border-radius: 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
 }
 
-.market-offers__side {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  margin-right: auto;
-}
-
 .market-offers__actions {
   display: flex;
+  width: 100%;
   gap: 0.45rem;
-  flex: 1 1 100%;
 }
 
 .market-offers__actions .btn {
@@ -8317,14 +8330,8 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 @media (min-width: 720px) {
-  .market-offers__actions {
-    flex: 0 0 auto;
-    margin-left: auto;
-  }
-
   .market-offers__actions .btn {
-    flex: 0 0 auto;
-    min-width: 5.6rem;
+    min-width: 0;
   }
 }
 
