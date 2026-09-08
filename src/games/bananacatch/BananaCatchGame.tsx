@@ -6,6 +6,7 @@ import { isDesktopShell } from "../../lib/desktopOnline";
 import { readCatchBgmVolume, writeCatchBgmVolume } from "./bgmTracks";
 import {
   BANANA_IMAGE,
+  HEART_IMAGE,
   BFB_IMAGE,
   BLUE_BLOON_IMAGE,
   CATCH_CLEAR_BANANAS,
@@ -39,6 +40,7 @@ const USE_POINTER_LOCK = !isDesktopShell();
 
 const DROP_SRC: Record<DropKind, string> = {
   banana: BANANA_IMAGE,
+  heart: HEART_IMAGE,
   blue: BLUE_BLOON_IMAGE,
   green: GREEN_BLOON_IMAGE,
   pink: PINK_BLOON_IMAGE,

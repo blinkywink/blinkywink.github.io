@@ -1,4 +1,5 @@
 export const BANANA_IMAGE = "/images/bananas/banana.webp";
+export const HEART_IMAGE = "/images/ui/lives-heart.webp";
 export const MONKEY_IMAGE = "/images/bananas/banana-farm-dance.gif";
 export const MEADOW_BG_IMAGE = "/images/bananas/monkey-meadow-bg.webp";
 export const RED_BLOON_IMAGE = "/images/bloons/red-bloon.webp";
@@ -46,6 +47,7 @@ export function catchUiScale(_fieldW?: number, _fieldH?: number): number {
 
 export type DropKind =
   | "banana"
+  | "heart"
   | "red"
   | "blue"
   | "green"
@@ -56,6 +58,7 @@ export type DropKind =
 /** Intrinsic image aspect (width / height) for object-fit-free sizing. */
 export const KIND_ASPECT: Record<DropKind, number> = {
   banana: 114 / 118,
+  heart: 1,
   red: 49 / 63,
   blue: 53 / 68,
   green: 57 / 72,
@@ -70,6 +73,7 @@ export const KIND_ASPECT: Record<DropKind, number> = {
  */
 export const KIND_SCALE: Record<DropKind, number> = {
   banana: 44,
+  heart: 46,
   red: 44,
   blue: 44,
   green: 44,
@@ -84,6 +88,7 @@ export const KIND_SCALE: Record<DropKind, number> = {
  */
 export const KIND_SPEED: Record<DropKind, number> = {
   banana: 155,
+  heart: 140,
   red: 115,
   blue: 150,
   green: 185,
@@ -95,6 +100,7 @@ export const KIND_SPEED: Record<DropKind, number> = {
 /** Damage to hearts on contact. */
 export const KIND_DAMAGE: Record<DropKind, number> = {
   banana: 0,
+  heart: 0,
   red: 1,
   blue: 1,
   green: 1,
@@ -113,6 +119,7 @@ export const KIND_HIT: Record<
   { shape: "circle" | "ellipse"; rx: number; ry: number }
 > = {
   banana: { shape: "circle", rx: 0.82, ry: 0.82 },
+  heart: { shape: "circle", rx: 0.84, ry: 0.84 },
   red: { shape: "circle", rx: 0.9, ry: 0.9 },
   blue: { shape: "circle", rx: 0.9, ry: 0.9 },
   green: { shape: "circle", rx: 0.9, ry: 0.9 },
@@ -130,8 +137,8 @@ export const PLAYER_LERP = 14;
 export const SPAWN_BANANA_MS_START = 1200;
 export const SPAWN_BANANA_MS_MIN = 720;
 /** Ordinary bloons (singles + formations). */
-export const SPAWN_BLOON_MS_START = 1100;
-export const SPAWN_BLOON_MS_MIN = 520;
+export const SPAWN_BLOON_MS_START = 900;
+export const SPAWN_BLOON_MS_MIN = 420;
 /** Blimps on their own slow clock so they never stack. */
 export const SPAWN_BLIMP_MS_START = 11000;
 export const SPAWN_BLIMP_MS_MIN = 7500;

@@ -159,6 +159,97 @@ export async function searchEnchor(
   return { ...json, data, found: data.length };
 }
 
+export type ChartFlags = {
+  hasLyrics: boolean;
+  hasVocals: boolean;
+};
+
+const FLAG_CACHE_KEY = "bloonhero-chart-flags-v1";
+const flagCache = new Map<string, ChartFlags>();
+
+function flagKey(md5: string): string {
+  return md5.trim().toLowerCase();
+}
+
+function readFlagCache(): void {
+  if (flagCache.size > 0) return;
+  try {
+    const raw = localStorage.getItem(FLAG_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, ChartFlags>;
+    for (const [md5, flags] of Object.entries(parsed)) {
+      if (!flags || typeof flags !== "object") continue;
+      flagCache.set(flagKey(md5), {
+        hasLyrics: Boolean(flags.hasLyrics),
+        hasVocals: Boolean(flags.hasVocals),
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function writeFlagCache(): void {
+  try {
+    const out: Record<string, ChartFlags> = {};
+    for (const [md5, flags] of flagCache) out[md5] = flags;
+    localStorage.setItem(FLAG_CACHE_KEY, JSON.stringify(out));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function rememberChartFlags(hit: EnchorHit): void {
+  const md5 = flagKey(hit.md5 || "");
+  if (md5.length < 8) return;
+  readFlagCache();
+  flagCache.set(md5, {
+    hasLyrics: Boolean(hit.notesData?.hasLyrics),
+    hasVocals: hitHasVocals(hit),
+  });
+  writeFlagCache();
+}
+
+export function cachedChartFlags(md5: string): ChartFlags | null {
+  readFlagCache();
+  return flagCache.get(flagKey(md5)) ?? null;
+}
+
+/** Match a recent-play row back to Enchor so lyrics/vocals tags can show. */
+export async function lookupChartFlags(
+  md5: string,
+  artist: string,
+  name: string,
+): Promise<ChartFlags | null> {
+  const key = flagKey(md5);
+  const cached = cachedChartFlags(key);
+  if (cached) return cached;
+
+  const query = `${artist} ${name}`.trim();
+  if (!query) return null;
+  try {
+    const res = await fetch(`${API}/search`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        search: query,
+        instrument: "guitar",
+        difficulty: "expert",
+        page: 1,
+        per_page: 20,
+      }),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as EnchorSearchResponse;
+    const hit = (json.data ?? []).find((row) => flagKey(row.md5) === key);
+    if (!hit) return null;
+    rememberChartFlags(hit);
+    return cachedChartFlags(key);
+  } catch {
+    return null;
+  }
+}
+
 export async function downloadSng(md5: string): Promise<ArrayBuffer> {
   const res = await fetch(enchorSngUrl(md5));
   if (!res.ok) throw new Error(`Chart download failed (${res.status})`);

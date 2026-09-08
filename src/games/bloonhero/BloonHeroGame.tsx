@@ -31,7 +31,12 @@ import {
 } from "./favorites";
 import { INSTRUMENT_LABEL } from "./instruments";
 import { recentPlayToHit } from "./recentPlays";
-import { DEFAULT_KEYS, type HeroKeybinds } from "./settings";
+import {
+  DEFAULT_KEYS,
+  DEFAULT_STAR_POWER_KEY,
+  isHeroTouchPlay,
+  type HeroKeybinds,
+} from "./settings";
 import { useBloonHero } from "./useBloonHero";
 
 type Props = {
@@ -64,6 +69,18 @@ function DiffPips({ score }: { score: number | null }) {
   );
 }
 
+function SongFlags({ hit }: { hit: EnchorHit }) {
+  const vocals = hitHasVocals(hit);
+  const lyrics = Boolean(hit.notesData?.hasLyrics);
+  if (!vocals && !lyrics) return null;
+  return (
+    <span className="hero-song-flags">
+      {vocals ? <span className="hero-flag hero-flag--vocals">Vocals</span> : null}
+      {lyrics ? <span className="hero-flag hero-flag--lyrics">Lyrics</span> : null}
+    </span>
+  );
+}
+
 function songDiffScore(hit: EnchorHit): number | null {
   const guitar = diffScoreFor(hit, "guitar");
   const vocals = hitHasVocals(hit) ? diffScoreFor(hit, "vocals") : null;
@@ -74,6 +91,7 @@ function songDiffScore(hit: EnchorHit): number | null {
 function useSnapCardList(
   deps: unknown[],
   capPx: () => number,
+  maxCount = 0,
 ) {
   const ref = useRef<HTMLUListElement>(null);
   useLayoutEffect(() => {
@@ -94,6 +112,7 @@ function useSnapCardList(
         const h = item.getBoundingClientRect().height;
         const next = n === 0 ? h : height + gap + h;
         if (n > 0 && next > limit + 0.5) break;
+        if (maxCount > 0 && n >= maxCount) break;
         height = next;
         n += 1;
       }
@@ -169,6 +188,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     maxLives,
     setCanvasEl,
     setProgressFillEl,
+    setStarFillEl,
     setCountdownEl,
     setLyricEl,
     togglePause,
@@ -177,6 +197,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const { user, isGuest } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capturingLane, setCapturingLane] = useState<number | null>(null);
+  const [capturingStar, setCapturingStar] = useState(false);
   const [vocalsOnly, setVocalsOnly] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<EnchorHit[]>(() =>
@@ -283,6 +304,34 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [capturingLane, settings.keys, updateSettings]);
 
+  useEffect(() => {
+    if (!capturingStar) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        setCapturingStar(false);
+        return;
+      }
+      const next = e.key.toLowerCase();
+      if (
+        !next ||
+        next === "tab" ||
+        next === "shift" ||
+        next === "control" ||
+        next === "alt" ||
+        next === "meta"
+      ) {
+        return;
+      }
+      updateSettings({ starPowerKey: next });
+      setCapturingStar(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [capturingStar, updateSettings]);
+
   const volumeSlider = (
     <label className="hero-volume">
       <span>Vol {Math.round(state.volume * 100)}</span>
@@ -333,6 +382,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
   const recentListRef = useSnapCardList(
     [state.recentPlays.length, showRecent],
     () => 16 * 16,
+    4,
   );
 
   const onSearch = (e: FormEvent) => {
@@ -534,6 +584,27 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
           <span className="hero-settings__hint">
             Click a lane, then press a key to rebind.
           </span>
+          {!isHeroTouchPlay() ? (
+            <div className="hero-settings__star">
+              <span>Star power</span>
+              <button
+                type="button"
+                className={`hero-settings__key${capturingStar ? " is-listening" : ""}`}
+                onClick={() => {
+                  setCapturingLane(null);
+                  setCapturingStar((on) => !on);
+                }}
+              >
+                {capturingStar
+                  ? "…"
+                  : formatKey(settings.starPowerKey || DEFAULT_STAR_POWER_KEY)}
+              </button>
+              <span className="hero-settings__hint">
+                Desktop only. Fill the meter on glowing notes, then press this
+                for double cash.
+              </span>
+            </div>
+          ) : null}
           <button
             type="button"
             className="btn btn--ghost hero-settings__reset"
@@ -547,6 +618,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 lyricsOffsetY: 0,
                 keys: [...DEFAULT_KEYS] as HeroKeybinds,
                 fourNote: true,
+                starPowerKey: DEFAULT_STAR_POWER_KEY,
               })
             }
           >
@@ -681,11 +753,11 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                             ? ` · ${Math.round(hit.song_length / 1000)}s`
                             : ""}
                         </span>
+                        <SongFlags hit={hit} />
                         <span className="hero-results__inst">
                           {instruments
                             .map((i) => INSTRUMENT_LABEL[i])
                             .join(" · ")}
-                          {hit.notesData?.hasLyrics ? " · lyrics" : ""}
                         </span>
                       </span>
                     </button>
@@ -734,6 +806,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                               <strong>
                                 {row.artist}, {row.songName}
                               </strong>
+                              <SongFlags hit={hit} />
                               <span>
                                 played by {row.username}
                                 {row.songLength
@@ -808,15 +881,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             )}
 
-            {playing &&
-            (settings.lyricsEnabled ?? true) &&
-            (state.currentLyric?.visible || state.currentLyric?.fullWord) ? (
-              <p className="hero-lyric-banner">
-                {state.currentLyric.visible || state.currentLyric.fullWord}
-              </p>
-            ) : null}
-
-            <div className="hero-stage">
+            <div className={`hero-stage${state.starActive ? " is-star" : ""}`}>
               {state.hasVocals ? (
                 <div
                   className={`hero-singer${state.talking ? " is-talking" : ""}${state.singing ? " is-open" : ""}`}
@@ -1059,6 +1124,16 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 </div>
               ) : null}
             </div>
+            {!isHeroTouchPlay() && state.hasStarPower ? (
+              <div
+                className={`hero-star-bar${state.starActive ? " is-on" : ""}${
+                  !state.starActive && state.starMeter >= 0.5 ? " is-ready" : ""
+                }`}
+                title="Star power"
+              >
+                <span ref={setStarFillEl} className="hero-star-bar__fill" />
+              </div>
+            ) : null}
           </>
         )}
       </main>

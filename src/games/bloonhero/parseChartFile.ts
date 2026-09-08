@@ -16,7 +16,12 @@ export type ChartNote = {
   dur: number;
   tick: number;
   sustain: boolean;
+  /** Inside a chart star-power phrase. */
+  star?: boolean;
+  starPhrase?: number;
 };
+
+export type StarPhrase = { t0: number; t1: number };
 
 /** Shorter than this is treated as a tap (no trail / hold). */
 export const MIN_SUSTAIN_S = 0.14;
@@ -29,6 +34,7 @@ export type ParsedChart = {
   notes: ChartNote[];
   duration: number;
   instrument: PlayableInstrument;
+  starPhrases: StarPhrase[];
 };
 
 type TempoEvent = { tick: number; bpm: number };
@@ -175,6 +181,23 @@ export function parseChartFile(
     });
   }
 
+  const starPhrases: StarPhrase[] = [];
+  for (const line of lines) {
+    const m = line.match(/^(\d+)\s*=\s*S\s+(\d+)\s+(\d+)/i);
+    if (!m) continue;
+    const kind = Number(m[2]);
+    // 0 and 2 are both used as star-power phrases in .chart files.
+    if (kind !== 0 && kind !== 2) continue;
+    const tick = Number(m[1]);
+    const len = Number(m[3]);
+    const t0 = tickToSeconds(tick, meta.resolution, tempos) - meta.offsetSec;
+    const t1 =
+      tickToSeconds(tick + Math.max(0, len), meta.resolution, tempos) -
+      meta.offsetSec;
+    if (t1 > t0 + 0.02) starPhrases.push({ t0, t1 });
+  }
+
+  applyStarPhrases(notes, starPhrases);
   notes.sort((a, b) => a.t - b.t || a.lane - b.lane);
   if (!notes.length) {
     throw new Error(`No playable ${instrument} notes in chart`);
@@ -192,5 +215,38 @@ export function parseChartFile(
     notes,
     duration,
     instrument,
+    starPhrases,
   };
+}
+
+/** Mark notes that sit inside a star-power phrase (after 4-note fold / simplify). */
+export function applyStarPhrases<T extends ChartNote>(
+  notes: T[],
+  phrases: StarPhrase[],
+): T[] {
+  if (!phrases.length) {
+    for (const n of notes) {
+      n.star = false;
+      n.starPhrase = undefined;
+    }
+    return notes;
+  }
+  for (const n of notes) {
+    let phrase = -1;
+    for (let i = 0; i < phrases.length; i++) {
+      const p = phrases[i]!;
+      if (n.t >= p.t0 - 0.03 && n.t <= p.t1 + 0.04) {
+        phrase = i;
+        break;
+      }
+    }
+    if (phrase >= 0) {
+      n.star = true;
+      n.starPhrase = phrase;
+    } else {
+      n.star = false;
+      n.starPhrase = undefined;
+    }
+  }
+  return notes;
 }

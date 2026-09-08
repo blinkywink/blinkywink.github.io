@@ -19,10 +19,13 @@ export type HeroSettings = {
   keys: HeroKeybinds;
   /** Fold the 5th expert lane into the 4th so you only play 4 keys. */
   fourNote: boolean;
+  /** Desktop star-power deploy. Default Space. */
+  starPowerKey: string;
 };
 
 const KEY = "bloonhero-settings-v1";
 export const DEFAULT_KEYS: HeroKeybinds = ["d", "f", "j", "k", "l"];
+export const DEFAULT_STAR_POWER_KEY = " ";
 export const DEFAULT_SETTINGS: HeroSettings = {
   trackSpeed: 1,
   bloonScale: 1,
@@ -32,6 +35,7 @@ export const DEFAULT_SETTINGS: HeroSettings = {
   lyricsOffsetY: 0,
   keys: [...DEFAULT_KEYS] as HeroKeybinds,
   fourNote: true,
+  starPowerKey: DEFAULT_STAR_POWER_KEY,
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -73,11 +77,16 @@ export function readHeroSettings(): HeroSettings {
         : 0,
       keys,
       fourNote: parsed.fourNote === undefined ? true : Boolean(parsed.fourNote),
+      starPowerKey:
+        typeof parsed.starPowerKey === "string" && parsed.starPowerKey
+          ? parsed.starPowerKey.toLowerCase()
+          : DEFAULT_STAR_POWER_KEY,
     };
   } catch {
     return {
       ...DEFAULT_SETTINGS,
       keys: [...DEFAULT_KEYS] as HeroKeybinds,
+      starPowerKey: DEFAULT_STAR_POWER_KEY,
     };
   }
 }

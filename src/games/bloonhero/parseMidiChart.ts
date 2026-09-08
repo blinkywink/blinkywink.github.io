@@ -8,9 +8,16 @@ import {
   PLAYABLE_INSTRUMENTS,
   type PlayableInstrument,
 } from "./instruments";
-import type { ChartNote, ParsedChart } from "./parseChartFile";
+import {
+  applyStarPhrases,
+  type ChartNote,
+  type ParsedChart,
+  type StarPhrase,
+} from "./parseChartFile";
 
 const EXPERT_BASE = 96;
+/** Clone Hero 5-fret star-power phrase marker. */
+const STAR_POWER_NOTE = 116;
 /** Typical sung pitch window (exclude percussion / markers ≥ 96). */
 const VOCAL_PITCH_MIN = 36;
 const VOCAL_PITCH_MAX = 84;
@@ -157,13 +164,19 @@ export function parseMidiChart(
   if (!track) throw new Error(`No ${instrument} MIDI track found`);
 
   const open = new Map<number, number>();
+  const starOpen = new Map<number, number>();
   const raw: { tick: number; lane: number; endTick: number }[] = [];
+  const starRaw: { tick: number; endTick: number }[] = [];
   let tick = 0;
 
   for (const e of track) {
     tick += e.deltaTime;
     if (e.type === "noteOn" && e.velocity > 0) {
       const n = e.noteNumber;
+      if (instrument === "guitar" && n === STAR_POWER_NOTE) {
+        starOpen.set(n, tick);
+        continue;
+      }
       if (!isPlayableMidiPitch(instrument, n)) continue;
       open.set(n, tick);
     } else if (
@@ -171,6 +184,13 @@ export function parseMidiChart(
       (e.type === "noteOn" && e.velocity === 0)
     ) {
       const n = e.noteNumber;
+      if (instrument === "guitar" && n === STAR_POWER_NOTE) {
+        const start = starOpen.get(n);
+        if (start == null) continue;
+        starOpen.delete(n);
+        starRaw.push({ tick: start, endTick: Math.max(start, tick) });
+        continue;
+      }
       const start = open.get(n);
       if (start == null) continue;
       open.delete(n);
@@ -198,6 +218,11 @@ export function parseMidiChart(
     };
   });
 
+  const starPhrases: StarPhrase[] = starRaw.map((r) => ({
+    t0: tickToSec(r.tick, tpq, tempos) - offset,
+    t1: tickToSec(r.endTick, tpq, tempos) - offset,
+  }));
+  applyStarPhrases(notes, starPhrases);
   notes.sort((a, b) => a.t - b.t || a.lane - b.lane);
   if (!notes.length) throw new Error(`No playable ${instrument} notes in MIDI`);
 
@@ -212,5 +237,6 @@ export function parseMidiChart(
     notes,
     duration,
     instrument,
+    starPhrases,
   };
 }

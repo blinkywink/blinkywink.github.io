@@ -14,6 +14,7 @@ export type HighwayNote = {
   lane: number;
   dur: number;
   sustain: boolean;
+  star?: boolean;
   resolved: boolean;
   result?: Judge;
   holding: boolean;
@@ -62,12 +63,12 @@ export type HighwayDrawState = {
   laneCount?: number;
   /** Bigger tap tiles on phones. */
   pianoTiles?: boolean;
+  /** Desktop star power is deployed. */
+  starActive?: boolean;
   darts?: readonly DartFx[];
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
   wallMs?: number;
-  /** Current synced lyric, drawn on the highway so it can't sit under the canvas. */
-  lyric?: string | null;
 };
 
 const JUDGE_COLOR: Record<Judge, string> = {
@@ -96,9 +97,12 @@ const LANE_TRAIL = LANES.map((l) => hexAlpha(l.color, 0.7));
 const LANE_TRAIL_HOT = LANES.map((l) => hexAlpha(l.color, 0.95));
 const LANE_TRAIL_DROP = LANES.map((l) => hexAlpha(l.color, 0.28));
 
+const STAR_PINK = "#ff6ec8";
+
 type BloonSprite = {
   img: HTMLImageElement;
   outline: HTMLCanvasElement | null;
+  starTint: HTMLCanvasElement | null;
 };
 
 const sprites: (BloonSprite | null)[] = BLOON_IMAGES.map(() => null);
@@ -123,6 +127,21 @@ function ensureShuriken(): HTMLImageElement | null {
     else img.addEventListener("load", finish, { once: true });
   }
   return shurikenImg?.complete && shurikenImg.naturalWidth ? shurikenImg : null;
+}
+
+function makeTint(img: HTMLImageElement, color: string): HTMLCanvasElement {
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, w);
+  c.height = Math.max(1, h);
+  const ctx = c.getContext("2d");
+  if (!ctx) return c;
+  ctx.drawImage(img, 0, 0, w, h);
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, c.width, c.height);
+  return c;
 }
 
 function makeOutline(img: HTMLImageElement, color: string): HTMLCanvasElement {
@@ -158,7 +177,7 @@ function makeOutline(img: HTMLImageElement, color: string): HTMLCanvasElement {
 /** Prefetch bloon art used by the highway canvas. */
 export function ensureBloonImages(): void {
   if (typeof Image === "undefined") return;
-  const key = BLOON_IMAGES.join("|");
+  const key = `${BLOON_IMAGES.join("|")}|star-tint`;
   if (loadKey === key) return;
   loadKey = key;
   BLOON_IMAGES.forEach((src, i) => {
@@ -170,6 +189,7 @@ export function ensureBloonImages(): void {
       sprites[i] = {
         img,
         outline: makeOutline(img, LANES[i]!.color),
+        starTint: makeTint(img, STAR_PINK),
       };
     };
     if (img.complete && img.naturalWidth) finish();
@@ -265,6 +285,65 @@ function drawBloonAt(
   drawImageContain(ctx, spr.img, cx, cy, size, alpha);
 }
 
+function drawStarAtmosphere(
+  ctx: CanvasRenderingContext2D,
+  cssW: number,
+  cssH: number,
+  hitY: number,
+  wallMs: number,
+  laneCount: number,
+  laneW: number,
+  gap: number,
+) {
+  const pulse = 0.72 + 0.28 * Math.sin(wallMs / 520);
+
+  const bg = ctx.createLinearGradient(0, 0, 0, cssH);
+  bg.addColorStop(0, "#0e0a0d");
+  bg.addColorStop(0.42, "#100a0e");
+  bg.addColorStop(0.78, "#160a10");
+  bg.addColorStop(1, "#241018");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  const wash = ctx.createRadialGradient(
+    cssW * 0.5,
+    hitY,
+    8,
+    cssW * 0.5,
+    hitY,
+    Math.max(cssW, cssH) * 0.72,
+  );
+  wash.addColorStop(0, `rgba(255, 120, 200, ${0.08 * pulse})`);
+  wash.addColorStop(0.45, `rgba(255, 70, 170, ${0.03 * pulse})`);
+  wash.addColorStop(1, "rgba(255, 70, 170, 0)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  for (let i = 0; i < 16; i++) {
+    const lane = i % laneCount;
+    const x =
+      lane * (laneW + gap) +
+      laneW * (0.18 + ((i * 47) % 64) / 100);
+    const speed = 52 + (i % 5) * 16;
+    const travel = (wallMs * 0.06 * speed + i * 97) % (cssH + 48);
+    const y = cssH - travel;
+    const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(wallMs / 320 + i));
+    ctx.fillStyle = `rgba(255, 186, 230, ${0.1 + (i % 3) * 0.05})`;
+    ctx.globalAlpha = twinkle;
+    ctx.beginPath();
+    ctx.arc(x, y, i % 4 === 0 ? 2.4 : 1.35, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  const bloom = ctx.createLinearGradient(0, hitY - 36, 0, hitY + 42);
+  bloom.addColorStop(0, "rgba(255, 110, 200, 0)");
+  bloom.addColorStop(0.5, `rgba(255, 140, 214, ${0.12 * pulse})`);
+  bloom.addColorStop(1, "rgba(255, 110, 200, 0)");
+  ctx.fillStyle = bloom;
+  ctx.fillRect(0, hitY - 36, cssW, 78);
+}
+
 function drawReceptor(
   ctx: CanvasRenderingContext2D,
   lane: number,
@@ -272,6 +351,7 @@ function drawReceptor(
   cy: number,
   size: number,
   pressed: boolean,
+  starActive = false,
 ) {
   const spr = sprites[lane];
   const push = pressed ? 3 : 0;
@@ -280,6 +360,15 @@ function drawReceptor(
   const y = cy + push;
 
   ctx.save();
+  if (starActive) {
+    const glow = ctx.createRadialGradient(cx, y, 2, cx, y, s * 0.7);
+    glow.addColorStop(0, "rgba(255, 150, 214, 0.22)");
+    glow.addColorStop(1, "rgba(255, 110, 200, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, y, s * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
   if (spr?.img.complete && spr.img.naturalWidth) {
     drawImageContain(ctx, spr.img, cx, y, s, pressed ? 0.42 : 0.26);
     if (spr.outline) {
@@ -318,8 +407,6 @@ export function drawHeroHighway(
   const wallMs = state.wallMs ?? performance.now();
 
   ctx.clearRect(0, 0, cssW, cssH);
-  ctx.fillStyle = "#0a0a0c";
-  ctx.fillRect(0, 0, cssW, cssH);
 
   const laneCount = state.laneCount === 4 ? 4 : 5;
   const gap = 4;
@@ -328,17 +415,34 @@ export function drawHeroHighway(
   const bloonSize = state.pianoTiles
     ? Math.min(laneW * 0.82, 92) * scaleMul
     : Math.min(laneW * 0.56, 40) * scaleMul;
+  const starOn = !!state.starActive;
+  const starPulse = 0.72 + 0.28 * Math.sin(wallMs / 520);
+
+  if (starOn) {
+    drawStarAtmosphere(ctx, cssW, cssH, hitY, wallMs, laneCount, laneW, gap);
+  } else {
+    ctx.fillStyle = "#0a0a0c";
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
 
   // Lane columns
   for (let i = 0; i < laneCount; i++) {
     const x = i * (laneW + gap);
-    ctx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.018)";
+    ctx.fillStyle = starOn
+      ? i % 2 === 0
+        ? `rgba(255, 120, 196, ${0.028 + 0.016 * starPulse})`
+        : `rgba(255, 90, 180, ${0.018 + 0.012 * starPulse})`
+      : i % 2 === 0
+        ? "rgba(255,255,255,0.035)"
+        : "rgba(255,255,255,0.018)";
     ctx.fillRect(x, 0, laneW, cssH);
   }
 
   // Subtle depth grid so you can read which note is ahead.
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.strokeStyle = starOn
+    ? `rgba(255, 160, 214, ${0.04 + 0.02 * starPulse})`
+    : "rgba(255,255,255,0.07)";
   ctx.lineWidth = 1;
   const gridRows = 10;
   for (let r = 1; r < gridRows; r++) {
@@ -348,7 +452,9 @@ export function drawHeroHighway(
     ctx.lineTo(cssW, y);
     ctx.stroke();
   }
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.strokeStyle = starOn
+    ? `rgba(255, 170, 220, ${0.06 + 0.025 * starPulse})`
+    : "rgba(255,255,255,0.12)";
   for (let i = 0; i <= laneCount; i++) {
     const x = i * (laneW + gap) - gap / 2;
     ctx.beginPath();
@@ -369,11 +475,27 @@ export function drawHeroHighway(
       hitY,
       bloonSize,
       active,
+      starOn,
     );
   }
 
-  ctx.strokeStyle = "rgba(255,236,160,0.55)";
-  ctx.lineWidth = 2;
+  if (starOn) {
+    ctx.save();
+    ctx.shadowColor = STAR_PINK;
+    ctx.shadowBlur = 7;
+    ctx.strokeStyle = `rgba(255, 176, 226, ${0.32 + 0.08 * starPulse})`;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(0, hitY);
+    ctx.lineTo(cssW, hitY);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.strokeStyle = starOn
+    ? "rgba(255, 210, 236, 0.4)"
+    : "rgba(255,236,160,0.55)";
+  ctx.lineWidth = starOn ? 2.5 : 2;
   ctx.setLineDash([8, 6]);
   ctx.beginPath();
   ctx.moveTo(0, hitY);
@@ -421,11 +543,15 @@ export function drawHeroHighway(
       const top = Math.min(yHead, yEnd);
       const bot = Math.max(yHead, yEnd);
       const tw = Math.max(4, Math.min(laneW * 0.12, 8));
-      ctx.strokeStyle = n.releasedEarly
-        ? LANE_TRAIL_DROP[lane]!
-        : n.holding
-          ? LANE_TRAIL_HOT[lane]!
-          : LANE_TRAIL[lane]!;
+      ctx.strokeStyle = n.star
+        ? n.releasedEarly
+          ? "rgba(255, 110, 200, 0.28)"
+          : "rgba(255, 110, 200, 0.72)"
+        : n.releasedEarly
+          ? LANE_TRAIL_DROP[lane]!
+          : n.holding
+            ? LANE_TRAIL_HOT[lane]!
+            : LANE_TRAIL[lane]!;
       ctx.lineWidth = tw;
       ctx.lineCap = "round";
       ctx.beginPath();
@@ -446,14 +572,19 @@ export function drawHeroHighway(
     if (!(n.resolved && n.result !== "miss" && !n.holding && !waitingForDart)) {
       const yDraw =
         waitingForDart && n.hitY != null ? n.hitY : yHead;
-      drawBloonAt(
-        ctx,
-        lane,
-        cx,
-        yDraw,
-        bloonSize,
-        miss ? 0.35 : 1,
-      );
+      const spr = sprites[lane];
+      if (n.star && !miss && spr?.starTint) {
+        drawImageContain(ctx, spr.starTint, cx, yDraw, bloonSize, 1);
+      } else {
+        drawBloonAt(
+          ctx,
+          lane,
+          cx,
+          yDraw,
+          bloonSize,
+          miss ? 0.35 : 1,
+        );
+      }
     }
   }
 
@@ -539,38 +670,7 @@ export function drawHeroHighway(
     ctx.restore();
   }
 
-  const lyric = (state.lyric ?? "").trim();
-  if (lyric) {
-    drawHighwayLyric(ctx, cssW, cssH, lyric);
-  }
-
   return nextHint;
-}
-
-function drawHighwayLyric(
-  ctx: CanvasRenderingContext2D,
-  cssW: number,
-  cssH: number,
-  text: string,
-): void {
-  const fontSize = Math.max(18, Math.min(34, cssW * 0.055));
-  ctx.save();
-  ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  const padX = 16;
-  const padY = 8;
-  const metrics = ctx.measureText(text);
-  const boxW = Math.min(cssW - 16, metrics.width + padX * 2);
-  const boxH = fontSize + padY * 2;
-  const x = (cssW - boxW) / 2;
-  // Under the dart monkey image, which covers the top of the stage.
-  const y = Math.max(120, Math.min(cssH * 0.34, 220));
-  ctx.fillStyle = "rgba(0,0,0,0.78)";
-  ctx.fillRect(x, y, boxW, boxH);
-  ctx.fillStyle = "#fff8e8";
-  ctx.fillText(text, cssW / 2, y + boxH / 2, boxW - padX);
-  ctx.restore();
 }
 
 function hexAlpha(hex: string, a: number): string {

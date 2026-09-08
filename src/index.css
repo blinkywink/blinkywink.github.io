@@ -15601,6 +15601,75 @@ body.rewards-overlay-open .sweeper-result {
   line-height: 1.1;
 }
 
+.hero-star-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  height: 1.85rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 120, 196, 0.35);
+  background: rgba(18, 8, 16, 0.72);
+  color: #ffd0ec;
+  pointer-events: none;
+}
+
+.hero-star-bar__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: rgba(255, 110, 200, 0.55);
+  will-change: transform;
+}
+
+.hero-star-bar__label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-star-bar.is-ready {
+  border-top-color: rgba(255, 150, 214, 0.8);
+  box-shadow: 0 -6px 16px rgba(255, 110, 200, 0.18);
+}
+
+.hero-star-bar.is-on .hero-star-bar__fill {
+  background: rgba(255, 160, 220, 0.58);
+  box-shadow: 0 0 8px rgba(255, 120, 200, 0.28);
+}
+
+.hero-star-bar.is-on {
+  animation: hero-star-bar-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-star-bar-pulse {
+  0%,
+  100% {
+    border-top-color: rgba(255, 140, 210, 0.32);
+  }
+  50% {
+    border-top-color: rgba(255, 210, 236, 0.55);
+  }
+}
+
+.hero-settings__star {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+  margin-top: 0.35rem;
+}
+
 .hero-stat strong {
   font-size: 1.2rem;
 }
@@ -15628,21 +15697,32 @@ body.rewards-overlay-open .sweeper-result {
   text-transform: none;
 }
 
-.hero-lyric-banner {
-  margin: 0 auto;
-  max-width: min(92%, 36rem);
-  padding: 0.15rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.72);
-  text-align: center;
-  font-size: clamp(1.15rem, 4.6vw, 1.6rem);
-  font-weight: 800;
-  line-height: 1.25;
-  color: #fff8e8;
+.hero-song-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
 }
 
-.hero-lyric-banner:empty {
-  display: none;
+.hero-flag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.35;
+}
+
+.hero-flag--vocals {
+  color: #f8efc8;
+  background: rgba(240, 200, 74, 0.18);
+}
+
+.hero-flag--lyrics {
+  color: #d7f3ff;
+  background: rgba(120, 190, 255, 0.18);
 }
 
 .hero-judge {
@@ -15687,6 +15767,31 @@ body.rewards-overlay-open .sweeper-result {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0a0a0c;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.hero-stage.is-star {
+  border-color: rgba(255, 140, 210, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 120, 200, 0.14),
+    0 0 12px rgba(255, 80, 180, 0.14),
+    0 16px 40px rgba(0, 0, 0, 0.35);
+  animation: hero-star-stage 2.6s ease-in-out infinite;
+}
+
+@keyframes hero-star-stage {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 120, 200, 0.1),
+      0 0 8px rgba(255, 80, 180, 0.08),
+      0 16px 40px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 170, 226, 0.28),
+      0 0 16px rgba(255, 90, 190, 0.18),
+      0 16px 40px rgba(0, 0, 0, 0.35);
+  }
 }
 
 .hero-singer {
@@ -16045,7 +16150,8 @@ body.rewards-overlay-open .sweeper-result {
   opacity: 0.7;
 }
 
-.hero-results__meta > .hero-results__diff {
+.hero-results__meta > .hero-results__diff,
+.hero-results__meta > .hero-song-flags {
   opacity: 1;
 }
 

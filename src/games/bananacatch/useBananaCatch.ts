@@ -108,9 +108,9 @@ function makeDropAt(
   const anchorX = clamp(opts.x, half, Math.max(half, fieldW - half));
   let rot = 0;
   let spin = 0;
-  if (kind === "banana") {
-    rot = rand(-55, 55);
-    spin = rand(-40, 40);
+  if (kind === "banana" || kind === "heart") {
+    rot = rand(-18, 18);
+    spin = kind === "heart" ? rand(-25, 25) : rand(-40, 40);
   } else if (isBlimp(kind)) {
     rot = BLIMP_BASE_ROT;
   }
@@ -159,29 +159,83 @@ function pickBlimp(elapsed: number): "moab" | "bfb" | null {
   return "moab";
 }
 
+/**
+ * Drop a threat close enough that standing still loses, but offset so one
+ * step clears it. Never pin both sides at once.
+ */
+function placeAwayFrom(
+  fieldW: number,
+  span: number,
+  playerX: number,
+  occupied: number[],
+  elapsed: number,
+): number {
+  const half = span * 0.5;
+  const left = half + 6;
+  const right = Math.max(left, fieldW - half - 6);
+  const dodge = elapsed < 10 ? 78 : 62;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  let x = playerX + side * rand(dodge * 0.55, dodge + 36);
+  if (x < left || x > right) x = playerX - side * rand(dodge * 0.55, dodge + 36);
+
+  let penalty = 0;
+  for (const ox of occupied) {
+    if (Math.abs(x - ox) < 64) penalty += 1;
+  }
+  if (penalty > 0) {
+    const flip = playerX - (x - playerX);
+    if (flip >= left && flip <= right) x = flip;
+  }
+  return clamp(x, left, right);
+}
+
+function formationStart(
+  fieldW: number,
+  itemW: number,
+  count: number,
+  step: number,
+  playerX: number,
+  occupied: number[],
+  elapsed: number,
+): number {
+  const totalW = Math.max(0, (count - 1) * step);
+  const center = placeAwayFrom(
+    fieldW,
+    totalW + itemW,
+    playerX,
+    occupied,
+    elapsed,
+  );
+  const half = itemW * 0.5;
+  return clamp(center - totalW / 2, half, Math.max(half, fieldW - totalW - half));
+}
+
 /** Horizontal / double / thick / column / sway patterns for ordinary bloons. */
 function spawnFormation(
   fieldW: number,
   elapsed: number,
   nextId: () => number,
   ui: number,
+  playerX: number,
+  occupied: number[],
 ): Drop[] {
   const kind = pickOrdinary(elapsed);
   const { w, h } = drawSizeFor(kind, ui);
   const gap = w * 1.35;
   const patternRoll = Math.random();
 
-  // ~40% stay as a lone float (sometimes with a little sway)
-  if (patternRoll < 0.38) {
+  // One readable shape. Early stays short; later packs come in faster.
+  if (patternRoll < (elapsed < 8 ? 0.34 : 0.22)) {
+    const x = placeAwayFrom(fieldW, w, playerX, occupied, elapsed);
     return [
       makeDropAt(
         kind,
         fieldW,
         nextId,
         {
-          x: rand(w, Math.max(w, fieldW - w)),
-          swayAmp: Math.random() < 0.45 ? rand(18, 42) : 0,
-          swayFreq: rand(1.6, 2.6),
+          x,
+          swayAmp: rand(14, 32),
+          swayFreq: rand(1.5, 2.4),
           swayPhase: rand(0, Math.PI * 2),
         },
         ui,
@@ -189,8 +243,8 @@ function spawnFormation(
     ];
   }
 
-  const swayAmp = rand(28, 56);
-  const swayFreq = rand(1.4, 2.4);
+  const swayAmp = rand(18, 38);
+  const swayFreq = rand(1.4, 2.3);
   const phase = rand(0, Math.PI * 2);
   const sharedSway = {
     swayAmp,
@@ -198,11 +252,10 @@ function spawnFormation(
     swayPhase: phase,
   };
 
-  // Single thick horizontal line (4-6)
+  // Short line that cuts across the lane you are in
   if (patternRoll < 0.58) {
-    const count = 4 + Math.floor(Math.random() * 3);
-    const totalW = (count - 1) * gap;
-    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+    const count = elapsed < 12 ? 3 : 3 + Math.floor(Math.random() * 3);
+    const startX = formationStart(fieldW, w, count, gap, playerX, occupied, elapsed);
     return Array.from({ length: count }, (_, i) =>
       makeDropAt(
         kind,
@@ -217,11 +270,10 @@ function spawnFormation(
     );
   }
 
-  // Double line (2 rows)
-  if (patternRoll < 0.74) {
-    const count = 3 + Math.floor(Math.random() * 3);
-    const totalW = (count - 1) * gap;
-    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+  // Double line
+  if (patternRoll < 0.76 && elapsed >= 12) {
+    const count = 3 + (elapsed >= 24 ? Math.floor(Math.random() * 2) : 0);
+    const startX = formationStart(fieldW, w, count, gap, playerX, occupied, elapsed);
     const rowGap = h * 1.15;
     const out: Drop[] = [];
     for (let row = 0; row < 2; row++) {
@@ -245,12 +297,11 @@ function spawnFormation(
     return out;
   }
 
-  // Thick packed bar (2 deep, tight)
-  if (patternRoll < 0.88) {
-    const count = 5 + Math.floor(Math.random() * 2);
-    const tight = gap * 0.78;
-    const totalW = (count - 1) * tight;
-    const startX = rand(w * 0.5, Math.max(w * 0.5, fieldW - totalW - w * 0.5));
+  // Packed bar
+  if (patternRoll < 0.9 && elapsed >= 20) {
+    const count = 4 + Math.floor(Math.random() * 2);
+    const tight = gap * 0.82;
+    const startX = formationStart(fieldW, w, count, tight, playerX, occupied, elapsed);
     const out: Drop[] = [];
     for (let row = 0; row < 2; row++) {
       for (let i = 0; i < count; i++) {
@@ -272,9 +323,9 @@ function spawnFormation(
     return out;
   }
 
-  // Vertical column with staggered snake sway
-  const count = 4 + Math.floor(Math.random() * 3);
-  const x = rand(w, Math.max(w, fieldW - w));
+  // Column that drifts through your lane
+  const count = 3 + Math.floor(Math.random() * 3);
+  const x = placeAwayFrom(fieldW, w, playerX, occupied, elapsed);
   return Array.from({ length: count }, (_, i) =>
     makeDropAt(
       kind,
@@ -282,8 +333,8 @@ function spawnFormation(
       nextId,
       {
         x,
-        y: -h - i * (h * 1.1),
-        swayAmp: swayAmp * 0.85,
+        y: -h - i * (h * 1.05),
+        swayAmp,
         swayFreq,
         swayPhase: phase + i * 0.55,
       },
@@ -493,26 +544,55 @@ export function useBananaCatch() {
 
       const spawn: Drop[] = [];
 
+      const playerPx = playerXRef.current * fieldW;
+      const occupied = dropsRef.current
+        .filter((d) => d.kind !== "banana" && d.kind !== "heart")
+        .map((d) => d.anchorX);
+
       if (bananaTimerRef.current <= 0 && fieldW > 0) {
+        const bloonXs = occupied;
+        const heartFalling = [...dropsRef.current, ...spawn].some(
+          (d) => d.kind === "heart",
+        );
+        // ~1 heart per 30 banana slots, rolled fresh so it isn't a fixed timer.
+        const dropHeart =
+          s.lives < CATCH_LIVES &&
+          !heartFalling &&
+          Math.random() < 1 / 30;
+        const side = Math.random() < 0.5 ? -1 : 1;
+        let openX = clamp(
+          playerPx + side * rand(dropHeart ? 42 : 70, dropHeart ? 110 : 160),
+          margin,
+          Math.max(margin, fieldW - margin),
+        );
+        if (bloonXs.some((ox) => Math.abs(ox - openX) < 70)) {
+          openX = clamp(
+            openX + (openX < playerPx ? -80 : 80),
+            margin,
+            Math.max(margin, fieldW - margin),
+          );
+        }
         spawn.push(
           makeDropAt(
-            "banana",
+            dropHeart ? "heart" : "banana",
             fieldW,
             nextId,
             {
-              x: rand(margin, Math.max(margin, fieldW - margin)),
-              swayAmp: rand(10, 28),
-              swayFreq: rand(1.2, 2),
+              x: openX,
+              swayAmp: rand(dropHeart ? 4 : 8, dropHeart ? 12 : 18),
+              swayFreq: rand(1.2, 1.8),
               swayPhase: rand(0, Math.PI * 2),
             },
             ui,
           ),
         );
-        bananaTimerRef.current = bananaInterval * rand(0.75, 1.15);
+        bananaTimerRef.current = bananaInterval * rand(0.85, 1.15);
       }
 
       if (bloonTimerRef.current <= 0 && fieldW > 0) {
-        spawn.push(...spawnFormation(fieldW, t, nextId, ui));
+        spawn.push(
+          ...spawnFormation(fieldW, t, nextId, ui, playerPx, occupied),
+        );
         // Extra pause after a big formation so the screen can breathe
         const justBig = spawn.length >= 6;
         bloonTimerRef.current =
@@ -532,7 +612,7 @@ export function useBananaCatch() {
               fieldW,
               nextId,
               {
-                x: rand(fieldW * 0.2, fieldW * 0.8),
+                x: placeAwayFrom(fieldW, 160, playerPx, occupied, t),
               },
               ui,
             ),
@@ -594,6 +674,9 @@ export function useBananaCatch() {
             bananas += 1;
             cashEarned += CASH_PER_BANANA;
             pendingCashRef.current += CASH_PER_BANANA;
+            bananaFxRef.current?.(d.x, d.y);
+          } else if (d.kind === "heart") {
+            lives = Math.min(CATCH_LIVES, lives + 1);
             bananaFxRef.current?.(d.x, d.y);
           } else if (invulnerable) {
             // I-frames: bloon pops with no life loss.

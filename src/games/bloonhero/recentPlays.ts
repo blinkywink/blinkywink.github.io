@@ -1,5 +1,9 @@
 import { supabase, supabaseConfigured } from "../../lib/supabase";
-import type { EnchorHit } from "./enchorApi";
+import {
+  cachedChartFlags,
+  lookupChartFlags,
+  type EnchorHit,
+} from "./enchorApi";
 
 export type BloonHeroRecentPlay = {
   id: number;
@@ -13,6 +17,8 @@ export type BloonHeroRecentPlay = {
   charter: string | null;
   songLength: number | null;
   playedAt: string;
+  hasLyrics?: boolean;
+  hasVocals?: boolean;
 };
 
 type RecentRow = {
@@ -49,7 +55,37 @@ export async function fetchBloonHeroRecentPlays(
     charter: r.charter ?? null,
     songLength: r.song_length == null ? null : Number(r.song_length),
     playedAt: String(r.played_at),
+    ...(cachedChartFlags(String(r.md5)) ?? {}),
   }));
+}
+
+/** Fill lyrics/vocals tags for recent rows Enchor still knows about. */
+export async function enrichRecentPlayFlags(
+  rows: BloonHeroRecentPlay[],
+): Promise<BloonHeroRecentPlay[]> {
+  const pending = rows.filter(
+    (row) => row.hasLyrics == null && row.hasVocals == null,
+  );
+  const unique = new Map<string, BloonHeroRecentPlay>();
+  for (const row of pending) unique.set(row.md5.toLowerCase(), row);
+
+  const jobs = [...unique.values()];
+  const flags = new Map<string, { hasLyrics: boolean; hasVocals: boolean }>();
+  const workers = Array.from({ length: Math.min(4, jobs.length) }, async () => {
+    while (jobs.length) {
+      const row = jobs.shift();
+      if (!row) return;
+      const found = await lookupChartFlags(row.md5, row.artist, row.songName);
+      if (found) flags.set(row.md5.toLowerCase(), found);
+    }
+  });
+  await Promise.all(workers);
+
+  if (!flags.size) return rows;
+  return rows.map((row) => {
+    const found = flags.get(row.md5.toLowerCase());
+    return found ? { ...row, ...found } : row;
+  });
 }
 
 export async function recordBloonHeroPlay(hit: EnchorHit): Promise<void> {
@@ -87,7 +123,8 @@ export function recentPlayToHit(row: BloonHeroRecentPlay): EnchorHit {
     albumArtMd5: row.albumArtMd5,
     notesData: {
       instruments: ["guitar"],
-      hasVocals: false,
+      hasVocals: Boolean(row.hasVocals),
+      hasLyrics: Boolean(row.hasLyrics),
       noteCounts: [{ instrument: "guitar", difficulty: "expert", count: 1 }],
     },
   };

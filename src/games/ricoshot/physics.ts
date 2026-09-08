@@ -345,14 +345,17 @@ export function traceShot(
   };
 
   while (t < maxTime && bounces <= maxBounces && !done) {
-    // Mild seek toward nearest live bloon
+    // Seek the nearest bloon you can actually see. Steering through a wall
+    // just drives the shot into the shelf and tunnels.
     if (seek > 0 && !opts.ghost) {
+      const blockers = liveWalls.filter((w) => w.hp > 0);
       let best: Vec | null = null;
       let bestD = Infinity;
       for (let i = 0; i < live.length; i++) {
         const b = live[i]!;
         if (b.hp <= 0) continue;
         const bp = bloonPosAt(b, swayT0 + t);
+        if (!clearLineOfSight(pos, bp, blockers)) continue;
         const d = dist2(pos, bp);
         if (d < bestD) {
           bestD = d;
@@ -537,6 +540,32 @@ export function traceShot(
     wallsAfter: wallsFull,
     allPopped: bloonsFull.every((b) => b.hp <= 0),
     hit: { kind: "done" },
+  };
+}
+
+/** Aim guide: a long shot line plus the first ricochet. */
+export function previewAimPath(
+  level: Pick<RicoLevel, "walls" | "sniper" | "bloons">,
+  angle: number,
+  opts: ShotMods = {},
+): { aim: Vec[]; bounce: Vec[] } {
+  const shot = traceShot(level, angle, {
+    ...opts,
+    ghost: true,
+    seek: 0,
+    maxBounces: 1,
+    maxTime: opts.maxTime ?? 1.7,
+    recordEvery: 1,
+  });
+  const cut = shot.bounceAt[0];
+  if (cut == null || cut >= shot.points.length - 1) {
+    return { aim: shot.points, bounce: [] };
+  }
+  const after = shot.points.slice(cut);
+  const bounceLen = 28;
+  return {
+    aim: shot.points.slice(0, cut + 1),
+    bounce: after.slice(0, bounceLen),
   };
 }
 

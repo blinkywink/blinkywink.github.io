@@ -99,27 +99,28 @@ function lerpPair(
 }
 
 /**
- * Linear ramp. Tier is shown, so question 1 starts ~25% closer than the
- * old wide crop, then tightens from there instead of jumping.
+ * Question 1 already starts fairly zoomed, then tightens from there.
+ * Crop/zoom are about 20% harder than the last ramp so it isn't a free read.
  */
 export function difficultyForRound(round: number): DifficultyConfig {
   const start: DifficultyConfig = {
     ...DIFFICULTY_PRESETS.easy,
-    cropSize: [0.45, 0.61],
-    zoom: [1.33, 1.53],
+    cropSize: [0.36, 0.49],
+    zoom: [1.55, 1.78],
+    rotation: 8,
   };
   const end: DifficultyConfig = {
     tier: "hard",
-    cropSize: [0.24, 0.32],
-    zoom: [1.45, 1.73],
-    rotation: 14,
-    blur: [0, 0.25],
-    pixelation: [1, 1.15],
-    stretch: [0.94, 1.06],
-    brightness: [0.92, 1.1],
-    contrast: [1, 1.18],
-    distortion: [0, 0.03],
-    scoreMultiplier: 1.7,
+    cropSize: [0.19, 0.26],
+    zoom: [1.7, 2.08],
+    rotation: 18,
+    blur: [0, 0.35],
+    pixelation: [1, 1.25],
+    stretch: [0.92, 1.08],
+    brightness: [0.9, 1.12],
+    contrast: [1, 1.22],
+    distortion: [0, 0.04],
+    scoreMultiplier: 1.9,
   };
   const t = Math.min(1, Math.max(0, (Math.max(1, round) - 1) / 11));
   const tier: DifficultyTier =

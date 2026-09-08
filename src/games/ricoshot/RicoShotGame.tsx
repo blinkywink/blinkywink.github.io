@@ -10,6 +10,7 @@ import {
   bloonPosAt,
   DART_IMG,
   DART_DRAW_R,
+  DART_SPEED,
   FLIGHT_PLAYBACK_RATE,
   isBossBloon,
   kindFromHp,
@@ -21,6 +22,7 @@ import {
   type RicoWall,
 } from "./config";
 import { shooterDef } from "./shooters";
+import { previewAimPath } from "./physics";
 import { useRicoShot } from "./useRicoShot";
 import {
   playRicoFire,
@@ -473,29 +475,33 @@ export function RicoShotGame({ onBack: _onBack, onRunEnd }: Props) {
           }
         }
         for (const ang of angles) {
-          const toX = s.level.sniper.x + Math.cos(ang) * 110;
-          const toY = s.level.sniper.y + Math.sin(ang) * 110;
-          ctx.save();
-          ctx.strokeStyle = "rgba(255, 220, 80, 0.9)";
-          ctx.lineWidth = 3;
-          ctx.setLineDash([7, 9]);
-          ctx.lineCap = "round";
-          ctx.shadowColor = "rgba(255, 200, 40, 0.45)";
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.moveTo(
-            s.level.sniper.x + Math.cos(ang) * 28,
-            s.level.sniper.y + Math.sin(ang) * 28,
+          const path = previewAimPath(
+            { walls: drawWalls.current, sniper: s.level.sniper, bloons: s.bloons },
+            ang,
+            {
+              speed: DART_SPEED * def.speedMul,
+              phaseWood: def.phase === "wood",
+              phaseAll: def.phase === "all",
+            },
           );
-          ctx.lineTo(toX, toY);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = "#ffe566";
-          ctx.beginPath();
-          ctx.arc(toX, toY, 5.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
+          const pts = path.bounce.length
+            ? [...path.aim, ...path.bounce.slice(1)]
+            : path.aim;
+          if (pts.length >= 2) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255, 220, 80, 0.92)";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "butt";
+            ctx.lineJoin = "round";
+            ctx.setLineDash([8, 8]);
+            ctx.shadowColor = "rgba(255, 200, 40, 0.4)";
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.moveTo(pts[0]!.x, pts[0]!.y);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i]!.x, pts[i]!.y);
+            ctx.stroke();
+            ctx.restore();
+          }
         }
       }
 
