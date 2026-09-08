@@ -254,6 +254,11 @@ export function useBloonHero() {
   const lyricsRef = useRef<LyricPhrase[]>([]);
   const lyricsUiAtRef = useRef(0);
   const lyricElRef = useRef<HTMLElement | null>(null);
+  const lyricLineAt = (songTime: number): string => {
+    if (!settingsRef.current.lyricsEnabled) return "";
+    const line = lyricDisplayAtTime(lyricsRef.current, songTime);
+    return (line?.visible || line?.fullWord || "").trim();
+  };
   const pausedRef = useRef(false);
   /** When set, countdown before unpausing. wall ms start. */
   const resumeAtRef = useRef<number | null>(null);
@@ -1166,6 +1171,7 @@ export function useBloonHero() {
             darts: dartsRef.current,
             hitFlashes: hitFlashesRef.current,
             wallMs,
+            lyric: lyricLineAt(songTimeRef.current),
           });
         }
         frameRef.current = requestAnimationFrame(tick);
@@ -1199,6 +1205,7 @@ export function useBloonHero() {
             darts: [],
             hitFlashes: [],
             wallMs,
+            lyric: lyricLineAt(songTimeRef.current),
           });
         }
         const cdEl = countdownElRef.current;
@@ -1367,6 +1374,7 @@ export function useBloonHero() {
           darts: dartsRef.current,
           hitFlashes: hitFlashesRef.current,
           wallMs: wall,
+          lyric: lyricLineAt(now),
         });
       }
 

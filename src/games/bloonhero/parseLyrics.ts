@@ -119,7 +119,10 @@ function isNonLyricMarker(text: string): boolean {
 /** Turn one raw syllable token into display text (Clone Hero plain-text rules). */
 function parseSyllable(raw: string): Syllable | null {
   let s = normalizeQuoted(raw);
-  if (s.toLowerCase().startsWith("lyric ")) s = s.slice(6).trim();
+  s = unwrapEventText(s);
+  const lower = s.toLowerCase();
+  if (lower.startsWith("lyric ")) s = s.slice(6).trim();
+  else if (lower.startsWith("lyrics ")) s = s.slice(7).trim();
   if (isNonLyricMarker(s)) return null;
   if (s === "+" || s === "%") return null;
 
@@ -216,11 +219,11 @@ function assembleSyllables(timed: TimedSyl[], from: number, to: number): string 
 }
 
 function classifyChartEvent(raw: string): RawEv["kind"] | null {
-  const text = normalizeQuoted(raw);
+  const text = unwrapEventText(raw);
   const lower = text.toLowerCase();
   if (lower === "phrase_start") return "phrase_start";
   if (lower === "phrase_end") return "phrase_end";
-  if (lower.startsWith("lyric ")) return "syllable";
+  if (lower.startsWith("lyric ") || lower.startsWith("lyrics ")) return "syllable";
   return null;
 }
 
@@ -333,18 +336,6 @@ function trackName(track: MidiTrack): string {
   return "";
 }
 
-function findVocalsTrack(tracks: MidiTrack[]): MidiTrack | null {
-  for (const name of ["PART VOCALS", "HARM1", "HARM2", "HARM3"]) {
-    const tr = tracks.find((t) => trackName(t).toUpperCase() === name);
-    if (tr) return tr;
-  }
-  return (
-    tracks.find((t) => /^PART VOCALS$/i.test(trackName(t))) ??
-    tracks.find((t) => /VOCAL/i.test(trackName(t))) ??
-    null
-  );
-}
-
 function collectMidiTempos(tracks: MidiTrack[]): MidiTempoEv[] {
   const tempos: MidiTempoEv[] = [];
   for (const track of tracks) {
@@ -390,31 +381,47 @@ function midiTickToSec(
   return time;
 }
 
+function unwrapEventText(raw: string): string {
+  let s = normalizeQuoted(raw).trim();
+  // Clone Hero often stores `[lyric Hello]` or `[phrase_start]` on the EVENTS track.
+  if (s.startsWith("[") && s.endsWith("]") && s.length > 2) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
 function classifyMidiText(text: string): RawEv["kind"] | null {
-  const t = normalizeQuoted(text);
-  const lower = t.toLowerCase();
+  const lower = unwrapEventText(text).toLowerCase();
   if (lower === "phrase_start") return "phrase_start";
   if (lower === "phrase_end") return "phrase_end";
-  if (lower.startsWith("lyric ")) return "syllable";
+  if (lower.startsWith("lyric ") || lower.startsWith("lyrics ")) return "syllable";
   return null;
 }
 
-/** PART VOCALS only - ignore [idle]/[play] markers on other tracks. */
-function collectVocalsLyricEvents(track: MidiTrack): RawEv[] {
+function collectTrackLyricEvents(track: MidiTrack): RawEv[] {
   const out: RawEv[] = [];
   let tick = 0;
   for (const e of track) {
     tick += e.deltaTime;
     if (e.type === "lyrics" && "text" in e && e.text) {
-      out.push({ tick, kind: "syllable", text: e.text });
+      out.push({ tick, kind: "syllable", text: unwrapEventText(e.text) });
       continue;
     }
     if (e.type === "text" && "text" in e && e.text) {
       const kind = classifyMidiText(e.text);
-      if (kind) out.push({ tick, kind, text: e.text });
+      if (kind) out.push({ tick, kind, text: unwrapEventText(e.text) });
     }
   }
   return out;
+}
+
+function lyricTrackRank(name: string): number {
+  const n = name.trim().toUpperCase();
+  if (n === "EVENTS" || n === "EVENT") return 0;
+  if (n === "PART VOCALS" || n === "VOCALS") return 1;
+  if (n === "HARM1" || n === "HARM2" || n === "HARM3") return 2;
+  if (/VOCAL|LYRIC|EVENT/.test(n)) return 3;
+  return 4;
 }
 
 export function parseLyricsFromMidi(
@@ -424,14 +431,29 @@ export function parseLyricsFromMidi(
   const midi = parseMidi(bytes);
   const tpq = midi.header.ticksPerBeat;
   if (!tpq) return [];
-  const track = findVocalsTrack(midi.tracks);
-  if (!track) return [];
   const tempos = collectMidiTempos(midi.tracks);
   const tickToSec = (tick: number) => midiTickToSec(tick, tpq, tempos) - offsetSec;
-  return buildCues(collectVocalsLyricEvents(track), tickToSec, tpq);
+
+  let best: RawEv[] = [];
+  let bestRank = 99;
+  for (const track of midi.tracks) {
+    const events = collectTrackLyricEvents(track);
+    const syllables = events.filter((e) => e.kind === "syllable").length;
+    if (syllables <= 0) continue;
+    const rank = lyricTrackRank(trackName(track));
+    if (
+      syllables > best.filter((e) => e.kind === "syllable").length ||
+      (syllables === best.filter((e) => e.kind === "syllable").length &&
+        rank < bestRank)
+    ) {
+      best = events;
+      bestRank = rank;
+    }
+  }
+  return buildCues(best, tickToSec, tpq);
 }
 
-/** Prefer chart `[Events]` lyrics; fall back to PART VOCALS MIDI. */
+/** Prefer whichever source actually has sung words (chart events or MIDI). */
 export function parseLyricsFromPack(opts: {
   chartText?: string | null;
   midBytes?: Uint8Array | null;
@@ -441,8 +463,8 @@ export function parseLyricsFromPack(opts: {
   const fromChart = opts.chartText
     ? parseLyricsFromChart(opts.chartText, offset)
     : [];
-  if (fromChart.length) return fromChart;
-  return opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
+  const fromMidi = opts.midBytes ? parseLyricsFromMidi(opts.midBytes, offset) : [];
+  return fromChart.length >= fromMidi.length ? fromChart : fromMidi;
 }
 
 export function lyricDisplayAtTime(

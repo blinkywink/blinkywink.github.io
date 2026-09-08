@@ -796,6 +796,14 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               </p>
             )}
 
+            {playing &&
+            (settings.lyricsEnabled ?? true) &&
+            (state.currentLyric?.visible || state.currentLyric?.fullWord) ? (
+              <p className="hero-lyric-banner">
+                {state.currentLyric?.visible || state.currentLyric?.fullWord}
+              </p>
+            ) : null}
+
             <div className="hero-stage">
               {state.hasVocals ? (
                 <div

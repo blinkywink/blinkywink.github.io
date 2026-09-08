@@ -66,6 +66,8 @@ export type HighwayDrawState = {
   hitFlashes?: readonly HitFlash[];
   /** performance.now() for dart timing */
   wallMs?: number;
+  /** Current synced lyric, drawn on the highway so it can't sit under the canvas. */
+  lyric?: string | null;
 };
 
 const JUDGE_COLOR: Record<Judge, string> = {
@@ -537,7 +539,38 @@ export function drawHeroHighway(
     ctx.restore();
   }
 
+  const lyric = (state.lyric ?? "").trim();
+  if (lyric) {
+    drawHighwayLyric(ctx, cssW, cssH, lyric);
+  }
+
   return nextHint;
+}
+
+function drawHighwayLyric(
+  ctx: CanvasRenderingContext2D,
+  cssW: number,
+  cssH: number,
+  text: string,
+): void {
+  const fontSize = Math.max(18, Math.min(34, cssW * 0.055));
+  ctx.save();
+  ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const padX = 16;
+  const padY = 8;
+  const metrics = ctx.measureText(text);
+  const boxW = Math.min(cssW - 16, metrics.width + padX * 2);
+  const boxH = fontSize + padY * 2;
+  const x = (cssW - boxW) / 2;
+  // Below the dart monkey overlay, which covers the top of the stage.
+  const y = Math.min(cssH * 0.22, 150);
+  ctx.fillStyle = "rgba(0,0,0,0.78)";
+  ctx.fillRect(x, y, boxW, boxH);
+  ctx.fillStyle = "#fff8e8";
+  ctx.fillText(text, cssW / 2, y + boxH / 2, boxW - padX);
+  ctx.restore();
 }
 
 function hexAlpha(hex: string, a: number): string {
