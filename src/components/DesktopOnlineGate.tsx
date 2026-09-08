@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { assertOnlineBackend, isDesktopShell } from "../lib/desktopOnline";
 
-/** Blocks interaction on desktop until Supabase is reachable - app shell renders underneath. */
+/** Only covers desktop when the machine is offline. A failed API ping must not hide updates. */
 export function DesktopOnlineGate() {
   const [blocked, setBlocked] = useState(false);
   const [message, setMessage] = useState("Checking connection…");
