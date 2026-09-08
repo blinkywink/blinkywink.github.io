@@ -24,6 +24,7 @@ import { needsVisualSeed } from "../lib/cardVisualSeed";
 import { requestExchange } from "../lib/exchanges";
 import { fetchLeaderboardRank } from "../lib/leaderboardRanks";
 import { makeCollectionOffer } from "../lib/marketplace";
+import { CollectionOfferSheet } from "./CollectionOfferSheet";
 import { pingInbox, requestTrade } from "../lib/trades";
 import {
   hasPlayerChrome,
@@ -154,7 +155,6 @@ export function CardLab({
   const [focused, setFocused] = useState<MonkeyCardSpec | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
-  const [offerInput, setOfferInput] = useState("500");
   const [offerBusy, setOfferBusy] = useState(false);
   const [offerError, setOfferError] = useState<string | null>(null);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(
@@ -434,6 +434,7 @@ export function CardLab({
       if (e.key !== "Escape") return;
       if (exchangeCardId) setExchangeCardId(null);
       else if (exchangeOpen) closeExchange();
+      else if (offerOpen) setOfferOpen(false);
       else if (infoOpen) setInfoOpen(false);
       else if (focused) setFocused(null);
       else if (view.kind !== "towers") {
@@ -443,7 +444,7 @@ export function CardLab({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [exchangeCardId, exchangeOpen, focused, infoOpen, view.kind]);
+  }, [exchangeCardId, exchangeOpen, focused, infoOpen, offerOpen, view.kind]);
 
   useEffect(() => {
     if (!focused) return;
@@ -487,7 +488,42 @@ export function CardLab({
             aria-label="Close"
             onClick={closeFocus}
           />
-          {!infoOpen ? (
+          {offerOpen && canRequestTrade && viewer && focused ? (
+            <CollectionOfferSheet
+              card={focused}
+              ownerName={viewer.username}
+              balance={profile?.coins ?? null}
+              busy={offerBusy}
+              error={offerError}
+              onClose={() => {
+                setOfferOpen(false);
+                setOfferError(null);
+              }}
+              onSubmit={(price) => {
+                setOfferBusy(true);
+                setOfferError(null);
+                void makeCollectionOffer(viewer.userId, focused.id, price)
+                  .then(() => {
+                    setOfferOpen(false);
+                    setTradeMsg(
+                      `Offer sent to ${viewer.username}. Cash is held until they respond.`,
+                    );
+                    setTradeMsgError(false);
+                    if ((profile?.coins ?? 0) >= price) {
+                      setCoinBalance((profile?.coins ?? 0) - price);
+                    }
+                  })
+                  .catch((err: unknown) => {
+                    setOfferError(
+                      err instanceof Error
+                        ? err.message
+                        : "Could not send offer.",
+                    );
+                  })
+                  .finally(() => setOfferBusy(false));
+              }}
+            />
+          ) : !infoOpen ? (
             <div className="card-focus__panel">
               <div className="card-focus__face">
                 <button
@@ -550,62 +586,6 @@ export function CardLab({
                   </button>
                 ) : null}
               </div>
-              {offerOpen && canRequestTrade && viewer && focused ? (
-                <form
-                  className="card-focus__offer"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const price = Math.round(Number(offerInput));
-                    if (!Number.isFinite(price) || price < 10) {
-                      setOfferError("Offer must be at least 10 Cash.");
-                      return;
-                    }
-                    setOfferBusy(true);
-                    setOfferError(null);
-                    void makeCollectionOffer(viewer.userId, focused.id, price)
-                      .then(() => {
-                        setOfferOpen(false);
-                        setTradeMsg(
-                          `Offer sent to ${viewer.username}. It lands in their Market → Offers.`,
-                        );
-                        setTradeMsgError(false);
-                        if ((profile?.coins ?? 0) >= price) {
-                          setCoinBalance((profile?.coins ?? 0) - price);
-                        }
-                      })
-                      .catch((err: unknown) => {
-                        setOfferError(
-                          err instanceof Error
-                            ? err.message
-                            : "Could not send offer.",
-                        );
-                      })
-                      .finally(() => setOfferBusy(false));
-                  }}
-                >
-                  <label>
-                    <span>Offer Cash</span>
-                    <input
-                      type="number"
-                      min={10}
-                      step={1}
-                      inputMode="numeric"
-                      value={offerInput}
-                      onChange={(e) => setOfferInput(e.target.value)}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="btn btn--primary btn--sm"
-                    disabled={offerBusy}
-                  >
-                    {offerBusy ? "Sending…" : "Send offer"}
-                  </button>
-                  {offerError ? (
-                    <p className="card-focus__offer-err">{offerError}</p>
-                  ) : null}
-                </form>
-              ) : null}
             </div>
           ) : (
             <CardInfoSheet

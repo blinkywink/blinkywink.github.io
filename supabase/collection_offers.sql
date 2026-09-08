@@ -67,10 +67,14 @@ begin
 end;
 $$;
 
+-- Named args must match the order PostgREST looks up (alphabetical).
+drop function if exists public.make_collection_offer(uuid, text, integer);
+drop function if exists public.make_collection_offer(text, integer, uuid);
+
 create or replace function public.make_collection_offer(
-  p_seller_id uuid,
   p_card_id text,
-  p_offer_price integer
+  p_offer_price integer,
+  p_seller_id uuid
 )
 returns uuid
 language plpgsql
@@ -362,12 +366,14 @@ end;
 $$;
 
 revoke all on function public._refund_collection_offer(uuid) from public;
-revoke all on function public.make_collection_offer(uuid, text, integer) from public;
+revoke all on function public.make_collection_offer(text, integer, uuid) from public;
 revoke all on function public.respond_collection_offer(uuid, boolean) from public;
 revoke all on function public.ignore_collection_offers() from public;
 revoke all on function public.get_collection_offers() from public;
 
-grant execute on function public.make_collection_offer(uuid, text, integer) to anon, authenticated;
+grant execute on function public.make_collection_offer(text, integer, uuid) to anon, authenticated;
 grant execute on function public.respond_collection_offer(uuid, boolean) to anon, authenticated;
 grant execute on function public.ignore_collection_offers() to anon, authenticated;
 grant execute on function public.get_collection_offers() to anon, authenticated;
+
+notify pgrst, 'reload schema';

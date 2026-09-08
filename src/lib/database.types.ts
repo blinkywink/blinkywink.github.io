@@ -520,7 +520,7 @@ export type Database = {
         Returns: unknown;
       };
       make_collection_offer: {
-        Args: { p_seller_id: string; p_card_id: string; p_offer_price: number };
+        Args: { p_card_id: string; p_offer_price: number; p_seller_id: string };
         Returns: string;
       };
       respond_collection_offer: {

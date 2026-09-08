@@ -611,9 +611,9 @@ export async function makeCollectionOffer(
 ): Promise<string> {
   requireSession();
   const { data, error } = await supabase.rpc("make_collection_offer", {
-    p_seller_id: sellerId,
     p_card_id: cardId,
     p_offer_price: Math.round(offerPrice),
+    p_seller_id: sellerId,
   });
   if (error) throwMarketError(error);
   cacheInvalidate("market:collection-offers");

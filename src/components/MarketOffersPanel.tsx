@@ -6,11 +6,21 @@ import {
   respondCollectionOffer,
   type CollectionOffer,
 } from "../lib/marketplace";
+import { formatPathLevels } from "../lib/pathCombos";
 import { CashAmount } from "./CurrencyChip";
 
 type Props = {
   onAccepted: () => void;
 };
+
+function cardLabel(cardId: string): { name: string; detail: string } {
+  const card = cardSpecById(cardId);
+  if (!card) return { name: cardId, detail: "" };
+  return {
+    name: card.entity.name,
+    detail: card.isParagon ? "Paragon" : formatPathLevels(card.pathLevels),
+  };
+}
 
 export function MarketOffersPanel({ onAccepted }: Props) {
   const [incoming, setIncoming] = useState<CollectionOffer[]>([]);
@@ -85,87 +95,95 @@ export function MarketOffersPanel({ onAccepted }: Props) {
         </p>
       ) : null}
 
-      <div className="market-offers__head">
-        <h2>Offers on your cards</h2>
-        {incoming.length > 0 ? (
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            disabled={busyId != null}
-            onClick={() => void onIgnoreAll()}
-          >
-            Ignore all
-          </button>
-        ) : null}
-      </div>
-      <p className="market-offers__note">
-        Collection offers stay here instead of your inbox.
-      </p>
-
-      {incoming.length === 0 ? (
-        <p className="market-banner">No offers waiting.</p>
-      ) : (
-        <ul className="market-offers__list">
-          {incoming.map((offer) => {
-            const card = cardSpecById(offer.cardId);
-            return (
-              <li key={offer.id} className="market-offers__row">
-                <div>
-                  <strong>{offer.partnerUsername}</strong> offered{" "}
-                  <CashAmount amount={offer.offerPrice} size={16} /> for{" "}
-                  {card?.entity.name ?? offer.cardId}
-                </div>
-                <div className="market-offers__actions">
-                  <button
-                    type="button"
-                    className="btn btn--primary btn--sm"
-                    disabled={busyId != null}
-                    onClick={() => void onRespond(offer, true)}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--sm"
-                    disabled={busyId != null}
-                    onClick={() => void onRespond(offer, false)}
-                  >
-                    Decline
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {outgoing.length > 0 ? (
-        <>
-          <h2>Your offers</h2>
+      <section className="market-offers__section">
+        <div className="market-offers__head">
+          <h2>On your cards</h2>
+          {incoming.length > 0 ? (
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              disabled={busyId != null}
+              onClick={() => void onIgnoreAll()}
+            >
+              Ignore all
+            </button>
+          ) : null}
+        </div>
+        {incoming.length === 0 ? (
+          <p className="market-empty">No offers waiting.</p>
+        ) : (
           <ul className="market-offers__list">
-            {outgoing.map((offer) => {
-              const card = cardSpecById(offer.cardId);
+            {incoming.map((offer) => {
+              const label = cardLabel(offer.cardId);
               return (
-                <li key={offer.id} className="market-offers__row">
-                  <div>
-                    <CashAmount amount={offer.offerPrice} size={16} /> for{" "}
-                    {card?.entity.name ?? offer.cardId} · waiting on{" "}
-                    {offer.partnerUsername}
+                <li key={offer.id} className="market-offers__card">
+                  <div className="market-offers__copy">
+                    <strong>{label.name}</strong>
+                    <span>
+                      {label.detail ? `${label.detail} · ` : ""}
+                      from {offer.partnerUsername}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--sm"
-                    disabled={busyId != null}
-                    onClick={() => void onRespond(offer, false)}
-                  >
-                    Cancel
-                  </button>
+                  <CashAmount amount={offer.offerPrice} size={18} />
+                  <div className="market-offers__actions">
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--sm"
+                      disabled={busyId != null}
+                      onClick={() => void onRespond(offer, true)}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={busyId != null}
+                      onClick={() => void onRespond(offer, false)}
+                    >
+                      Decline
+                    </button>
+                  </div>
                 </li>
               );
             })}
           </ul>
-        </>
-      ) : null}
+        )}
+      </section>
+
+      <section className="market-offers__section">
+        <h2>Your offers</h2>
+        {outgoing.length === 0 ? (
+          <p className="market-empty">You have no pending offers.</p>
+        ) : (
+          <ul className="market-offers__list">
+            {outgoing.map((offer) => {
+              const label = cardLabel(offer.cardId);
+              return (
+                <li key={offer.id} className="market-offers__card">
+                  <div className="market-offers__copy">
+                    <strong>{label.name}</strong>
+                    <span>
+                      {label.detail ? `${label.detail} · ` : ""}
+                      waiting on {offer.partnerUsername}
+                    </span>
+                  </div>
+                  <CashAmount amount={offer.offerPrice} size={18} />
+                  <div className="market-offers__actions">
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={busyId != null}
+                      onClick={() => void onRespond(offer, false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

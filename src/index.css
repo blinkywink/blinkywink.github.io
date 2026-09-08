@@ -8109,35 +8109,144 @@ body.rewards-overlay-open .sweeper-result {
   gap: 0.5rem;
 }
 
-.card-focus__offer {
+.offer-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
   display: grid;
-  justify-items: center;
-  gap: 0.45rem;
-  width: min(16rem, 100%);
-}
-
-.card-focus__offer label {
-  display: grid;
-  gap: 0.25rem;
-  width: 100%;
-  font-size: 0.85rem;
-}
-
-.card-focus__offer input {
-  width: 100%;
+  place-items: center;
+  padding:
+    calc(var(--site-header-h, 4.35rem) + 0.6rem)
+    0.85rem
+    calc(var(--site-bottom-nav-h, 0px) + 0.85rem);
   box-sizing: border-box;
 }
 
-.card-focus__offer-err {
+.offer-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(6, 18, 32, 0.72);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.offer-sheet__panel {
+  position: relative;
+  z-index: 1;
+  width: min(24rem, 100%);
+  display: grid;
+  gap: 0.7rem;
+  padding: 1.2rem 1.1rem 1.05rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(36, 52, 72, 0.98) 0%, rgba(14, 22, 34, 0.98) 100%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.offer-sheet__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.offer-sheet__kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.offer-sheet__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.offer-sheet__meta {
+  margin: -0.35rem 0 0.15rem;
+  color: rgba(240, 240, 244, 0.62);
+  font-weight: 700;
+}
+
+.offer-sheet__field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.offer-sheet__input {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 3.1rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 2px solid #2a2a34;
+  background: #0e0e14;
+}
+
+.offer-sheet__input img {
+  flex: 0 0 auto;
+}
+
+.offer-sheet__input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #f0f0f4;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.offer-sheet__input input:focus {
+  outline: none;
+}
+
+.offer-sheet__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.55);
+  line-height: 1.4;
+}
+
+.offer-sheet__err {
   margin: 0;
   color: #ffb4b4;
-  font-size: 0.85rem;
-  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.offer-sheet__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 0.5rem;
+}
+
+.offer-sheet__actions .btn {
+  min-height: 2.7rem;
 }
 
 .market-offers {
   display: grid;
-  gap: 0.75rem;
+  gap: 1.1rem;
+}
+
+.market-offers__section {
+  display: grid;
+  gap: 0.65rem;
 }
 
 .market-offers__head {
@@ -8153,11 +8262,6 @@ body.rewards-overlay-open .sweeper-result {
   font-size: 1.05rem;
 }
 
-.market-offers__note {
-  margin: 0;
-  color: rgba(240, 240, 244, 0.7);
-}
-
 .market-offers__list {
   list-style: none;
   margin: 0;
@@ -8166,20 +8270,54 @@ body.rewards-overlay-open .sweeper-result {
   gap: 0.6rem;
 }
 
-.market-offers__row {
-  display: flex;
-  flex-wrap: wrap;
+.market-offers__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem 0.75rem;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 0.85rem;
+  padding: 0.8rem 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
 }
 
+.market-offers__copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.market-offers__copy strong {
+  font-size: 0.98rem;
+}
+
+.market-offers__copy span {
+  color: rgba(240, 240, 244, 0.58);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
 .market-offers__actions {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 0.4rem;
+  gap: 0.45rem;
+}
+
+.market-offers__actions .btn {
+  flex: 1 1 0;
+  min-height: 2.45rem;
+}
+
+@media (min-width: 720px) {
+  .market-offers__actions {
+    grid-column: auto;
+    flex: 0 0 auto;
+  }
+
+  .market-offers__actions .btn {
+    flex: 0 0 auto;
+    min-width: 5.6rem;
+  }
 }
 
 .card-info {

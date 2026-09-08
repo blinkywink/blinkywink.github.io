@@ -451,7 +451,6 @@ export function Marketplace({ onBack: _onBack }: Props) {
             [
               ["browse", "Browse"],
               ["sell", "Sell"],
-              ["offers", "Offers"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -498,8 +497,9 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </p>
         ) : null}
 
-        {tab === "browse" ? (
+        {tab === "browse" || tab === "offers" ? (
           <div className="market-filters">
+            {tab === "browse" ? (
             <label className="market-search">
               <span className="visually-hidden">
                 {showMineOnly
@@ -518,8 +518,11 @@ export function Marketplace({ onBack: _onBack }: Props) {
                 autoComplete="off"
               />
             </label>
+            ) : null}
 
             <div className="market-toolbar">
+            {tab === "browse" ? (
+              <>
               <label className="market-toolbar__field">
                 <span className="visually-hidden">Tower</span>
                 <select
@@ -551,6 +554,8 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   ))}
                 </select>
               </label>
+              </>
+              ) : null}
               <div
                 className="market-toolbar__toggles"
                 role="group"
@@ -561,7 +566,13 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   className={`market-chip${hideOwned ? " is-on" : ""}`}
                   aria-pressed={hideOwned}
                   disabled={isGuest || showMineOnly}
-                  onClick={() => setHideOwned((v) => !v)}
+                  onClick={() => {
+                    if (tab === "offers") {
+                      setTab("browse");
+                      return;
+                    }
+                    setHideOwned((v) => !v);
+                  }}
                 >
                   Hide owned
                 </button>
@@ -571,11 +582,30 @@ export function Marketplace({ onBack: _onBack }: Props) {
                   aria-pressed={showMineOnly}
                   disabled={isGuest || !user}
                   onClick={() => {
+                    if (tab === "offers") {
+                      setTab("browse");
+                      return;
+                    }
                     setShowMineOnly((v) => !v);
                     setHideOwned(false);
                   }}
                 >
                   Your listings
+                </button>
+                <button
+                  type="button"
+                  className={`market-chip${tab === "offers" ? " is-on" : ""}`}
+                  aria-pressed={tab === "offers"}
+                  disabled={isGuest || !user}
+                  onClick={() => {
+                    setError(null);
+                    setStatus(null);
+                    setShowMineOnly(false);
+                    setHideOwned(false);
+                    setTab((current) => (current === "offers" ? "browse" : "offers"));
+                  }}
+                >
+                  Offers
                 </button>
               </div>
             </div>
