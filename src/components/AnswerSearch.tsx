@@ -11,6 +11,11 @@ import { byTower, towerEntities } from "../data/towers";
 import { prefersKeyboardAutofocus } from "../lib/focus";
 import { normalizeSearch, rankEntityMatch } from "../utils/searchEntities";
 
+export type GuessLock =
+  | { kind: "base" }
+  | { kind: "paragon" }
+  | { kind: "upgrade"; tier: number };
+
 type Props = {
   disabled?: boolean;
   /** Reset search when the challenge changes. */
@@ -19,6 +24,8 @@ type Props = {
   status?: "idle" | "correct" | "wrong";
   /** Wrong guesses this round - crossed out in the picker. */
   eliminatedIds?: string[];
+  /** Only this tier can be submitted. */
+  guessLock?: GuessLock | null;
 };
 
 function towerFamilyName(entity: TowerEntity): string {
@@ -31,6 +38,7 @@ export function AnswerSearch({
   onSelect,
   status = "idle",
   eliminatedIds = [],
+  guessLock = null,
 }: Props) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -160,7 +168,13 @@ export function AnswerSearch({
     <div className={`answer-search answer-search--${status}`}>
       <label className="answer-search__label" htmlFor={`${listId}-input`}>
         {pickedTower
-          ? "Pick the base tower or an upgrade"
+          ? guessLock?.kind === "base"
+            ? "Pick the base tower"
+            : guessLock?.kind === "paragon"
+              ? "Pick the paragon"
+              : guessLock?.kind === "upgrade"
+                ? `Pick the tier ${guessLock.tier} path`
+                : "Pick the base tower or an upgrade"
           : "Search a tower, then pick the upgrade"}
       </label>
       <div className="answer-search__field">
@@ -257,7 +271,7 @@ export function AnswerSearch({
             </button>
           </div>
 
-          {family.base ? (
+          {(!guessLock || guessLock.kind === "base") && family.base ? (
             <button
               type="button"
               className={`upgrade-picker__base ${
@@ -287,6 +301,7 @@ export function AnswerSearch({
             </button>
           ) : null}
 
+          {!guessLock || guessLock.kind === "upgrade" ? (
           <div
             className="upgrade-picker__grid"
             role="group"
@@ -295,7 +310,10 @@ export function AnswerSearch({
             {family.grid.map((pathRow, pathIdx) => (
               <div key={pathIdx} className="upgrade-picker__row">
                 {pathRow.map((upgrade, tierIdx) =>
-                  upgrade ? (
+                  upgrade &&
+                  (!guessLock ||
+                    guessLock.kind !== "upgrade" ||
+                    upgrade.tier === guessLock.tier) ? (
                     <button
                       key={upgrade.id}
                       type="button"
@@ -334,8 +352,9 @@ export function AnswerSearch({
               </div>
             ))}
           </div>
+          ) : null}
 
-          {family.paragon ? (
+          {(!guessLock || guessLock.kind === "paragon") && family.paragon ? (
             <button
               type="button"
               className={`upgrade-picker__paragon ${

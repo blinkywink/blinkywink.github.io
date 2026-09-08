@@ -2,7 +2,6 @@ import type { TowerEntity } from "../../data/types";
 import {
   difficultyForRound,
   type DifficultyConfig,
-  ZOOMED_CONFIG,
 } from "./config";
 import { pickOne } from "../../utils/random";
 
@@ -13,24 +12,17 @@ export type Challenge = {
   startedAt: number;
 };
 
-function poolForSelection(entities: TowerEntity[]): {
-  towers: TowerEntity[];
-  upgrades: TowerEntity[];
-} {
-  return {
-    towers: entities.filter((e) => e.type === "tower"),
-    upgrades: entities.filter((e) => e.type !== "tower"),
-  };
+function zoomedPool(entities: TowerEntity[]): TowerEntity[] {
+  return entities.filter((e) => {
+    if (e.type === "tower" || e.type === "paragon") return true;
+    return e.type === "upgrade" && e.tier >= 4;
+  });
 }
 
 export function pickCorrectEntity(entities: TowerEntity[]): TowerEntity {
-  const { towers, upgrades } = poolForSelection(entities);
-  const roll = Math.random();
-  if (roll < ZOOMED_CONFIG.towerChance && towers.length) {
-    return pickOne(towers);
-  }
-  if (upgrades.length) return pickOne(upgrades);
-  return pickOne(entities);
+  const pool = zoomedPool(entities);
+  const bag = pool.length ? pool : entities;
+  return pickOne(bag);
 }
 
 export function createChallenge(

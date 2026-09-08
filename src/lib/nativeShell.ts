@@ -30,6 +30,7 @@ async function initNativeShell(): Promise<void> {
   } catch {
     /* ignore */
   }
+  installIosOverscrollGuard();
   /* Capgo set() waits for this after reload — run before React mounts. */
   try {
     const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
@@ -51,4 +52,41 @@ async function initNativeShell(): Promise<void> {
   } catch {
     /* ignore */
   }
+}
+
+/** Stop iOS rubber-band from reloading the WKWebView on a fast flick. */
+function installIosOverscrollGuard(): void {
+  const ios =
+    document.documentElement.dataset.platform === "ios" ||
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (!ios) return;
+  const flag = window as Window & { __iosOverscrollGuard?: boolean };
+  if (flag.__iosOverscrollGuard) return;
+  flag.__iosOverscrollGuard = true;
+
+  let startY = 0;
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      startY = e.touches[0]?.clientY ?? 0;
+    },
+    { passive: true },
+  );
+  document.addEventListener(
+    "touchmove",
+    (e) => {
+      const y = e.touches[0]?.clientY ?? 0;
+      const dy = y - startY;
+      const scroller = document.querySelector(".site-main");
+      const node = scroller instanceof HTMLElement ? scroller : null;
+      if (!node) return;
+      const atTop = node.scrollTop <= 0;
+      const atBottom =
+        node.scrollTop + node.clientHeight >= node.scrollHeight - 1;
+      if ((atTop && dy > 0) || (atBottom && dy < 0)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false },
+  );
 }

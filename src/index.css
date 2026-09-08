@@ -1286,6 +1286,20 @@ html.is-route-scroll-lock body,
     overscroll-behavior: none;
   }
 
+  html[data-native="1"][data-platform="ios"],
+  html[data-native="1"][data-platform="ios"] body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    height: 100%;
+  }
+
+  html[data-native="1"][data-platform="ios"] .site-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .site-main {
     height: 100vh;
     height: 100svh;
@@ -8086,6 +8100,86 @@ body.rewards-overlay-open .sweeper-result {
 
 .card-focus__info {
   min-width: 8.5rem;
+}
+
+.card-focus__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.card-focus__offer {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  width: min(16rem, 100%);
+}
+
+.card-focus__offer label {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.card-focus__offer input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-focus__offer-err {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.market-offers {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.market-offers__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.market-offers__head h2,
+.market-offers h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.market-offers__note {
+  margin: 0;
+  color: rgba(240, 240, 244, 0.7);
+}
+
+.market-offers__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.market-offers__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.market-offers__actions {
+  display: flex;
+  gap: 0.4rem;
 }
 
 .card-info {

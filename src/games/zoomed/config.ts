@@ -86,14 +86,53 @@ export const DIFFICULTY_PRESETS: Record<DifficultyTier, DifficultyConfig> = {
   },
 };
 
-/** Progressive difficulty across a run (+ free play keeps ramping). */
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function lerpPair(
+  a: [number, number],
+  b: [number, number],
+  t: number,
+): [number, number] {
+  return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+}
+
+/**
+ * Linear ramp. Round 1 stays readable; later rounds tighten gradually.
+ * The old step function jumped to a tiny crop on question 3.
+ */
 export function difficultyForRound(round: number): DifficultyConfig {
-  if (round <= 2) return DIFFICULTY_PRESETS.easy;
-  if (round <= 5) return DIFFICULTY_PRESETS.medium;
-  if (round <= 8) return DIFFICULTY_PRESETS.hard;
-  if (round <= 12) return DIFFICULTY_PRESETS.extreme;
-  // Free-play deep: stick on extreme (tightest crop preset)
-  return DIFFICULTY_PRESETS.extreme;
+  const start = DIFFICULTY_PRESETS.easy;
+  const end: DifficultyConfig = {
+    tier: "hard",
+    cropSize: [0.32, 0.42],
+    zoom: [1.16, 1.38],
+    rotation: 14,
+    blur: [0, 0.25],
+    pixelation: [1, 1.15],
+    stretch: [0.94, 1.06],
+    brightness: [0.92, 1.1],
+    contrast: [1, 1.18],
+    distortion: [0, 0.03],
+    scoreMultiplier: 1.7,
+  };
+  const t = Math.min(1, Math.max(0, (Math.max(1, round) - 1) / 11));
+  const tier: DifficultyTier =
+    t < 0.34 ? "easy" : t < 0.67 ? "medium" : "hard";
+  return {
+    tier,
+    cropSize: lerpPair(start.cropSize, end.cropSize, t),
+    zoom: lerpPair(start.zoom, end.zoom, t),
+    rotation: lerp(start.rotation, end.rotation, t),
+    blur: lerpPair(start.blur, end.blur, t),
+    pixelation: lerpPair(start.pixelation, end.pixelation, t),
+    stretch: lerpPair(start.stretch, end.stretch, t),
+    brightness: lerpPair(start.brightness, end.brightness, t),
+    contrast: lerpPair(start.contrast, end.contrast, t),
+    distortion: lerpPair(start.distortion, end.distortion, t),
+    scoreMultiplier: lerp(start.scoreMultiplier, end.scoreMultiplier, t),
+  };
 }
 
 export type ZoomedConfig = {

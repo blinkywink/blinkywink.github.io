@@ -35,9 +35,10 @@ import { LoadingDots } from "./LoadingDots";
 import { MarketToShopLink } from "./ShopMarketSwap";
 import { MonkeyCard } from "./MonkeyCard";
 import { UserAvatar } from "./UserAvatar";
+import { MarketOffersPanel } from "./MarketOffersPanel";
 import { VisibleCardGrid } from "./VisibleCardGrid";
 
-type Tab = "browse" | "sell";
+type Tab = "browse" | "sell" | "offers";
 
 type SellErrorBoundaryState = { error: string | null };
 
@@ -450,6 +451,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
             [
               ["browse", "Browse"],
               ["sell", "Sell"],
+              ["offers", "Offers"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -496,7 +498,7 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </p>
         ) : null}
 
-        {tab !== "sell" ? (
+        {tab === "browse" ? (
           <div className="market-filters">
             <label className="market-search">
               <span className="visually-hidden">
@@ -580,7 +582,18 @@ export function Marketplace({ onBack: _onBack }: Props) {
           </div>
         ) : null}
 
-        {tab === "sell" ? (
+        {tab === "offers" ? (
+          isGuest ? (
+            <p className="market-banner">Sign in to see offers.</p>
+          ) : (
+            <MarketOffersPanel
+              onAccepted={() => {
+                void refreshProfile();
+                void refreshCards();
+              }}
+            />
+          )
+        ) : tab === "sell" ? (
           <SellErrorBoundary>
           <div className="market-sell-pick">
             {!marketUnlocked && !isGuest ? (

@@ -519,6 +519,22 @@ export type Database = {
         Args: Record<string, never>;
         Returns: unknown;
       };
+      make_collection_offer: {
+        Args: { p_seller_id: string; p_card_id: string; p_offer_price: number };
+        Returns: string;
+      };
+      respond_collection_offer: {
+        Args: { p_offer_id: string; p_accept: boolean };
+        Returns: number | null;
+      };
+      ignore_collection_offers: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      get_collection_offers: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
       get_listing_offers: {
         Args: { p_listing_id: string };
         Returns: unknown;

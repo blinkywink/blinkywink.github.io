@@ -1,14 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { AnswerReveal } from "../../components/AnswerReveal";
-import { AnswerSearch } from "../../components/AnswerSearch";
+import { AnswerSearch, type GuessLock } from "../../components/AnswerSearch";
 import { ChallengeImage } from "../../components/ChallengeImage";
 import { GameHeader } from "../../components/GameHeader";
 import { LivesMeter } from "../../components/LivesMeter";
 import { ResultsScreen } from "../../components/ResultsScreen";
 import type { TransformParams } from "../../utils/imageProcessing";
+import type { TowerEntity } from "../../data/types";
 import { useZoomedGame } from "./useZoomedGame";
 
+function zoomedGuessLock(entity: TowerEntity): GuessLock {
+  if (entity.type === "paragon") return { kind: "paragon" };
+  if (entity.type === "tower") return { kind: "base" };
+  return { kind: "upgrade", tier: entity.tier };
+}
+
+function zoomedTierLabel(entity: TowerEntity): string {
+  if (entity.type === "paragon") return "Paragon";
+  if (entity.type === "tower") return "Base tower";
+  return `Tier ${entity.tier}`;
+}
 type Props = {
   onBack: () => void;
   /** Fired once when results show (clear and/or accuracy). */
@@ -159,7 +171,8 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
             </>
           ) : (
             <>
-              <h2>What is this?</h2>
+              <h2>{zoomedTierLabel(challenge.correct)}</h2>
+              <p className="guess-hint">Guess the tower and path.</p>
               <LivesMeter maxAttempts={maxLives} attemptsUsed={livesLost} />
               {state.attemptsUsed >= 2 ? (
                 <p className="guess-hint" role="status">
@@ -196,6 +209,7 @@ export function ZoomedGame({ onBack, onRunEnd }: Props) {
               disabled={searchLocked}
               status="idle"
               eliminatedIds={state.eliminatedIds}
+              guessLock={zoomedGuessLock(challenge.correct)}
               onSelect={answer}
             />
           )}

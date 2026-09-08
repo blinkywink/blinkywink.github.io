@@ -30,7 +30,7 @@ const config: CapacitorConfig = {
     /* We pad with env(safe-area-inset-*) ourselves (viewport-fit=cover). */
     contentInset: "never",
     preferredContentMode: "mobile",
-    scrollEnabled: true,
+    scrollEnabled: false,
     backgroundColor: "#0a0a0e",
   },
   android: {

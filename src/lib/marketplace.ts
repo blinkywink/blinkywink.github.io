@@ -538,7 +538,107 @@ export async function ackMarketSaleNotices(ids: string[]): Promise<void> {
   cacheInvalidate("market:sales");
 }
 
-/** Notify seller/buyer after offer mutations. */
 export async function notifyMarketPartner(userId: string): Promise<void> {
   await pingInbox(userId).catch(() => undefined);
+}
+
+export type CollectionOffer = {
+  id: string;
+  cardId: string;
+  offerPrice: number;
+  partnerId: string;
+  partnerUsername: string;
+  createdAt: string;
+};
+
+export type CollectionOfferInbox = {
+  incoming: CollectionOffer[];
+  outgoing: CollectionOffer[];
+};
+
+const EMPTY_COLLECTION_OFFERS: CollectionOfferInbox = {
+  incoming: [],
+  outgoing: [],
+};
+
+function mapCollectionOffer(raw: unknown): CollectionOffer | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const id = String(row.id ?? "").trim();
+  const cardId = String(row.cardId ?? "").trim();
+  if (!id || !cardId) return null;
+  return {
+    id,
+    cardId,
+    offerPrice: Math.max(0, Math.round(Number(row.offerPrice) || 0)),
+    partnerId: String(row.partnerId ?? ""),
+    partnerUsername: String(row.partnerUsername ?? "Player"),
+    createdAt: String(row.createdAt ?? ""),
+  };
+}
+
+export async function fetchCollectionOffers(
+  opts?: { force?: boolean },
+): Promise<CollectionOfferInbox> {
+  requireSession();
+  return cached(
+    "market:collection-offers",
+    CacheTtl.inbox,
+    async () => {
+      const { data, error } = await supabase.rpc("get_collection_offers");
+      if (error) throwMarketError(error);
+      const raw = (data ?? {}) as {
+        incoming?: unknown[];
+        outgoing?: unknown[];
+      };
+      return {
+        incoming: (Array.isArray(raw.incoming) ? raw.incoming : [])
+          .map(mapCollectionOffer)
+          .filter((row): row is CollectionOffer => Boolean(row)),
+        outgoing: (Array.isArray(raw.outgoing) ? raw.outgoing : [])
+          .map(mapCollectionOffer)
+          .filter((row): row is CollectionOffer => Boolean(row)),
+      };
+    },
+    opts,
+  ).catch(() => EMPTY_COLLECTION_OFFERS);
+}
+
+export async function makeCollectionOffer(
+  sellerId: string,
+  cardId: string,
+  offerPrice: number,
+): Promise<string> {
+  requireSession();
+  const { data, error } = await supabase.rpc("make_collection_offer", {
+    p_seller_id: sellerId,
+    p_card_id: cardId,
+    p_offer_price: Math.round(offerPrice),
+  });
+  if (error) throwMarketError(error);
+  cacheInvalidate("market:collection-offers");
+  return String(data);
+}
+
+export async function respondCollectionOffer(
+  offerId: string,
+  accept: boolean,
+): Promise<number | null> {
+  requireSession();
+  const { data, error } = await supabase.rpc("respond_collection_offer", {
+    p_offer_id: offerId,
+    p_accept: accept,
+  });
+  if (error) throwMarketError(error);
+  cacheInvalidate("market:");
+  if (data == null) return null;
+  return typeof data === "number" ? data : Number(data);
+}
+
+export async function ignoreCollectionOffers(): Promise<number> {
+  requireSession();
+  const { data, error } = await supabase.rpc("ignore_collection_offers");
+  if (error) throwMarketError(error);
+  cacheInvalidate("market:collection-offers");
+  return Math.max(0, Math.floor(Number(data) || 0));
 }

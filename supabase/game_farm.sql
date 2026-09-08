@@ -358,6 +358,12 @@ begin
   last_game := st ->> 'lastGame';
   streak := coalesce((st ->> 'streak')::integer, 0);
 
+  -- Sweeper deaths are common and pay nothing — don't feed the 5-in-a-row mute.
+  if gid = 'bloonssweeper' and coalesce(p_won, false) = false then
+    select p.coins into coins from public.profiles p where p.id = uid;
+    return public.game_farm_snapshot(st, gid, false, 'ok', coins);
+  end if;
+
   if last_game is not distinct from gid then
     streak := streak + 1;
   else

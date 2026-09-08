@@ -313,8 +313,12 @@ function parseSnap(
   };
 }
 
-function guestNoteRun(game: GamePath, _won: boolean): GameFarmSnapshot {
+function guestNoteRun(game: GamePath, won: boolean): GameFarmSnapshot {
   const st = readGuest();
+  // Sweeper deaths are common and pay nothing — don't feed the 5-in-a-row mute.
+  if (game === "bloonssweeper" && !won) {
+    return snapshotFromStored(st, game);
+  }
   let streak = st.lastGame === game ? st.streak + 1 : 1;
   let justPaused = false;
   let spamUntil = { ...st.spamUntil };
