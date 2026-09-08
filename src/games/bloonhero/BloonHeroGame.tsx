@@ -170,6 +170,7 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
     setCanvasEl,
     setProgressFillEl,
     setCountdownEl,
+    setLyricEl,
     togglePause,
   } = useBloonHero();
 
@@ -865,38 +866,6 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
                 </div>
               </div>
 
-              {(settings.lyricsEnabled ?? true) &&
-              state.currentLyric &&
-              (playing || state.phase === "ready") ? (
-                <p
-                  key={`${state.currentLyric.fullWord}:${state.currentLyric.visible}`}
-                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}${(state.currentLyric.opacity ?? 1) < 0.99 ? " is-fading-out" : ""}`}
-                  style={
-                    {
-                      "--lyrics-scale": settings.lyricsScale ?? 1,
-                      "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
-                      ...((state.currentLyric.opacity ?? 1) < 0.99
-                        ? { opacity: state.currentLyric.opacity }
-                        : {}),
-                    } as CSSProperties
-                  }
-                  aria-live="polite"
-                >
-                  {state.currentLyric.pending ? (
-                    <span className="hero-lyrics__word">
-                      <span className="hero-lyrics__visible">
-                        {state.currentLyric.visible}
-                      </span>
-                      <span className="hero-lyrics__pending" aria-hidden="true">
-                        {state.currentLyric.pending}
-                      </span>
-                    </span>
-                  ) : (
-                    state.currentLyric.visible
-                  )}
-                </p>
-              ) : null}
-
               <div
                 className="hero-countdown"
                 ref={setCountdownEl}
@@ -909,6 +878,25 @@ export function BloonHeroGame({ onBack, onRunEnd }: Props) {
               >
                 <span>{state.countdown ?? ""}</span>
               </div>
+
+              {(settings.lyricsEnabled ?? true) &&
+              state.hasLyrics &&
+              playing ? (
+                <p
+                  ref={setLyricEl}
+                  className={`hero-lyrics${state.hasVocals ? " hero-lyrics--below-monkey" : " hero-lyrics--solo"}`}
+                  style={
+                    {
+                      "--lyrics-scale": settings.lyricsScale ?? 1,
+                      "--lyrics-offset-y": `${settings.lyricsOffsetY ?? 0}px`,
+                    } as CSSProperties
+                  }
+                  hidden={!state.currentLyric?.visible && !state.currentLyric?.fullWord}
+                  aria-live="polite"
+                >
+                  {state.currentLyric?.visible || state.currentLyric?.fullWord || ""}
+                </p>
+              ) : null}
 
               {playing && state.paused && !resuming ? (
                 <div className="hero-overlay hero-overlay--pause" role="dialog">

@@ -15707,15 +15707,23 @@ body.rewards-overlay-open .sweeper-result {
   }
 }
 
+.hero-lyrics[hidden] {
+  display: none;
+}
+
 .hero-lyrics {
   position: absolute;
   left: 50%;
-  z-index: 8;
+  z-index: 4;
   display: flex;
   justify-content: center;
-  width: min(92%, 36rem);
+  width: max-content;
+  max-width: min(92%, 36rem);
   margin: 0;
-  transform: translateX(-50%);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  transform: translate3d(-50%, 0, 0);
   text-align: center;
   font-size: calc(clamp(0.95rem, 2.8vw, 1.35rem) * var(--lyrics-scale, 1));
   font-weight: 700;
@@ -15748,11 +15756,11 @@ body.rewards-overlay-open .sweeper-result {
 }
 
 .hero-lyrics--below-monkey {
-  /* Sit below dart monkey (width ≈ height); stay above the highway. */
+  /* Sit just under the dart monkey, above the highway canvas. */
   top: calc(
-    0.15rem + clamp(7.5rem, 28vw, 11.5rem) + 0.45rem + var(--lyrics-offset-y, 0px)
+    0.15rem + clamp(7.5rem, 28vw, 11.5rem) + 0.35rem + var(--lyrics-offset-y, 0px)
   );
-  z-index: 8;
+  z-index: 4;
 }
 
 .hero-progress {
@@ -15779,7 +15787,6 @@ body.rewards-overlay-open .sweeper-result {
   padding: 0.45rem 0.45rem 0.55rem;
   touch-action: manipulation;
   z-index: 1;
-  contain: layout paint size;
 }
 
 .hero-highway-canvas {

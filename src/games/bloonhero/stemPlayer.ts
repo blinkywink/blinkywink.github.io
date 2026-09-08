@@ -1,6 +1,7 @@
 /** Multi-stem Clone Hero pack audio - play song + guitar + drums + vocals together. */
 
 import { isDesktopShell } from "../../lib/desktopOnline";
+import { isHeroTouchPlay } from "./settings";
 
 export type StemPlayer = {
   /** Primary clock stem (song.* when present, else longest). */
@@ -14,6 +15,11 @@ export type StemPlayer = {
   get paused(): boolean;
   get ended(): boolean;
   play: () => Promise<void>;
+  /**
+   * Call from the Play / Resume tap. Mobile browsers only allow audio to
+   * start inside that gesture — the countdown later is too late.
+   */
+  prime: (opts?: { keepTime?: boolean }) => void;
   pause: () => void;
   setVolume: (v: number) => void;
   /** 0-1 vocals loudness (0 if no vocals stem). */
@@ -131,8 +137,11 @@ export async function createStemPlayer(
 ): Promise<{ player: StemPlayer; urls: string[] }> {
   if (!stems.length) throw new Error("No song audio found in chart pack");
 
-  /** WKWebView/Tauri: Web Audio + multi MediaElementSource drifts and glitches. */
-  const useSimpleAudio = isDesktopShell();
+  /**
+   * Web Audio + MediaElementSource goes silent on mobile browsers and drifts
+   * in the desktop shell. HTML audio is reliable there.
+   */
+  const useSimpleAudio = isDesktopShell() || isHeroTouchPlay();
 
   const urls: string[] = [];
   const elements: HTMLAudioElement[] = [];
@@ -145,8 +154,10 @@ export async function createStemPlayer(
     const audio = new Audio(url);
     audio.preload = "auto";
     audio.volume = 1;
-    // MediaElementSource requires CORS-friendly media; blob URLs are fine.
-    audio.crossOrigin = "anonymous";
+    audio.setAttribute("playsinline", "");
+    audio.setAttribute("webkit-playsinline", "");
+    // MediaElementSource needs this; on mobile it can mute blob playback.
+    if (!useSimpleAudio) audio.crossOrigin = "anonymous";
     elements.push(audio);
   }
 
@@ -188,6 +199,8 @@ export async function createStemPlayer(
   let userVolume = Math.min(1, Math.max(0, volume));
   let graphReady = false;
   let graphFailed = useSimpleAudio;
+  let playingForReal = false;
+  let retryUnlock: (() => void) | null = null;
 
   const applyOutputGain = () => {
     const g = userVolume * normGain;
@@ -273,7 +286,44 @@ export async function createStemPlayer(
       // Don't treat a short song.* stem ending as the whole pack finishing.
       return elements.length > 0 && elements.every((el) => el.ended);
     },
+    prime(opts) {
+      playingForReal = false;
+      if (!useSimpleAudio) {
+        ensureGraph();
+        if (audioCtx && audioCtx.state === "suspended") {
+          void audioCtx.resume().catch(() => {});
+        }
+      }
+      const keepTime = opts?.keepTime === true;
+      // play() must be invoked here, inside the tap. Pause immediately so the
+      // countdown can start the real playback later — iOS will allow that
+      // only after this first gesture play.
+      for (const el of elements) {
+        const held = el.currentTime;
+        const heldVol = el.volume;
+        el.muted = false;
+        el.volume = 0;
+        const started = el.play();
+        const reset = () => {
+          if (playingForReal) return;
+          el.pause();
+          el.volume = heldVol;
+          try {
+            el.currentTime = keepTime ? held : 0;
+          } catch {
+            /* ignore */
+          }
+          applyOutputGain();
+        };
+        if (started && typeof started.then === "function") {
+          void started.then(reset).catch(() => {});
+        } else {
+          reset();
+        }
+      }
+    },
     async play() {
+      playingForReal = true;
       if (!useSimpleAudio) ensureGraph();
       if (audioCtx && audioCtx.state === "suspended") {
         try {
@@ -282,8 +332,10 @@ export async function createStemPlayer(
           /* ignore */
         }
       }
+      applyOutputGain();
       const t = master.currentTime;
       for (const el of elements) {
+        el.muted = false;
         if (Math.abs(el.currentTime - t) > 0.02) {
           try {
             el.currentTime = t;
@@ -293,19 +345,44 @@ export async function createStemPlayer(
         }
       }
       // Start together - never re-seek stems mid-playback (causes repeats on WebKit).
-      await Promise.all(
+      const results = await Promise.all(
         elements.map(async (el) => {
-          if (!el.paused && !el.ended) return;
+          if (!el.paused && !el.ended) return true;
           try {
             await el.play();
+            return true;
           } catch {
-            /* ignore */
+            return false;
           }
         }),
       );
+      if (results.some(Boolean)) {
+        retryUnlock?.();
+        retryUnlock = null;
+        return;
+      }
+      // Countdown play was blocked. Next tap on the page retries.
+      if (retryUnlock || typeof window === "undefined") return;
+      const retry = () => {
+        retryUnlock = null;
+        window.removeEventListener("pointerdown", retry);
+        window.removeEventListener("touchend", retry);
+        if (!playingForReal) return;
+        void player.play();
+      };
+      retryUnlock = () => {
+        window.removeEventListener("pointerdown", retry);
+        window.removeEventListener("touchend", retry);
+      };
+      window.addEventListener("pointerdown", retry, { once: true });
+      window.addEventListener("touchend", retry, { once: true });
     },
     pause() {
-      for (const el of elements) el.pause();
+      playingForReal = false;
+      for (const el of elements) {
+        el.muted = false;
+        el.pause();
+      }
     },
     setVolume(v: number) {
       userVolume = Math.min(1, Math.max(0, v));
@@ -325,6 +402,9 @@ export async function createStemPlayer(
       return smooth;
     },
     destroy() {
+      playingForReal = false;
+      retryUnlock?.();
+      retryUnlock = null;
       for (const el of elements) {
         el.pause();
         el.removeAttribute("src");

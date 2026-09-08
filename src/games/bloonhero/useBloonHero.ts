@@ -253,6 +253,7 @@ export function useBloonHero() {
   const hitFlashIdRef = useRef(0);
   const lyricsRef = useRef<LyricPhrase[]>([]);
   const lyricsUiAtRef = useRef(0);
+  const lyricElRef = useRef<HTMLElement | null>(null);
   const pausedRef = useRef(false);
   /** When set, countdown before unpausing. wall ms start. */
   const resumeAtRef = useRef<number | null>(null);
@@ -322,6 +323,10 @@ export function useBloonHero() {
 
   const setCountdownEl = useCallback((el: HTMLElement | null) => {
     countdownElRef.current = el;
+  }, []);
+
+  const setLyricEl = useCallback((el: HTMLElement | null) => {
+    lyricElRef.current = el;
   }, []);
 
   const resizeCanvas = useCallback(() => {
@@ -781,8 +786,9 @@ export function useBloonHero() {
     keysDownRef.current.clear();
     pressedRef.current.clear();
     holdingRef.current.clear();
-    player.pause();
-    player.currentTime = 0;
+    // Must run inside this tap. Don't pause again here — that cancels the
+    // mobile unlock before the browser accepts it.
+    player.prime();
     resizeCanvas();
     setState((prev) => ({
       ...INITIAL,
@@ -875,6 +881,9 @@ export function useBloonHero() {
       lastCountdownRef.current = null;
       return;
     }
+
+    // Resume tap unlocks audio; playback itself starts after 3-2-1.
+    playerRef.current?.prime({ keepTime: true });
 
     // Resume: 3 → 2 → 1 → GO then unpause
     resumeAtRef.current = performance.now();
@@ -1368,6 +1377,13 @@ export function useBloonHero() {
       ) {
         lyricsUiAtRef.current = wallMs;
         const line = lyricDisplayAtTime(lyricsRef.current, now);
+        const el = lyricElRef.current;
+        if (el) {
+          const text = (line?.visible || line?.fullWord || "").trim();
+          if (el.textContent !== text) el.textContent = text;
+          el.hidden = !text;
+          el.style.opacity = text ? String(line?.opacity ?? 1) : "0";
+        }
         setState((prev) =>
           lyricDisplaysEqual(prev.currentLyric, line)
             ? prev
@@ -1585,5 +1601,6 @@ export function useBloonHero() {
     setCanvasEl,
     setProgressFillEl,
     setCountdownEl,
+    setLyricEl,
   };
 }
