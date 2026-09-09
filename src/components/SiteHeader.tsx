@@ -7,7 +7,7 @@ import {
 } from "../lib/logoHome";
 import { isShopPath } from "../lib/mobileView";
 import { isNativeShell } from "../lib/nativeShell";
-import { SITE_LOGO, SITE_NAME } from "../lib/brand";
+import { SITE_LOGO, SITE_NAME, SITE_WORDMARK } from "../lib/brand";
 import { AccountBar } from "./AccountBar";
 import {
   useIsCompactViewport,
@@ -94,7 +94,12 @@ export function SiteHeader() {
             height={66}
             draggable={false}
           />
-          <span>{SITE_NAME}</span>
+          <img
+            className="site-header__wordmark"
+            src={SITE_WORDMARK}
+            alt={SITE_NAME}
+            draggable={false}
+          />
         </Link>
 
         <nav className="site-nav site-nav--desktop" aria-label="Main">

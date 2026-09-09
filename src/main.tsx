@@ -18,9 +18,11 @@ import "@fontsource/luckiest-guy/latin-400.css";
 import { initSiteTheme } from "./lib/siteTheme";
 import { nativeShellReady } from "./lib/nativeShell";
 import { installNativeMediaCdn } from "./lib/nativeMediaCdn";
+import { installSoftKeyboardState } from "./lib/softKeyboard";
 import "./index.css";
 
 initSiteTheme();
+installSoftKeyboardState();
 
 const root = document.getElementById("root")!;
 

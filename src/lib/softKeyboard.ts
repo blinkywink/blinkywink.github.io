@@ -19,9 +19,16 @@ function isTextField(el: EventTarget | null): boolean {
   );
 }
 
-/** Native app: flag while a text field is focused so fixed docks can hide. */
+/** Flag while a text field is focused so fixed docks / tab bar can hide. */
 export function installSoftKeyboardState(): void {
-  if (!isNativeShell() || typeof document === "undefined") return;
+  if (typeof document === "undefined") return;
+  const flag = window as Window & { __softKeyboardInstalled?: boolean };
+  if (flag.__softKeyboardInstalled) return;
+  /* Native IPA always; mobile web (≤820) for the same keyboard hide behavior. */
+  const want =
+    isNativeShell() || window.matchMedia("(max-width: 820px)").matches;
+  if (!want) return;
+  flag.__softKeyboardInstalled = true;
 
   const root = document.documentElement;
   let blurTimer: number | undefined;

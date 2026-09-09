@@ -14,7 +14,7 @@ export type Challenge = {
 
 function zoomedPool(entities: TowerEntity[]): TowerEntity[] {
   return entities.filter((e) => {
-    if (e.type === "tower" || e.type === "paragon") return true;
+    if (e.type === "tower") return true;
     return e.type === "upgrade" && e.tier >= 4;
   });
 }
