@@ -108,9 +108,29 @@ export function subscribeMobileNavSize(
   };
 }
 
+/** Play screens — no bottom tab bar (it covers the board and rides the keyboard). */
+const PLAY_PATHS_WITHOUT_NAV = new Set([
+  "/zoomed",
+  "/geoguessr",
+  "/pricecheck",
+  "/orderup",
+  "/roundcheck",
+  "/heliumpop",
+  "/ricoshot",
+  "/camodetection",
+  "/bloonssweeper",
+  "/blowfree",
+  "/bananacatch",
+  "/bloonhero",
+]);
+
 /** Main hub routes that show the modern bottom tab bar. */
 export function showsMobileAppNav(pathname: string): boolean {
-  /* Capacitor IPA has no browser chrome — keep the tab bar on every screen. */
+  /* Bloonle keeps the bar (custom keyboard sits with it). Other games do not. */
+  if (pathname === "/bloonle") return true;
+  if (PLAY_PATHS_WITHOUT_NAV.has(pathname)) return false;
+
+  /* Capacitor IPA has no browser chrome — keep the tab bar on hub screens. */
   if (isNativeShell()) return true;
 
   if (pathname === "/" || pathname === "/about" || pathname === "/profile") {

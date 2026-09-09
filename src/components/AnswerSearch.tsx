@@ -9,19 +9,9 @@ import {
 import type { TowerEntity } from "../data/types";
 import { byTower, towerEntities, towers } from "../data/towers";
 import { prefersKeyboardAutofocus } from "../lib/focus";
+import { categoryPackShelfArt, type TowerCategory } from "../lib/packTheme";
 import { normalizeSearch, rankEntityMatch } from "../utils/searchEntities";
 
-function useTouchPicker(): boolean {
-  const [touch, setTouch] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 820px), (pointer: coarse)");
-    const apply = () => setTouch(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-  return touch;
-}
 
 export type GuessLock =
   | { kind: "base" }
@@ -69,11 +59,11 @@ export function AnswerSearch({
 }: Props) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
-  const touchPicker = useTouchPicker() && Boolean(guessLock);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const [pickedTower, setPickedTower] = useState<string | null>(null);
+  const [pickedCategory, setPickedCategory] = useState<string | null>(null);
   const eliminated = useMemo(() => new Set(eliminatedIds), [eliminatedIds]);
 
   useEffect(() => {
@@ -81,6 +71,7 @@ export function AnswerSearch({
     setOpen(false);
     setHighlight(0);
     setPickedTower(null);
+    setPickedCategory(null);
   }, [roundKey]);
 
   useEffect(() => {
@@ -192,85 +183,118 @@ export function AnswerSearch({
     }
   };
 
-  if (touchPicker && guessLock) {
+  if (guessLock) {
     const choices = pickedTower ? pathChoices(pickedTower, guessLock) : [];
-    const groups = CATEGORY_ORDER.map((category) => ({
-      category,
-      towers: towers.filter((t) => t.category === category),
-    })).filter((g) => g.towers.length > 0);
+    const categoryTowers = pickedCategory
+      ? towers.filter((t) => t.category === pickedCategory)
+      : [];
 
     return (
-      <div className={`answer-search answer-search--${status} answer-search--touch`}>
-        {pickedTower ? (
-          <div className={`upgrade-picker ${disabled ? "is-locked" : ""}`}>
-            <div className="upgrade-picker__header">
-              <strong>{pickedTower}</strong>
-              <button
-                type="button"
-                className="upgrade-picker__change"
-                onClick={clearPicker}
-                disabled={disabled}
-              >
-                Change
-              </button>
-            </div>
-            <div
-              className="upgrade-picker__paths"
-              role="group"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(choices.length, 1)}, minmax(0, 1fr))`,
+      <div className={`answer-search answer-search--${status}`}>
+        <div className="tower-pick__bar">
+          {pickedCategory || pickedTower ? (
+            <button
+              type="button"
+              className="upgrade-picker__change"
+              onClick={() => {
+                if (pickedTower) {
+                  setPickedTower(null);
+                  return;
+                }
+                setPickedCategory(null);
               }}
-              aria-label={
-                guessLock.kind === "upgrade"
-                  ? `Tier ${guessLock.tier} paths`
-                  : "Path"
-              }
+              disabled={disabled}
             >
-              {choices.map((choice) => (
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+          <strong>
+            {pickedTower
+              ? pickedTower
+              : pickedCategory
+                ? pickedCategory
+                : "Pick a category"}
+          </strong>
+        </div>
+
+        {pickedTower ? (
+          <ul className="answer-search__list answer-search__list--sheet">
+            {choices.map((choice) => (
+              <li key={choice.id}>
                 <button
-                  key={choice.id}
                   type="button"
-                  className={`upgrade-picker__path ${
+                  className={`answer-search__option ${
                     eliminated.has(choice.id) ? "is-eliminated" : ""
                   }`}
                   onClick={() => submit(choice)}
                   disabled={disabled || eliminated.has(choice.id)}
                 >
-                  <span className="upgrade-picker__path-name">{choice.name}</span>
-                  {eliminated.has(choice.id) ? (
-                    <span className="upgrade-picker__x" aria-hidden="true">
-                      ✕
+                  <span className="answer-search__thumb answer-search__qmark" aria-hidden>
+                    ?
+                  </span>
+                  <span className="answer-search__option-text">
+                    <span className="answer-search__option-name">
+                      {choice.name}
                     </span>
-                  ) : null}
+                  </span>
                 </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="tower-pick">
-            {groups.map((group) => (
-              <section key={group.category} className="tower-pick__group">
-                <h3 className="tower-pick__label">{group.category}</h3>
-                <div className="tower-pick__grid">
-                  {group.towers.map((tower) => (
-                    <button
-                      key={tower.id}
-                      type="button"
-                      className="tower-pick__btn"
-                      disabled={disabled}
-                      onClick={() => {
-                        if (guessLock.kind === "base") {
-                          submit(tower);
-                          return;
-                        }
-                        openTowerPicker(tower);
-                      }}
-                    >
+              </li>
+            ))}
+          </ul>
+        ) : pickedCategory ? (
+          <ul className="answer-search__list answer-search__list--sheet">
+            {categoryTowers.map((tower) => (
+              <li key={tower.id}>
+                <button
+                  type="button"
+                  className="answer-search__option"
+                  disabled={disabled}
+                  onClick={() => {
+                    if (guessLock.kind === "base") {
+                      submit(tower);
+                      return;
+                    }
+                    openTowerPicker(tower);
+                  }}
+                >
+                  <img
+                    src={tower.image}
+                    alt=""
+                    className="answer-search__thumb"
+                    width={40}
+                    height={40}
+                  />
+                  <span className="answer-search__option-text">
+                    <span className="answer-search__option-name">
                       {tower.name}
-                    </button>
-                  ))}
-                </div>
-              </section>
+                    </span>
+                    <span className="answer-search__option-meta">
+                      {tower.category}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="tower-pick__cats">
+            {CATEGORY_ORDER.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className="tower-pick__cat"
+                disabled={disabled}
+                onClick={() => setPickedCategory(category)}
+              >
+                <img
+                  src={categoryPackShelfArt(category as TowerCategory)}
+                  alt=""
+                  className="tower-pick__cat-img"
+                />
+                <span>{category}</span>
+              </button>
             ))}
           </div>
         )}

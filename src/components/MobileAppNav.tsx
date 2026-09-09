@@ -225,8 +225,8 @@ export function MobileAppNav() {
   }
 
   const show =
-    native ||
-    (compact && view === "modern" && showsMobileAppNav(pathname));
+    (native || (compact && view === "modern")) &&
+    showsMobileAppNav(pathname);
   if (!show) return null;
 
   return (

@@ -166,6 +166,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
           ) : null}
         </div>
 
+        <div className="camo-board">
         <div
           className={`camo-grid camo-grid--n${grid}`}
           style={{ "--camo-n": grid } as CSSProperties}
@@ -215,6 +216,7 @@ export function CamoDetectionGame({ onBack, onRunEnd }: Props) {
               </button>
             );
           })}
+        </div>
         </div>
 
         {recalling ? (
