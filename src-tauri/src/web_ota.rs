@@ -5,7 +5,11 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
 use std::io::{copy, Read, Write};
+use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+use std::thread;
+use std::time::Duration;
 use tauri::{AppHandle, Manager, Runtime};
 
 const STATE_FILE: &str = "state.json";
@@ -304,10 +308,117 @@ pub fn resolve_bytes<R: Runtime>(
   Some((asset.bytes, asset.mime_type))
 }
 
-/// HTTP localhost origin so WKWebView can sign in. `mcota://` makes fetch
-/// fail with "TypeError: Load failed" on macOS.
-pub fn ota_entry_url() -> &'static str {
-  "http://mcota.localhost/"
+static LOCAL_ORIGIN: OnceLock<String> = OnceLock::new();
+
+/// Real loopback origin. `http://mcota.localhost/` is not registered, so the
+/// Mac webview stays white. `mcota://` loads, but WKWebView fetch dies.
+pub fn start_local_origin<R: Runtime>(app: &AppHandle<R>) -> String {
+  if let Some(url) = LOCAL_ORIGIN.get() {
+    return url.clone();
+  }
+
+  let listener = match TcpListener::bind("127.0.0.1:0") {
+    Ok(listener) => listener,
+    Err(err) => {
+      log::warn!("OTA local server bind failed: {err}");
+      return "mcota://localhost/".into();
+    }
+  };
+  let port = match listener.local_addr() {
+    Ok(addr) => addr.port(),
+    Err(err) => {
+      log::warn!("OTA local server addr failed: {err}");
+      return "mcota://localhost/".into();
+    }
+  };
+  let handle = app.clone();
+  thread::spawn(move || {
+    for stream in listener.incoming() {
+      match stream {
+        Ok(stream) => {
+          let handle = handle.clone();
+          thread::spawn(move || serve_local(handle, stream));
+        }
+        Err(err) => log::warn!("OTA local accept failed: {err}"),
+      }
+    }
+  });
+
+  let url = format!("http://127.0.0.1:{port}/");
+  let _ = LOCAL_ORIGIN.set(url.clone());
+  url
+}
+
+pub fn ota_entry_url() -> String {
+  LOCAL_ORIGIN
+    .get()
+    .cloned()
+    .unwrap_or_else(|| "mcota://localhost/".into())
+}
+
+fn percent_decode(input: &str) -> String {
+  let bytes = input.as_bytes();
+  let mut out = Vec::with_capacity(bytes.len());
+  let mut i = 0;
+  while i < bytes.len() {
+    if bytes[i] == b'%' && i + 2 < bytes.len() {
+      let hex = &input[i + 1..i + 3];
+      if let Ok(v) = u8::from_str_radix(hex, 16) {
+        out.push(v);
+        i += 3;
+        continue;
+      }
+    }
+    out.push(bytes[i]);
+    i += 1;
+  }
+  String::from_utf8_lossy(&out).into_owned()
+}
+
+fn serve_local<R: Runtime>(app: AppHandle<R>, mut stream: TcpStream) {
+  let _ = stream.set_read_timeout(Some(Duration::from_secs(8)));
+  let mut buf = [0u8; 8192];
+  let n = match stream.read(&mut buf) {
+    Ok(n) if n > 0 => n,
+    _ => return,
+  };
+  let req = String::from_utf8_lossy(&buf[..n]);
+  let first = req.lines().next().unwrap_or("");
+  let mut parts = first.split_whitespace();
+  let method = parts.next().unwrap_or("");
+  let target = parts.next().unwrap_or("/");
+
+  if method != "GET" && method != "HEAD" {
+    let _ = stream.write_all(
+      b"HTTP/1.1 405 Method Not Allowed\r\nConnection: close\r\nContent-Length: 0\r\n\r\n",
+    );
+    return;
+  }
+
+  let path = percent_decode(target.split('?').next().unwrap_or("/"));
+  match resolve_bytes(&app, &path) {
+    Some((bytes, mime)) => {
+      let header = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nContent-Length: {}\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n",
+        bytes.len()
+      );
+      let _ = stream.write_all(header.as_bytes());
+      if method == "GET" {
+        let _ = stream.write_all(&bytes);
+      }
+    }
+    None => {
+      let body = b"not found";
+      let header = format!(
+        "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+      );
+      let _ = stream.write_all(header.as_bytes());
+      if method == "GET" {
+        let _ = stream.write_all(body);
+      }
+    }
+  }
 }
 
 pub fn should_boot_ota<R: Runtime>(app: &AppHandle<R>) -> bool {

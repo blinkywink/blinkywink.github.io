@@ -44,7 +44,8 @@ fn desktop_web_ota_reload(app: tauri::AppHandle) -> Result<(), String> {
   let Some(win) = app.get_webview_window("main") else {
     return Err("main window missing".into());
   };
-  let url = Url::parse(web_ota::ota_entry_url()).map_err(|e| e.to_string())?;
+  let _ = web_ota::start_local_origin(&app);
+  let url = Url::parse(&web_ota::ota_entry_url()).map_err(|e| e.to_string())?;
   win.navigate(url).map_err(|e| e.to_string())
 }
 
@@ -55,7 +56,7 @@ fn boot_ota_if_present(app: &tauri::AppHandle) {
   let Some(win) = app.get_webview_window("main") else {
     return;
   };
-  if let Ok(url) = Url::parse(web_ota::ota_entry_url()) {
+  if let Ok(url) = Url::parse(&web_ota::ota_entry_url()) {
     let _ = win.navigate(url);
   }
 }
@@ -105,6 +106,7 @@ pub fn run() {
       app
         .handle()
         .plugin(tauri_plugin_updater::Builder::new().build())?;
+      let _ = web_ota::start_local_origin(app.handle());
       boot_ota_if_present(app.handle());
       Ok(())
     })

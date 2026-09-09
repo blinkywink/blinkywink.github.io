@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Monkey Cards",
+        "backgroundColor": "#12141a",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
