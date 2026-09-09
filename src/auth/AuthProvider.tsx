@@ -242,10 +242,25 @@ async function authRpc(
   username: string,
   password: string,
 ): Promise<{ session: AppSession | null; error: string | null }> {
-  const { data, error } = await supabase.rpc(fn, {
-    p_username: username,
-    p_password: password,
-  });
+  let data: unknown;
+  let error: { message: string } | null = null;
+  try {
+    const result = await supabase.rpc(fn, {
+      p_username: username,
+      p_password: password,
+    });
+    data = result.data;
+    error = result.error;
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : "Sign in failed.";
+    if (/Load failed|Failed to fetch|NetworkError|Network request failed/i.test(raw)) {
+      return {
+        session: null,
+        error: "Could not reach the server. Quit the app fully and reopen it, then try again.",
+      };
+    }
+    return { session: null, error: raw };
+  }
 
   if (error) {
     return { session: null, error: mapRpcError(error.message) };

@@ -304,16 +304,10 @@ pub fn resolve_bytes<R: Runtime>(
   Some((asset.bytes, asset.mime_type))
 }
 
-/// Entry URL for the active OTA bundle (platform-specific scheme form).
+/// HTTP localhost origin so WKWebView can sign in. `mcota://` makes fetch
+/// fail with "TypeError: Load failed" on macOS.
 pub fn ota_entry_url() -> &'static str {
-  #[cfg(windows)]
-  {
-    "http://mcota.localhost/"
-  }
-  #[cfg(not(windows))]
-  {
-    "mcota://localhost/"
-  }
+  "http://mcota.localhost/"
 }
 
 pub fn should_boot_ota<R: Runtime>(app: &AppHandle<R>) -> bool {

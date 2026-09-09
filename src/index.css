@@ -6257,6 +6257,67 @@ body:has(.roundcheck-page) {
   color: #f0f0f4;
 }
 
+.upgrade-picker__paths {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.upgrade-picker__path {
+  position: relative;
+  min-height: 4.6rem;
+  padding: 0.7rem 0.45rem;
+  border-radius: 14px;
+  border: 2px solid #3a3a46;
+  background: #14141c;
+  color: #f0f0f4;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.upgrade-picker__path-name {
+  display: block;
+}
+
+.upgrade-picker__path.is-eliminated {
+  opacity: 0.4;
+  filter: grayscale(0.9);
+}
+
+.tower-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.tower-pick__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.tower-pick__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.tower-pick__btn {
+  min-height: 2.7rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 12px;
+  border: 2px solid #2e2e38;
+  background: #14141c;
+  color: #f0f0f4;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
 .upgrade-picker__grid {
   display: flex;
   flex-direction: column;
