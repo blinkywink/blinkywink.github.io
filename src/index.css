@@ -1496,38 +1496,6 @@ html.is-route-scroll-lock body,
 }
 
 @media (max-width: 820px) {
-  /* Don't let the tab bar ride the keyboard. Bloonle keeps it. */
-  html[data-mobile-chrome="modern"][data-mobile-nav="1"]:has(
-      input:is(
-          [type="text"],
-          [type="search"],
-          [type="email"],
-          [type="password"],
-          [type="number"],
-          [type="tel"],
-          [type="url"]
-        ):focus,
-      textarea:focus
-    ):not(:has(.bloonle-page)) {
-    --site-bottom-nav-h: 0px;
-  }
-
-  html[data-mobile-chrome="modern"][data-mobile-nav="1"]:has(
-      input:is(
-          [type="text"],
-          [type="search"],
-          [type="email"],
-          [type="password"],
-          [type="number"],
-          [type="tel"],
-          [type="url"]
-        ):focus,
-      textarea:focus
-    ):not(:has(.bloonle-page))
-    .mobile-app-nav {
-    display: none;
-  }
-
   html[data-mobile-chrome="modern"][data-mobile-nav="1"] .mobile-app-nav {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));

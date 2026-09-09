@@ -1,7 +1,5 @@
 /** Mobile chrome: classic top bar vs modern bottom-nav app shell. Device only. */
 
-import { isNativeShell } from "./nativeShell";
-
 export const MOBILE_VIEW_OPTIONS = [
   { id: "modern", label: "Modern" },
   { id: "classic", label: "Classic" },
@@ -108,47 +106,9 @@ export function subscribeMobileNavSize(
   };
 }
 
-/** Play screens — no bottom tab bar (it covers the board and rides the keyboard). */
-const PLAY_PATHS_WITHOUT_NAV = new Set([
-  "/zoomed",
-  "/geoguessr",
-  "/pricecheck",
-  "/orderup",
-  "/roundcheck",
-  "/heliumpop",
-  "/ricoshot",
-  "/camodetection",
-  "/bloonssweeper",
-  "/blowfree",
-  "/bananacatch",
-  "/bloonhero",
-]);
-
-/** Main hub routes that show the modern bottom tab bar. */
-export function showsMobileAppNav(pathname: string): boolean {
-  /* Bloonle keeps the bar (custom keyboard sits with it). Other games do not. */
-  if (pathname === "/bloonle") return true;
-  if (PLAY_PATHS_WITHOUT_NAV.has(pathname)) return false;
-
-  /* Capacitor IPA has no browser chrome — keep the tab bar on hub screens. */
-  if (isNativeShell()) return true;
-
-  if (pathname === "/" || pathname === "/about" || pathname === "/profile") {
-    return true;
-  }
-  if (pathname === "/games" || pathname.startsWith("/games/")) return true;
-  if (pathname === "/shop" || pathname.startsWith("/shop/")) return true;
-  if (pathname === "/collection" || pathname.startsWith("/collection/")) {
-    return true;
-  }
-  if (pathname === "/marketplace" || pathname.startsWith("/marketplace/")) {
-    return true;
-  }
-  if (pathname === "/leaderboard") return true;
-  if (pathname.startsWith("/user/")) return true;
-  if (pathname.startsWith("/trade/")) return true;
-  if (pathname === "/profile/paragon-lab") return true;
-  return false;
+/** Bottom tab bar stays on every mobile screen, including games. */
+export function showsMobileAppNav(_pathname: string): boolean {
+  return true;
 }
 
 export function isShopPath(pathname: string): boolean {
