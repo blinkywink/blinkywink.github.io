@@ -3,4 +3,4 @@ export const SITE_NAME = "Monkey Cards";
 export const SITE_ORIGIN = "https://monkeycards.app";
 export const SITE_OG_IMAGE = `${SITE_ORIGIN}/og-embed.png`;
 export const SITE_LOGO = "/images/ui/site-logo.png";
-export const SITE_WORDMARK = "/images/ui/site-wordmark.png";
+export const SITE_WORDMARK = "/images/ui/site-title.png";
