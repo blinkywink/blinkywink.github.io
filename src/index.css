@@ -5461,7 +5461,7 @@ body:has(.roundcheck-page) {
 .zoomed-controls {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -6091,10 +6091,24 @@ body:has(.roundcheck-page) {
   z-index: 20;
 }
 
+.zoomed-controls > .answer-search,
+.answer-search:has(.tower-pick__bar) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .answer-search__list--sheet {
   position: static;
-  max-height: min(360px, 46vh);
+  flex: 1 1 auto;
+  min-height: 8rem;
+  max-height: none;
   width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .answer-search__option {
@@ -6355,6 +6369,12 @@ body:has(.roundcheck-page) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .tower-pick__cat {

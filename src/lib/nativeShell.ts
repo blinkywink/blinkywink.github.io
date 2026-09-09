@@ -54,6 +54,24 @@ async function initNativeShell(): Promise<void> {
   }
 }
 
+function nestedCanScroll(target: EventTarget | null, dy: number): boolean {
+  let el = target instanceof Element ? target.parentElement : null;
+  while (el) {
+    if (el instanceof HTMLElement) {
+      const oy = getComputedStyle(el).overflowY;
+      const scrollable = oy === "auto" || oy === "scroll" || oy === "overlay";
+      if (scrollable && el.scrollHeight > el.clientHeight + 1) {
+        if (dy > 0 && el.scrollTop > 0) return true;
+        if (dy < 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
+          return true;
+        }
+      }
+    }
+    el = el.parentElement;
+  }
+  return false;
+}
+
 /** Stop iOS rubber-band from reloading the WKWebView on a fast flick. */
 function installIosOverscrollGuard(): void {
   const ios =
@@ -77,6 +95,7 @@ function installIosOverscrollGuard(): void {
     (e) => {
       const y = e.touches[0]?.clientY ?? 0;
       const dy = y - startY;
+      if (nestedCanScroll(e.target, dy)) return;
       const scroller = document.querySelector(".site-main");
       const node = scroller instanceof HTMLElement ? scroller : null;
       if (!node) return;

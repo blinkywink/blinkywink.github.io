@@ -39,24 +39,22 @@ fn desktop_web_ota_apply(app: tauri::AppHandle, args: ApplyArgs) -> Result<WebOt
   web_ota::apply_bundle(&app, &args.url, &args.checksum, &args.version)
 }
 
+const SITE_URL: &str = "https://monkeycards.app/";
+
 #[tauri::command]
 fn desktop_web_ota_reload(app: tauri::AppHandle) -> Result<(), String> {
   let Some(win) = app.get_webview_window("main") else {
     return Err("main window missing".into());
   };
-  let _ = web_ota::start_local_origin(&app);
-  let url = Url::parse(&web_ota::ota_entry_url()).map_err(|e| e.to_string())?;
+  let url = Url::parse(SITE_URL).map_err(|e| e.to_string())?;
   win.navigate(url).map_err(|e| e.to_string())
 }
 
-fn boot_ota_if_present(app: &tauri::AppHandle) {
-  if !web_ota::should_boot_ota(app) {
-    return;
-  }
+fn open_site(app: &tauri::AppHandle) {
   let Some(win) = app.get_webview_window("main") else {
     return;
   };
-  if let Ok(url) = Url::parse(&web_ota::ota_entry_url()) {
+  if let Ok(url) = Url::parse(SITE_URL) {
     let _ = win.navigate(url);
   }
 }
@@ -106,8 +104,7 @@ pub fn run() {
       app
         .handle()
         .plugin(tauri_plugin_updater::Builder::new().build())?;
-      let _ = web_ota::start_local_origin(app.handle());
-      boot_ota_if_present(app.handle());
+      open_site(app.handle());
       Ok(())
     })
     .run(tauri::generate_context!())

@@ -5,6 +5,12 @@
   "windows": [
     "main"
   ],
+  "remote": {
+    "urls": [
+      "https://monkeycards.app/*",
+      "https://www.monkeycards.app/*"
+    ]
+  },
   "permissions": [
     "core:default",
     "updater:default",

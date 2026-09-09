@@ -9,11 +9,6 @@ import {
   mergeDesktopSignals,
   type DesktopRemoteConfig,
 } from "../lib/desktopDownloads";
-import {
-  desktopNeedsWebOta,
-  desktopWebOtaApply,
-  desktopWebOtaReload,
-} from "../lib/desktopWebOta";
 import { applyRemoteFeaturedTowers } from "../lib/remoteShop";
 import { startVisiblePoll } from "../lib/visiblePoll";
 import { ExternalLink } from "./ExternalLink";
@@ -102,22 +97,7 @@ export function DesktopUpdateGate() {
         return;
       }
 
-      // Day-to-day: same slim zip as mobile Capgo.
-      const webOta = await desktopNeedsWebOta();
-      if (webOta.needed && webOta.manifest) {
-        installingRef.current = true;
-        setStatus("updating");
-        setMessage("Updating");
-        setProgress(null);
-        await desktopWebOtaApply(webOta.manifest);
-        setProgress(100);
-        await desktopWebOtaReload();
-        window.setTimeout(() => {
-          window.location.reload();
-        }, 250);
-        return;
-      }
-
+      // The desktop window is monkeycards.app — web updates are the site itself.
       setStatus("idle");
     } catch (err) {
       console.warn("Desktop update failed", err);

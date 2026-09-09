@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Monkey Cards",
+        "url": "https://monkeycards.app/",
         "backgroundColor": "#12141a",
         "width": 1280,
         "height": 800,
