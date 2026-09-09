@@ -1,11 +1,11 @@
 {
-  "minDesktopVersion": "1.0.40",
-  "version": "1.0.40",
-  "shopDay": "2026-9-8",
+  "minDesktopVersion": "1.0.41",
+  "version": "1.0.41",
+  "shopDay": "2026-9-9",
   "featuredTowers": [
-    "Heli Pilot",
-    "Druid",
-    "Wizard Monkey"
+    "Engineer Monkey",
+    "Monkey Buccaneer",
+    "Banana Farm"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
   "downloadMac": "https://api.blinkywink.co/downloads/blinkywink-mac.dmg",
