@@ -2036,6 +2036,45 @@ body:has(.roundcheck-page) {
   --zoomed-row-pad: clamp(0.5rem, 1.2vmin, 0.7rem);
 }
 
+/* Phone: keep the 2×2 category grid fully above the bottom tab bar. */
+@media (max-width: 820px) {
+  .zoomed-page {
+    --zoomed-img: clamp(11rem, calc(var(--game-h) * 0.34), 15rem);
+    --zoomed-pick-w: min(100%, 21rem);
+    --zoomed-list-h: clamp(9rem, calc(var(--game-h) * 0.28), 14rem);
+    --zoomed-cat-art: clamp(2.5rem, calc(var(--game-h) * 0.055), 3.4rem);
+    --zoomed-cat-tile: clamp(4.4rem, calc(var(--game-h) * 0.095), 5.6rem);
+    --zoomed-cat-gap: 0.4rem;
+    --zoomed-row-pad: 0.32rem;
+  }
+
+  .zoomed-controls {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    justify-content: flex-start;
+    padding-bottom: 0.25rem;
+  }
+
+  .zoomed-controls > .answer-search,
+  .zoomed-controls .answer-search:has(.tower-pick__bar) {
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .zoomed-controls .tower-pick__cats {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: min(12.5rem, calc(var(--game-h) * 0.34));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .zoomed-controls .tower-pick__cat {
+    font-size: 0.82rem;
+  }
+}
+
 .sweeper-page {
   --game-max-w: var(--content-max);
   --game-gutter: 1.25rem;
