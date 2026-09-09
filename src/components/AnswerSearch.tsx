@@ -306,13 +306,7 @@ export function AnswerSearch({
     <div className={`answer-search answer-search--${status}`}>
       <label className="answer-search__label" htmlFor={`${listId}-input`}>
         {pickedTower
-          ? guessLock?.kind === "base"
-            ? "Pick the base tower"
-            : guessLock?.kind === "paragon"
-              ? "Pick the paragon"
-              : guessLock?.kind === "upgrade"
-                ? `Pick the tier ${guessLock.tier} path`
-                : "Pick the base tower or an upgrade"
+          ? "Pick the base tower or an upgrade"
           : "Search a tower, then pick the upgrade"}
       </label>
       <div className="answer-search__field">
@@ -409,7 +403,7 @@ export function AnswerSearch({
             </button>
           </div>
 
-          {(!guessLock || guessLock.kind === "base") && family.base ? (
+          {family.base ? (
             <button
               type="button"
               className={`upgrade-picker__base ${
@@ -439,7 +433,6 @@ export function AnswerSearch({
             </button>
           ) : null}
 
-          {!guessLock || guessLock.kind === "upgrade" ? (
           <div
             className="upgrade-picker__grid"
             role="group"
@@ -448,10 +441,7 @@ export function AnswerSearch({
             {family.grid.map((pathRow, pathIdx) => (
               <div key={pathIdx} className="upgrade-picker__row">
                 {pathRow.map((upgrade, tierIdx) =>
-                  upgrade &&
-                  (!guessLock ||
-                    guessLock.kind !== "upgrade" ||
-                    upgrade.tier === guessLock.tier) ? (
+                  upgrade ? (
                     <button
                       key={upgrade.id}
                       type="button"
@@ -490,9 +480,8 @@ export function AnswerSearch({
               </div>
             ))}
           </div>
-          ) : null}
 
-          {(!guessLock || guessLock.kind === "paragon") && family.paragon ? (
+          {family.paragon ? (
             <button
               type="button"
               className={`upgrade-picker__paragon ${
