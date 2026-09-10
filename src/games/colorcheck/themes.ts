@@ -228,17 +228,6 @@ export const CONNECTION_THEMES: ConnectionTheme[] = [
     (e) => /^The\b/i.test(e.name),
   ),
   must(
-    "explosive-name",
-    "Bomb, missile, or rocket in the name",
-    1,
-    "name",
-    (e) =>
-      /\bbombs?\b/i.test(e.name) ||
-      /\bmissile\b/i.test(e.name) ||
-      /\brockets?\b/i.test(e.name) ||
-      /\bbomba\b/i.test(e.name),
-  ),
-  must(
     "lord-master",
     "Lord or Master in the name",
     1,
