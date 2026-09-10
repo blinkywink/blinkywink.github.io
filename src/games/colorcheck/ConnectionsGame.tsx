@@ -84,7 +84,7 @@ function Tile({
   );
 }
 
-/** Connections with BTD towers (Color Check arcade slot). */
+/** Connections with BTD towers. */
 export function ColorCheckGame({ onBack, onRunEnd }: Props) {
   const {
     state,

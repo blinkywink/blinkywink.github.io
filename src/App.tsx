@@ -97,7 +97,7 @@ const GeoguessrGame = lazyRoute(() =>
 const PriceCheckGame = lazyRoute(() =>
   import("./games/pricecheck").then((m) => ({ default: m.PriceCheckGame })),
 );
-const ColorCheckGame = lazyRoute(() =>
+const ConnectionsGame = lazyRoute(() =>
   import("./games/colorcheck").then((m) => ({ default: m.ColorCheckGame })),
 );
 const OrderUpGame = lazyRoute(() =>
@@ -572,7 +572,7 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
-  const onColorCheckRunEnd = useCallback(
+  const onConnectionsRunEnd = useCallback(
     (info: {
       cleared: boolean;
       correctCount: number;
@@ -584,7 +584,7 @@ function AppShell() {
       if (!info.fresh) return;
       setEndlessHaul(null);
       setRunHaul({
-        game: "colorcheck",
+        game: "connections",
         cleared: info.cleared,
         cashEarned: info.coinsEarned,
         details: [
@@ -592,7 +592,7 @@ function AppShell() {
           `${info.correctCount}/4 groups`,
         ],
       });
-      void recordGameRun("colorcheck", info.cleared);
+      void recordGameRun("connections", info.cleared);
       queueClearAndBonusPacks({
         cleared: info.cleared,
         // Daily clear gets the bonus pack; practice does not.
@@ -601,7 +601,7 @@ function AppShell() {
       });
       void creditHeroClear(info.cleared);
       void settleFeaturedBonus(
-        "colorcheck",
+        "connections",
         featuredDidDecentQuiz(info.cleared, info.correctCount),
         { oneShotAttempt: info.mode === "daily" },
       );
@@ -887,19 +887,20 @@ function AppShell() {
             }
           />
           <Route
-            path="/colorcheck"
+            path="/connections"
             element={
               <LazyGame>
-                <GameFarmGate game="colorcheck">
-                <ColorCheckGame
+                <GameFarmGate game="connections">
+                <ConnectionsGame
                   key={gameReplayKey}
                   onBack={goGames}
-                  onRunEnd={onColorCheckRunEnd}
+                  onRunEnd={onConnectionsRunEnd}
                 />
                 </GameFarmGate>
               </LazyGame>
             }
           />
+          <Route path="/colorcheck" element={<Navigate to="/connections" replace />} />
           <Route
             path="/orderup"
             element={

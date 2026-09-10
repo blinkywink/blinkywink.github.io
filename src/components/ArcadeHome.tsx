@@ -37,7 +37,7 @@ export type GameId =
   | "roundcheck"
   | "heliumpop"
   | "blowfree"
-  | "colorcheck";
+  | "connections";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -197,18 +197,40 @@ function PricePreview() {
   );
 }
 
-function ColorCheckPreview() {
-  const imgs = [
+function ConnectionsPreview() {
+  const solved = [
     "/images/towers/dart-monkey/dart-monkey.webp",
-    "/images/towers/ninja-monkey/ninja-monkey.webp",
+    "/images/towers/boomerang-monkey/boomerang-monkey.webp",
+    "/images/towers/tack-shooter/tack-shooter.webp",
     "/images/towers/bomb-shooter/bomb-shooter.webp",
+  ];
+  const rest = [
+    "/images/towers/ninja-monkey/ninja-monkey.webp",
     "/images/towers/wizard-monkey/wizard-monkey.webp",
+    "/images/towers/ice-monkey/ice-monkey.webp",
+    "/images/towers/glue-gunner/glue-gunner.webp",
+    "/images/towers/sniper-monkey/sniper-monkey.webp",
+    "/images/towers/monkey-sub/monkey-sub.webp",
+    "/images/towers/monkey-buccaneer/monkey-buccaneer.webp",
+    "/images/towers/monkey-ace/monkey-ace.webp",
   ];
   return (
     <div className="game-preview game-preview--connections" aria-hidden>
-      {imgs.map((src) => (
-        <img key={src} src={src} alt="" draggable={false} />
-      ))}
+      <div className="game-preview__conn-solved">
+        <span className="game-preview__conn-solved-label">PRIMARY</span>
+        <div className="game-preview__conn-solved-row">
+          {solved.map((src) => (
+            <img key={src} src={src} alt="" draggable={false} />
+          ))}
+        </div>
+      </div>
+      <div className="game-preview__conn-grid">
+        {rest.map((src) => (
+          <span key={src} className="game-preview__conn-tile">
+            <img src={src} alt="" draggable={false} />
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -791,11 +813,11 @@ export function ArcadeHome({
       preview: <PricePreview />,
     },
     {
-      id: "colorcheck" as const,
+      id: "connections" as const,
       title: "CONNECTIONS",
       blurb: "Group sixteen towers into four hidden links.",
       label: "Connections, Group towers into four hidden categories",
-      preview: <ColorCheckPreview />,
+      preview: <ConnectionsPreview />,
     },
     {
       id: "roundcheck" as const,

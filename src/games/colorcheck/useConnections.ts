@@ -48,7 +48,7 @@ type Persisted = {
   reward: number;
 };
 
-const STORAGE_KEY = "bloon-arcade:colorcheck:daily:v1";
+const STORAGE_KEY = "bloon-arcade:connections:daily:v1";
 
 function loadPersisted(day: string): Persisted | null {
   try {
@@ -260,7 +260,7 @@ export function useConnections() {
           ? connectionsDailyReward()
           : connectionsPracticeReward();
       if (reward <= 0) return { awarded: true, reward: 0 };
-      const balance = await awardCoins(reward, "colorcheck");
+      const balance = await awardCoins(reward, "connections");
       if (balance != null) setCoinBalanceRef.current(balance);
       return { awarded: true, reward };
     },

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "bloon-arcade:colorcheck:bests";
+const STORAGE_KEY = "bloon-arcade:connections:bests";
 
 export type BestScores = {
   bestScore: number;

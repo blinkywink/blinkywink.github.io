@@ -19,7 +19,7 @@ export const GAME_STAT_LABELS: Record<GamePath, string> = {
   roundcheck: "Round Check",
   heliumpop: "Helium Pop",
   blowfree: "Blow Free",
-  colorcheck: "Connections",
+  connections: "Connections",
 };
 
 export type AccountStats = {

@@ -4177,20 +4177,72 @@ body:has(.conn-page) {
 }
 
 .game-preview--connections {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.28rem;
-  padding: 0.45rem;
-  background: #14141c;
+  padding: 0.4rem;
+  background:
+    radial-gradient(circle at 50% 20%, #2a2438 0%, #14141c 70%);
 }
 
-.game-preview--connections img {
+.game-preview__conn-solved {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 0.28rem 0.35rem 0.32rem;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #c9b458 0%, #a8943a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.game-preview__conn-solved-label {
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #1a1508;
+  line-height: 1;
+}
+
+.game-preview__conn-solved-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.14rem;
   width: 100%;
-  height: 100%;
+}
+
+.game-preview__conn-solved-row img {
+  width: 100%;
+  aspect-ratio: 1;
   object-fit: contain;
-  background: #0e0e14;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+.game-preview__conn-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.18rem;
+}
+
+.game-preview__conn-tile {
+  display: grid;
+  place-items: center;
+  min-height: 0;
   border-radius: 6px;
+  background: #1c1c26;
+  border: 1px solid #2e2e3a;
+  overflow: hidden;
+}
+
+.game-preview__conn-tile img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
 }
 
 .game-preview__cc-art {
