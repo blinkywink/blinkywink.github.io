@@ -250,6 +250,11 @@ export function categoryPackShelfArt(category: TowerCategory): string {
   return `/images/packs/category-${category.toLowerCase()}-mosaic.webp`;
 }
 
+/** BTD6 tower-type badge icon (rocket/chevron/wand/gear) for a category. */
+export function towerTypeIcon(category: TowerCategory): string {
+  return `/images/ui/tower-type-${category.toLowerCase()}.png`;
+}
+
 /** Force these towers into the featured row on a given UTC day. */
 const PINNED_DAILY_TOWERS: Record<string, string[]> = {
   "2026-8-11": ["Skywarden"],

@@ -1958,7 +1958,9 @@ html[data-native="1"][data-platform="android"] .monkey-card--paragon .monkey-car
 .site-main:has(.hero-page),
 .site-main:has(.zoomed-page),
 .site-main:has(.rico-page),
-.site-main:has(.roundcheck-page) {
+.site-main:has(.roundcheck-page),
+.site-main:has(.colorcheck-page),
+.site-main:has(.conn-page) {
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
@@ -1974,7 +1976,9 @@ body:has(.catch-page),
 body:has(.hero-page),
 body:has(.zoomed-page),
 body:has(.rico-page),
-body:has(.roundcheck-page) {
+body:has(.roundcheck-page),
+body:has(.colorcheck-page),
+body:has(.conn-page) {
   overflow: hidden;
   height: 100dvh;
 }
@@ -1993,7 +1997,9 @@ body:has(.roundcheck-page) {
 .catch-page,
 .hero-page,
 .rico-page,
-.roundcheck-page {
+.roundcheck-page,
+.colorcheck-page,
+.conn-page {
   width: min(var(--game-max-w), calc(100% - var(--game-gutter)));
   margin: 0 auto;
   padding: var(--game-pad-y) 0 calc(var(--game-pad-y) + 0.1rem);
@@ -2019,6 +2025,10 @@ body:has(.roundcheck-page) {
 
 .camo-page {
   --game-max-w: 720px;
+}
+
+.colorcheck-page {
+  --game-max-w: 760px;
 }
 
 .zoomed-page {
@@ -2102,7 +2112,8 @@ body:has(.roundcheck-page) {
   .sweeper-page,
   .blowfree-page,
   .catch-page,
-  .hero-page {
+  .hero-page,
+  .colorcheck-page {
     --game-gutter: 0px;
     --game-pad-y: 0.4rem;
   }
@@ -4155,6 +4166,98 @@ body:has(.roundcheck-page) {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   color: rgba(240, 240, 244, 0.45);
+}
+
+.game-preview--colorcheck {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  background: #14141c;
+}
+
+.game-preview--connections {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.28rem;
+  padding: 0.45rem;
+  background: #14141c;
+}
+
+.game-preview--connections img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #0e0e14;
+  border-radius: 6px;
+}
+
+.game-preview__cc-art {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 10px;
+  background: #0e0e14;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.game-preview__cc-art img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+}
+
+.game-preview__cc-marker {
+  position: absolute;
+  top: 38%;
+  left: 58%;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+}
+
+.game-preview__cc-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  flex-shrink: 0;
+}
+
+.game-preview__cc-bar {
+  display: block;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.game-preview__cc-bar--r {
+  background: linear-gradient(
+    to right,
+    #e0554a 40%,
+    rgba(255, 255, 255, 0.12) 40%
+  );
+}
+
+.game-preview__cc-bar--g {
+  background: linear-gradient(
+    to right,
+    #55c26a 65%,
+    rgba(255, 255, 255, 0.12) 65%
+  );
+}
+
+.game-preview__cc-bar--b {
+  background: linear-gradient(
+    to right,
+    #4a8fe0 25%,
+    rgba(255, 255, 255, 0.12) 25%
+  );
 }
 
 .game-preview--order {
@@ -14256,17 +14359,8 @@ body.rewards-overlay-open .sweeper-result {
   font-size: 0.95rem;
 }
 
-.bloonle-page.is-kb-open .bloonle-hints {
-  margin-top: 0.2rem;
-  padding: 0.22rem 0.55rem 0.28rem;
-}
-
-.bloonle-page.is-kb-open .bloonle-hints__label {
+.bloonle-page.is-kb-open .bloonle-feedback-list {
   display: none;
-}
-
-.bloonle-page.is-kb-open .bloonle-hints p:not(.bloonle-hints__label) {
-  font-size: 0.8rem;
 }
 
 .bloonle-page > .game-header {
@@ -14312,34 +14406,126 @@ body.rewards-overlay-open .sweeper-result {
   color: rgba(240, 240, 244, 0.5);
 }
 
-.bloonle-hints {
-  margin: 0.4rem auto 0;
-  max-width: 18rem;
-  padding: 0.35rem 0.7rem 0.45rem;
-  border-radius: 10px;
-  background: rgba(18, 18, 24, 0.72);
-  border: 1px solid #2a2a34;
-  text-align: center;
+.bloonle-feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  flex-shrink: 0;
+  max-height: 10rem;
+  overflow-y: auto;
 }
 
-.bloonle-hints__label {
-  margin: 0 0 0.12rem;
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(240, 240, 244, 0.45);
+.bloonle-feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
 }
 
-.bloonle-hints p:not(.bloonle-hints__label) {
+.bloonle-feedback-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
   margin: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #f0f0f4;
+  padding: 0.28rem 0.7rem;
+  min-height: 2.75rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.bloonle-hints p:not(.bloonle-hints__label) + p {
-  margin-top: 0.08rem;
+.bloonle-feedback-chip--icon {
+  padding: 0.28rem 0.55rem;
+  min-width: 2.75rem;
+}
+
+.bloonle-feedback-mark {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.bloonle-feedback-art {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+}
+
+.bloonle-feedback-coin {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+.bloonle-feedback-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.4rem);
+  transform: translateX(-50%);
+  z-index: 5;
+  width: max-content;
+  max-width: min(16rem, 70vw);
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(18, 18, 24, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f0f0f4;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: normal;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+}
+
+.bloonle-feedback-chip.is-tip-open .bloonle-feedback-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bloonle-feedback-chip:hover .bloonle-feedback-tip,
+  .bloonle-feedback-chip:focus-visible .bloonle-feedback-tip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.bloonle-feedback-chip.is-match {
+  background: rgba(34, 140, 64, 0.35);
+  border-color: #2fbf5a;
+  color: #7dff9c;
+}
+
+.bloonle-feedback-chip.is-miss {
+  background: rgba(160, 36, 48, 0.32);
+  border-color: #e04555;
+  color: #ff8f9a;
+}
+
+.bloonle-feedback-chip.is-unknown {
+  background: rgba(58, 58, 68, 0.35);
+  border-color: #3a3a44;
+  color: rgba(240, 240, 244, 0.45);
 }
 
 .bloonle-toast {
@@ -14701,6 +14887,44 @@ body.rewards-overlay-open .sweeper-result {
     min-height: 1rem;
     font-size: 0.8rem;
   }
+
+  .bloonle-feedback-list {
+    max-height: 9.5rem;
+  }
+
+  .bloonle-feedback-row {
+    gap: 0.55rem;
+  }
+
+  .bloonle-feedback-chip {
+    font-size: 1rem;
+    padding: 0.35rem 0.75rem;
+    min-height: 3.15rem;
+  }
+
+  .bloonle-feedback-chip--icon {
+    padding: 0.35rem 0.6rem;
+    min-width: 3.15rem;
+  }
+
+  .bloonle-feedback-art {
+    width: 38px;
+    height: 38px;
+  }
+
+  .bloonle-feedback-coin {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bloonle-feedback-mark {
+    font-size: 1.2rem;
+  }
+
+  .bloonle-feedback-tip {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.6rem;
+  }
 }
 
 @media (max-width: 560px) and (max-height: 740px) {
@@ -15018,6 +15242,687 @@ html[data-native="1"] .camo-grid {
   .camo-cell.is-missed,
   .camo-page.is-watching .camo-cell.has-camo .camo-cell__img {
     animation: none;
+  }
+}
+
+/* --- Color Check --- */
+.colorcheck-page {
+  position: relative;
+}
+
+.colorcheck-page > .game-header {
+  flex-shrink: 0;
+  margin-bottom: 0.3rem;
+}
+
+.colorcheck-main {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  overflow: hidden;
+  padding-bottom: 4.75rem;
+}
+
+.colorcheck-prompt {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.colorcheck-prompt__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.colorcheck-prompt h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 3.2vw, 1.4rem);
+  letter-spacing: 0.03em;
+  color: #f0f0f4;
+}
+
+.colorcheck-prompt h2.is-win {
+  color: #7ddea0;
+}
+
+.colorcheck-prompt h2.is-miss {
+  color: #ff8f8f;
+}
+
+.colorcheck-prompt__hud {
+  flex-shrink: 0;
+}
+
+.colorcheck-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+/* Image on top - fills whatever space is left between the prompt and the
+   guess panel, always keeping its own aspect ratio (canvas intrinsic size). */
+.colorcheck-canvas-wrap {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(90, 100, 120, 0.18), transparent 55%),
+    rgba(12, 14, 18, 0.72);
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.colorcheck-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border-radius: 0.5rem;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  image-rendering: auto;
+}
+
+/* Guess controls sit below the art, full width - swatch + hex readout, then
+   three RGB sliders. */
+.colorcheck-guess {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.colorcheck-swatch-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.colorcheck-swatch {
+  display: inline-block;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.6rem;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.colorcheck-swatch--lg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.colorcheck-swatch-hex {
+  font-family: var(--font-display), monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(240, 240, 244, 0.85);
+}
+
+.colorcheck-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.colorcheck-slider {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr) 2.4rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.colorcheck-slider__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  color: rgba(240, 240, 244, 0.65);
+}
+
+.colorcheck-slider--h .colorcheck-slider__label {
+  color: #f0a0ff;
+}
+
+.colorcheck-slider--s .colorcheck-slider__label {
+  color: #7ec8ff;
+}
+
+.colorcheck-slider--l .colorcheck-slider__label {
+  color: #f0e6c8;
+}
+
+.colorcheck-slider--r .colorcheck-slider__label {
+  color: #ff8f8f;
+}
+
+.colorcheck-slider--g .colorcheck-slider__label {
+  color: #7ddea0;
+}
+
+.colorcheck-slider--b .colorcheck-slider__label {
+  color: #8fb8ff;
+}
+
+.colorcheck-slider__value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(240, 240, 244, 0.75);
+  text-align: right;
+}
+
+/*
+ * Cross-browser range input reset. The gradient lives in an inline
+ * `background` on the input itself; every native track pseudo-element has to
+ * be forced transparent or it paints over that gradient and you get the
+ * browser's default (grey, on iOS a solid blue-fill) track instead.
+ */
+.colorcheck-slider input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  display: block;
+  width: 100%;
+  height: 1.4rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.colorcheck-slider input[type="range"]::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.colorcheck-slider input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.colorcheck-slider input[type="range"]::-moz-range-progress {
+  background: transparent;
+}
+
+.colorcheck-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-top: -0.35rem;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.colorcheck-slider input[type="range"]::-moz-range-thumb {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.colorcheck-compare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.colorcheck-swatch-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.colorcheck-swatch-block .colorcheck-swatch {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 0.75rem;
+}
+
+.colorcheck-swatch-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.colorcheck-compare__meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.colorcheck-compare__pct {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: 700;
+  color: #f0c84a;
+}
+
+.colorcheck-compare__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.5);
+}
+
+.colorcheck-loading {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+.colorcheck-next-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.45rem;
+  display: flex;
+  justify-content: center;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.colorcheck-next-bar__btn {
+  pointer-events: auto;
+  min-width: min(18rem, 88vw);
+}
+
+.colorcheck-choice-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.45rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  z-index: 3;
+  padding-inline: 0.75rem;
+  pointer-events: none;
+}
+
+.colorcheck-choice {
+  pointer-events: auto;
+  min-width: min(9.5rem, 42vw);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.colorcheck-choice--real {
+  background: rgba(40, 48, 62, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f0f0f4;
+}
+
+.colorcheck-compare-art {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+}
+
+.colorcheck-compare-art__col {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 18rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.colorcheck-compare-art__col .colorcheck-canvas {
+  max-width: 100%;
+  max-height: min(42vh, 22rem);
+}
+
+.colorcheck-compare-art__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 244, 0.55);
+}
+
+/* --- Connections (replaces Color Check gameplay) --- */
+.conn-page {
+  --conn-ink: #f0f0f4;
+  --game-max-w: 48rem;
+  --game-pad-y: 0.45rem;
+  --game-gutter: 1rem;
+  color: var(--conn-ink);
+  gap: 0.45rem;
+  padding-inline: 0.85rem;
+  padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+}
+
+.conn-page > .game-header {
+  flex: 0 0 auto;
+  margin-bottom: 0.2rem;
+  overflow: visible;
+}
+
+.conn-page .game-header__title {
+  line-height: 1.2;
+  padding-block: 0.12rem;
+}
+
+.conn-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: auto;
+}
+
+.conn-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+.conn-prompt {
+  margin: 0;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: rgba(240, 240, 244, 0.78);
+}
+
+.conn-solved-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.conn-solved {
+  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.conn-solved__label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+}
+
+.conn-solved__names {
+  margin-top: 0.28rem;
+  font-size: clamp(0.92rem, 1.6vw, 1.05rem);
+  line-height: 1.35;
+  opacity: 0.92;
+}
+
+.conn-solved.is-diff-0 {
+  background: #c4b35a;
+  color: #1a1810;
+}
+.conn-solved.is-diff-1 {
+  background: #c47a3a;
+  color: #1a120c;
+}
+.conn-solved.is-diff-2 {
+  background: #6a8fbf;
+  color: #0e1520;
+}
+.conn-solved.is-diff-3 {
+  background: #8b6aad;
+  color: #140f1a;
+}
+
+.conn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.conn-tile {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  background: rgba(28, 32, 42, 0.92);
+  color: inherit;
+  padding: 0.55rem 0.35rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  aspect-ratio: 1;
+  min-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.conn-tile.is-selected {
+  border-color: #f0c84a;
+  background: rgba(60, 52, 28, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(240, 200, 74, 0.35);
+}
+
+.conn-tile__img {
+  width: 64%;
+  height: 64%;
+  max-width: 6.5rem;
+  max-height: 6.5rem;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+.conn-tile__name {
+  font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.conn-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 1.55rem;
+}
+
+.conn-toast {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  color: #f0c84a;
+}
+
+.conn-toast--spacer {
+  visibility: hidden;
+}
+
+.conn-footer {
+  flex: 0 0 auto;
+  padding-top: 0.45rem;
+  width: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+.conn-actions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.conn-submit {
+  width: min(100%, 20rem);
+  min-height: 3.5rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.conn-actions .btn:disabled,
+.conn-submit:disabled {
+  opacity: 0.45;
+}
+
+.conn-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0 0.3rem;
+}
+
+.conn-result__cash {
+  margin: 0;
+}
+
+.conn-result__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(240, 240, 244, 0.7);
+}
+
+.conn-back {
+  min-width: 9rem;
+  min-height: 2.75rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 560px) {
+  .conn-page {
+    --game-max-w: 100%;
+    --game-pad-y: 0.25rem;
+    gap: 0.25rem;
+    padding-inline: 0.55rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .conn-stage {
+    width: 100%;
+    gap: 0.45rem;
+  }
+
+  .conn-prompt {
+    font-size: 0.88rem;
+  }
+
+  .conn-grid {
+    gap: 0.35rem;
+  }
+
+  .conn-tile {
+    border-radius: 0.55rem;
+    padding: 0.28rem 0.15rem 0.32rem;
+  }
+
+  .conn-tile__img {
+    width: 62%;
+    height: 62%;
+    max-width: 4.5rem;
+    max-height: 4.5rem;
+  }
+
+  .conn-tile__name {
+    font-size: 0.68rem;
+  }
+
+  .conn-solved {
+    padding: 0.55rem 0.55rem;
+    border-radius: 0.65rem;
+  }
+
+  .conn-solved__label {
+    font-size: 0.88rem;
+  }
+
+  .conn-solved__names {
+    font-size: 0.74rem;
+  }
+
+  .conn-footer {
+    width: 100%;
+    padding-top: 0.45rem;
+  }
+
+  .conn-submit {
+    min-height: 3.35rem;
+    width: 100%;
+    max-width: none;
+    font-size: 1.05rem;
+  }
+
+  .conn-toast {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .colorcheck-canvas-wrap {
+    padding: 0.5rem;
+  }
+
+  .colorcheck-compare-art {
+    gap: 0.45rem;
+  }
+
+  .colorcheck-choice-bar {
+    gap: 0.45rem;
   }
 }
 

@@ -36,7 +36,8 @@ export type GameId =
   | "bloonhero"
   | "roundcheck"
   | "heliumpop"
-  | "blowfree";
+  | "blowfree"
+  | "colorcheck";
 
 type Props = {
   onPlay: (game: GameId) => void;
@@ -192,6 +193,22 @@ function PricePreview() {
           draggable={false}
         />
       </div>
+    </div>
+  );
+}
+
+function ColorCheckPreview() {
+  const imgs = [
+    "/images/towers/dart-monkey/dart-monkey.webp",
+    "/images/towers/ninja-monkey/ninja-monkey.webp",
+    "/images/towers/bomb-shooter/bomb-shooter.webp",
+    "/images/towers/wizard-monkey/wizard-monkey.webp",
+  ];
+  return (
+    <div className="game-preview game-preview--connections" aria-hidden>
+      {imgs.map((src) => (
+        <img key={src} src={src} alt="" draggable={false} />
+      ))}
     </div>
   );
 }
@@ -772,6 +789,13 @@ export function ArcadeHome({
       blurb: "Which tower costs more?",
       label: "Price Check, Which tower costs more?",
       preview: <PricePreview />,
+    },
+    {
+      id: "colorcheck" as const,
+      title: "CONNECTIONS",
+      blurb: "Group sixteen towers into four hidden links.",
+      label: "Connections, Group towers into four hidden categories",
+      preview: <ColorCheckPreview />,
     },
     {
       id: "roundcheck" as const,

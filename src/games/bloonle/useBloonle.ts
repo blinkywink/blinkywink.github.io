@@ -6,11 +6,14 @@ import { useQuizHeroFx } from "../../lib/quizHeroFx";
 import { bloonleSolveReward } from "../rewards";
 import {
   BLOONLE_CONFIG,
+  compareEntities,
   evaluateGuess,
   nextMidnightMs,
+  poolEntityForSlug,
   puzzleForDay,
   puzzlePractice,
   todayKey,
+  type BloonleAxisFeedback,
   type BloonlePuzzle,
   type LetterMark,
 } from "./dictionary";
@@ -21,6 +24,8 @@ export type BloonleMode = "daily" | "practice";
 export type BloonleGuess = {
   letters: string;
   marks: LetterMark[];
+  /** Category/price/path comparison vs the answer, or null for an unknown word. */
+  feedback: BloonleAxisFeedback | null;
 };
 
 type Persisted = {
@@ -83,11 +88,15 @@ export function claimBloonleDailyHaulOnce(day: string): boolean {
   return true;
 }
 
-function rebuildGuesses(slugs: string[], answer: string): BloonleGuess[] {
-  return slugs.map((letters) => ({
-    letters,
-    marks: evaluateGuess(letters, answer),
-  }));
+function rebuildGuesses(slugs: string[], puzzle: BloonlePuzzle): BloonleGuess[] {
+  return slugs.map((letters) => {
+    const guessed = poolEntityForSlug(letters);
+    return {
+      letters,
+      marks: evaluateGuess(letters, puzzle.slug),
+      feedback: guessed ? compareEntities(guessed.entity, puzzle.entity) : null,
+    };
+  });
 }
 
 type State = {
@@ -113,7 +122,7 @@ function makeDailyState(): State {
   const guesses =
     saved &&
     saved.guesses.every((g) => g.length === puzzle.slug.length)
-      ? rebuildGuesses(saved.guesses, puzzle.slug)
+      ? rebuildGuesses(saved.guesses, puzzle)
       : [];
   let status: BloonleStatus = guesses.length
     ? (saved?.status ?? "playing")
@@ -284,7 +293,11 @@ export function useBloonle() {
       }
 
       const marks = evaluateGuess(guess, s.puzzle.slug);
-      const guesses = [...s.guesses, { letters: guess, marks }];
+      const guessed = poolEntityForSlug(guess);
+      const feedback = guessed
+        ? compareEntities(guessed.entity, s.puzzle.entity)
+        : null;
+      const guesses = [...s.guesses, { letters: guess, marks, feedback }];
       let status: BloonleStatus = "playing";
       if (guess === s.puzzle.slug) status = "won";
       else if (guesses.length >= BLOONLE_CONFIG.maxGuesses) status = "lost";

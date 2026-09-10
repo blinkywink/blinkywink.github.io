@@ -66,6 +66,13 @@ export const BLOONLE_POOL: BloonlePuzzle[] = buildPool();
 /** All valid guess slugs (same length required at submit time). */
 export const BLOONLE_DICT = new Set(BLOONLE_POOL.map((p) => p.slug));
 
+const BLOONLE_POOL_BY_SLUG = new Map(BLOONLE_POOL.map((p) => [p.slug, p]));
+
+/** Resolve a guessed slug to its pool entity, if it's a known tower/upgrade. */
+export function poolEntityForSlug(slug: string): BloonlePuzzle | undefined {
+  return BLOONLE_POOL_BY_SLUG.get(slug);
+}
+
 export const BLOONLE_CONFIG = {
   maxGuesses: 6,
   /** Solving the daily (any guess count ≤ 6) pays a full perfect-run. */
@@ -175,6 +182,52 @@ export function evaluateGuess(guess: string, answer: string): LetterMark[] {
     }
   }
   return marks;
+}
+
+export type PathLabel = "top" | "middle" | "bottom" | "base";
+
+export function pathLabel(path: number | null): PathLabel {
+  if (path === 1) return "top";
+  if (path === 2) return "middle";
+  if (path === 3) return "bottom";
+  return "base";
+}
+
+export type PriceCmp = "higher" | "lower" | "equal";
+
+export type BloonleAxisFeedback = {
+  category: { correct: boolean; guess: string; answer: string };
+  price: { cmp: PriceCmp; guessCost: number; answerCost: number };
+  path: { correct: boolean; guess: PathLabel; answer: PathLabel };
+};
+
+/** Compare a guessed pool entity against the answer on category/price/path. */
+export function compareEntities(
+  guess: TowerEntity,
+  answer: TowerEntity,
+): BloonleAxisFeedback {
+  return {
+    category: {
+      correct: guess.category === answer.category,
+      guess: guess.category,
+      answer: answer.category,
+    },
+    price: {
+      cmp:
+        guess.cost > answer.cost
+          ? "higher"
+          : guess.cost < answer.cost
+            ? "lower"
+            : "equal",
+      guessCost: guess.cost,
+      answerCost: answer.cost,
+    },
+    path: {
+      correct: guess.path === answer.path,
+      guess: pathLabel(guess.path),
+      answer: pathLabel(answer.path),
+    },
+  };
 }
 
 export function nextMidnightMs(now = new Date()): number {

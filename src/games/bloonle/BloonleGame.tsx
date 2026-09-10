@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { GameHeader } from "../../components/GameHeader";
 import { useIsCompactViewport } from "../../components/MobileAppNav";
 import { isTypingTarget } from "../../lib/keyboard";
@@ -8,7 +16,12 @@ import {
   useBloonleKeyboardSession,
 } from "./bloonleKeyboardBridge";
 import { dayNumber, type LetterMark } from "./dictionary";
-import { claimBloonleDailyHaulOnce, useBloonle } from "./useBloonle";
+import {
+  claimBloonleDailyHaulOnce,
+  useBloonle,
+  type BloonleGuess,
+} from "./useBloonle";
+import { towerTypeIcon, type TowerCategory } from "../../lib/packTheme";
 
 type Props = {
   onBack: () => void;
@@ -58,6 +71,159 @@ function Tile({
   return (
     <div className={cls} aria-hidden={!letter}>
       {letter}
+    </div>
+  );
+}
+
+function pathShort(label: string): string {
+  if (label === "middle") return "mid";
+  if (label === "bottom") return "bot";
+  return label;
+}
+
+function pathPhrase(label: string): string {
+  if (label === "base") return "base";
+  if (label === "top") return "top path";
+  if (label === "middle") return "middle path";
+  if (label === "bottom") return "bottom path";
+  return label;
+}
+
+function FeedbackChip({
+  tip,
+  match,
+  icon,
+  children,
+  openId,
+  chipId,
+  onOpenChange,
+}: {
+  tip: string;
+  match: boolean;
+  icon?: boolean;
+  children: ReactNode;
+  openId: string | null;
+  chipId: string;
+  onOpenChange: (id: string | null) => void;
+}) {
+  const open = openId === chipId;
+  const rootRef = useRef<HTMLButtonElement>(null);
+
+  const onDocPointer = useEffectEvent((e: PointerEvent) => {
+    if (!open) return;
+    const el = rootRef.current;
+    if (el && e.target instanceof Node && el.contains(e.target)) return;
+    onOpenChange(null);
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    document.addEventListener("pointerdown", onDocPointer);
+    return () => document.removeEventListener("pointerdown", onDocPointer);
+  }, [open, onDocPointer]);
+
+  return (
+    <button
+      ref={rootRef}
+      type="button"
+      className={`bloonle-feedback-chip${icon ? " bloonle-feedback-chip--icon" : ""} is-${match ? "match" : "miss"}${open ? " is-tip-open" : ""}`}
+      aria-label={tip}
+      onClick={() => {
+        // Hover shows the tip on desktop; tap toggles on touch.
+        if (
+          typeof window !== "undefined" &&
+          window.matchMedia("(hover: hover) and (pointer: fine)").matches
+        ) {
+          return;
+        }
+        onOpenChange(open ? null : chipId);
+      }}
+    >
+      {children}
+      <span className="bloonle-feedback-tip" role="tooltip">
+        {tip}
+      </span>
+    </button>
+  );
+}
+
+function GuessFeedbackRow({ guess }: { guess: BloonleGuess }) {
+  const rowId = useId();
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  if (!guess.feedback) {
+    return (
+      <div className="bloonle-feedback-row">
+        <span className="bloonle-feedback-chip is-miss">?</span>
+      </div>
+    );
+  }
+  const { category, price, path } = guess.feedback;
+  const priceOk = price.cmp === "equal";
+  const categoryArt = towerTypeIcon(category.guess as TowerCategory);
+  const categoryTip = category.correct
+    ? `The tower is ${category.guess}`
+    : `The tower is not ${category.guess}`;
+  const priceTip = priceOk
+    ? "The tower costs the same"
+    : price.cmp === "higher"
+      ? "The tower costs more"
+      : "The tower costs less";
+  const pathShown = path.correct ? path.answer : path.guess;
+  const pathTip = path.correct
+    ? `The tower is ${pathPhrase(path.answer)}`
+    : `The tower is not ${pathPhrase(path.guess)}`;
+
+  return (
+    <div className="bloonle-feedback-row">
+      <FeedbackChip
+        tip={categoryTip}
+        match={category.correct}
+        icon
+        chipId={`${rowId}-cat`}
+        openId={openId}
+        onOpenChange={setOpenId}
+      >
+        <img
+          className="bloonle-feedback-art"
+          src={categoryArt}
+          alt=""
+          width={36}
+          height={36}
+          draggable={false}
+        />
+      </FeedbackChip>
+      <FeedbackChip
+        tip={priceTip}
+        match={priceOk}
+        icon
+        chipId={`${rowId}-price`}
+        openId={openId}
+        onOpenChange={setOpenId}
+      >
+        <img
+          className="bloonle-feedback-coin"
+          src="/images/ui/money-icon.webp"
+          alt=""
+          width={28}
+          height={28}
+          draggable={false}
+        />
+        {!priceOk ? (
+          <span className="bloonle-feedback-mark" aria-hidden>
+            {price.cmp === "higher" ? "↑" : "↓"}
+          </span>
+        ) : null}
+      </FeedbackChip>
+      <FeedbackChip
+        tip={pathTip}
+        match={path.correct}
+        chipId={`${rowId}-path`}
+        openId={openId}
+        onOpenChange={setOpenId}
+      >
+        {pathShort(pathShown)}
+      </FeedbackChip>
     </div>
   );
 }
@@ -262,18 +428,6 @@ export function BloonleGame({
             Base towers and T5 upgrades · no spaces · {len} letters ·{" "}
             {maxGuesses} tries
           </p>
-          {!done && state.guesses.length >= 2 ? (
-            <div className="bloonle-hints" aria-live="polite">
-              <p className="bloonle-hints__label">Hints</p>
-              <p>
-                It is a{" "}
-                {state.puzzle.entity.type === "tower" ? "base tower" : "T5"}
-              </p>
-              {state.guesses.length >= 4 ? (
-                <p>It is {state.puzzle.entity.category}</p>
-              ) : null}
-            </div>
-          ) : null}
         </div>
 
         {state.toast ? (
@@ -320,6 +474,14 @@ export function BloonleGame({
             );
           })}
         </div>
+
+        {state.guesses.length > 0 ? (
+          <div className="bloonle-feedback-list" aria-live="polite">
+            {state.guesses.map((g, i) => (
+              <GuessFeedbackRow key={i} guess={g} />
+            ))}
+          </div>
+        ) : null}
 
         {done ? (
           <div className="bloonle-result">

@@ -17,6 +17,8 @@ export type Profile = {
   last_bloonle_day?: string | null;
   /** UTC date (YYYY-MM-DD) of last Blow Free daily Cash claim, or null. */
   last_blowfree_day?: string | null;
+  /** UTC date (YYYY-MM-DD) of last Connections daily Cash claim, or null. */
+  last_colorcheck_day?: string | null;
   /** Owned card id used as profile picture, or null. */
   avatar_card_id: string | null;
   avatar_zoom: number;
@@ -81,6 +83,7 @@ export type Database = {
           last_daily_card_claim?: string | null;
           last_bloonle_day?: string | null;
           last_blowfree_day?: string | null;
+          last_colorcheck_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -114,6 +117,7 @@ export type Database = {
           last_daily_card_claim?: string | null;
           last_bloonle_day?: string | null;
           last_blowfree_day?: string | null;
+          last_colorcheck_day?: string | null;
           avatar_card_id?: string | null;
           avatar_zoom?: number;
           avatar_x?: number;
@@ -638,6 +642,15 @@ export type Database = {
           amount: number;
           coins: number;
           last_blowfree_day: string;
+        };
+      };
+      claim_colorcheck_daily: {
+        Args: Record<string, never>;
+        Returns: {
+          already: boolean;
+          amount: number;
+          coins: number;
+          last_colorcheck_day: string;
         };
       };
       record_bloonhero_play: {

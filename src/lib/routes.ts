@@ -12,7 +12,8 @@ export type GamePath =
   | "bloonhero"
   | "roundcheck"
   | "heliumpop"
-  | "blowfree";
+  | "blowfree"
+  | "colorcheck";
 
 export const GAME_PATHS: readonly GamePath[] = [
   "zoomed",
@@ -27,6 +28,7 @@ export const GAME_PATHS: readonly GamePath[] = [
   "roundcheck",
   "heliumpop",
   "blowfree",
+  "colorcheck",
 ] as const;
 
 export function gamePath(game: GamePath): string {

@@ -97,6 +97,9 @@ const GeoguessrGame = lazyRoute(() =>
 const PriceCheckGame = lazyRoute(() =>
   import("./games/pricecheck").then((m) => ({ default: m.PriceCheckGame })),
 );
+const ColorCheckGame = lazyRoute(() =>
+  import("./games/colorcheck").then((m) => ({ default: m.ColorCheckGame })),
+);
 const OrderUpGame = lazyRoute(() =>
   import("./games/orderup").then((m) => ({ default: m.OrderUpGame })),
 );
@@ -569,6 +572,43 @@ function AppShell() {
     [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
   );
 
+  const onColorCheckRunEnd = useCallback(
+    (info: {
+      cleared: boolean;
+      correctCount: number;
+      coinsEarned: number;
+      mode: "daily" | "practice";
+      fresh: boolean;
+    }) => {
+      // Revisit / account-sync of an already-finished daily: no haul.
+      if (!info.fresh) return;
+      setEndlessHaul(null);
+      setRunHaul({
+        game: "colorcheck",
+        cleared: info.cleared,
+        cashEarned: info.coinsEarned,
+        details: [
+          info.mode === "daily" ? "Daily cleared" : "Practice cleared",
+          `${info.correctCount}/4 groups`,
+        ],
+      });
+      void recordGameRun("colorcheck", info.cleared);
+      queueClearAndBonusPacks({
+        cleared: info.cleared,
+        // Daily clear gets the bonus pack; practice does not.
+        wantBonus: info.cleared && info.mode === "daily",
+        haulAfter: true,
+      });
+      void creditHeroClear(info.cleared);
+      void settleFeaturedBonus(
+        "colorcheck",
+        featuredDidDecentQuiz(info.cleared, info.correctCount),
+        { oneShotAttempt: info.mode === "daily" },
+      );
+    },
+    [settleFeaturedBonus, creditHeroClear, queueClearAndBonusPacks],
+  );
+
   const onRicoShotRunEnd = useCallback(
     (info: {
       cleared: boolean;
@@ -841,6 +881,20 @@ function AppShell() {
                   key={gameReplayKey}
                   onBack={goGames}
                   onRunEnd={quizRewardHandlers.pricecheck}
+                />
+                </GameFarmGate>
+              </LazyGame>
+            }
+          />
+          <Route
+            path="/colorcheck"
+            element={
+              <LazyGame>
+                <GameFarmGate game="colorcheck">
+                <ColorCheckGame
+                  key={gameReplayKey}
+                  onBack={goGames}
+                  onRunEnd={onColorCheckRunEnd}
                 />
                 </GameFarmGate>
               </LazyGame>

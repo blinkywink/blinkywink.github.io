@@ -61,20 +61,22 @@ export function generateTransform(
 
   const maxX = Math.max(0, imgW - cropW);
   const maxY = Math.max(0, imgH - cropH);
-  const { cropX, cropY } = pickInterestingCrop(
+  let { cropX, cropY } = pickInterestingCrop(
     img,
     cropW,
     cropH,
     maxX,
     maxY,
   );
+  const zoom = randRange(difficulty.zoom[0], difficulty.zoom[1]);
+  ({ cropX, cropY } = recenterCropForZoom(img, { cropX, cropY, cropW, cropH }, zoom));
 
   return {
     cropX,
     cropY,
     cropW,
     cropH,
-    zoom: randRange(difficulty.zoom[0], difficulty.zoom[1]),
+    zoom,
     rotation: randRange(-difficulty.rotation, difficulty.rotation),
     stretchX: randRange(difficulty.stretch[0], difficulty.stretch[1]),
     stretchY: randRange(difficulty.stretch[0], difficulty.stretch[1]),
@@ -176,7 +178,12 @@ function scoreCropRegion(
     }
   }
 
-  if (count < 8) return -1;
+  // Prefer solid art coverage inside the crop
+  const area = ((x1 - x0) * (y1 - y0)) / (step * step);
+  const coverage = Math.min(1, count / Math.max(1, area));
+
+  // Reject mostly-empty / padding crops (these read as blue background in-game)
+  if (count < 10 || coverage < 0.22) return -1;
 
   const inv = 1 / count;
   const meanR = sumR * inv;
@@ -190,15 +197,60 @@ function scoreCropRegion(
   // Distinct color count reward (log so 20+ colors don't dominate forever)
   const variety = Math.log2(1 + buckets.size) * 900;
 
-  // Prefer solid art coverage inside the crop
-  const area = ((x1 - x0) * (y1 - y0)) / (step * step);
-  const coverage = Math.min(1, count / Math.max(1, area));
-  const coverageBonus = coverage * 400;
+  // Coverage heavily weighted so sparse edge crops lose to solid tower ink
+  const coverageBonus = coverage * coverage * 1400;
 
   return variance + variety + coverageBonus;
 }
 
-/** Sample crop origins; keep the most colorful ones, then pick with light randomness. */
+/** Bounding box + mass center of opaque pixels in image space. */
+function getOpaqueSubject(
+  analysis: { w: number; h: number; data: Uint8ClampedArray },
+  imgW: number,
+  imgH: number,
+): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  cx: number;
+  cy: number;
+} | null {
+  const { w, h, data } = analysis;
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+  let sumX = 0;
+  let sumY = 0;
+  let n = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const a = data[(y * w + x) * 4 + 3]!;
+      if (a < 40) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+      sumX += x;
+      sumY += y;
+      n += 1;
+    }
+  }
+  if (n < 8 || maxX < minX || maxY < minY) return null;
+  const sx = imgW / w;
+  const sy = imgH / h;
+  return {
+    minX: minX * sx,
+    minY: minY * sy,
+    maxX: (maxX + 1) * sx,
+    maxY: (maxY + 1) * sy,
+    cx: (sumX / n) * sx,
+    cy: (sumY / n) * sy,
+  };
+}
+
+/** Sample crop origins; keep ink-heavy colorful ones, then pick with light randomness. */
 function pickInterestingCrop(
   img: HTMLImageElement,
   cropW: number,
@@ -210,13 +262,36 @@ function pickInterestingCrop(
   const imgH = img.naturalHeight;
   const bias = ZOOMED_CONFIG.cropCenterBias;
   const analysis = getAnalysisImage(img);
+  const subject = getOpaqueSubject(analysis, imgW, imgH);
+
+  // Keep crops overlapping the tower ink, not transparent padding.
+  let sampleMinX = 0;
+  let sampleMinY = 0;
+  let sampleMaxX = maxX;
+  let sampleMaxY = maxY;
+  if (subject) {
+    const padX = cropW * 0.15;
+    const padY = cropH * 0.15;
+    sampleMinX = Math.max(0, Math.min(maxX, subject.minX - padX));
+    sampleMinY = Math.max(0, Math.min(maxY, subject.minY - padY));
+    sampleMaxX = Math.max(
+      sampleMinX,
+      Math.min(maxX, subject.maxX - cropW + padX),
+    );
+    sampleMaxY = Math.max(
+      sampleMinY,
+      Math.min(maxY, subject.maxY - cropH + padY),
+    );
+  }
+  const spanX = Math.max(0, sampleMaxX - sampleMinX);
+  const spanY = Math.max(0, sampleMaxY - sampleMinY);
 
   const candidates: { cropX: number; cropY: number; score: number }[] = [];
-  const samples = 36;
+  const samples = 40;
 
   for (let i = 0; i < samples; i++) {
-    const cropX = biasedUnit(bias) * maxX;
-    const cropY = biasedUnit(bias) * maxY;
+    const cropX = sampleMinX + biasedUnit(bias) * spanX;
+    const cropY = sampleMinY + biasedUnit(bias) * spanY;
     const score = scoreCropRegion(
       analysis,
       imgW,
@@ -229,11 +304,11 @@ function pickInterestingCrop(
     candidates.push({ cropX, cropY, score });
   }
 
-  // Also force a few grid samples so we don't miss vivid corners of the art
+  // Also force a few grid samples inside the subject window
   for (let gy = 0; gy < 3; gy++) {
     for (let gx = 0; gx < 3; gx++) {
-      const cropX = maxX <= 0 ? 0 : (gx / 2) * maxX;
-      const cropY = maxY <= 0 ? 0 : (gy / 2) * maxY;
+      const cropX = spanX <= 0 ? sampleMinX : sampleMinX + (gx / 2) * spanX;
+      const cropY = spanY <= 0 ? sampleMinY : sampleMinY + (gy / 2) * spanY;
       const score = scoreCropRegion(
         analysis,
         imgW,
@@ -247,9 +322,36 @@ function pickInterestingCrop(
     }
   }
 
+  // Prefer the opaque mass center as a safe fallback candidate
+  if (subject) {
+    const cropX = Math.max(0, Math.min(maxX, subject.cx - cropW / 2));
+    const cropY = Math.max(0, Math.min(maxY, subject.cy - cropH / 2));
+    const score = scoreCropRegion(
+      analysis,
+      imgW,
+      imgH,
+      cropX,
+      cropY,
+      cropW,
+      cropH,
+    );
+    candidates.push({ cropX, cropY, score: Math.max(score, 1) });
+  }
+
   candidates.sort((a, b) => b.score - a.score);
   const viable = candidates.filter((c) => c.score > 0);
-  const pool = (viable.length ? viable : candidates).slice(0, 6);
+  // Never accept empty/padding crops — fall back to subject center if needed
+  if (!viable.length) {
+    if (subject) {
+      return {
+        cropX: Math.max(0, Math.min(maxX, subject.cx - cropW / 2)),
+        cropY: Math.max(0, Math.min(maxY, subject.cy - cropH / 2)),
+      };
+    }
+    return { cropX: maxX / 2, cropY: maxY / 2 };
+  }
+
+  const pool = viable.slice(0, 6);
   // Weighted pick among top scores
   const weights = pool.map((c, i) => Math.max(0.15, c.score) * (1.15 - i * 0.08));
   const total = weights.reduce((a, b) => a + b, 0);
@@ -260,6 +362,85 @@ function pickInterestingCrop(
   }
   const fallback = pool[0]!;
   return { cropX: fallback.cropX, cropY: fallback.cropY };
+}
+
+/**
+ * After zoom is chosen, slide the crop so the zoomed viewport still sits on ink.
+ * Extra zoom shows only the crop center — empty centers become blue background.
+ */
+function recenterCropForZoom(
+  img: HTMLImageElement,
+  crop: { cropX: number; cropY: number; cropW: number; cropH: number },
+  zoom: number,
+): { cropX: number; cropY: number } {
+  if (zoom <= 1.05) return { cropX: crop.cropX, cropY: crop.cropY };
+
+  const imgW = img.naturalWidth;
+  const imgH = img.naturalHeight;
+  const analysis = getAnalysisImage(img);
+  const visW = crop.cropW / zoom;
+  const visH = crop.cropH / zoom;
+  const maxX = Math.max(0, imgW - crop.cropW);
+  const maxY = Math.max(0, imgH - crop.cropH);
+
+  // Score possible centers inside the crop for the zoomed window
+  let best = {
+    cropX: crop.cropX,
+    cropY: crop.cropY,
+    score: scoreCropRegion(
+      analysis,
+      imgW,
+      imgH,
+      crop.cropX + (crop.cropW - visW) / 2,
+      crop.cropY + (crop.cropH - visH) / 2,
+      visW,
+      visH,
+    ),
+  };
+
+  const steps = 5;
+  for (let gy = 0; gy < steps; gy++) {
+    for (let gx = 0; gx < steps; gx++) {
+      const localX = ((crop.cropW - visW) * gx) / (steps - 1);
+      const localY = ((crop.cropH - visH) * gy) / (steps - 1);
+      const visX = crop.cropX + localX;
+      const visY = crop.cropY + localY;
+      const score = scoreCropRegion(
+        analysis,
+        imgW,
+        imgH,
+        visX,
+        visY,
+        visW,
+        visH,
+      );
+      if (score > best.score) {
+        // Shift whole crop so this window becomes the zoomed center
+        const cropX = Math.max(
+          0,
+          Math.min(maxX, visX + visW / 2 - crop.cropW / 2),
+        );
+        const cropY = Math.max(
+          0,
+          Math.min(maxY, visY + visH / 2 - crop.cropH / 2),
+        );
+        best = { cropX, cropY, score };
+      }
+    }
+  }
+
+  // If still empty after search, snap crop to opaque mass center
+  if (best.score <= 0) {
+    const subject = getOpaqueSubject(analysis, imgW, imgH);
+    if (subject) {
+      return {
+        cropX: Math.max(0, Math.min(maxX, subject.cx - crop.cropW / 2)),
+        cropY: Math.max(0, Math.min(maxY, subject.cy - crop.cropH / 2)),
+      };
+    }
+  }
+
+  return { cropX: best.cropX, cropY: best.cropY };
 }
 
 /**
