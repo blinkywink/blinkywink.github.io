@@ -1,8 +1,8 @@
 /** Hosted desktop installers (Pages hops to GitHub's blob CDN — no GitHub login). */
 export const DESKTOP_MAC_DMG =
-  "https://api.blinkywink.co/downloads/blinkywink-mac.dmg";
+  "https://api.monkeycards.app/downloads/blinkywink-mac.dmg";
 export const DESKTOP_WINDOWS_SETUP =
-  "https://api.blinkywink.co/downloads/blinkywink-windows-setup.exe";
+  "https://api.monkeycards.app/downloads/blinkywink-windows-setup.exe";
 
 export const DESKTOP_RELEASE_TAG_BASE =
   "https://github.com/blinkywink/blinkywink.github.io/releases/latest/download";

@@ -8,6 +8,6 @@
     "Banana Farm"
   ],
   "message": "This desktop app is out of date. Update to keep playing.",
-  "downloadMac": "https://api.blinkywink.co/downloads/blinkywink-mac.dmg",
-  "downloadWindows": "https://api.blinkywink.co/downloads/blinkywink-windows-setup.exe"
+  "downloadMac": "https://api.monkeycards.app/downloads/blinkywink-mac.dmg",
+  "downloadWindows": "https://api.monkeycards.app/downloads/blinkywink-windows-setup.exe"
 }

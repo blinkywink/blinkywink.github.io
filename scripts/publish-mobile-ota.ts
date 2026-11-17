@@ -100,7 +100,7 @@ function writeManifest(body: Record<string, string>) {
 const appVersion = readDesktopVersion();
 const nativeVersion = readMobileNativeVersion();
 const zipName = `MonkeyCards-web-${nativeVersion}.zip`;
-const zipUrl = `https://api.blinkywink.co/downloads/${zipName}`;
+const zipUrl = `https://api.monkeycards.app/downloads/${zipName}`;
 mkdirSync(OUT_DIR, { recursive: true });
 
 if (!skipBuild) {
